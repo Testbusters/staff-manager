@@ -7,8 +7,8 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 ## Mandatory Development Pipeline
 
 **Phase 0 — Session orientation** *(only at the start of each new session or after a context summary)*
-- Read `.claude/CLAUDE.local.md` (always, even if previously read — forces system injection of active local overrides). If the file does not exist, continue.
-- Check `MEMORY.md`: read the **Active plan** section (if present) to re-align on in-progress sessions, then **Lessons/Patterns** for patterns relevant to the current block.
+- Read `.claude/CLAUDE.local.md` to confirm active overrides for this session (it is auto-loaded, but an explicit read ensures its content is fully in context). If the file does not exist, continue.
+- Check `MEMORY.md` (project root): read the **Active plan** section (if present) to re-align on in-progress sessions, then **Lessons/Patterns** for patterns relevant to the current block. The auto-memory is injected automatically — no explicit read needed.
 - If context was compressed (summary): read `docs/implementation-checklist.md` to re-align on current state.
 - Do not re-read files already in the current context — use the already-acquired line reference.
 
@@ -21,10 +21,12 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   1. Every route being moved/repurposed/removed → `grep href="/route"` across all `.tsx`/`.ts`
   2. Every component being modified → find all import consumers
   3. Every redirect being added → check breadcrumbs and CTAs in pages that link to the old route
-  4. Check `e2e/` for spec files referencing affected routes or selectors
-  - Use a Task agent (Explore) if the scan requires >3 independent queries.
+  4. Check `e2e/` and `__tests__/api/` for files referencing affected routes or selectors
+  5. Every shared type or utility being modified (e.g. `lib/types.ts`, `lib/transitions.ts`) → grep import count across `.ts`/`.tsx`. If >10 consumers: treat as high-impact regardless of file count; list all consumers in the file list.
+  6. Every table being modified → check FK references from other tables and RLS policies filtering on modified columns. Query: `SELECT conname, conrelid::regclass FROM pg_constraint WHERE confrelid='tablename'::regclass AND contype='f';`
+  - Use the Agent tool (`subagent_type: 'Explore'`) if the scan requires >3 independent queries.
   - An incomplete dependency scan = incomplete file list = rework discovered in Phase 2. This is a process error.
-- For broad codebase searches (>3 independent Glob/Grep queries): delegate to a Task agent (Explore) to protect the main context.
+- For broad codebase searches (>3 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` to protect the main context.
 - If anything is ambiguous: use AskUserQuestion BEFORE writing code.
 - Expected output: feature summary, **complete** file list verified by dependency scan, open questions.
 - *** STOP — present requirements summary and file list. Wait for explicit confirmation before proceeding. ***
@@ -32,17 +34,17 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 **Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or touching >5 files)*
 - Present a design outline: data flow, data structures involved, main trade-offs.
 - State any discarded alternatives and rationale.
-- For simple blocks (≤3 files, no migration, no new patterns): skip this phase, stating so explicitly.
+- For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
 - *** STOP — wait for design confirmation before writing code. ***
 
 **Phase 2 — Implementation**
 - **First action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
 - Write the code. Follow the project's Coding Conventions.
 - Do not add unrequested features. No unrequested refactoring.
-- **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB via Management API (`curl` with `SUPABASE_ACCESS_TOKEN` from `.env.local`) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
+- **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB via Management API (Node.js `https.request` with `SUPABASE_ACCESS_TOKEN` from `.env.local` — `curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **PostgREST join syntax** (`table!relation`, `!inner`): verify FK existence before using it. If FK absent → two-step query (separate fetches + in-memory merge). Verification query: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f';`
 - **DROP CONSTRAINT before UPDATE** (migrations): if a column has a CHECK constraint and the UPDATE sets a value not allowed by the current constraint (e.g. renaming an enum value), the UPDATE fails. Pattern inside a single migration: (1) `ALTER TABLE t DROP CONSTRAINT c;` (2) `UPDATE t SET col = new_val WHERE ...;` (3) `ALTER TABLE t ADD CONSTRAINT c CHECK (...);` — all three statements in the same migration file so they run atomically.
-- **Security checklist** (before intermediate commit): for every new/modified API route verify: (1) auth check before any operation, (2) input validated (Zod), (3) no sensitive data exposed in response, (4) RLS not implicitly bypassed.
+- **Security checklist** (before intermediate commit): for every new/modified API route verify: (1) auth check before any operation, (2) input validated (Zod), (3) no sensitive data exposed in response, (4) RLS not implicitly bypassed; for every new Supabase table: (5) `ALTER TABLE t ENABLE ROW LEVEL SECURITY` is present in the migration and at least one policy covers each relevant role.
 - Expected output: list of created/modified files with paths.
 
 **Phase 3 — Build + unit tests**
@@ -61,6 +63,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   - Business rules: application constraint violation → correct error code
   - DB state: after write, verify expected record with service role
 - Focus on core cases — do not exhaust every combination, cover critical paths.
+- **Test data teardown**: every test that writes to DB must clean up in `afterAll`/`afterEach` using the service role client. Use cleanup-first pattern in `beforeAll` (delete any pre-existing data before creating test fixtures — prevents orphaned records from interrupted runs).
 - Run `npx vitest run __tests__/api/` — all green.
 - Output: summary line only. Do not proceed with open errors.
 
@@ -78,7 +81,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Selectors: use explicit CSS class selectors (e.g. `span.text-green-300`) — never `getByText()` for status values (captures partial matches from raw DB Timeline entries).
 
 **Phase 5.5 — Manual smoke test** *(before the formal checklist)*
-- Run 3-5 quick steps in the browser with the appropriate test account to verify the main flow.
+- Run 3-5 quick steps in the browser with the appropriate test account to verify the main flow: `collaboratore@test.com` for collaboratore flows, `responsabile_compensi@test.com` for approval flows, `admin@test.com` for admin flows.
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
 
@@ -116,13 +119,25 @@ SELECT …;
 Only after explicit confirmation:
 1. Update `docs/implementation-checklist.md`: mark block ✅, add a Log row with date, files, test results, relevant notes.
 2. Update `CLAUDE.md` **only if** the block introduces non-obvious patterns, modifies RBAC, or adds a new coding convention. Do not update for simple file additions — Claude infers structure from code.
+2b. If the block touched collaborator profile fields, permissions, or edit flows: update `docs/profile-editing-contract.md` (field × entry point matrix). Mandatory per CLAUDE.md reference documents.
 3. Update `README.md` (Project Structure + test counts).
-4. Update `MEMORY.md` **only if** new lessons emerged that are not already documented. Avoid duplications.
-   - If MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.
+4. Update `MEMORY.md` (project root) **only if** new lessons emerged that are not already documented. Avoid duplications.
+   - If project-root MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.
 5. If structural or design issues emerged: open `docs/refactoring-backlog.md`, check for duplicates, add new entries ordered by topic.
-6. Commit: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified. Commit `CLAUDE.md` and `MEMORY.md` separately if updated — never mixed into the code commit.
-7. Run `git push` immediately after the commit.
-8. Run `/compact` to free the current session's context.
+6. **Commit sequence** — each block produces up to 3 commits:
+   - **Commit 1 — code** (already done in Phase 3): source files only.
+   - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b.
+   - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
+7. Run `git push` immediately after the last commit.
+
+**Phase 8.5 — Context file review + compact**
+After git push, before closing the session:
+- Execute checks **C1 through C9** from `.claude/rules/context-review.md` in order.
+- Apply any fix found before moving to the next check.
+- **Phase complete only when all 9 checks pass** — not when the review "seems thorough".
+- Then run `/compact` to free the current session's context.
+
+> `pipeline.md` and `files-guide.md`: update only if a process gap or structural change was explicitly identified during the block. These are not routine targets — they are covered by C5 and C8 respectively.
 
 ---
 
@@ -148,22 +163,23 @@ Activate when stakeholders introduce changes to the functional scope that impact
 
 **Phase R4 — Execution**
 - Read `docs/implementation-checklist.md` — the plan for each block is already defined and approved, ready to use.
-- Proceed block by block following the standard pipeline (Phases 0–8).
-- Update `MEMORY.md` Active plan section after each completed step.
+- Proceed block by block following the standard pipeline (Phases 0–8.5).
+- Update `MEMORY.md` (project root) Active plan section after each completed step.
 
 ---
 
 ## Cross-Cutting Rules
 
-- **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, curl, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline.
+- **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, Node.js scripts, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline. Note: use Node.js `https.request` (not `curl`) for Supabase Management API calls — `curl` fails with PAT due to shell interpolation.
 - **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Do not rely on memory or partial exploration. The user must never need to ask for a deeper analysis — it is your responsibility to deliver a complete file list from the start.
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **Even if the plan is pre-written**: still execute phase by phase with the gates. A pre-written plan replaces only Phase 1, it does not compress subsequent phases.
 - **Do not re-read files already in context**: use the already-acquired line reference.
-- **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, delegate to `Task subagent_type=Explore` to protect the main context from verbosity.
+- **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, use the Agent tool with `subagent_type: 'Explore'` to protect the main context from verbosity.
 - **Concise output**: always report only the build/test summary line. Paste details only on error.
-- **Keep MEMORY.md compact**: stay under ~150 active lines. Beyond that: extract topics into separate files and link.
-- **Immediate migration**: every `supabase/migrations/*.sql` must be applied to the remote DB immediately after writing (Management API + SELECT verification + `docs/migrations-log.md` entry). Never leave a written migration unapplied before tests.
+- **Keep MEMORY.md compact**: project-root MEMORY.md and auto-memory MEMORY.md must both stay under ~150 active lines. Beyond that: extract topics into separate files and link.
+- **Immediate migration**: every `supabase/migrations/*.sql` must be applied to the remote DB immediately after writing (Node.js Management API + SELECT verification + `docs/migrations-log.md` entry). Never leave a written migration unapplied before tests.
 - **FK check before PostgREST joins**: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f'`. If FK absent: two-step query.
 - **Locators from real JSX**: before writing every e2e locator, read the component (Read tool). Identify unique classes for each target element — never assume from memory.
 - **Playwright UAT**: CSS class selectors (e.g. `span.text-green-300`) for status badges. Never `getByText()` for status values.
+- **Mid-session context**: if context window reaches ~70% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5.

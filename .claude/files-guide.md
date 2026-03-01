@@ -13,19 +13,20 @@ at every session start; others are read on-demand or only when explicitly refere
 ```
 Automatically loaded at session start
 ─────────────────────────────────────
-CLAUDE.md                      ← project context (official, committed)
-CLAUDE.local.md                ← personal overrides (official, gitignored)
-.claude/rules/pipeline.md      ← workflow rules (official, committed)
-.claude/settings.json          ← shared config (official, committed)
-.claude/settings.local.json    ← personal config (official, gitignored)
+CLAUDE.md                        ← project context (official, committed)
+.claude/CLAUDE.local.md          ← personal overrides (official, gitignored)
+.claude/rules/pipeline.md        ← workflow rules (official, committed)
+.claude/settings.json            ← shared config (official, committed)
+.claude/settings.local.json      ← personal config (official, gitignored)
+~/.claude/projects/.../MEMORY.md ← auto-memory (Claude Code system, NOT committed)
 
 Loaded on demand
 ─────────────────────────────────────
-MEMORY.md                      ← session memory (project convention — NOT auto-loaded)
-docs/requirements.md           ← product spec (read in Phase 1)
+MEMORY.md (project root)         ← shared lessons (project convention — read in Phase 0)
+docs/requirements.md             ← product spec (read in Phase 1)
 docs/implementation-checklist.md ← progress tracker (read in Phase 1)
-docs/refactoring-backlog.md    ← tech debt (read in Phase 1)
-docs/migrations-log.md         ← migration history (read/written in Phase 2)
+docs/refactoring-backlog.md      ← tech debt (read in Phase 1)
+docs/migrations-log.md           ← migration history (read/written in Phase 2)
 ```
 
 ---
@@ -83,8 +84,9 @@ Each file in `.claude/rules/` can cover a specific topic (workflow, API conventi
 **Advanced feature**: rules files support YAML frontmatter with a `paths` field for
 path-specific rules (e.g. a rule that applies only to `e2e/*.spec.ts` files).
 
-**This project uses it for**: `pipeline.md` — the mandatory development pipeline (Phases 0–8,
-R1–R4, cross-cutting rules). Separated from CLAUDE.md because it is long and specialised.
+**This project uses it for**:
+- `pipeline.md` — the mandatory development pipeline (Phases 0–8.5, R1–R4, cross-cutting rules). Separated from CLAUDE.md because it is long and specialised.
+- `context-review.md` — the Phase 8.5 compliance checklist (C1–C9). Contains specific, verifiable checks executed at the end of every block. Separated from pipeline.md to keep the checklist independently updatable.
 
 **When to update**: only when the workflow itself changes — a phase is added, a rule is refined,
 or a process error reveals a gap. Not routine.
@@ -114,13 +116,18 @@ during the requirements revision cycle. Remove this file when the revision is co
 
 ## MEMORY.md — Session memory
 
-**Important distinction**: Claude Code has an official auto-memory system stored in
-`~/.claude/projects/<project>/memory/`. That is separate from this project's `MEMORY.md`.
+**Two distinct MEMORY files coexist in this project — do not confuse them**:
+
+| File | Path | Committed? | Loaded by | Purpose |
+|---|---|---|---|---|
+| Project `MEMORY.md` | `/Users/MarcoG/Projects/staff-manager/MEMORY.md` | ✅ yes | Pipeline Phase 0 (explicit read) | Shared team knowledge: Active plan + Lessons |
+| Auto-memory | `~/.claude/projects/.../memory/MEMORY.md` | ❌ no | Claude Code system (injected in context) | Claude's private persistent patterns — never add to git |
 
 **This project's MEMORY.md** (at the repo root) is a **project convention**:
 - It is **NOT auto-loaded** by Claude Code
 - Claude reads it explicitly in **Phase 0** of the pipeline ("Check MEMORY.md")
 - It is committed and shared with the team (it tracks project-level learnings, not personal state)
+- Must never contain sensitive data (tokens, credentials) — those belong in `.env.local` only
 
 **Why it exists**: bridges sessions. After a context reset, Claude re-reads MEMORY.md in
 Phase 0 to re-align without you re-explaining the situation.
@@ -165,6 +172,7 @@ so Claude does not ask for permission at every pipeline command (tsc, vitest, pl
 |---|---|
 | Tech stack, RBAC, state machines, known patterns | `CLAUDE.md` |
 | Development pipeline, phase gates, cross-cutting rules | `.claude/rules/pipeline.md` |
+| Phase 8.5 compliance checklist (C1–C9) | `.claude/rules/context-review.md` |
 | Temporary suspension or personal override | `CLAUDE.local.md` |
 | Tool permission settings | `.claude/settings.local.json` |
 | Current work in progress, session state | `MEMORY.md` → Active plan |
@@ -184,7 +192,8 @@ so Claude does not ask for permission at every pipeline command (tsc, vitest, pl
 | `CLAUDE.local.md` | Every session | Automatic (gitignored) |
 | `.claude/rules/pipeline.md` | Every session | Automatic (rules dir) |
 | `.claude/settings.local.json` | Every session | Automatic (gitignored) |
-| `MEMORY.md` | Phase 0 | Explicit read in pipeline |
+| `MEMORY.md` (project root) | Phase 0 | Explicit read in pipeline |
+| Auto-memory `MEMORY.md` | Every session | Claude Code system injection |
 | `docs/requirements.md` | Phase 1 | Explicit read in pipeline |
 | `docs/implementation-checklist.md` | Phase 1 | Explicit read in pipeline |
 | `docs/refactoring-backlog.md` | Phase 1 | Explicit read in pipeline |
