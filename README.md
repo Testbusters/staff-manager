@@ -75,14 +75,19 @@ app/
     coda/page.tsx                → Admin: pre-approved + approved queue (?tab=compensi|rimborsi)
     export/page.tsx              → Admin: export approved records as CSV/XLSX + bulk mark-paid (?tab=occasionali|piva|rimborsi)
     documenti/page.tsx           → Admin: 3 tabs (list/upload/cu-batch). Responsabile: list + upload. Collaboratore: redirect → /profilo?tab=documenti
-    eventi/page.tsx              → Collaboratore: events list (read-only, ordered by start_datetime ASC)
-    comunicazioni/page.tsx       → Collaboratore: 2 tabs — Comunicazioni (AnnouncementBoard) + Risorse (ResourceList), read-only
-    opportunita/page.tsx         → Collaboratore: benefits list (BenefitList read-only)
+    eventi/page.tsx              → Collaboratore: events list (read-only, ordered by start_datetime ASC, upcoming/past sections)
+    eventi/[id]/page.tsx         → Event detail: tipo, datetime, location + Maps link, Google Calendar link, descrizione, luma embed
+    comunicazioni/page.tsx       → Collaboratore: 2 tabs — Comunicazioni (non-expired, pinned first) + Risorse (categoria filter chips)
+    comunicazioni/[id]/page.tsx  → Communication detail: contenuto, file_urls download links, expires_at
+    risorse/[id]/page.tsx        → Resource detail: categoria badge, descrizione, tag chips, link + file download
+    opportunita/page.tsx         → Collaboratore: 2 tabs — Opportunità (tipo badge, scadenza) + Sconti (expiry badge)
+    opportunita/[id]/page.tsx    → Opportunity detail: tipo, descrizione, requisiti, scadenza, link_candidatura, file
+    sconti/[id]/page.tsx         → Discount detail: fornitore, logo, descrizione, codice_sconto + CopyButton, validità, link
     documenti/[id]/page.tsx      → Document detail with signed URL + sign flow (checkbox gate) + delete section for admin+CONTRATTO
     ticket/page.tsx              → Ticket list (collaboratore: own; admin/responsabile: all + Collaboratore column)
     ticket/nuova/page.tsx        → Create new ticket form
     ticket/[id]/page.tsx         → Ticket detail: message thread + reply form + status change buttons
-    contenuti/page.tsx           → Content hub: 4 URL-based tabs (bacheca/agevolazioni/guide/eventi), per-tab fetch
+    contenuti/page.tsx           → Content hub: 5 URL-based tabs (comunicazioni/sconti/risorse/eventi/opportunita), admin-only, per-tab fetch
     notifiche/page.tsx           → Full notifications page (Suspense wrapper → NotificationPageClient)
     feedback/page.tsx            → Admin-only: list all feedback with categoria badge, role, pagina, message, signed screenshot URL (1h TTL)
   api/
@@ -121,13 +126,15 @@ app/
     tickets/[id]/route.ts        → GET (detail + messages + signed attachment URLs + author role labels)
     tickets/[id]/messages/route.ts → POST (reply FormData + optional file, service role, notification on reply)
     tickets/[id]/status/route.ts → PATCH (change status APERTO/IN_LAVORAZIONE/CHIUSO, admin/responsabile)
-    announcements/route.ts       → GET (pinned first) + POST (admin/responsabile)
-    announcements/[id]/route.ts  → PATCH + DELETE
-    benefits/route.ts            → GET + POST (admin)
-    benefits/[id]/route.ts       → PATCH + DELETE
-    resources/route.ts           → GET + POST with tag[] (admin)
+    communications/route.ts      → GET (pinned first, non-expired) + POST (admin-only, fields: titolo/contenuto/pinned/expires_at/file_urls)
+    communications/[id]/route.ts → PATCH + DELETE (admin-only)
+    discounts/route.ts           → GET + POST (admin-only, fields: titolo/fornitore/codice_sconto/valid_from/valid_to/logo_url/file_url)
+    discounts/[id]/route.ts      → PATCH + DELETE (admin-only)
+    opportunities/route.ts       → GET + POST (admin-only, fields: titolo/tipo/descrizione/requisiti/scadenza_candidatura/link_candidatura)
+    opportunities/[id]/route.ts  → PATCH + DELETE (admin-only)
+    resources/route.ts           → GET + POST with tag[] + categoria (admin)
     resources/[id]/route.ts      → PATCH + DELETE
-    events/route.ts              → GET (ordered by start_datetime asc) + POST (admin)
+    events/route.ts              → GET (ordered by start_datetime asc) + POST with tipo + file_url (admin)
     events/[id]/route.ts         → PATCH + DELETE
     onboarding/complete/route.ts → POST save anagrafica + generate contract (docxtemplater) + onboarding_completed=true
   auth/callback/route.ts
@@ -156,7 +163,7 @@ components/
   compensation/
     PaymentOverview.tsx          → Server component: CompensazioniCard (netto per year + ritenuta 20% + APPROVATO section + IN_ATTESA dimmed) + RimborsiCard (total per year + approved + in_attesa) + massimale progress bar
     DashboardBarChart.tsx        → Client: Recharts BarChart (last 6 months liquidato, blue=compensi teal=rimborsi)
-    DashboardUpdates.tsx         → Client: tabbed "Ultimi aggiornamenti" (Documenti tab functional with DA_FIRMARE list + prev/next pagination; 3 tabs disabled for Block 12)
+    DashboardUpdates.tsx         → Client: tabbed "Ultimi aggiornamenti" (4 functional tabs: Documenti/Eventi/Comunicazioni e risorse/Opportunità e sconti; prev/next pagination, 4 items/page)
     CompenseTabs.tsx             → Client: tab switcher compensi/rimborsi with count badges
     PendingApprovedList.tsx      → "Da ricevere" amber card: table of APPROVATO compensations with lordo/netto + total footer
     StatusBadge.tsx              → Pill badge for CompensationStatus | ExpenseStatus
@@ -182,6 +189,7 @@ components/
     CUBatchUpload.tsx            → Admin: ZIP + CSV + year batch import with success/duplicate/error detail
   ui/
     InfoTooltip.tsx              → Client component: hover + keyboard-accessible ℹ tooltip (useState, tabIndex=0, onFocus/onBlur)
+    CopyButton.tsx               → Client component: copy text to clipboard with 2s "Copiato" feedback
   ticket/
     TicketStatusBadge.tsx        → Pill badge for ticket status (APERTO=green, IN_LAVORAZIONE=yellow, CHIUSO=gray)
     TicketList.tsx               → Ticket table with status/priority filters + Collaboratore column for admin
@@ -196,10 +204,11 @@ components/
   responsabile/
     CollaboratoreDetail.tsx      → Client: anagrafica header + compensi/rimborsi/documenti sections with inline action buttons + integration modal
   contenuti/
-    AnnouncementBoard.tsx        → Announcement CRUD with pin, community scope, expiry-unaware display
-    BenefitList.tsx              → Benefit CRUD with expiry badge (Attivo/In scadenza/Scaduto), discount code
-    ResourceList.tsx             → Resource CRUD with comma-separated tag → chip display, link + file_url
-    EventList.tsx                → Event CRUD with datetime, location, Luma external link + iframe embed
+    CommunicationList.tsx        → Communication CRUD: pin toggle, expires_at date, file_urls (newline-separated)
+    DiscountList.tsx             → Discount CRUD: fornitore, codice_sconto, valid_from/to dates, logo_url, file_url; expiry badge
+    OpportunityList.tsx          → Opportunity CRUD: tipo select (LAVORO/FORMAZIONE/STAGE/PROGETTO/ALTRO), requisiti, scadenza_candidatura, link_candidatura
+    ResourceList.tsx             → Resource CRUD: categoria select + tag chips, link + file_url
+    EventList.tsx                → Event CRUD: tipo select, datetime, location, Luma link + iframe embed, file_url
 
 lib/
   supabase/client.ts             → Browser Supabase client
@@ -241,6 +250,7 @@ supabase/migrations/
   023_workflow_refactor.sql      → (skipped — superseded by 024)
   024_remove_bozza_add_corso.sql → Remove BOZZA state (migrate→IN_ATTESA, update CHECK, DEFAULT IN_ATTESA); ADD COLUMN corso_appartenenza TEXT on compensations
   025_remove_ricevuta_pagamento.sql → Remove RICEVUTA_PAGAMENTO type; CHECK restricted to (CONTRATTO_OCCASIONALE, CU); recreate macro_type + unique index
+  026_content_types_redesign.sql  → Rename announcements→communications, benefits→discounts; add columns; CREATE TABLE opportunities + RLS
 
 __tests__/                         → 167 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)

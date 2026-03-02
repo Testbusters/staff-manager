@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-02. Blocco 11 ✅. Prossimo: definire Blocco 12.
+> Aggiornato 2026-03-02. Blocco 12 ✅. Prossimo: definire Blocco 13.
 
 ---
 
@@ -20,6 +20,7 @@
 | 2026-03-02 | Blocco 9 — Finalizzazione sezione Collaboratore - Compensi e Rimborsi | ✅ | tsc ✅, build ✅, vitest 156/156 ✅, e2e ⏸ (sospeso, CLAUDE.local.md), smoke test OK | PaymentOverview redesign: verbose labels ("Netto ricevuto nel {year}", ritenuta 20% con InfoTooltip), sezione APPROVATO separata, IN_ATTESA dimmed. Tab Compensi: PendingApprovedList (card "Da ricevere"), CompensationList con chevron + meta labeling (Competenza/Inviato). Tab Rimborsi: PendingApprovedExpenseList (card "Da liquidare"), ExpenseList con date etichettate (Spesa/Inviato) + chevron. InfoTooltip client component (useState, keyboard-accessible). Rimossi file obsoleti: CompensationWizard.tsx, compensi/nuova/page.tsx, attachments route. TicketQuickModal → bg-blue-600. |
 | 2026-03-02 | Blocco 10 — Sezione Documenti Collaboratore | ✅ | tsc ✅, build ✅, vitest 167/167 ✅ (11 nuovi in documents.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 025: RICEVUTA_PAGAMENTO rimosso da DB CHECK + macro_type. DocumentType/DocumentMacroType aggiornati. API validTipi ristretto a 2 valori. DocumentList dead code rimosso. DocumentUploadForm dropdown semplificato. profilo/page.tsx: form self-upload + CTA "Nuovo rimborso" nel tab documenti. |
 | 2026-03-02 | Blocco 11 — Dashboard Collaboratore Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Saluto con nome + data. 4 KPI cards (Compensi in corso, Rimborsi in corso, Da ricevere, Da firmare). DashboardUpdates: 4 tab (Documenti funzionale + 3 disabilitate per Block 12), paginazione prev/next, 4 elementi/pagina. Sezione posizionata dopo KPI, prima di Azioni rapide. Legenda bar chart colorata (blu/teal). Feed collaboratore rimosso. DashboardBarChart. |
+| 2026-03-02 | Blocco 12 — Content Types Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 026: rename announcements→communications, benefits→discounts; new opportunities table. API /communications, /discounts, /opportunities (admin-only); /resources + /events updated. Admin /contenuti: 5 tabs, admin-only. Read pages: /eventi, /comunicazioni/[id], /risorse/[id], /opportunita, /sconti/[id]. Dashboard 4 tabs enabled. Events: Google Calendar link + Maps. Discounts: CopyButton. Resources: categoria filter. |
 
 ---
 
@@ -223,6 +224,23 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | 10d — DocumentList dead code | ✅ | TypeBadge: rimossi casi COCOCO, PIVA, RICEVUTA; MACRO_ORDER aggiornato |
 | 10e — DocumentUploadForm dropdown | ✅ | Dropdown semplificato a 2 opzioni flat (no optgroup) |
 | 10f — profilo/page.tsx documenti tab | ✅ | DocumentUploadForm + CTA "Nuovo rimborso" → /rimborsi/nuova |
+
+---
+
+## Blocco 12 — Content Types Redesign ✅
+
+> Requisito: `docs/requirements.md` — Block 12: Content Types
+> Dipendenze: Blocco 11 (DashboardUpdates stub)
+
+| Sotto-blocco | Stato | Note |
+|---|---|---|
+| 12a — Migration 026 | ✅ | Rename announcements→communications, benefits→discounts; nuove colonne; CREATE TABLE opportunities + RLS |
+| 12b — TypeScript types | ✅ | Communication, Discount, Opportunity interfaces; ResourceCategoria, EventTipo, OpportunityTipo literal types |
+| 12c — API routes | ✅ | /api/communications, /discounts, /opportunities (admin-only CRUD); /resources + /events aggiornati con nuovi campi |
+| 12d — Admin /contenuti | ✅ | 5 tab (comunicazioni/sconti/risorse/eventi/opportunita); solo amministrazione; rimosso accesso responsabile |
+| 12e — Read pages collaboratore | ✅ | /eventi, /eventi/[id], /comunicazioni, /comunicazioni/[id], /risorse/[id], /opportunita, /opportunita/[id], /sconti/[id] |
+| 12f — Dashboard tabs | ✅ | 4 tab DashboardUpdates funzionanti; fetch paralleli in page.tsx; merge comms+risorse e opps+sconti |
+| 12g — Feature additions | ✅ | Google Calendar link + Maps link in /eventi/[id]; CopyButton per codice sconto; filtro categoria in /comunicazioni?tab=risorse |
 
 ---
 
