@@ -109,12 +109,17 @@ export default function ExpenseList({
                 </div>
               </div>
 
-              {/* Right: amount + badge */}
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <span className="tabular-nums font-medium text-gray-200 text-sm">
-                  {formatCurrency(e.importo)}
-                </span>
-                <StatusBadge stato={e.stato} />
+              {/* Right: amount + badge + chevron */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-col items-end gap-2">
+                  <span className="tabular-nums font-medium text-gray-200 text-sm">
+                    {formatCurrency(e.importo)}
+                  </span>
+                  <StatusBadge stato={e.stato} />
+                </div>
+                <svg className="h-4 w-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
               </div>
             </Link>
           ))}

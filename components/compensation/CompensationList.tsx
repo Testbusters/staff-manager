@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { Compensation, CompensationStatus, Role } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 type CompensationRow = Compensation & { communities?: { name: string } | null };
 
@@ -54,7 +55,6 @@ function formatCurrency(n: number | null | undefined) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
-// CSS-only tooltip for amount labels
 function AmountWithTooltip({
   amount,
   label,
@@ -65,15 +65,12 @@ function AmountWithTooltip({
   colorClass?: string;
 }) {
   return (
-    <span className="relative group/tip inline-flex items-center gap-1">
+    <span className="inline-flex items-center gap-1">
       <span className={`tabular-nums font-medium ${colorClass ?? 'text-gray-200'}`}>
         {formatCurrency(amount)}
       </span>
       <span className={`text-xs ${colorClass ?? 'text-gray-400'}`}>{label}</span>
-      <span className="ml-0.5 text-gray-600 cursor-default select-none text-xs leading-none">ℹ</span>
-      <span className="pointer-events-none absolute bottom-full right-0 mb-2 w-64 rounded-lg bg-gray-700 px-3 py-2 text-xs text-gray-200 opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 shadow-lg whitespace-normal text-left">
-        {TOOLTIP_TEXT}
-      </span>
+      <InfoTooltip tip={TOOLTIP_TEXT} />
     </span>
   );
 }

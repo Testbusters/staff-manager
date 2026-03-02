@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
+
 const fmt = (n: number) =>
   new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 
@@ -17,17 +20,6 @@ type Props = {
   currentYear: number;
 };
 
-// CSS-only tooltip — works when parent has no overflow:hidden
-function InfoTooltip({ tip }: { tip: string }) {
-  return (
-    <span className="relative group/tip inline-block leading-none">
-      <span className="text-gray-500 hover:text-gray-300 cursor-default text-xs select-none transition-colors">ℹ</span>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-xs text-gray-200 opacity-0 group-hover/tip:opacity-100 transition-opacity z-20 shadow-xl whitespace-normal text-left leading-relaxed">
-        {tip}
-      </span>
-    </span>
-  );
-}
 
 const TIP_RITENUTA =
   "La ritenuta d'acconto (20%) viene trattenuta alla fonte e versata dall'associazione all'Agenzia delle Entrate a tuo nome. È un acconto IRPEF — non è un costo aggiuntivo. Il netto è l'importo che ricevi sul conto.";
@@ -199,6 +191,14 @@ export default function PaymentOverview({
               Stai avvicinandoti al massimale ({pct.toFixed(0)}%).
             </p>
           )}
+          <div className="mt-3 flex justify-end">
+            <Link
+              href="/profilo?tab=impostazioni"
+              className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              Modifica massimale →
+            </Link>
+          </div>
         </div>
       )}
 

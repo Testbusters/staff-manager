@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Compensation } from '@/lib/types';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 type CompensationRow = Compensation & { communities?: { name: string } | null };
 
@@ -8,18 +9,6 @@ const fmt = (n: number | null) =>
     ? '—'
     : new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 
-// CSS-only tooltip wrapper
-function WithTooltip({ children, tip }: { children: React.ReactNode; tip: string }) {
-  return (
-    <span className="relative group/tip inline-flex items-center gap-0.5">
-      {children}
-      <span className="ml-0.5 text-gray-600 cursor-default select-none">ℹ</span>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-64 rounded-lg bg-gray-700 px-3 py-2 text-xs text-gray-200 opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 shadow-lg">
-        {tip}
-      </span>
-    </span>
-  );
-}
 
 const TOOLTIP_TEXT =
   'Lordo: compenso prima della ritenuta d\'acconto (20%). Netto = Lordo − 20% = importo accreditato sul conto.';
@@ -52,10 +41,10 @@ export default function PendingApprovedList({
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Community</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Periodo</th>
             <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">
-              <WithTooltip tip={TOOLTIP_TEXT}>Lordo</WithTooltip>
+              <span className="inline-flex items-center gap-1">Lordo <InfoTooltip tip={TOOLTIP_TEXT} /></span>
             </th>
             <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">
-              <WithTooltip tip={TOOLTIP_TEXT}>Netto</WithTooltip>
+              <span className="inline-flex items-center gap-1">Netto <InfoTooltip tip={TOOLTIP_TEXT} /></span>
             </th>
             <th className="px-4 py-2.5" />
           </tr>
