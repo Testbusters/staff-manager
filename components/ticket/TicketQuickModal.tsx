@@ -54,7 +54,7 @@ export default function TicketQuickModal() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="shrink-0 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-300 transition"
+        className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
       >
         Apri ticket
       </button>

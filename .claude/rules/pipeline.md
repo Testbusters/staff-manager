@@ -80,8 +80,23 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - If something fails: paste only the failing scenario with error, fix, and re-run. Do not proceed with red tests.
 - Selectors: use explicit CSS class selectors (e.g. `span.text-green-300`) — never `getByText()` for status values (captures partial matches from raw DB Timeline entries).
 
+**Phase 5.4 — Test data setup** *(before smoke test)*
+- Determine the test user(s) from the role scope of the block:
+  - Collaboratore → `collaboratore_test@test.com`
+  - Responsabile compensi → `responsabile_compensi_test@test.com`
+  - Admin → `admin_test@test.com`
+  - Multi-role blocks: use all relevant accounts.
+- Identify the entities and states involved in the block (tables, state machines, relevant DB records).
+- Insert representative test records covering all relevant states via Node.js one-shot script (service role, cleanup-first pattern — delete existing UAT records before inserting fresh ones).
+- Goal: the smoke test account has realistic data for every UI state that must be visible in Phase 5.5.
+- Leave test data in DB for the smoke test. Clean up after Phase 5.5 only if the records would break other tests.
+
 **Phase 5.5 — Manual smoke test** *(before the formal checklist)*
-- Run 3-5 quick steps in the browser with the appropriate test account to verify the main flow: `collaboratore@test.com` for collaboratore flows, `responsabile_compensi@test.com` for approval flows, `admin@test.com` for admin flows.
+- Use the test account established in Phase 5.4 (or the role-mapped account if Phase 5.4 was skipped):
+  - Collaboratore → `collaboratore_test@test.com`
+  - Responsabile compensi → `responsabile_compensi_test@test.com`
+  - Admin → `admin_test@test.com`
+- Run 3-5 quick steps in the browser to verify the main flow.
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
 

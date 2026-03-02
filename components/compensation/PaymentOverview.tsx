@@ -59,7 +59,7 @@ function OverviewCard({
               </div>
             )}
             {pending > 0 && (
-              <div className="flex items-center justify-between pt-1 border-t border-gray-800">
+              <div className={`flex items-center justify-between pt-1 ${paidByYear.length > 0 || (grossCurrentYear != null && grossCurrentYear > 0) ? 'border-t border-gray-800' : ''}`}>
                 <span className="text-xs text-gray-500">In attesa di pagamento</span>
                 <span className="text-sm text-yellow-400">{fmt(pending)}</span>
               </div>
