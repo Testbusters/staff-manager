@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-02. Blocco 12 ✅. Prossimo: definire Blocco 13.
+> Aggiornato 2026-03-02. Blocco 12 ✅, Blocco 13a ✅. Prossimo: Blocco 13b (Import XLS).
 
 ---
 
@@ -21,6 +21,7 @@
 | 2026-03-02 | Blocco 10 — Sezione Documenti Collaboratore | ✅ | tsc ✅, build ✅, vitest 167/167 ✅ (11 nuovi in documents.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 025: RICEVUTA_PAGAMENTO rimosso da DB CHECK + macro_type. DocumentType/DocumentMacroType aggiornati. API validTipi ristretto a 2 valori. DocumentList dead code rimosso. DocumentUploadForm dropdown semplificato. profilo/page.tsx: form self-upload + CTA "Nuovo rimborso" nel tab documenti. |
 | 2026-03-02 | Blocco 11 — Dashboard Collaboratore Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Saluto con nome + data. 4 KPI cards (Compensi in corso, Rimborsi in corso, Da ricevere, Da firmare). DashboardUpdates: 4 tab (Documenti funzionale + 3 disabilitate per Block 12), paginazione prev/next, 4 elementi/pagina. Sezione posizionata dopo KPI, prima di Azioni rapide. Legenda bar chart colorata (blu/teal). Feed collaboratore rimosso. DashboardBarChart. |
 | 2026-03-02 | Blocco 12 — Content Types Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 026: rename announcements→communications, benefits→discounts; new opportunities table. API /communications, /discounts, /opportunities (admin-only); /resources + /events updated. Admin /contenuti: 5 tabs, admin-only. Read pages: /eventi, /comunicazioni/[id], /risorse/[id], /opportunita, /sconti/[id]. Dashboard 4 tabs enabled. Events: Google Calendar link + Maps. Discounts: CopyButton. Resources: categoria filter. |
+| 2026-03-02 | Blocco 13a — Compensi e rimborsi responsabile (redesign) | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Nav rename Approvazioni→Compensi e rimborsi. Fetch tutti gli stati + join collaborators(nome,cognome). 4 KPI cards server-side. ApprovazioniCompensazioni: search LIKE, filtri stato, checkbox, bulk approve, paginazione 25/p, Import section disabilitata. ApprovazioniRimborsi: stessa struttura senza Import. POST /api/compensations/approve-bulk + /api/expenses/approve-bulk (community-scoped + history). Expense.community_id aggiunto a lib/types.ts. |
 
 ---
 
@@ -241,6 +242,18 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | 12e — Read pages collaboratore | ✅ | /eventi, /eventi/[id], /comunicazioni, /comunicazioni/[id], /risorse/[id], /opportunita, /opportunita/[id], /sconti/[id] |
 | 12f — Dashboard tabs | ✅ | 4 tab DashboardUpdates funzionanti; fetch paralleli in page.tsx; merge comms+risorse e opps+sconti |
 | 12g — Feature additions | ✅ | Google Calendar link + Maps link in /eventi/[id]; CopyButton per codice sconto; filtro categoria in /comunicazioni?tab=risorse |
+
+---
+
+## Blocco 13 — Importazione compensi (responsabile_compensi) 🔄
+
+> Requisito: docs/requirements.md — Block 13
+> Dipendenze: Blocco 12
+
+| Sotto-blocco | Stato | Note |
+|---|---|---|
+| 13a — Redesign sezione Compensi e rimborsi | ✅ | Nav rename, KPI, search, filtri, checkbox, bulk approve, Import stub disabilitato |
+| 13b — Import XLS da URL esterno | 🔲 | 4 file target configurabili (tipologie TBD), parser XLS stub |
 
 ---
 

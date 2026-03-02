@@ -68,7 +68,7 @@ app/
     rimborsi/page.tsx            → Redirect → /compensi (unified page)
     rimborsi/nuova/page.tsx      → Reimbursement creation form (single step)
     rimborsi/[id]/page.tsx       → Reimbursement detail + timeline + actions
-    approvazioni/page.tsx        → Responsabile: pending queue (?tab=compensi|rimborsi) + "Carica compensi" button
+    approvazioni/page.tsx        → Responsabile: "Compensi e rimborsi" — 4 KPI cards + ApprovazioniCompensazioni (search/filter/checkbox/bulk approve/Import stub) | ApprovazioniRimborsi (?tab=compensi|rimborsi)
     approvazioni/carica/page.tsx → Responsabile/admin: choice screen (Singolo per docente | Excel placeholder) + CompensationCreateWizard
     collaboratori/page.tsx       → Responsabile + admin: paginated list (20/page) with URL-driven filters (all/doc-da-firmare/stallo)
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
@@ -108,10 +108,12 @@ app/
     admin/notification-settings/ → GET list all 15 settings + PATCH toggle inapp_enabled/email_enabled (admin only)
     feedback/route.ts            → POST create feedback entry (authenticated; FormData: categoria/pagina/messaggio/screenshot)
     compensations/route.ts       → GET (list, role-filtered) + POST (create, responsabile/admin only, always IN_ATTESA)
+    compensations/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
     compensations/[id]/route.ts  → GET (detail + history)
     compensations/[id]/transition/route.ts → POST (state machine: reopen/approve/reject/mark_liquidated)
     compensations/communities/route.ts → GET (collaboratore's communities)
     expenses/route.ts            → GET (list) + POST (create, always INVIATO)
+    expenses/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
     expenses/[id]/route.ts       → GET (detail + history + attachments)
     expenses/[id]/transition/route.ts → POST (reimbursement state machine)
     expenses/[id]/attachments/route.ts → POST (register uploaded file)
@@ -168,11 +170,13 @@ components/
     PendingApprovedList.tsx      → "Da ricevere" amber card: table of APPROVATO compensations with lordo/netto + total footer
     StatusBadge.tsx              → Pill badge for CompensationStatus | ExpenseStatus
     CompensationCreateWizard.tsx → 3-step creation wizard for responsabile/admin (choice→search collab→data→summary+create)
+    ApprovazioniCompensazioni.tsx → Responsabile: search + state filters + checkboxes + bulk approve bar + Import section (disabled) + pagination 25/page
     CompensationList.tsx         → Card list with status filter chips + chevron; meta row: community dot + Competenza + Inviato; tooltip only on netto
     CompensationDetail.tsx       → Read-only detail card
     Timeline.tsx                 → Chronological event list (accepts HistoryEvent[])
     ActionPanel.tsx              → Role-aware action buttons + modals
   expense/
+    ApprovazioniRimborsi.tsx     → Responsabile: same structure as ApprovazioniCompensazioni without Import section
     ExpenseList.tsx              → Card list with status filter chips + chevron; date labels: Spesa/Inviato
     PendingApprovedExpenseList.tsx → "Da liquidare" amber card: table of APPROVATO expenses with importo + total footer
     ExpenseDetail.tsx            → Read-only reimbursement detail card
