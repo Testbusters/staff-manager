@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   const annoStr = formData.get('anno') as string | null;
   const anno = annoStr ? parseInt(annoStr, 10) : null;
 
-  const validTipi = ['CONTRATTO_OCCASIONALE', 'CONTRATTO_COCOCO', 'CONTRATTO_PIVA', 'RICEVUTA_PAGAMENTO', 'CU'];
+  const validTipi = ['CONTRATTO_OCCASIONALE', 'CU'];
   if (!file || !tipo || !titolo?.trim()) {
     return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });
   }

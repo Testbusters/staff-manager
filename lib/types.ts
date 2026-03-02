@@ -36,13 +36,11 @@ export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
 // ── Document ─────────────────────────────────────────────────
 export type DocumentType =
   | 'CONTRATTO_OCCASIONALE'
-  | 'RICEVUTA_PAGAMENTO'
   | 'CU';
 export type DocumentSignStatus = 'DA_FIRMARE' | 'FIRMATO' | 'NON_RICHIESTO';
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   CONTRATTO_OCCASIONALE: 'Contratto prestazione occasionale',
-  RICEVUTA_PAGAMENTO:    'Ricevuta di pagamento',
   CU:                    'Certificazione Unica',
 };
 
@@ -66,18 +64,16 @@ export interface ContractTemplate {
   uploaded_at: string;
 }
 
-export type DocumentMacroType = 'CONTRATTO' | 'RICEVUTA_PAGAMENTO' | 'CU';
+export type DocumentMacroType = 'CONTRATTO' | 'CU';
 
 export const DOCUMENT_MACRO_TYPE: Record<DocumentType, DocumentMacroType> = {
   CONTRATTO_OCCASIONALE: 'CONTRATTO',
-  RICEVUTA_PAGAMENTO:    'RICEVUTA_PAGAMENTO',
   CU:                    'CU',
 };
 
 export const DOCUMENT_MACRO_TYPE_LABELS: Record<DocumentMacroType, string> = {
-  CONTRATTO:          'Contratto',
-  RICEVUTA_PAGAMENTO: 'Ricevuta di pagamento',
-  CU:                 'Certificazione Unica',
+  CONTRATTO: 'Contratto',
+  CU:        'Certificazione Unica',
 };
 
 export const DOCUMENT_SIGN_STATUS_LABELS: Record<DocumentSignStatus, string> = {

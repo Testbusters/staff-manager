@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ProfileForm from '@/components/ProfileForm';
 import DocumentList from '@/components/documents/DocumentList';
+import DocumentUploadForm from '@/components/documents/DocumentUploadForm';
 
 export default async function ProfiloPage({
   searchParams,
@@ -118,7 +119,18 @@ export default async function ProfiloPage({
       )}
 
       {activeTab === 'documenti' && (
-        <DocumentList documents={documents} isAdmin={false} />
+        <div className="space-y-6">
+          <div className="flex justify-end">
+            <Link
+              href="/rimborsi/nuova"
+              className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+            >
+              Nuovo rimborso
+            </Link>
+          </div>
+          <DocumentUploadForm collaborators={[]} isAdmin={false} />
+          <DocumentList documents={documents} isAdmin={false} />
+        </div>
       )}
     </div>
   );

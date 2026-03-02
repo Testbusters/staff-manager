@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DOCUMENT_TYPE_LABELS, DOCUMENT_MACRO_TYPE_LABELS } from '@/lib/types';
+import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, DocumentSignStatus } from '@/lib/types';
 
 interface Collaborator {
@@ -128,13 +128,8 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
             className={inputCls}
           >
             <option value="">— Seleziona —</option>
-            <optgroup label={DOCUMENT_MACRO_TYPE_LABELS['CONTRATTO']}>
-              <option value="CONTRATTO_OCCASIONALE">{DOCUMENT_TYPE_LABELS['CONTRATTO_OCCASIONALE']}</option>
-            </optgroup>
-            <optgroup label="Altro">
-              <option value="RICEVUTA_PAGAMENTO">{DOCUMENT_TYPE_LABELS['RICEVUTA_PAGAMENTO']}</option>
-              <option value="CU">{DOCUMENT_TYPE_LABELS['CU']}</option>
-            </optgroup>
+            <option value="CONTRATTO_OCCASIONALE">{DOCUMENT_TYPE_LABELS['CONTRATTO_OCCASIONALE']}</option>
+            <option value="CU">{DOCUMENT_TYPE_LABELS['CU']}</option>
           </select>
         </div>
         <div>

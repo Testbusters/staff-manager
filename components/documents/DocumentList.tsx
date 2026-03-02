@@ -19,17 +19,8 @@ function TypeBadge({ tipo }: { tipo: DocumentType | string }) {
   if (tipo === 'CONTRATTO_OCCASIONALE') {
     return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-violet-900/40 text-violet-300 border-violet-700/40">Occasionale</span>;
   }
-  if (tipo === 'CONTRATTO_COCOCO') {
-    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-violet-900/40 text-violet-300 border-violet-700/40">CoCoCo</span>;
-  }
-  if (tipo === 'CONTRATTO_PIVA') {
-    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-violet-900/40 text-violet-300 border-violet-700/40">P.IVA</span>;
-  }
   if (tipo === 'CU') {
     return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-blue-900/40 text-blue-300 border-blue-700/40">CU</span>;
-  }
-  if (tipo === 'RICEVUTA_PAGAMENTO') {
-    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-teal-900/40 text-teal-300 border-teal-700/40">Ricevuta</span>;
   }
   return <span className="text-gray-400 text-xs">{tipo}</span>;
 }
@@ -47,7 +38,7 @@ function SignBadge({ stato }: { stato: string }) {
   );
 }
 
-const MACRO_ORDER: DocumentMacroType[] = ['CONTRATTO', 'RICEVUTA_PAGAMENTO', 'CU'];
+const MACRO_ORDER: DocumentMacroType[] = ['CONTRATTO', 'CU'];
 
 export default function DocumentList({ documents, isAdmin }: Props) {
   const router = useRouter();
