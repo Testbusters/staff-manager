@@ -3,6 +3,23 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ContentEvent, EventTipo } from '@/lib/types';
 
+function buildGCalUrl(event: ContentEvent): string | null {
+  if (!event.start_datetime) return null;
+  const fmt = (iso: string) => iso.replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const start = fmt(event.start_datetime);
+  const end = event.end_datetime
+    ? fmt(event.end_datetime)
+    : fmt(new Date(new Date(event.start_datetime).getTime() + 3_600_000).toISOString());
+  const params = new URLSearchParams({ action: 'TEMPLATE', text: event.titolo, dates: `${start}/${end}` });
+  if (event.descrizione) params.set('details', event.descrizione);
+  if (event.location)    params.set('location', event.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function buildMapsUrl(location: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
 const TIPO_LABELS: Record<EventTipo, string> = {
   WEBINAR:  'Webinar',
   INCONTRO: 'Incontro',
@@ -88,7 +105,17 @@ export default async function EventDetailPage({
         {event.location && (
           <div className="flex items-center gap-3">
             <span className="text-gray-500">📍</span>
-            <p className="text-sm text-gray-200">{event.location}</p>
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-gray-200">{event.location}</p>
+              <a
+                href={buildMapsUrl(event.location)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-400 hover:text-blue-300 transition"
+              >
+                Vedi su Maps →
+              </a>
+            </div>
           </div>
         )}
         {event.luma_url && (
@@ -110,6 +137,19 @@ export default async function EventDetailPage({
           </div>
         )}
       </div>
+
+      {(() => { const gcalUrl = buildGCalUrl(event); return gcalUrl ? (
+        <div>
+          <a
+            href={gcalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm text-gray-200 transition"
+          >
+            📅 Aggiungi a Google Calendar
+          </a>
+        </div>
+      ) : null; })()}
 
       {event.descrizione && (
         <div className="space-y-2">

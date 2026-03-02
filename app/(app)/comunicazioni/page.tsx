@@ -17,10 +17,12 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+const VALID_CATEGORIA = ['GUIDA', 'NORMATIVA', 'PROCEDURA', 'MODELLO', 'ALTRO'] as const;
+
 export default async function ComunicazioniPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; categoria?: string }>;
 }) {
   const supabase = await createClient();
 
@@ -36,8 +38,11 @@ export default async function ComunicazioniPage({
   if (!profile?.is_active) redirect('/pending');
   if (profile.member_status === 'uscente_senza_compenso') redirect('/documenti');
 
-  const { tab } = await searchParams;
-  const activeTab: Tab = tab === 'risorse' ? 'risorse' : 'comunicazioni';
+  const params = await searchParams;
+  const activeTab: Tab = params.tab === 'risorse' ? 'risorse' : 'comunicazioni';
+  const categoriaFilter = VALID_CATEGORIA.includes(params.categoria as ResourceCategoria)
+    ? (params.categoria as ResourceCategoria)
+    : null;
 
   const now = new Date().toISOString();
 
@@ -51,12 +56,14 @@ export default async function ComunicazioniPage({
         .then((r) => r.data ?? [])) as Communication[])
     : [];
 
+  let resourcesQuery = supabase
+    .from('resources')
+    .select('id, titolo, descrizione, categoria, tag, link, file_url, community_id, created_at')
+    .order('created_at', { ascending: false });
+  if (categoriaFilter) resourcesQuery = resourcesQuery.eq('categoria', categoriaFilter);
+
   const resources: Resource[] = activeTab === 'risorse'
-    ? ((await supabase
-        .from('resources')
-        .select('id, titolo, descrizione, categoria, tag, link, file_url, community_id, created_at')
-        .order('created_at', { ascending: false })
-        .then((r) => r.data ?? [])) as Resource[])
+    ? ((await resourcesQuery.then((r) => r.data ?? [])) as Resource[])
     : [];
 
   const tabCls = (t: Tab) =>
@@ -116,6 +123,23 @@ export default async function ComunicazioniPage({
 
       {activeTab === 'risorse' && (
         <div className="space-y-3">
+          <div className="flex flex-wrap gap-1.5">
+            {([['', 'Tutte'], ...Object.entries(CATEGORIA_LABELS)] as [string, string][]).map(([key, label]) => {
+              const active = key === '' ? !categoriaFilter : categoriaFilter === key;
+              const href = key === '' ? '?tab=risorse' : `?tab=risorse&categoria=${key}`;
+              return (
+                <Link key={key || 'all'} href={href}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    active
+                      ? 'bg-gray-200 text-gray-900'
+                      : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
           {resources.length === 0 && (
             <p className="text-sm text-gray-500 py-8 text-center">Nessuna risorsa disponibile.</p>
           )}

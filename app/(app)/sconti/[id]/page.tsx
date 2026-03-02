@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { Discount } from '@/lib/types';
+import CopyButton from '@/components/ui/CopyButton';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -76,10 +77,13 @@ export default async function DiscountDetailPage({
 
         {d.codice_sconto && (
           <div className="border-t border-gray-800 pt-3">
-            <p className="text-xs text-gray-500 mb-1">Codice sconto</p>
-            <span className="rounded-md bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm font-mono text-yellow-300">
-              {d.codice_sconto}
-            </span>
+            <p className="text-xs text-gray-500 mb-2">Codice sconto</p>
+            <div className="flex items-center gap-3">
+              <span className="rounded-md bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm font-mono text-yellow-300">
+                {d.codice_sconto}
+              </span>
+              <CopyButton text={d.codice_sconto} />
+            </div>
           </div>
         )}
 
