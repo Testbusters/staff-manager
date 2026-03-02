@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-02. Blocco 12 ✅. Prossimo: definire Blocco 13.
+> Aggiornato 2026-03-02. Blocco 13 ✅. Prossimo: definire Blocco 14.
 
 ---
 
@@ -21,6 +21,7 @@
 | 2026-03-02 | Blocco 10 — Sezione Documenti Collaboratore | ✅ | tsc ✅, build ✅, vitest 167/167 ✅ (11 nuovi in documents.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 025: RICEVUTA_PAGAMENTO rimosso da DB CHECK + macro_type. DocumentType/DocumentMacroType aggiornati. API validTipi ristretto a 2 valori. DocumentList dead code rimosso. DocumentUploadForm dropdown semplificato. profilo/page.tsx: form self-upload + CTA "Nuovo rimborso" nel tab documenti. |
 | 2026-03-02 | Blocco 11 — Dashboard Collaboratore Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Saluto con nome + data. 4 KPI cards (Compensi in corso, Rimborsi in corso, Da ricevere, Da firmare). DashboardUpdates: 4 tab (Documenti funzionale + 3 disabilitate per Block 12), paginazione prev/next, 4 elementi/pagina. Sezione posizionata dopo KPI, prima di Azioni rapide. Legenda bar chart colorata (blu/teal). Feed collaboratore rimosso. DashboardBarChart. |
 | 2026-03-02 | Blocco 12 — Content Types Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 026: rename announcements→communications, benefits→discounts; new opportunities table. API /communications, /discounts, /opportunities (admin-only); /resources + /events updated. Admin /contenuti: 5 tabs, admin-only. Read pages: /eventi, /comunicazioni/[id], /risorse/[id], /opportunita, /sconti/[id]. Dashboard 4 tabs enabled. Events: Google Calendar link + Maps. Discounts: CopyButton. Resources: categoria filter. |
+| 2026-03-02 | Blocco 13 — Notification System Overhaul | ✅ | tsc ✅, build ✅, vitest 202/202 ✅ (35 nuovi in notifications-block13.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 027: rimozione integrazioni event_keys, aggiunta documento_firmato:amministrazione, email ticket reply abilitata, 4 content event_keys. New builders: buildContentNotification (4 tipi), buildCompensationReopenNotification. Helper: getAllActiveCollaboratori (broadcast). Email E9–E12. NotificationBell: TYPE_BADGE 8 tipi + formatRelativeTime + message truncation. NotificationSettingsManager: rimozione integrazioni, sezione Contenuti. /notifiche: type filter chips (8 tipi) + "Solo non lette" in header. API entity_type filter. DashboardUpdates: colored badges per content type. 7 API routes aggiornate (comp reopen, ticket reply, doc sign, 4 content POST). |
 
 ---
 
@@ -241,6 +242,27 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | 12e — Read pages collaboratore | ✅ | /eventi, /eventi/[id], /comunicazioni, /comunicazioni/[id], /risorse/[id], /opportunita, /opportunita/[id], /sconti/[id] |
 | 12f — Dashboard tabs | ✅ | 4 tab DashboardUpdates funzionanti; fetch paralleli in page.tsx; merge comms+risorse e opps+sconti |
 | 12g — Feature additions | ✅ | Google Calendar link + Maps link in /eventi/[id]; CopyButton per codice sconto; filtro categoria in /comunicazioni?tab=risorse |
+
+---
+
+## Blocco 13 — Notification System Overhaul ✅
+
+> Requisito: `docs/requirements.md` — Block 13: Notifications
+> Dipendenze: Blocco 12 (content types), Blocco 10 (documenti), Blocco 9 (compensi)
+
+| Sotto-blocco | Stato | Note |
+|---|---|---|
+| 13a — Migration 027 | ✅ | Rimozione comp_integrazioni/rimborso_integrazioni; aggiunta documento_firmato:amministrazione; email abilitata per ticket_risposta:collaboratore; 4 nuovi event_keys (comunicazione_pubblicata, evento_pubblicato, opportunita_pubblicata, sconto_pubblicato) |
+| 13b — notification-utils.ts | ✅ | NotificationEntityType esteso a 8 tipi; ContentEntityType; buildCompensationReopenNotification; buildContentNotification |
+| 13c — notification-helpers.ts | ✅ | getAllActiveCollaboratori (broadcast notifications per tutti i collaboratori attivi) |
+| 13d — email-templates.ts | ✅ | E9 emailRispostaTicket, E10 emailNuovaComunicazione, E11 emailNuovoEvento, E12 emailNuovoContenuto (maschile/femminile per tipo) |
+| 13e — NotificationBell.tsx | ✅ | TYPE_BADGE map (8 tipi, chip colorati); formatRelativeTime; content entity routing; message truncation (line-clamp-1) |
+| 13f — NotificationSettingsManager.tsx | ✅ | Rimossi comp_integrazioni/rimborso_integrazioni; aggiunto documento_firmato in sezione Documenti; nuova sezione Contenuti con 4 event_keys; label Amministrazione aggiunta |
+| 13g — API routes (7 route) | ✅ | compensations/[id]/transition (reopen notify); tickets/[id]/messages (E9 email); documents/[id]/sign (settings-driven); communications/route.ts (broadcast); events/route.ts (broadcast); opportunities/route.ts (broadcast); discounts/route.ts (in-app only) |
+| 13h — notifications/route.ts | ✅ | entity_type filter param con VALID_ENTITY_TYPES whitelist (8 valori) |
+| 13i — NotificationPageClient.tsx | ✅ | TYPE_BADGE map; type filter chips (8 tipi); "Solo non lette" in header; entityHref esteso a 8 tipi; max-w-2xl container |
+| 13j — DashboardUpdates.tsx | ✅ | Colored badge constants (EVENT/COMM/RES/OPP/DISC); BADGE_BASE; applicati per tab (events=cyan, comm=green, res=blue, opp=indigo, disc=rose) |
+| 13k — Unit tests | ✅ | 35 test in notifications-block13.test.ts: NotificationEntityType, buildContentNotification (4 tipi), buildCompensationReopenNotification, E9–E12, entity_type whitelist |
 
 ---
 

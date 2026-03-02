@@ -120,7 +120,7 @@ app/
     documents/[id]/route.ts      → GET (detail + signed URL) + DELETE (admin only, CONTRATTO only, hard-deletes storage + DB)
     documents/[id]/sign/route.ts → POST (collab/resp uploads signed PDF; requires confirmed=true in FormData)
     documents/cu-batch/route.ts  → POST (ZIP+CSV batch import, dedup by collaborator+anno, notifications)
-    notifications/route.ts       → GET (paginated list + real unread count; ?page/limit/unread_only) + PATCH (mark all read)
+    notifications/route.ts       → GET (paginated list + real unread count; ?page/limit/unread_only/entity_type) + PATCH (mark all read)
     notifications/[id]/route.ts  → PATCH (mark single read) + DELETE (dismiss)
     tickets/route.ts             → GET (list, role-filtered + enriched with creator name) + POST (create)
     tickets/[id]/route.ts        → GET (detail + messages + signed attachment URLs + author role labels)
@@ -155,15 +155,15 @@ components/
     ContractTemplateManager.tsx   → Admin: upload/replace .docx templates per type (OCCASIONALE/COCOCO/PIVA) + placeholders reference (including 13 CoCoCo-specific vars)
     NotificationSettingsManager.tsx → Admin: toggle grid for in-app + email per event×role (15 rows, optimistic updates)
   Sidebar.tsx                    → Role-based navigation sidebar (hosts NotificationBell); renders comingSoon items as non-clickable span with "Presto" badge
-  NotificationBell.tsx           → Bell icon + unread badge + dropdown (30s polling, mark-read single on click, mark-all button, dismiss ×, loading/error states, truncation warning, link to /notifiche)
+  NotificationBell.tsx           → Bell icon + unread badge + dropdown (30s polling, mark-read single on click, mark-all button, dismiss ×, TYPE_BADGE colored chips per entity type, relative time, message truncation, link to /notifiche)
   FeedbackButton.tsx             → Fixed bottom-right floating button (all app pages): opens modal form (categoria/pagina/messaggio/screenshot upload), POST to /api/feedback, success toast
   notifications/
-    NotificationPageClient.tsx   → Full notifications page: "solo non lette" filter toggle, pagination (20/page), mark-read + dismiss per row
+    NotificationPageClient.tsx   → Full notifications page: type filter chips (8 entity types), "solo non lette" toggle in header, pagination (20/page), mark-read + dismiss per row, TYPE_BADGE colored chips
   ProfileForm.tsx                → Profile edit form (avatar, fiscal data, guide collassabili)
   compensation/
     PaymentOverview.tsx          → Server component: CompensazioniCard (netto per year + ritenuta 20% + APPROVATO section + IN_ATTESA dimmed) + RimborsiCard (total per year + approved + in_attesa) + massimale progress bar
     DashboardBarChart.tsx        → Client: Recharts BarChart (last 6 months liquidato, blue=compensi teal=rimborsi)
-    DashboardUpdates.tsx         → Client: tabbed "Ultimi aggiornamenti" (4 functional tabs: Documenti/Eventi/Comunicazioni e risorse/Opportunità e sconti; prev/next pagination, 4 items/page)
+    DashboardUpdates.tsx         → Client: tabbed "Ultimi aggiornamenti" (4 functional tabs: Documenti/Eventi/Comunicazioni e risorse/Opportunità e sconti; prev/next pagination, 4 items/page; colored badges per content type)
     CompenseTabs.tsx             → Client: tab switcher compensi/rimborsi with count badges
     PendingApprovedList.tsx      → "Da ricevere" amber card: table of APPROVATO compensations with lordo/netto + total footer
     StatusBadge.tsx              → Pill badge for CompensationStatus | ExpenseStatus
@@ -219,10 +219,10 @@ lib/
   expense-transitions.ts         → Pure state machine: canExpenseTransition, applyExpenseTransition (7 actions incl. reject_manager)
   export-utils.ts                → Pure functions: buildCSV, buildXLSXWorkbook, ExportItem type
   documents-storage.ts           → buildStoragePath, getSignedUrl, getDocumentUrls (1h TTL, service role)
-  notification-utils.ts          → Pure notification payload builders (comp/expense/ticket — collaboratore + responsabile side)
-  notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User
+  notification-utils.ts          → Pure notification payload builders (comp/expense/ticket — collaboratore + responsabile side); buildCompensationReopenNotification; buildContentNotification (4 content types)
+  notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User, getAllActiveCollaboratori (broadcast)
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
-  email-templates.ts             → 8 branded HTML templates E1–E8 (Testbusters logo + legal footer; APP_URL env controls all CTA links)
+  email-templates.ts             → 12 branded HTML templates E1–E12 (Testbusters logo + legal footer; APP_URL env controls all CTA links; E9=ticket reply, E10=nuova comunicazione, E11=nuovo evento, E12=nuovo contenuto)
 
 supabase/migrations/
   001_schema.sql                 → Full schema (compensations, expense_reimbursements, communities, documents, etc.)
@@ -251,8 +251,9 @@ supabase/migrations/
   024_remove_bozza_add_corso.sql → Remove BOZZA state (migrate→IN_ATTESA, update CHECK, DEFAULT IN_ATTESA); ADD COLUMN corso_appartenenza TEXT on compensations
   025_remove_ricevuta_pagamento.sql → Remove RICEVUTA_PAGAMENTO type; CHECK restricted to (CONTRATTO_OCCASIONALE, CU); recreate macro_type + unique index
   026_content_types_redesign.sql  → Rename announcements→communications, benefits→discounts; add columns; CREATE TABLE opportunities + RLS
+  027_notifications_redesign.sql  → Remove stale integrazioni event_keys; add documento_firmato:amministrazione; enable ticket reply email; add 4 content event_keys (comunicazione/evento/opportunita/sconto pubblicata)
 
-__tests__/                         → 167 tests total (vitest)
+__tests__/                         → 202 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
   export-utils.test.ts             → Unit tests for CSV/XLSX builders
@@ -266,6 +267,7 @@ __tests__/                         → 167 tests total (vitest)
     transition-schema.test.ts      → Unit tests for compensation/expense/mark-paid/approve-all Zod schemas (22 cases)
     username.test.ts               → Unit tests for username generation and validation (23 cases)
     documents.test.ts              → Unit tests for documents validTipi and type mapping (11 cases)
+    notifications-block13.test.ts  → Unit tests for NotificationEntityType, buildContentNotification (4 types), buildCompensationReopenNotification, E9–E12 templates, entity_type whitelist (35 cases)
 
 e2e/
   rimborsi.spec.ts                 → Playwright UAT: reimbursement full flow (S1–S10, 11 tests)
@@ -302,7 +304,7 @@ next.config.ts
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Run unit tests (167 cases) + Playwright e2e (187 tests across 21 spec files)
+npm test           # Run unit tests (202 cases) + Playwright e2e (187 tests across 21 spec files)
 npm run build      # Production build (TypeScript check included)
 ```
 
