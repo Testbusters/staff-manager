@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-02. Blocco 13 ✅. Prossimo: definire Blocco 14.
+> Aggiornato 2026-03-02. Blocco 14 ✅. Prossimo: definire Blocco 15.
 
 ---
 
@@ -22,6 +22,7 @@
 | 2026-03-02 | Blocco 11 — Dashboard Collaboratore Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Saluto con nome + data. 4 KPI cards (Compensi in corso, Rimborsi in corso, Da ricevere, Da firmare). DashboardUpdates: 4 tab (Documenti funzionale + 3 disabilitate per Block 12), paginazione prev/next, 4 elementi/pagina. Sezione posizionata dopo KPI, prima di Azioni rapide. Legenda bar chart colorata (blu/teal). Feed collaboratore rimosso. DashboardBarChart. |
 | 2026-03-02 | Blocco 12 — Content Types Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 026: rename announcements→communications, benefits→discounts; new opportunities table. API /communications, /discounts, /opportunities (admin-only); /resources + /events updated. Admin /contenuti: 5 tabs, admin-only. Read pages: /eventi, /comunicazioni/[id], /risorse/[id], /opportunita, /sconti/[id]. Dashboard 4 tabs enabled. Events: Google Calendar link + Maps. Discounts: CopyButton. Resources: categoria filter. |
 | 2026-03-02 | Blocco 13 — Notification System Overhaul | ✅ | tsc ✅, build ✅, vitest 202/202 ✅ (35 nuovi in notifications-block13.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 027: rimozione integrazioni event_keys, aggiunta documento_firmato:amministrazione, email ticket reply abilitata, 4 content event_keys. New builders: buildContentNotification (4 tipi), buildCompensationReopenNotification. Helper: getAllActiveCollaboratori (broadcast). Email E9–E12. NotificationBell: TYPE_BADGE 8 tipi + formatRelativeTime + message truncation. NotificationSettingsManager: rimozione integrazioni, sezione Contenuti. /notifiche: type filter chips (8 tipi) + "Solo non lette" in header. API entity_type filter. DashboardUpdates: colored badges per content type. 7 API routes aggiornate (comp reopen, ticket reply, doc sign, 4 content POST). |
+| 2026-03-02 | Blocco 14 — Rich Text Editor + Notification Alerts | ✅ | tsc ✅, build ✅, vitest 202/202 ✅, e2e 3/3 ✅ (block14.spec.ts), smoke test OK | No DB migration. Tiptap 3 (@tiptap/react @tiptap/pm @tiptap/starter-kit). New components: RichTextEditor (toolbar B/I/H2/H3/bullet/ordered, immediatelyRender:false), RichTextDisplay (dangerouslySetInnerHTML + toSafeHtml backward compat + Tailwind dark prose styles). 5 admin list components (textarea→RichTextEditor). 5 detail pages (whitespace-pre-wrap→RichTextDisplay). Email E10/E11/E12: optional contenuto/descrizione param + htmlSection() sanitizer. discounts route: add email dispatch. NotificationBell: prevUnreadRef detects increase → Web Audio ping (880→1174Hz, 0.5s) + bell-pulse animation. globals.css: @keyframes bell-pulse. |
 
 ---
 
@@ -263,6 +264,25 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | 13i — NotificationPageClient.tsx | ✅ | TYPE_BADGE map; type filter chips (8 tipi); "Solo non lette" in header; entityHref esteso a 8 tipi; max-w-2xl container |
 | 13j — DashboardUpdates.tsx | ✅ | Colored badge constants (EVENT/COMM/RES/OPP/DISC); BADGE_BASE; applicati per tab (events=cyan, comm=green, res=blue, opp=indigo, disc=rose) |
 | 13k — Unit tests | ✅ | 35 test in notifications-block13.test.ts: NotificationEntityType, buildContentNotification (4 tipi), buildCompensationReopenNotification, E9–E12, entity_type whitelist |
+
+---
+
+## Blocco 14 — Rich Text Editor + Notification Alerts ✅
+
+> Requisito: `docs/requirements.md` — Block 14: Rich Text Editor + Notification Alerts
+> Dipendenze: Blocco 12 (content types), Blocco 13 (notifications)
+
+| Sotto-blocco | Stato | Note |
+|---|---|---|
+| 14a — RichTextEditor component | ✅ | Tiptap 3 (@tiptap/react @tiptap/pm @tiptap/starter-kit); toolbar B/I/H2/H3/bullet/ordered; immediatelyRender:false (SSR fix); useEffect sync external value |
+| 14b — RichTextDisplay component | ✅ | dangerouslySetInnerHTML; toSafeHtml (backward compat for plain-text DB content); Tailwind dark prose arbitrary selectors |
+| 14c — Admin list components (5) | ✅ | CommunicationList, EventList, OpportunityList, DiscountList, ResourceList: textarea→RichTextEditor; setRich helper; card list view→RichTextDisplay |
+| 14d — Detail pages (5) | ✅ | comunicazioni/[id], eventi/[id], opportunita/[id], sconti/[id], risorse/[id]: whitespace-pre-wrap text→RichTextDisplay |
+| 14e — Email templates E10/E11/E12 | ✅ | Optional contenuto/descrizione param; private htmlSection() sanitizer (strips script + event handlers); inserted after highlight block |
+| 14f — API routes (4) | ✅ | communications: contenuto to email; events: descrizione to email; opportunities: descrizione to email; discounts: add email dispatch + descrizione |
+| 14g — NotificationBell alerts | ✅ | prevUnreadRef tracks unread count; on increase: playNotificationSound() (Web Audio, 880→1174Hz, 0.5s) + setBellPulse(true) |
+| 14h — globals.css animation | ✅ | @keyframes bell-pulse (scale+rotate, 0.6s ease-out) + .bell-pulse class; onAnimationEnd resets state |
+| 14i — Playwright e2e | ✅ | 3/3 passed: S1 H2 heading stored+rendered, S2 editor loads existing HTML, S3 collaboratore RichTextDisplay |
 
 ---
 

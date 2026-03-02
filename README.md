@@ -190,6 +190,8 @@ components/
   ui/
     InfoTooltip.tsx              → Client component: hover + keyboard-accessible ℹ tooltip (useState, tabIndex=0, onFocus/onBlur)
     CopyButton.tsx               → Client component: copy text to clipboard with 2s "Copiato" feedback
+    RichTextEditor.tsx           → Client component: Tiptap 3 rich text editor (B/I/H2/H3/bullet/ordered toolbar, dark mode)
+    RichTextDisplay.tsx          → Server-compatible: renders stored HTML via dangerouslySetInnerHTML with backward-compat toSafeHtml
   ticket/
     TicketStatusBadge.tsx        → Pill badge for ticket status (APERTO=green, IN_LAVORAZIONE=yellow, CHIUSO=gray)
     TicketList.tsx               → Ticket table with status/priority filters + Collaboratore column for admin
@@ -291,6 +293,7 @@ e2e/
   notifications-enhanced.spec.ts  → Playwright UAT: notification bell advanced features S1–S6 (badge persistence, mark-read single, mark-all, dismiss, ticket link, /notifiche filter, 6 tests)
   remove-super-admin.spec.ts       → Playwright UAT: super_admin role removal S1–S4 (admin access, form options, login blocked, DB constraint, 4 tests)
   feedback.spec.ts                 → Playwright UAT: feedback tool S1–S5 (submit no screenshot, submit with screenshot, RBAC, admin list, login autofill, 5 tests)
+  block14.spec.ts                  → Playwright UAT: rich text editor S1–S3 (H2 heading stored+rendered, editor loads HTML, RichTextDisplay collaboratore, 3 tests)
   fixtures/                        → Real Testbusters .docx templates (COCOCO/OCCASIONALE/PIVA) used as stable e2e fixtures
 
 proxy.ts                         → Auth middleware (active check + password change redirect)
@@ -304,7 +307,7 @@ next.config.ts
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Run unit tests (202 cases) + Playwright e2e (187 tests across 21 spec files)
+npm test           # Run unit tests (202 cases) + Playwright e2e (190 tests across 22 spec files)
 npm run build      # Production build (TypeScript check included)
 ```
 

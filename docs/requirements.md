@@ -474,3 +474,63 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
 - DROP + recreate `macro_type` generated column (solo CONTRATTO/CU)
 - CHECK constraint aggiornato a `('CONTRATTO_OCCASIONALE', 'CU')`
 - Unique index `uq_one_contratto_per_collaborator` ricreato
+
+### Revisione Dashboard Collaboratore (Block 11)
+
+**Scope**: `/` (ruolo collaboratore) — redesign completo della sezione collaboratore.
+
+#### Layout approvato
+
+1. **Header**: `Ciao [Nome]!` + data corrente in italiano
+2. **4 KPI card** (grid 2×2 mobile, 1×4 desktop):
+   - Compensi in corso: count IN_ATTESA+APPROVATO · importo netto totale → `/compensi`
+   - Rimborsi in corso: count IN_ATTESA+APPROVATO · importo totale → `/rimborsi`
+   - Da ricevere: APPROVATO netto compensi + APPROVATO rimborsi · amber se >0 → `/compensi`
+   - Da firmare: count DA_FIRMARE · amber se >0 · → `/profilo?tab=documenti`
+3. **Sezione "Da fare"** (visibile solo se presente almeno 1 item — sostituisce "Cosa mi manca"):
+   - Ogni documento DA_FIRMARE mostrato individualmente con titolo + link a `/documenti/[id]`
+   - Ticket senza risposta: generico → `/ticket`
+   - Profilo incompleto (IBAN/CF): generico → `/profilo`
+4. **Azioni rapide** (4 button): `+ Nuovo rimborso`, `Compensi e rimborsi`, `Carica documento`, `+ Apri ticket`
+5. **PaymentOverview**: riuso diretto del componente esistente (massimale + compensi liquidati/approvati + rimborsi)
+6. **DashboardBarChart** (nuovo client component, Recharts): bar chart ultimi 6 mesi, 2 bar per mese (blu = compensi lordi liquidati, teal = rimborsi liquidati). Nascosto se tutti i valori sono zero.
+7. **Ultimi aggiornamenti**: feed invariato
+
+#### Dati aggiuntivi necessari (espansione select esistenti, zero query nuove)
+- `collaborators`: aggiungere `nome, cognome, importo_lordo_massimale`
+- `compensations`: aggiungere `importo_lordo, liquidated_at`
+- `expense_reimbursements`: aggiungere `liquidated_at`
+- `documents` (DA_FIRMARE): aggiungere `titolo`
+
+---
+
+## Block 14 — Rich Text Editor + Notification Alerts
+
+### Feature 1 — Rich Text Editor (Tiptap)
+
+**Library**: `@tiptap/react @tiptap/pm @tiptap/starter-kit` — outputs semantic HTML stored in existing `text` DB columns (no migration).
+
+**Extensions**: bold, italic, heading (H2/H3), bullet list, ordered list, blockquote, hard break.
+
+**Backward compatibility**: `toSafeHtml` helper in `RichTextDisplay` — if content doesn't start with `<`, wraps plain text in `<p>` tags.
+
+**New components**:
+- `components/ui/RichTextEditor.tsx` — dark-mode toolbar with B/I/H2/H3/bullet/ordered buttons + Tiptap editor area.
+- `components/ui/RichTextDisplay.tsx` — renders HTML with `dangerouslySetInnerHTML`, applies Tailwind arbitrary-selector dark prose styles.
+
+**Admin list components** (replace `<textarea>` with `<RichTextEditor>`):
+- `CommunicationList.tsx` → `contenuto`
+- `EventList.tsx` → `descrizione`
+- `OpportunityList.tsx` → `descrizione`, `requisiti`
+- `DiscountList.tsx` → `descrizione`
+- `ResourceList.tsx` → `descrizione`
+
+**Detail pages** (replace `whitespace-pre-wrap` text with `<RichTextDisplay>`):
+- `comunicazioni/[id]/page.tsx`, `eventi/[id]/page.tsx`, `opportunita/[id]/page.tsx`, `sconti/[id]/page.tsx`, `risorse/[id]/page.tsx`
+
+**Email templates** (`lib/email-templates.ts`): add optional `contenuto`/`descrizione` param to E10/E11/E12; render via private `htmlSection()` helper after highlight block. API routes pass the body field to the email call.
+
+### Feature 2 — Notification Sound + Bell Pulse
+
+- `components/NotificationBell.tsx`: add `prevUnreadRef` to detect new arrivals; on count increase → play Web Audio API sine-wave ping (880→1174 Hz, 0.5s) + trigger `.bell-pulse` animation on bell emoji.
+- `app/globals.css`: add `@keyframes bell-pulse` + `.bell-pulse` class.
