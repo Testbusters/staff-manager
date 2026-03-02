@@ -91,7 +91,7 @@ app/
     notifiche/page.tsx           → Full notifications page (Suspense wrapper → NotificationPageClient)
     feedback/page.tsx            → Admin-only: list all feedback with categoria badge, role, pagina, message, signed screenshot URL (1h TTL)
   api/
-    profile/route.ts             → PATCH own profile fields (nome, cognome, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, telefono, indirizzo, civico_residenza, IBAN, tshirt, partita_iva, ha_figli_a_carico)
+    profile/route.ts             → PATCH own profile fields (nome, cognome, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, telefono, indirizzo, civico_residenza, IBAN, tshirt, partita_iva, sono_un_figlio_a_carico)
     profile/avatar/route.ts      → POST upload profile photo → avatars bucket
     auth/change-password/        → POST forced password change
     auth/clear-force-change/     → POST clear must_change_password flag
@@ -105,7 +105,7 @@ app/
     admin/contract-templates/    → GET list templates + POST upload/replace .docx per type (OCCASIONALE/COCOCO/PIVA)
     admin/collaboratori/route.ts → GET search collaborators (q, community_id, active_only) scoped for responsabile
     admin/blocks/clear-flag/     → POST clear must_change_password flag for a user (admin only)
-    admin/notification-settings/ → GET list all 15 settings + PATCH toggle inapp_enabled/email_enabled (admin only)
+    admin/notification-settings/ → GET list all 19 settings + PATCH toggle inapp_enabled/email_enabled (admin only)
     feedback/route.ts            → POST create feedback entry (authenticated; FormData: categoria/pagina/messaggio/screenshot)
     compensations/route.ts       → GET (list, role-filtered) + POST (create, responsabile/admin only, always IN_ATTESA)
     compensations/[id]/route.ts  → GET (detail + history)
