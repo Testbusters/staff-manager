@@ -58,7 +58,7 @@ IN_ATTESA → APPROVATO → LIQUIDATO
 ```
 app/
   (app)/
-    page.tsx                     → Dashboard collaboratore (cards, quick actions, cosa mi manca, feed) + responsabile (CommCard per community, cosa devo fare, feed pending) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
+    page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, Azioni rapide, PaymentOverview, bar chart) + responsabile (CommCard per community, cosa devo fare, feed pending) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
     layout.tsx                   → Protected layout (auth guard + Sidebar)
     profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | blue CTA "Nuovo rimborso" + DocumentUploadForm + DocumentList)
     impostazioni/page.tsx        → Settings: 5-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event)
@@ -155,6 +155,8 @@ components/
   ProfileForm.tsx                → Profile edit form (avatar, fiscal data, guide collassabili)
   compensation/
     PaymentOverview.tsx          → Server component: CompensazioniCard (netto per year + ritenuta 20% + APPROVATO section + IN_ATTESA dimmed) + RimborsiCard (total per year + approved + in_attesa) + massimale progress bar
+    DashboardBarChart.tsx        → Client: Recharts BarChart (last 6 months liquidato, blue=compensi teal=rimborsi)
+    DashboardUpdates.tsx         → Client: tabbed "Ultimi aggiornamenti" (Documenti tab functional with DA_FIRMARE list + prev/next pagination; 3 tabs disabled for Block 12)
     CompenseTabs.tsx             → Client: tab switcher compensi/rimborsi with count badges
     PendingApprovedList.tsx      → "Da ricevere" amber card: table of APPROVATO compensations with lordo/netto + total footer
     StatusBadge.tsx              → Pill badge for CompensationStatus | ExpenseStatus
