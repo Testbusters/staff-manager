@@ -16,8 +16,8 @@ implementation of each approved block. Working on `main`.
 
 | Step | Description | Status |
 |------|-------------|--------|
-| C | Guided review of `docs/requirements.md`: section-by-section comparison, user approval per change | 🔄 in progress — Blocks 1–10 done, next blocks to define |
-| D | Rebuild `docs/implementation-checklist.md` based on updated `requirements.md` | 🔄 in progress — Blocks 1–10 ✅, next blocks to plan |
+| C | Guided review of `docs/requirements.md`: section-by-section comparison, user approval per change | 🔄 in progress — Blocks 1–11 done, next blocks to define |
+| D | Rebuild `docs/implementation-checklist.md` based on updated `requirements.md` | 🔄 in progress — Blocks 1–11 ✅, next blocks to plan |
 
 > **Rule**: do not advance to the next step without explicit confirmation. C and D depend on
 > order — the checklist cannot be rebuilt before `requirements.md` is updated.
