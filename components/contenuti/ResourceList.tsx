@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Resource, Community } from '@/lib/types';
+import type { Resource, ResourceCategoria, Community } from '@/lib/types';
+
+const CATEGORIA_OPTIONS: { value: ResourceCategoria; label: string }[] = [
+  { value: 'GUIDA',     label: 'Guida' },
+  { value: 'NORMATIVA', label: 'Normativa' },
+  { value: 'PROCEDURA', label: 'Procedura' },
+  { value: 'MODELLO',   label: 'Modello' },
+  { value: 'ALTRO',     label: 'Altro' },
+];
 
 interface FormData {
   titolo: string;
@@ -11,6 +19,7 @@ interface FormData {
   file_url: string;
   tag: string;  // comma-separated
   community_id: string;
+  categoria: string;
 }
 
 function ResourceForm({
@@ -31,6 +40,7 @@ function ResourceForm({
     file_url: initial?.file_url ?? '',
     tag: initial?.tag ?? '',
     community_id: initial?.community_id ?? '',
+    categoria: initial?.categoria ?? 'ALTRO',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +67,13 @@ function ResourceForm({
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       <input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)"
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <div className="flex items-center gap-3">
+        <label className="text-sm text-gray-400 shrink-0">Categoria:</label>
+        <select value={form.categoria} onChange={set('categoria')}
+          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
+          {CATEGORIA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
       <input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)"
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       <div className="flex items-center gap-2">
@@ -109,6 +126,7 @@ export default function ResourceList({
         file_url: data.file_url || undefined,
         tag: parseTags(data.tag),
         community_id: data.community_id || null,
+        categoria: data.categoria || 'ALTRO',
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
@@ -127,6 +145,7 @@ export default function ResourceList({
         file_url: data.file_url || null,
         tag: parseTags(data.tag),
         community_id: data.community_id || null,
+        categoria: data.categoria || 'ALTRO',
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
@@ -158,7 +177,7 @@ export default function ResourceList({
         <div key={r.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
           {editingId === r.id ? (
             <ResourceForm
-              initial={{ titolo: r.titolo, descrizione: r.descrizione ?? '', link: r.link ?? '', file_url: r.file_url ?? '', tag: (r.tag ?? []).join(', '), community_id: r.community_id ?? '' }}
+              initial={{ titolo: r.titolo, descrizione: r.descrizione ?? '', link: r.link ?? '', file_url: r.file_url ?? '', tag: (r.tag ?? []).join(', '), community_id: r.community_id ?? '', categoria: r.categoria ?? 'ALTRO' }}
               communities={communities}
               onSave={(data) => handleEdit(r.id, data)}
               onCancel={() => setEditingId(null)}

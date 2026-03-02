@@ -2,25 +2,6 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
-const WRITE_ROLES = ['amministrazione', 'responsabile_compensi'];
-
-export async function GET() {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const { data, error } = await supabase
-    .from('announcements')
-    .select('*')
-    .order('pinned', { ascending: false })
-    .order('published_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ announcements: data ?? [] });
-}
-
 export async function POST(request: Request) {
   const supabase = await createClient();
 
@@ -34,32 +15,36 @@ export async function POST(request: Request) {
     .single();
 
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
-  if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+  if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json();
-  const { titolo, contenuto, pinned, community_id } = body as {
+  const { titolo, contenuto, pinned, community_id, expires_at, file_urls } = body as {
     titolo: string;
     contenuto: string;
     pinned?: boolean;
     community_id?: string | null;
+    expires_at?: string | null;
+    file_urls?: string[];
   };
 
   if (!titolo?.trim() || !contenuto?.trim()) {
     return NextResponse.json({ error: 'Titolo e contenuto sono obbligatori' }, { status: 400 });
   }
 
-  const serviceClient = createServiceClient(
+  const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { data, error } = await serviceClient
-    .from('announcements')
+  const { data, error } = await svc
+    .from('communications')
     .insert({
       titolo: titolo.trim(),
       contenuto: contenuto.trim(),
       pinned: pinned ?? false,
       community_id: community_id ?? null,
+      expires_at: expires_at ?? null,
+      file_urls: file_urls ?? [],
       published_at: new Date().toISOString(),
     })
     .select()
@@ -67,5 +52,5 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ announcement: data }, { status: 201 });
+  return NextResponse.json({ communication: data }, { status: 201 });
 }

@@ -39,6 +39,8 @@ export async function PATCH(
   if (body.luma_url !== undefined) update.luma_url = body.luma_url?.trim() || null;
   if (body.luma_embed_url !== undefined) update.luma_embed_url = body.luma_embed_url?.trim() || null;
   if (body.community_id !== undefined) update.community_id = body.community_id;
+  if (body.tipo !== undefined) update.tipo = body.tipo?.trim() || null;
+  if (body.file_url !== undefined) update.file_url = body.file_url?.trim() || null;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

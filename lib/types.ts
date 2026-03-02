@@ -147,17 +147,23 @@ export interface TicketMessage {
 }
 
 // ── Content ──────────────────────────────────────────────────
-export interface Announcement {
+export type ResourceCategoria = 'GUIDA' | 'NORMATIVA' | 'PROCEDURA' | 'MODELLO' | 'ALTRO';
+export type EventTipo = 'WEBINAR' | 'INCONTRO' | 'WORKSHOP' | 'SOCIAL' | 'ALTRO';
+export type OpportunityTipo = 'LAVORO' | 'FORMAZIONE' | 'STAGE' | 'PROGETTO' | 'ALTRO';
+
+export interface Communication {
   id: string;
   community_id: string | null;
   titolo: string;
   contenuto: string;
   pinned: boolean;
   published_at: string;
+  expires_at: string | null;
+  file_urls: string[];
   created_at: string;
 }
 
-export interface Benefit {
+export interface Discount {
   id: string;
   community_id: string | null;
   titolo: string;
@@ -166,6 +172,9 @@ export interface Benefit {
   link: string | null;
   valid_from: string | null;
   valid_to: string | null;
+  fornitore: string;
+  logo_url: string | null;
+  file_url: string | null;
   created_at: string;
 }
 
@@ -177,6 +186,7 @@ export interface Resource {
   link: string | null;
   file_url: string | null;
   tag: string[] | null;
+  categoria: ResourceCategoria;
   created_at: string;
 }
 
@@ -190,6 +200,21 @@ export interface ContentEvent {
   location: string | null;
   luma_url: string | null;
   luma_embed_url: string | null;
+  tipo: EventTipo | null;
+  file_url: string | null;
+  created_at: string;
+}
+
+export interface Opportunity {
+  id: string;
+  community_id: string | null;
+  titolo: string;
+  tipo: OpportunityTipo;
+  descrizione: string;
+  requisiti: string | null;
+  scadenza_candidatura: string | null;
+  link_candidatura: string | null;
+  file_url: string | null;
   created_at: string;
 }
 

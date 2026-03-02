@@ -2,24 +2,6 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
-const WRITE_ROLES = ['amministrazione'];
-
-export async function GET() {
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const { data, error } = await supabase
-    .from('benefits')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ benefits: data ?? [] });
-}
-
 export async function POST(request: Request) {
   const supabase = await createClient();
 
@@ -33,10 +15,13 @@ export async function POST(request: Request) {
     .single();
 
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
-  if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+  if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json();
-  const { titolo, descrizione, codice_sconto, link, valid_from, valid_to, community_id } = body as {
+  const {
+    titolo, descrizione, codice_sconto, link,
+    valid_from, valid_to, community_id, fornitore, logo_url, file_url,
+  } = body as {
     titolo: string;
     descrizione?: string;
     codice_sconto?: string;
@@ -44,19 +29,22 @@ export async function POST(request: Request) {
     valid_from?: string;
     valid_to?: string;
     community_id?: string | null;
+    fornitore?: string;
+    logo_url?: string;
+    file_url?: string;
   };
 
   if (!titolo?.trim()) {
     return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
   }
 
-  const serviceClient = createServiceClient(
+  const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { data, error } = await serviceClient
-    .from('benefits')
+  const { data, error } = await svc
+    .from('discounts')
     .insert({
       titolo: titolo.trim(),
       descrizione: descrizione?.trim() || null,
@@ -65,11 +53,14 @@ export async function POST(request: Request) {
       valid_from: valid_from || null,
       valid_to: valid_to || null,
       community_id: community_id ?? null,
+      fornitore: fornitore?.trim() ?? '',
+      logo_url: logo_url?.trim() || null,
+      file_url: file_url?.trim() || null,
     })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ benefit: data }, { status: 201 });
+  return NextResponse.json({ discount: data }, { status: 201 });
 }

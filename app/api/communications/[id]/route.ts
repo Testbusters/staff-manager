@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
-const WRITE_ROLES = ['amministrazione'];
-
-async function authorizeWriter(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function authorizeAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Unauthorized', status: 401 };
+  if (!user) return { user: null, error: 'Unauthorized', status: 401 as const };
 
   const { data: profile } = await supabase
     .from('user_profiles')
@@ -14,10 +12,10 @@ async function authorizeWriter(supabase: Awaited<ReturnType<typeof createClient>
     .eq('user_id', user.id)
     .single();
 
-  if (!profile?.is_active) return { error: 'Utente non attivo', status: 403 };
-  if (!WRITE_ROLES.includes(profile.role)) return { error: 'Non autorizzato', status: 403 };
+  if (!profile?.is_active) return { user: null, error: 'Utente non attivo', status: 403 as const };
+  if (profile.role !== 'amministrazione') return { user: null, error: 'Non autorizzato', status: 403 as const };
 
-  return { error: null, status: 200 };
+  return { user, error: null, status: 200 as const };
 }
 
 export async function PATCH(
@@ -26,26 +24,34 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const supabase = await createClient();
-  const auth = await authorizeWriter(supabase);
+  const auth = await authorizeAdmin(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await request.json();
-  const update: Record<string, unknown> = {};
-  if (body.titolo !== undefined) update.titolo = body.titolo.trim();
-  if (body.descrizione !== undefined) update.descrizione = body.descrizione?.trim() || null;
-  if (body.codice_sconto !== undefined) update.codice_sconto = body.codice_sconto?.trim() || null;
-  if (body.link !== undefined) update.link = body.link?.trim() || null;
-  if (body.valid_from !== undefined) update.valid_from = body.valid_from || null;
-  if (body.valid_to !== undefined) update.valid_to = body.valid_to || null;
-  if (body.community_id !== undefined) update.community_id = body.community_id;
+  const { titolo, contenuto, pinned, community_id, expires_at, file_urls } = body as {
+    titolo?: string;
+    contenuto?: string;
+    pinned?: boolean;
+    community_id?: string | null;
+    expires_at?: string | null;
+    file_urls?: string[];
+  };
 
-  const serviceClient = createServiceClient(
+  const update: Record<string, unknown> = {};
+  if (titolo !== undefined) update.titolo = titolo.trim();
+  if (contenuto !== undefined) update.contenuto = contenuto.trim();
+  if (pinned !== undefined) update.pinned = pinned;
+  if (community_id !== undefined) update.community_id = community_id;
+  if (expires_at !== undefined) update.expires_at = expires_at;
+  if (file_urls !== undefined) update.file_urls = file_urls;
+
+  const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { data, error } = await serviceClient
-    .from('benefits')
+  const { data, error } = await svc
+    .from('communications')
     .update(update)
     .eq('id', id)
     .select()
@@ -53,7 +59,7 @@ export async function PATCH(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ benefit: data });
+  return NextResponse.json({ communication: data });
 }
 
 export async function DELETE(
@@ -62,15 +68,18 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const supabase = await createClient();
-  const auth = await authorizeWriter(supabase);
+  const auth = await authorizeAdmin(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const serviceClient = createServiceClient(
+  const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { error } = await serviceClient.from('benefits').delete().eq('id', id);
+  const { error } = await svc
+    .from('communications')
+    .delete()
+    .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

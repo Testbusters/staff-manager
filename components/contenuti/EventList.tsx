@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ContentEvent, Community } from '@/lib/types';
+import type { ContentEvent, EventTipo, Community } from '@/lib/types';
+
+const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
+  { value: 'WEBINAR',   label: 'Webinar' },
+  { value: 'INCONTRO',  label: 'Incontro' },
+  { value: 'WORKSHOP',  label: 'Workshop' },
+  { value: 'SOCIAL',    label: 'Social' },
+  { value: 'ALTRO',     label: 'Altro' },
+];
 
 function formatDateRange(start: string | null, end: string | null): string {
   if (!start) return '';
@@ -29,6 +37,8 @@ interface FormData {
   luma_url: string;
   luma_embed_url: string;
   community_id: string;
+  tipo: string;
+  file_url: string;
 }
 
 function EventForm({
@@ -51,6 +61,8 @@ function EventForm({
     luma_url: initial?.luma_url ?? '',
     luma_embed_url: initial?.luma_embed_url ?? '',
     community_id: initial?.community_id ?? '',
+    tipo: initial?.tipo ?? '',
+    file_url: initial?.file_url ?? '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +103,18 @@ function EventForm({
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       <input value={form.luma_embed_url} onChange={set('luma_embed_url')} placeholder="URL embed Luma (per iframe)"
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="text-xs text-gray-500">Tipo evento</label>
+          <select value={form.tipo} onChange={set('tipo')}
+            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-2 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
+            <option value="">— Nessun tipo —</option>
+            {TIPO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
+          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none self-end" />
+      </div>
       <div className="flex items-center gap-2">
         <label className="text-sm text-gray-400">Community:</label>
         <select value={form.community_id} onChange={set('community_id')}
@@ -139,6 +163,8 @@ export default function EventList({
         luma_url: data.luma_url || null,
         luma_embed_url: data.luma_embed_url || null,
         community_id: data.community_id || null,
+        tipo: data.tipo || null,
+        file_url: data.file_url || null,
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
@@ -159,6 +185,8 @@ export default function EventList({
         luma_url: data.luma_url || null,
         luma_embed_url: data.luma_embed_url || null,
         community_id: data.community_id || null,
+        tipo: data.tipo || null,
+        file_url: data.file_url || null,
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
@@ -199,6 +227,8 @@ export default function EventList({
                 luma_url: ev.luma_url ?? '',
                 luma_embed_url: ev.luma_embed_url ?? '',
                 community_id: ev.community_id ?? '',
+                tipo: ev.tipo ?? '',
+                file_url: ev.file_url ?? '',
               }}
               communities={communities}
               onSave={(data) => handleEdit(ev.id, data)}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Benefit, Community } from '@/lib/types';
+import type { Discount, Community } from '@/lib/types';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -27,9 +27,12 @@ interface FormData {
   valid_from: string;
   valid_to: string;
   community_id: string;
+  fornitore: string;
+  logo_url: string;
+  file_url: string;
 }
 
-function BenefitForm({
+function DiscountForm({
   initial,
   communities,
   onSave,
@@ -48,6 +51,9 @@ function BenefitForm({
     valid_from: initial?.valid_from ?? '',
     valid_to: initial?.valid_to ?? '',
     community_id: initial?.community_id ?? '',
+    fornitore: initial?.fornitore ?? '',
+    logo_url: initial?.logo_url ?? '',
+    file_url: initial?.file_url ?? '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,12 +74,18 @@ function BenefitForm({
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
       <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)"
+        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       <textarea value={form.descrizione} onChange={set('descrizione')} placeholder="Descrizione" rows={3}
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
       <div className="grid grid-cols-2 gap-3">
         <input value={form.codice_sconto} onChange={set('codice_sconto')} placeholder="Codice sconto"
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
         <input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url"
+          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+        <input value={form.logo_url} onChange={set('logo_url')} placeholder="URL logo fornitore"
+          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+        <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Valido dal</label>
@@ -108,12 +120,12 @@ function BenefitForm({
   );
 }
 
-export default function BenefitList({
-  benefits,
+export default function DiscountList({
+  discounts,
   canWrite,
   communities,
 }: {
-  benefits: Benefit[];
+  discounts: Discount[];
   canWrite: boolean;
   communities: Community[];
 }) {
@@ -122,7 +134,7 @@ export default function BenefitList({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   async function handleCreate(data: FormData) {
-    const res = await fetch('/api/benefits', {
+    const res = await fetch('/api/discounts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, community_id: data.community_id || null }),
@@ -133,7 +145,7 @@ export default function BenefitList({
   }
 
   async function handleEdit(id: string, data: FormData) {
-    const res = await fetch(`/api/benefits/${id}`, {
+    const res = await fetch(`/api/discounts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, community_id: data.community_id || null }),
@@ -144,8 +156,8 @@ export default function BenefitList({
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm('Eliminare questo benefit?')) return;
-    await fetch(`/api/benefits/${id}`, { method: 'DELETE' });
+    if (!window.confirm('Eliminare questo sconto?')) return;
+    await fetch(`/api/discounts/${id}`, { method: 'DELETE' });
     router.refresh();
   }
 
@@ -154,56 +166,68 @@ export default function BenefitList({
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
           className="rounded-lg border border-dashed border-gray-700 hover:border-blue-600 px-4 py-2 text-sm text-gray-400 hover:text-blue-400 transition">
-          + Nuovo benefit
+          + Nuovo sconto
         </button>
       )}
       {showForm && (
-        <BenefitForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
+        <DiscountForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
-      {benefits.length === 0 && !showForm && (
-        <p className="text-sm text-gray-500 py-6 text-center">Nessun benefit disponibile.</p>
+      {discounts.length === 0 && !showForm && (
+        <p className="text-sm text-gray-500 py-6 text-center">Nessuno sconto disponibile.</p>
       )}
-      {benefits.map((b) => (
-        <div key={b.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
-          {editingId === b.id ? (
-            <BenefitForm
-              initial={{ titolo: b.titolo, descrizione: b.descrizione ?? '', codice_sconto: b.codice_sconto ?? '', link: b.link ?? '', valid_from: b.valid_from ?? '', valid_to: b.valid_to ?? '', community_id: b.community_id ?? '' }}
+      {discounts.map((d) => (
+        <div key={d.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
+          {editingId === d.id ? (
+            <DiscountForm
+              initial={{
+                titolo: d.titolo, descrizione: d.descrizione ?? '', codice_sconto: d.codice_sconto ?? '',
+                link: d.link ?? '', valid_from: d.valid_from ?? '', valid_to: d.valid_to ?? '',
+                community_id: d.community_id ?? '', fornitore: d.fornitore ?? '',
+                logo_url: d.logo_url ?? '', file_url: d.file_url ?? '',
+              }}
               communities={communities}
-              onSave={(data) => handleEdit(b.id, data)}
+              onSave={(data) => handleEdit(d.id, data)}
               onCancel={() => setEditingId(null)}
             />
           ) : (
             <>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-semibold text-gray-100">{b.titolo}</h3>
-                  {expiryBadge(b.valid_to)}
+                  <h3 className="text-sm font-semibold text-gray-100">{d.titolo}</h3>
+                  {d.fornitore && <span className="text-xs text-gray-500">· {d.fornitore}</span>}
+                  {expiryBadge(d.valid_to)}
                 </div>
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(b.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
-                    <button onClick={() => handleDelete(b.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
+                    <button onClick={() => setEditingId(d.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
+                    <button onClick={() => handleDelete(d.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
                   </div>
                 )}
               </div>
-              {b.descrizione && <p className="text-sm text-gray-400">{b.descrizione}</p>}
+              {d.descrizione && <p className="text-sm text-gray-400">{d.descrizione}</p>}
               <div className="flex items-center gap-3 flex-wrap">
-                {b.codice_sconto && (
+                {d.codice_sconto && (
                   <span className="rounded-md bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs font-mono text-yellow-300">
-                    {b.codice_sconto}
+                    {d.codice_sconto}
                   </span>
                 )}
-                {b.link && (
-                  <a href={b.link} target="_blank" rel="noopener noreferrer"
+                {d.link && (
+                  <a href={d.link} target="_blank" rel="noopener noreferrer"
                     className="text-xs text-blue-400 hover:text-blue-300 underline transition">
                     Scopri →
                   </a>
                 )}
-                {(b.valid_from || b.valid_to) && (
+                {d.file_url && (
+                  <a href={d.file_url} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-2 py-0.5 text-xs text-gray-300 transition">
+                    📎 Allegato
+                  </a>
+                )}
+                {(d.valid_from || d.valid_to) && (
                   <span className="text-xs text-gray-600">
-                    {b.valid_from && `Dal ${formatDate(b.valid_from)}`}
-                    {b.valid_from && b.valid_to && ' · '}
-                    {b.valid_to && `Al ${formatDate(b.valid_to)}`}
+                    {d.valid_from && `Dal ${formatDate(d.valid_from)}`}
+                    {d.valid_from && d.valid_to && ' · '}
+                    {d.valid_to && `Al ${formatDate(d.valid_to)}`}
                   </span>
                 )}
               </div>

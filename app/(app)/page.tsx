@@ -8,7 +8,7 @@ import PaymentOverview from '@/components/compensation/PaymentOverview';
 import DashboardBarChart from '@/components/compensation/DashboardBarChart';
 import type { BarMonthData } from '@/components/compensation/DashboardBarChart';
 import DashboardUpdates from '@/components/compensation/DashboardUpdates';
-import type { DashboardDocItem } from '@/components/compensation/DashboardUpdates';
+import type { DashboardDocItem, DashboardEventItem, DashboardCommItem, DashboardOppItem } from '@/components/compensation/DashboardUpdates';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
@@ -335,7 +335,7 @@ export default async function DashboardPage() {
     const [commResult, ccResult, annResult] = await Promise.all([
       svc.from('communities').select('id, name').in('id', communityIds),
       svc.from('collaborator_communities').select('collaborator_id, community_id').in('community_id', communityIds),
-      svc.from('announcements')
+      svc.from('communications')
         .select('id, titolo, published_at')
         .order('pinned', { ascending: false })
         .order('published_at', { ascending: false })
@@ -449,7 +449,7 @@ export default async function DashboardPage() {
       rFeedItems.push({ key: `pe-${e.id}`, icon: 'exp', text: `Rimborso inviato da ${name}`, date: e.created_at, href: `/collaboratori/${e.collaborator_id}` });
     }
     for (const a of annRows ?? []) {
-      rFeedItems.push({ key: `ann-${a.id}`, icon: 'ann', text: a.titolo, date: a.published_at, href: '/contenuti?tab=bacheca' });
+      rFeedItems.push({ key: `ann-${a.id}`, icon: 'ann', text: a.titolo, date: a.published_at, href: '/comunicazioni' });
     }
     rFeedItems.sort((a, b) => b.date.localeCompare(a.date));
     const rFeed = rFeedItems.slice(0, 10);
@@ -976,16 +976,44 @@ export default async function DashboardPage() {
         .order('created_at', { ascending: false })
     : Promise.resolve({ data: null as DashboardDocItem[] | null, error: null });
 
+  const nowIso = new Date().toISOString();
+
   const [
     { data: compensations },
     { data: expenses },
     { data: docsToSign },
     { data: allTickets },
+    { data: dashEvents },
+    { data: dashComms },
+    { data: dashResources },
+    { data: dashOpps },
+    { data: dashDiscounts },
   ] = await Promise.all([
     supabase.from('compensations').select('id, stato, importo_netto, importo_lordo, liquidated_at'),
     supabase.from('expense_reimbursements').select('id, stato, importo, liquidated_at'),
     docsQuery,
     supabase.from('tickets').select('id, oggetto, stato').eq('creator_user_id', user.id),
+    supabase.from('events')
+      .select('id, titolo, start_datetime, tipo')
+      .order('start_datetime', { ascending: true, nullsFirst: false })
+      .limit(4),
+    supabase.from('communications')
+      .select('id, titolo, published_at')
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+      .order('published_at', { ascending: false })
+      .limit(2),
+    supabase.from('resources')
+      .select('id, titolo, created_at, categoria')
+      .order('created_at', { ascending: false })
+      .limit(2),
+    supabase.from('opportunities')
+      .select('id, titolo, created_at, tipo')
+      .order('created_at', { ascending: false })
+      .limit(2),
+    supabase.from('discounts')
+      .select('id, titolo, valid_to, fornitore, created_at')
+      .order('created_at', { ascending: false })
+      .limit(2),
   ]);
 
   // Derive IDs for second-tier queries
@@ -1074,6 +1102,41 @@ export default async function DashboardPage() {
     });
   }
 
+  // Dashboard updates — events, comunicazioni, opportunita
+  const dashboardEvents: DashboardEventItem[] = ((dashEvents ?? []) as {
+    id: string; titolo: string; start_datetime: string | null; tipo: string | null;
+  }[]).map((e) => ({
+    id: e.id,
+    titolo: e.titolo,
+    start_datetime: e.start_datetime,
+    tipo: e.tipo as DashboardEventItem['tipo'],
+  }));
+
+  type CommRaw = { id: string; titolo: string; published_at: string };
+  type ResRaw  = { id: string; titolo: string; created_at: string; categoria: string };
+  type OppRaw  = { id: string; titolo: string; created_at: string; tipo: string };
+  type DiscRaw = { id: string; titolo: string; valid_to: string | null; fornitore: string; created_at: string };
+
+  const commItems: DashboardCommItem[] = [
+    ...((dashComms ?? []) as CommRaw[]).map((c) => ({
+      id: c.id, titolo: c.titolo, date: c.published_at, kind: 'comm' as const,
+    })),
+    ...((dashResources ?? []) as ResRaw[]).map((r) => ({
+      id: r.id, titolo: r.titolo, date: r.created_at,
+      categoria: r.categoria as DashboardCommItem['categoria'],
+      kind: 'resource' as const,
+    })),
+  ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+
+  const oppItems: DashboardOppItem[] = [
+    ...((dashOpps ?? []) as OppRaw[]).map((o) => ({
+      id: o.id, titolo: o.titolo, date: o.created_at, tipo: o.tipo, kind: 'opp' as const,
+    })),
+    ...((dashDiscounts ?? []) as DiscRaw[]).map((d) => ({
+      id: d.id, titolo: d.titolo, date: d.created_at, kind: 'discount' as const,
+    })),
+  ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+
   // Data corrente in italiano per il saluto
   const todayStr = new Date().toLocaleDateString('it-IT', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -1136,8 +1199,13 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* Ultimi aggiornamenti — tabs (Documenti functional; others coming in Block 12) */}
-      <DashboardUpdates documents={(docsToSign ?? []) as DashboardDocItem[]} />
+      {/* Ultimi aggiornamenti — tabs */}
+      <DashboardUpdates
+        documents={(docsToSign ?? []) as DashboardDocItem[]}
+        events={dashboardEvents}
+        comunicazioni={commItems}
+        opportunita={oppItems}
+      />
 
       {/* Da fare — ticket senza risposta + profilo incompleto */}
       {daFare.length > 0 && (

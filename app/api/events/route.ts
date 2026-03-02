@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const {
     titolo, descrizione, start_datetime, end_datetime,
-    location, luma_url, luma_embed_url, community_id,
+    location, luma_url, luma_embed_url, community_id, tipo, file_url,
   } = body as {
     titolo: string;
     descrizione?: string;
@@ -48,6 +48,8 @@ export async function POST(request: Request) {
     luma_url?: string;
     luma_embed_url?: string;
     community_id?: string | null;
+    tipo?: string;
+    file_url?: string;
   };
 
   if (!titolo?.trim()) {
@@ -70,6 +72,8 @@ export async function POST(request: Request) {
       luma_url: luma_url?.trim() || null,
       luma_embed_url: luma_embed_url?.trim() || null,
       community_id: community_id ?? null,
+      tipo: tipo?.trim() || null,
+      file_url: file_url?.trim() || null,
     })
     .select()
     .single();

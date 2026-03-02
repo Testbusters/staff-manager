@@ -37,6 +37,7 @@ export async function PATCH(
   if (body.file_url !== undefined) update.file_url = body.file_url?.trim() || null;
   if (body.tag !== undefined) update.tag = body.tag?.length ? body.tag : null;
   if (body.community_id !== undefined) update.community_id = body.community_id;
+  if (body.categoria !== undefined) update.categoria = body.categoria;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

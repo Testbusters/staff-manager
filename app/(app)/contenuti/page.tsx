@@ -1,16 +1,14 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import AnnouncementBoard from '@/components/contenuti/AnnouncementBoard';
-import BenefitList from '@/components/contenuti/BenefitList';
+import CommunicationList from '@/components/contenuti/CommunicationList';
+import DiscountList from '@/components/contenuti/DiscountList';
 import ResourceList from '@/components/contenuti/ResourceList';
 import EventList from '@/components/contenuti/EventList';
-import type { Role, Announcement, Benefit, Resource, ContentEvent, Community } from '@/lib/types';
+import OpportunityList from '@/components/contenuti/OpportunityList';
+import type { Role, Communication, Discount, Resource, ContentEvent, Opportunity, Community } from '@/lib/types';
 
-type Tab = 'bacheca' | 'agevolazioni' | 'guide' | 'eventi';
-
-const WRITE_ROLES_ANNOUNCEMENTS: Role[] = ['amministrazione', 'responsabile_compensi'];
-const WRITE_ROLES_CONTENT: Role[] = ['amministrazione'];
+type Tab = 'comunicazioni' | 'sconti' | 'risorse' | 'eventi' | 'opportunita';
 
 export default async function ContenutiPage({
   searchParams,
@@ -24,7 +22,7 @@ export default async function ContenutiPage({
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, is_active, member_status, can_publish_announcements')
+    .select('role, is_active, member_status')
     .eq('user_id', user.id)
     .single();
 
@@ -33,11 +31,15 @@ export default async function ContenutiPage({
   const role = profile.role as Role;
   if (role === 'collaboratore' && profile.member_status === 'uscente_senza_compenso') redirect('/documenti');
 
+  // Only admin can access this admin-facing content management page
+  if (role !== 'amministrazione') redirect('/');
+
   const { tab } = await searchParams;
-  const activeTab: Tab = tab === 'agevolazioni' ? 'agevolazioni'
-    : tab === 'guide' ? 'guide'
+  const activeTab: Tab = tab === 'sconti' ? 'sconti'
+    : tab === 'risorse' ? 'risorse'
     : tab === 'eventi' ? 'eventi'
-    : 'bacheca';
+    : tab === 'opportunita' ? 'opportunita'
+    : 'comunicazioni';
 
   // Always fetch communities (needed by forms)
   const { data: communities } = await supabase
@@ -47,25 +49,24 @@ export default async function ContenutiPage({
 
   const comms: Community[] = (communities ?? []) as Community[];
 
-  // Fetch data for active tab only
-  const announcements: Announcement[] = activeTab === 'bacheca'
+  const communications: Communication[] = activeTab === 'comunicazioni'
     ? ((await supabase
-        .from('announcements')
+        .from('communications')
         .select('*')
         .order('pinned', { ascending: false })
         .order('published_at', { ascending: false })
-        .then((r) => r.data ?? [])) as Announcement[])
+        .then((r) => r.data ?? [])) as Communication[])
     : [];
 
-  const benefits: Benefit[] = activeTab === 'agevolazioni'
+  const discounts: Discount[] = activeTab === 'sconti'
     ? ((await supabase
-        .from('benefits')
+        .from('discounts')
         .select('*')
         .order('created_at', { ascending: false })
-        .then((r) => r.data ?? [])) as Benefit[])
+        .then((r) => r.data ?? [])) as Discount[])
     : [];
 
-  const resources: Resource[] = activeTab === 'guide'
+  const resources: Resource[] = activeTab === 'risorse'
     ? ((await supabase
         .from('resources')
         .select('*')
@@ -81,9 +82,13 @@ export default async function ContenutiPage({
         .then((r) => r.data ?? [])) as ContentEvent[])
     : [];
 
-  const canWriteAnnouncements = WRITE_ROLES_ANNOUNCEMENTS.includes(role)
-    && (role !== 'responsabile_compensi' || profile.can_publish_announcements === true);
-  const canWriteContent = WRITE_ROLES_CONTENT.includes(role);
+  const opportunities: Opportunity[] = activeTab === 'opportunita'
+    ? ((await supabase
+        .from('opportunities')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .then((r) => r.data ?? [])) as Opportunity[])
+    : [];
 
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
@@ -97,43 +102,51 @@ export default async function ContenutiPage({
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-100">Contenuti</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Bacheca annunci, agevolazioni, guide e risorse, eventi della community.
+          Gestione comunicazioni, sconti, risorse, eventi e opportunità.
         </p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-2 mb-6 overflow-x-auto">
-        <Link href="?tab=bacheca" className={tabCls('bacheca')}>📌 Bacheca</Link>
-        <Link href="?tab=agevolazioni" className={tabCls('agevolazioni')}>🎁 Agevolazioni</Link>
-        <Link href="?tab=guide" className={tabCls('guide')}>📚 Guide & risorse</Link>
+        <Link href="?tab=comunicazioni" className={tabCls('comunicazioni')}>📌 Comunicazioni</Link>
+        <Link href="?tab=sconti" className={tabCls('sconti')}>🎁 Sconti</Link>
+        <Link href="?tab=risorse" className={tabCls('risorse')}>📚 Risorse</Link>
         <Link href="?tab=eventi" className={tabCls('eventi')}>🗓 Eventi</Link>
+        <Link href="?tab=opportunita" className={tabCls('opportunita')}>💼 Opportunità</Link>
       </div>
 
-      {activeTab === 'bacheca' && (
-        <AnnouncementBoard
-          announcements={announcements}
-          canWrite={canWriteAnnouncements}
+      {activeTab === 'comunicazioni' && (
+        <CommunicationList
+          communications={communications}
+          canWrite={true}
           communities={comms}
         />
       )}
-      {activeTab === 'agevolazioni' && (
-        <BenefitList
-          benefits={benefits}
-          canWrite={canWriteContent}
+      {activeTab === 'sconti' && (
+        <DiscountList
+          discounts={discounts}
+          canWrite={true}
           communities={comms}
         />
       )}
-      {activeTab === 'guide' && (
+      {activeTab === 'risorse' && (
         <ResourceList
           resources={resources}
-          canWrite={canWriteContent}
+          canWrite={true}
           communities={comms}
         />
       )}
       {activeTab === 'eventi' && (
         <EventList
           events={events}
-          canWrite={canWriteContent}
+          canWrite={true}
+          communities={comms}
+        />
+      )}
+      {activeTab === 'opportunita' && (
+        <OpportunityList
+          opportunities={opportunities}
+          canWrite={true}
           communities={comms}
         />
       )}
