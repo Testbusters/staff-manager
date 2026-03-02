@@ -24,10 +24,18 @@
 .DS_Store
 *.pem
 
-# claude local overrides (personal, not shared)
+# claude (project instructions — local only, not shared via git)
+CLAUDE.md
 CLAUDE.local.md
 .claude/CLAUDE.local.md
 .claude/settings.local.json
+
+# playwright generated artifacts
+playwright-report/
+test-results/
+
+# supabase CLI temp files
+supabase/.temp/
 
 # debug
 npm-debug.log*
