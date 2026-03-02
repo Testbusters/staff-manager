@@ -298,11 +298,19 @@ export function emailRispostaTicket(p: {
   };
 }
 
+function htmlSection(html: string): string {
+  const safe = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/\s*on\w+="[^"]*"/gi, '');
+  return `<div style="color:#d1d5db;font-size:14px;line-height:1.7;margin-top:12px">${safe}</div>`;
+}
+
 // ── E10 — Nuova comunicazione (→ collaboratore) ──────────────
 export function emailNuovaComunicazione(p: {
   nome: string;
   titolo: string;
   data: string;
+  contenuto?: string;
 }): { subject: string; html: string } {
   const body = `
     ${greeting(p.nome)}
@@ -311,6 +319,7 @@ export function emailNuovaComunicazione(p: {
       { label: 'Titolo', value: p.titolo },
       { label: 'Pubblicata il', value: p.data },
     ])}
+    ${p.contenuto ? htmlSection(p.contenuto) : ''}
     ${ctaButton('Leggi la comunicazione')}
   `;
   return {
@@ -324,6 +333,7 @@ export function emailNuovoEvento(p: {
   nome: string;
   titolo: string;
   data: string;
+  descrizione?: string;
 }): { subject: string; html: string } {
   const body = `
     ${greeting(p.nome)}
@@ -332,6 +342,7 @@ export function emailNuovoEvento(p: {
       { label: 'Evento', value: p.titolo },
       { label: 'Pubblicato il', value: p.data },
     ])}
+    ${p.descrizione ? htmlSection(p.descrizione) : ''}
     ${ctaButton('Vedi i dettagli')}
   `;
   return {
@@ -347,6 +358,7 @@ export function emailNuovoContenuto(p: {
   tipo: string;
   titolo: string;
   data: string;
+  descrizione?: string;
 }): { subject: string; html: string } {
   const body = `
     ${greeting(p.nome)}
@@ -355,6 +367,7 @@ export function emailNuovoContenuto(p: {
       { label: p.tipo, value: p.titolo },
       { label: 'Pubblicato il', value: p.data },
     ])}
+    ${p.descrizione ? htmlSection(p.descrizione) : ''}
     ${ctaButton("Vai all'app")}
   `;
   return {

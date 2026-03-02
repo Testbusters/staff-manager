@@ -4,6 +4,24 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import type { Notification } from '@/lib/types';
 
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext ?? (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+    osc.onended = () => ctx.close();
+  } catch { /* AudioContext unavailable or blocked, fail silently */ }
+}
+
 function entityHref(n: Notification): string | null {
   if (!n.entity_type || !n.entity_id) return null;
   if (n.entity_type === 'compensation')  return `/compensi/${n.entity_id}`;
@@ -47,16 +65,25 @@ export default function NotificationBell() {
   const [open, setOpen]                   = useState(false);
   const [loading, setLoading]             = useState(true);
   const [fetchError, setFetchError]       = useState(false);
+  const [bellPulse, setBellPulse]         = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevUnreadRef = useRef<number | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch('/api/notifications');
       if (!res.ok) { setFetchError(true); return; }
       const data = await res.json();
+      const newUnreadCount: number = data.unread ?? 0;
       setNotifications(data.notifications ?? []);
-      setUnread(data.unread ?? 0);
+      setUnread(newUnreadCount);
       setFetchError(false);
+      const prevCount = prevUnreadRef.current;
+      prevUnreadRef.current = newUnreadCount;
+      if (prevCount !== null && newUnreadCount > prevCount) {
+        playNotificationSound();
+        setBellPulse(true);
+      }
     } catch {
       setFetchError(true);
     } finally {
@@ -111,7 +138,14 @@ export default function NotificationBell() {
                    text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition"
         aria-label="Notifiche"
       >
-        <span className={`text-base leading-none ${fetchError ? 'text-red-400' : loading ? 'opacity-50' : ''}`}>
+        <span
+          className={[
+            'text-base leading-none',
+            fetchError ? 'text-red-400' : loading ? 'opacity-50' : '',
+            bellPulse ? 'bell-pulse' : '',
+          ].join(' ')}
+          onAnimationEnd={() => setBellPulse(false)}
+        >
           🔔
         </span>
         {unread > 0 && (

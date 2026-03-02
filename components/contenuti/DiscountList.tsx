@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Discount, Community } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -61,6 +63,9 @@ function DiscountForm({
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const setRich = (k: keyof FormData) => (v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titolo.trim()) { setError('Il titolo è obbligatorio.'); return; }
@@ -76,8 +81,7 @@ function DiscountForm({
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       <input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)"
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <textarea value={form.descrizione} onChange={set('descrizione')} placeholder="Descrizione" rows={3}
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
+      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-2 gap-3">
         <input value={form.codice_sconto} onChange={set('codice_sconto')} placeholder="Codice sconto"
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
@@ -204,7 +208,7 @@ export default function DiscountList({
                   </div>
                 )}
               </div>
-              {d.descrizione && <p className="text-sm text-gray-400">{d.descrizione}</p>}
+              {d.descrizione && <RichTextDisplay html={d.descrizione} />}
               <div className="flex items-center gap-3 flex-wrap">
                 {d.codice_sconto && (
                   <span className="rounded-md bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs font-mono text-yellow-300">

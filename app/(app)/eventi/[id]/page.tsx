@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { ContentEvent, EventTipo } from '@/lib/types';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 function buildGCalUrl(event: ContentEvent): string | null {
   if (!event.start_datetime) return null;
@@ -154,7 +155,7 @@ export default async function EventDetailPage({
       {event.descrizione && (
         <div className="space-y-2">
           <h2 className="text-sm font-medium text-gray-400">Descrizione</h2>
-          <p className="text-sm text-gray-300 whitespace-pre-wrap">{event.descrizione}</p>
+          <RichTextDisplay html={event.descrizione} />
         </div>
       )}
 

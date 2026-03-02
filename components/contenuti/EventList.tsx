@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ContentEvent, EventTipo, Community } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'WEBINAR',   label: 'Webinar' },
@@ -70,6 +72,9 @@ function EventForm({
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const setRich = (k: keyof FormData) => (v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titolo.trim()) { setError('Il titolo è obbligatorio.'); return; }
@@ -83,8 +88,7 @@ function EventForm({
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
       <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <textarea value={form.descrizione} onChange={set('descrizione')} placeholder="Descrizione" rows={3}
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
+      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Data/ora inizio</label>
@@ -245,7 +249,7 @@ export default function EventList({
                   </div>
                 )}
               </div>
-              {ev.descrizione && <p className="text-sm text-gray-400">{ev.descrizione}</p>}
+              {ev.descrizione && <RichTextDisplay html={ev.descrizione} />}
               <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                 {(ev.start_datetime || ev.end_datetime) && (
                   <span>📅 {formatDateRange(ev.start_datetime, ev.end_datetime)}</span>

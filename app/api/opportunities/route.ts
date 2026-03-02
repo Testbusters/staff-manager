@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       const today = new Date().toLocaleDateString('it-IT');
       for (const c of collaboratori) {
         if (c.email) {
-          const { subject, html } = emailNuovoContenuto({ nome: c.nome, tipo: 'Opportunità', titolo: titolo.trim(), data: today });
+          const { subject, html } = emailNuovoContenuto({ nome: c.nome, tipo: 'Opportunità', titolo: titolo.trim(), data: today, descrizione: descrizione.trim() });
           sendEmail(c.email, subject, html).catch(() => {});
         }
       }

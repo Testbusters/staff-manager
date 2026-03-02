@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { Resource, ResourceCategoria } from '@/lib/types';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const CATEGORIA_LABELS: Record<ResourceCategoria, string> = {
   GUIDA:     'Guida',
@@ -56,7 +57,7 @@ export default async function ResourceDetailPage({
 
       {r.descrizione && (
         <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
-          <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{r.descrizione}</p>
+          <RichTextDisplay html={r.descrizione} />
         </div>
       )}
 

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Communication, Community } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -42,6 +44,9 @@ function CommunicationForm({
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const setRich = (k: keyof FormData) => (v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titolo.trim() || !form.contenuto.trim()) {
@@ -59,8 +64,7 @@ function CommunicationForm({
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
       <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <textarea value={form.contenuto} onChange={set('contenuto')} placeholder="Contenuto *" rows={4} required
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
+      <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Contenuto *" />
       <textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
         rows={2}
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
@@ -201,7 +205,7 @@ export default function CommunicationList({
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-300 whitespace-pre-wrap">{c.contenuto}</p>
+              <RichTextDisplay html={c.contenuto} />
               {c.file_urls && c.file_urls.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {c.file_urls.map((url, i) => (

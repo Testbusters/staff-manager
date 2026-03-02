@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { Opportunity, OpportunityTipo } from '@/lib/types';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const TIPO_LABELS: Record<OpportunityTipo, string> = {
   LAVORO:     'Lavoro',
@@ -69,13 +70,13 @@ export default async function OpportunityDetailPage({
       <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 space-y-3">
         <div>
           <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Descrizione</h2>
-          <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{o.descrizione}</p>
+          <RichTextDisplay html={o.descrizione} />
         </div>
 
         {o.requisiti && (
           <div className="border-t border-gray-800 pt-3">
             <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Requisiti</h2>
-            <p className="text-sm text-gray-300 whitespace-pre-wrap">{o.requisiti}</p>
+            <RichTextDisplay html={o.requisiti} />
           </div>
         )}
 

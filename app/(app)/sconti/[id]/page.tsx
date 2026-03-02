@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { Discount } from '@/lib/types';
 import CopyButton from '@/components/ui/CopyButton';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -72,7 +73,7 @@ export default async function DiscountDetailPage({
 
       <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 space-y-3">
         {d.descrizione && (
-          <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{d.descrizione}</p>
+          <RichTextDisplay html={d.descrizione} />
         )}
 
         {d.codice_sconto && (

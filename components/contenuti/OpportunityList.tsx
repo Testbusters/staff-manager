@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Opportunity, OpportunityTipo, Community } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
   { value: 'LAVORO',     label: 'Lavoro' },
@@ -62,6 +64,9 @@ function OpportunityForm({
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const setRich = (k: keyof FormData) => (v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titolo.trim()) { setError('Il titolo è obbligatorio.'); return; }
@@ -90,10 +95,8 @@ function OpportunityForm({
             className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
         </div>
       </div>
-      <textarea value={form.descrizione} onChange={set('descrizione')} placeholder="Descrizione *" rows={3} required
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
-      <textarea value={form.requisiti} onChange={set('requisiti')} placeholder="Requisiti (opzionale)" rows={2}
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
+      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione *" />
+      <RichTextEditor value={form.requisiti} onChange={setRich('requisiti')} placeholder="Requisiti (opzionale)" />
       <div className="grid grid-cols-2 gap-3">
         <input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url"
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
@@ -207,8 +210,8 @@ export default function OpportunityList({
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-400 line-clamp-3">{o.descrizione}</p>
-              {o.requisiti && <p className="text-xs text-gray-500">Requisiti: {o.requisiti}</p>}
+              <RichTextDisplay html={o.descrizione} className="line-clamp-3" />
+              {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
               <div className="flex items-center gap-3 flex-wrap">
                 {o.scadenza_candidatura && (
                   <span className="text-xs text-gray-500">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</span>

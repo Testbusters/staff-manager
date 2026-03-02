@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Resource, ResourceCategoria, Community } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const CATEGORIA_OPTIONS: { value: ResourceCategoria; label: string }[] = [
   { value: 'GUIDA',     label: 'Guida' },
@@ -48,6 +50,9 @@ function ResourceForm({
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const setRich = (k: keyof FormData) => (v: string) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titolo.trim()) { setError('Il titolo è obbligatorio.'); return; }
@@ -61,8 +66,7 @@ function ResourceForm({
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
       <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <textarea value={form.descrizione} onChange={set('descrizione')} placeholder="Descrizione" rows={3}
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
+      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url"
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       <input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)"
@@ -193,7 +197,7 @@ export default function ResourceList({
                   </div>
                 )}
               </div>
-              {r.descrizione && <p className="text-sm text-gray-400">{r.descrizione}</p>}
+              {r.descrizione && <RichTextDisplay html={r.descrizione} />}
               <div className="flex items-center gap-2 flex-wrap">
                 {r.link && (
                   <a href={r.link} target="_blank" rel="noopener noreferrer"

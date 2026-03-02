@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getAllActiveCollaboratori } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
+import { emailNuovoContenuto } from '@/lib/email-templates';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Fire content notifications (in-app only; email disabled by default for discounts)
+  // Fire content notifications
   try {
     const [settings, collaboratori] = await Promise.all([
       getNotificationSettings(svc),
@@ -79,6 +80,15 @@ export async function POST(request: Request) {
       await svc.from('notifications').insert(notifs).then(({ error: e }) => {
         if (e) console.error('Discount notification insert failed:', e.message);
       });
+    }
+    if (setting?.email_enabled) {
+      const today = new Date().toLocaleDateString('it-IT');
+      for (const c of collaboratori) {
+        if (c.email) {
+          const { subject, html } = emailNuovoContenuto({ nome: c.nome, tipo: 'Sconto', titolo: titolo.trim(), data: today, descrizione: descrizione?.trim() });
+          sendEmail(c.email, subject, html).catch(() => {});
+        }
+      }
     }
   } catch (e) {
     console.error('Content notification dispatch failed:', e);
