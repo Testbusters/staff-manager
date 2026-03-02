@@ -29,6 +29,18 @@ const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
   discount:      { label: 'Sconto',        cls: 'bg-rose-900/60 text-rose-300 border-rose-800/60' },
 };
 
+// Ordered list for filter chips
+const TYPE_FILTERS: { key: string; label: string }[] = [
+  { key: 'compensation',  label: 'Compenso' },
+  { key: 'reimbursement', label: 'Rimborso' },
+  { key: 'document',      label: 'Documento' },
+  { key: 'ticket',        label: 'Ticket' },
+  { key: 'communication', label: 'Comunicazione' },
+  { key: 'event',         label: 'Evento' },
+  { key: 'opportunity',   label: 'Opportunità' },
+  { key: 'discount',      label: 'Sconto' },
+];
+
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -49,6 +61,7 @@ export default function NotificationPageClient() {
   const searchParams = useSearchParams();
   const page       = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
   const unreadOnly = searchParams.get('unread_only') === 'true';
+  const entityType = searchParams.get('entity_type') ?? '';
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [total, setTotal]                 = useState(0);
@@ -61,9 +74,10 @@ export default function NotificationPageClient() {
     setFetchError(false);
     try {
       const params = new URLSearchParams({
-        page:         String(page),
-        limit:        String(LIMIT),
-        unread_only:  String(unreadOnly),
+        page:        String(page),
+        limit:       String(LIMIT),
+        unread_only: String(unreadOnly),
+        ...(entityType ? { entity_type: entityType } : {}),
       });
       const res = await fetch(`/api/notifications?${params}`);
       if (!res.ok) throw new Error();
@@ -76,7 +90,7 @@ export default function NotificationPageClient() {
     } finally {
       setLoading(false);
     }
-  }, [page, unreadOnly]);
+  }, [page, unreadOnly, entityType]);
 
   useEffect(() => {
     fetchNotifications();
@@ -84,7 +98,10 @@ export default function NotificationPageClient() {
 
   const pushParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
-    for (const [k, v] of Object.entries(updates)) params.set(k, v);
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === '') params.delete(k);
+      else params.set(k, v);
+    }
     router.push(`/notifiche?${params}`);
   };
 
@@ -112,10 +129,14 @@ export default function NotificationPageClient() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
+  const chipBase = 'whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium border transition cursor-pointer select-none';
+  const chipActive = 'bg-gray-100 text-gray-900 border-gray-100';
+  const chipInactive = 'bg-transparent text-gray-400 border-gray-700 hover:border-gray-500 hover:text-gray-300';
+
   return (
-    <div className="space-y-4">
+    <div className="max-w-2xl space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-100">Notifiche</h1>
           {unread > 0 && (
@@ -124,26 +145,53 @@ export default function NotificationPageClient() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        {unread > 0 && (
           <button
-            onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
-            className={`text-xs px-3 py-1.5 rounded-full border transition ${
-              unreadOnly
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-transparent text-gray-400 border-gray-700 hover:border-gray-500'
-            }`}
+            onClick={handleMarkAllRead}
+            className="shrink-0 text-xs text-blue-400 hover:text-blue-300 transition mt-1"
           >
-            Solo non lette
+            Segna tutte come lette
           </button>
-          {unread > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              className="text-xs text-blue-400 hover:text-blue-300 transition"
-            >
-              Segna tutte come lette
-            </button>
-          )}
-        </div>
+        )}
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {/* All */}
+        <button
+          onClick={() => pushParams({ entity_type: '', page: '1' })}
+          className={`${chipBase} ${!entityType ? chipActive : chipInactive}`}
+        >
+          Tutte
+        </button>
+
+        {/* Type chips */}
+        {TYPE_FILTERS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => pushParams({ entity_type: entityType === key ? '' : key, page: '1' })}
+            className={`${chipBase} ${entityType === key ? chipActive : chipInactive}`}
+          >
+            {label}
+          </button>
+        ))}
+
+        {/* Divider */}
+        <span className="w-px bg-gray-700 mx-1 self-stretch" />
+
+        {/* Unread toggle */}
+        <button
+          onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
+          className={`${chipBase} ${unreadOnly
+            ? 'bg-blue-600 text-white border-blue-600'
+            : chipInactive
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            {unreadOnly && <span className="inline-block w-1.5 h-1.5 rounded-full bg-white" />}
+            Solo non lette
+          </span>
+        </button>
       </div>
 
       {/* List */}
@@ -156,7 +204,7 @@ export default function NotificationPageClient() {
           <p className="text-sm text-gray-500 text-center py-12">Caricamento…</p>
         ) : notifications.length === 0 ? (
           <p className="text-sm text-gray-500 text-center py-12">
-            {unreadOnly ? 'Nessuna notifica non letta' : 'Nessuna notifica'}
+            {unreadOnly ? 'Nessuna notifica non letta' : entityType ? `Nessuna notifica per questa categoria` : 'Nessuna notifica'}
           </p>
         ) : (
           <ul className="divide-y divide-gray-800">

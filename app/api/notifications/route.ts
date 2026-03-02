@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 
 // GET /api/notifications
 // Params (all optional):
-//   page=N        — page number, default 1
-//   limit=N       — per page, default 50 (dropdown), use 20 for full page
-//   unread_only=true — filter to unread only
+//   page=N            — page number, default 1
+//   limit=N           — per page, default 50 (dropdown), use 20 for full page
+//   unread_only=true  — filter to unread only
+//   entity_type=X     — filter by entity type (compensation, event, etc.)
 export async function GET(request: Request) {
   const supabase = await createClient();
 
@@ -15,8 +16,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page  = Math.max(1, parseInt(searchParams.get('page')  ?? '1',  10));
   const limit = Math.max(1, parseInt(searchParams.get('limit') ?? '50', 10));
-  const unreadOnly = searchParams.get('unread_only') === 'true';
+  const unreadOnly  = searchParams.get('unread_only') === 'true';
+  const entityType  = searchParams.get('entity_type') ?? null;
   const offset = (page - 1) * limit;
+
+  const VALID_ENTITY_TYPES = ['compensation', 'reimbursement', 'document', 'ticket', 'communication', 'event', 'opportunity', 'discount'];
 
   let query = supabase
     .from('notifications')
@@ -27,6 +31,9 @@ export async function GET(request: Request) {
 
   if (unreadOnly) {
     query = query.eq('read', false);
+  }
+  if (entityType && VALID_ENTITY_TYPES.includes(entityType)) {
+    query = query.eq('entity_type', entityType);
   }
 
   const { data, error, count } = await query;
