@@ -1,39 +1,125 @@
 const fmt = (n: number) =>
   new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 
-type YearBreakdown = { year: number; total: number };
+type CompYearBreakdown = { year: number; netto: number; lordo: number };
+type ExpYearBreakdown  = { year: number; total: number };
 
 type Props = {
-  compensPaidByYear: YearBreakdown[];
-  compensPending: number;
-  compensGrossCurrentYear: number;
-  expensePaidByYear: YearBreakdown[];
-  expensePending: number;
+  compensPaidByYear: CompYearBreakdown[];
+  compensApprovedLordo: number;
+  compensApprovedNetto: number;
+  compensInAttesaNetto: number;
+  expensePaidByYear: ExpYearBreakdown[];
+  expenseApproved: number;
+  expenseInAttesa: number;
   massimale: number | null;
   paidCurrentYear: number;
   currentYear: number;
 };
 
-function OverviewCard({
-  title,
+// CSS-only tooltip — works when parent has no overflow:hidden
+function InfoTooltip({ tip }: { tip: string }) {
+  return (
+    <span className="relative group/tip inline-block leading-none">
+      <span className="text-gray-500 hover:text-gray-300 cursor-default text-xs select-none transition-colors">ℹ</span>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-xs text-gray-200 opacity-0 group-hover/tip:opacity-100 transition-opacity z-20 shadow-xl whitespace-normal text-left leading-relaxed">
+        {tip}
+      </span>
+    </span>
+  );
+}
+
+const TIP_RITENUTA =
+  "La ritenuta d'acconto (20%) viene trattenuta alla fonte e versata dall'associazione all'Agenzia delle Entrate a tuo nome. È un acconto IRPEF — non è un costo aggiuntivo. Il netto è l'importo che ricevi sul conto.";
+
+const TIP_NETTO_APPROVATO =
+  "Importo netto che verrà accreditato sul tuo conto una volta che il compenso sarà liquidato. Corrisponde al lordo meno la ritenuta d'acconto del 20%.";
+
+function CompensazioniCard({
   paidByYear,
-  pending,
-  grossCurrentYear,
-  currentYear,
+  approvedLordo,
+  approvedNetto,
+  inAttesaNetto,
 }: {
-  title: string;
-  paidByYear: YearBreakdown[];
-  pending: number;
-  grossCurrentYear?: number;
-  currentYear?: number;
+  paidByYear: CompYearBreakdown[];
+  approvedLordo: number;
+  approvedNetto: number;
+  inAttesaNetto: number;
 }) {
-  const totalPaid = paidByYear.reduce((s, r) => s + r.total, 0);
-  const isEmpty = paidByYear.length === 0 && pending === 0 && !grossCurrentYear;
+  const isEmpty = paidByYear.length === 0 && approvedNetto === 0 && inAttesaNetto === 0;
 
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800 flex-1 min-w-0">
+    <div className="rounded-2xl bg-gray-900 border border-gray-800 flex-1 min-w-[260px]">
       <div className="px-5 py-4 border-b border-gray-800">
-        <h2 className="text-sm font-medium text-gray-200">{title}</h2>
+        <h2 className="text-sm font-medium text-gray-200">Compensi liquidati</h2>
+      </div>
+      <div className="p-5 space-y-3">
+        {isEmpty ? (
+          <p className="text-xs text-gray-600 italic">Nessun dato disponibile.</p>
+        ) : (
+          <>
+            {paidByYear.map(({ year, netto, lordo }) => (
+              <div key={year} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">Netto ricevuto nel {year}</span>
+                  <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(netto)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1 text-xs text-gray-600">
+                    Ritenuta trattenuta (20%)
+                    <InfoTooltip tip={TIP_RITENUTA} />
+                  </span>
+                  <span className="text-xs text-gray-600 tabular-nums">− {fmt(lordo - netto)}</span>
+                </div>
+              </div>
+            ))}
+
+            {approvedNetto > 0 && (
+              <div className={`space-y-1.5 ${paidByYear.length > 0 ? 'pt-3 border-t border-gray-800' : ''}`}>
+                <p className="text-xs font-medium text-gray-500">Approvato — in attesa di liquidazione</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Lordo approvato</span>
+                  <span className="text-xs text-gray-400 tabular-nums">{fmt(approvedLordo)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                    Netto che riceverai
+                    <InfoTooltip tip={TIP_NETTO_APPROVATO} />
+                  </span>
+                  <span className="text-sm font-medium text-amber-400 tabular-nums">{fmt(approvedNetto)}</span>
+                </div>
+              </div>
+            )}
+
+            {inAttesaNetto > 0 && (
+              <div className={`flex items-center justify-between ${(paidByYear.length > 0 || approvedNetto > 0) ? 'pt-2 border-t border-gray-800' : ''}`}>
+                <span className="text-xs text-gray-600">In valutazione (netto stimato)</span>
+                <span className="text-xs text-gray-600 tabular-nums">{fmt(inAttesaNetto)}</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RimborsiCard({
+  paidByYear,
+  approved,
+  inAttesa,
+}: {
+  paidByYear: ExpYearBreakdown[];
+  approved: number;
+  inAttesa: number;
+}) {
+  const totalPaid = paidByYear.reduce((s, r) => s + r.total, 0);
+  const isEmpty = paidByYear.length === 0 && approved === 0 && inAttesa === 0;
+
+  return (
+    <div className="rounded-2xl bg-gray-900 border border-gray-800 flex-1 min-w-[260px]">
+      <div className="px-5 py-4 border-b border-gray-800">
+        <h2 className="text-sm font-medium text-gray-200">Rimborsi liquidati</h2>
       </div>
       <div className="p-5 space-y-3">
         {isEmpty ? (
@@ -42,26 +128,26 @@ function OverviewCard({
           <>
             {paidByYear.map(({ year, total }) => (
               <div key={year} className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{year}</span>
-                <span className="text-sm font-medium text-gray-200">{fmt(total)}</span>
+                <span className="text-xs text-gray-400">Ricevuto nel {year}</span>
+                <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(total)}</span>
               </div>
             ))}
             {paidByYear.length > 1 && (
-              <div className="flex items-center justify-between pt-1 border-t border-gray-800">
-                <span className="text-xs text-gray-400">Totale liquidato</span>
-                <span className="text-sm font-semibold text-green-400">{fmt(totalPaid)}</span>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                <span className="text-xs text-gray-400">Totale rimborsi ricevuti</span>
+                <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(totalPaid)}</span>
               </div>
             )}
-            {grossCurrentYear != null && grossCurrentYear > 0 && currentYear != null && (
-              <div className="flex items-center justify-between pt-1 border-t border-gray-800">
-                <span className="text-xs text-gray-500">Lordo {currentYear}</span>
-                <span className="text-sm font-medium text-gray-300">{fmt(grossCurrentYear)}</span>
+            {approved > 0 && (
+              <div className={`flex items-center justify-between ${paidByYear.length > 0 ? 'pt-2 border-t border-gray-800' : ''}`}>
+                <span className="text-xs text-gray-500">Approvato — da liquidare</span>
+                <span className="text-sm font-medium text-amber-400 tabular-nums">{fmt(approved)}</span>
               </div>
             )}
-            {pending > 0 && (
-              <div className={`flex items-center justify-between pt-1 ${paidByYear.length > 0 || (grossCurrentYear != null && grossCurrentYear > 0) ? 'border-t border-gray-800' : ''}`}>
-                <span className="text-xs text-gray-500">In attesa di pagamento</span>
-                <span className="text-sm text-yellow-400">{fmt(pending)}</span>
+            {inAttesa > 0 && (
+              <div className={`flex items-center justify-between ${(paidByYear.length > 0 || approved > 0) ? 'pt-2 border-t border-gray-800' : ''}`}>
+                <span className="text-xs text-gray-600">In valutazione</span>
+                <span className="text-xs text-gray-600 tabular-nums">{fmt(inAttesa)}</span>
               </div>
             )}
           </>
@@ -72,13 +158,13 @@ function OverviewCard({
 }
 
 export default function PaymentOverview({
-  compensPaidByYear, compensPending, compensGrossCurrentYear,
-  expensePaidByYear, expensePending,
+  compensPaidByYear, compensApprovedLordo, compensApprovedNetto, compensInAttesaNetto,
+  expensePaidByYear, expenseApproved, expenseInAttesa,
   massimale, paidCurrentYear, currentYear,
 }: Props) {
   const hasData =
-    compensPaidByYear.length > 0 || compensPending > 0 || compensGrossCurrentYear > 0 ||
-    expensePaidByYear.length > 0 || expensePending > 0;
+    compensPaidByYear.length > 0 || compensApprovedNetto > 0 || compensInAttesaNetto > 0 ||
+    expensePaidByYear.length > 0 || expenseApproved > 0 || expenseInAttesa > 0;
 
   const showMassimale = massimale != null && massimale > 0;
   const pct = showMassimale ? Math.min(100, (paidCurrentYear / massimale) * 100) : 0;
@@ -88,7 +174,7 @@ export default function PaymentOverview({
   if (!hasData && !showMassimale) return null;
 
   return (
-    <div className="mb-6 space-y-4">
+    <div className="mb-8 space-y-5">
       {showMassimale && (
         <div className="rounded-2xl bg-gray-900 border border-gray-800 p-5">
           <div className="flex items-center justify-between mb-2">
@@ -120,17 +206,16 @@ export default function PaymentOverview({
         <>
           <h2 className="text-sm font-medium text-gray-400">I miei pagamenti</h2>
           <div className="flex gap-4 flex-wrap">
-            <OverviewCard
-              title="Compensi liquidati"
+            <CompensazioniCard
               paidByYear={compensPaidByYear}
-              pending={compensPending}
-              grossCurrentYear={compensGrossCurrentYear}
-              currentYear={currentYear}
+              approvedLordo={compensApprovedLordo}
+              approvedNetto={compensApprovedNetto}
+              inAttesaNetto={compensInAttesaNetto}
             />
-            <OverviewCard
-              title="Rimborsi liquidati"
+            <RimborsiCard
               paidByYear={expensePaidByYear}
-              pending={expensePending}
+              approved={expenseApproved}
+              inAttesa={expenseInAttesa}
             />
           </div>
         </>

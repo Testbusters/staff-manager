@@ -5,37 +5,64 @@ import CompenseTabs from '@/components/compensation/CompenseTabs';
 import TicketQuickModal from '@/components/ticket/TicketQuickModal';
 import type { Role } from '@/lib/types';
 
-type YearBreakdown = { year: number; total: number };
+type CompYearBreakdown = { year: number; netto: number; lordo: number };
+type ExpYearBreakdown  = { year: number; total: number };
 
-function groupByYear(
-  rows: { stato: string; liquidated_at: string | null; importo_netto?: number | null; importo?: number }[],
-  activeStates: string[],
-): { paidByYear: YearBreakdown[]; pending: number } {
-  const map: Record<number, number> = {};
-  let pending = 0;
+function groupCompByYear(rows: { stato: string; liquidated_at: string | null; importo_lordo?: number | null; importo_netto?: number | null }[]): {
+  paidByYear: CompYearBreakdown[];
+  approvedLordo: number;
+  approvedNetto: number;
+  inAttesaNetto: number;
+} {
+  const nettoMap: Record<number, number> = {};
+  const lordoMap: Record<number, number> = {};
+  let approvedLordo = 0, approvedNetto = 0, inAttesaNetto = 0;
 
   for (const row of rows) {
-    const amount =
-      'importo' in row
-        ? (row.importo ?? 0)
-        : (row.importo_netto ?? 0);
-
     if (row.stato === 'LIQUIDATO' && row.liquidated_at) {
-      const year = new Date(row.liquidated_at).getFullYear();
-      map[year] = (map[year] ?? 0) + amount;
-    } else if (activeStates.includes(row.stato)) {
-      pending += amount;
+      const y = new Date(row.liquidated_at).getFullYear();
+      nettoMap[y] = (nettoMap[y] ?? 0) + (row.importo_netto ?? 0);
+      lordoMap[y] = (lordoMap[y] ?? 0) + (row.importo_lordo ?? 0);
+    } else if (row.stato === 'APPROVATO') {
+      approvedLordo += row.importo_lordo ?? 0;
+      approvedNetto += row.importo_netto ?? 0;
+    } else if (row.stato === 'IN_ATTESA') {
+      inAttesaNetto += row.importo_netto ?? 0;
     }
   }
 
-  const paidByYear = Object.entries(map)
-    .map(([year, total]) => ({ year: Number(year), total }))
+  const paidByYear = Object.keys(nettoMap)
+    .map((y) => ({ year: Number(y), netto: nettoMap[Number(y)], lordo: lordoMap[Number(y)] ?? 0 }))
     .sort((a, b) => b.year - a.year);
 
-  return { paidByYear, pending };
+  return { paidByYear, approvedLordo, approvedNetto, inAttesaNetto };
 }
 
-const ACTIVE_STATES = ['IN_ATTESA', 'APPROVATO'];
+function groupExpByYear(rows: { stato: string; liquidated_at: string | null; importo?: number }[]): {
+  paidByYear: ExpYearBreakdown[];
+  approved: number;
+  inAttesa: number;
+} {
+  const map: Record<number, number> = {};
+  let approved = 0, inAttesa = 0;
+
+  for (const row of rows) {
+    if (row.stato === 'LIQUIDATO' && row.liquidated_at) {
+      const y = new Date(row.liquidated_at).getFullYear();
+      map[y] = (map[y] ?? 0) + (row.importo ?? 0);
+    } else if (row.stato === 'APPROVATO') {
+      approved += row.importo ?? 0;
+    } else if (row.stato === 'IN_ATTESA') {
+      inAttesa += row.importo ?? 0;
+    }
+  }
+
+  const paidByYear = Object.keys(map)
+    .map((y) => ({ year: Number(y), total: map[Number(y)] }))
+    .sort((a, b) => b.year - a.year);
+
+  return { paidByYear, approved, inAttesa };
+}
 
 export default async function CompensiPage() {
   const supabase = await createClient();
@@ -83,22 +110,23 @@ export default async function CompensiPage() {
       .single(),
   ]);
 
-  const { paidByYear: compensPaidByYear, pending: compensPending } =
-    groupByYear(allCompens ?? [], ACTIVE_STATES);
-  const { paidByYear: expensePaidByYear, pending: expensePending } =
-    groupByYear(allExpenses ?? [], ACTIVE_STATES);
+  const {
+    paidByYear: compensPaidByYear,
+    approvedLordo: compensApprovedLordo,
+    approvedNetto: compensApprovedNetto,
+    inAttesaNetto: compensInAttesaNetto,
+  } = groupCompByYear(allCompens ?? []);
+
+  const {
+    paidByYear: expensePaidByYear,
+    approved: expenseApproved,
+    inAttesa: expenseInAttesa,
+  } = groupExpByYear(allExpenses ?? []);
 
   const massimale = collabRecord?.importo_lordo_massimale ?? null;
 
-  // Gross LIQUIDATO in current year — always computed (used both for massimale bar and gross row)
-  const grossCurrentYear = (allCompens ?? [])
-    .filter(
-      (c) =>
-        c.stato === 'LIQUIDATO' &&
-        c.liquidated_at &&
-        new Date(c.liquidated_at).getFullYear() === currentYear,
-    )
-    .reduce((sum, c) => sum + (c.importo_lordo ?? 0), 0);
+  // Lordo liquidato nell'anno corrente — usato per la barra massimale
+  const paidCurrentYear = compensPaidByYear.find((y) => y.year === currentYear)?.lordo ?? 0;
 
   return (
     <div className="p-6 max-w-5xl">
@@ -114,12 +142,14 @@ export default async function CompensiPage() {
 
       <PaymentOverview
         compensPaidByYear={compensPaidByYear}
-        compensPending={compensPending}
-        compensGrossCurrentYear={grossCurrentYear}
+        compensApprovedLordo={compensApprovedLordo}
+        compensApprovedNetto={compensApprovedNetto}
+        compensInAttesaNetto={compensInAttesaNetto}
         expensePaidByYear={expensePaidByYear}
-        expensePending={expensePending}
+        expenseApproved={expenseApproved}
+        expenseInAttesa={expenseInAttesa}
         massimale={massimale}
-        paidCurrentYear={grossCurrentYear}
+        paidCurrentYear={paidCurrentYear}
         currentYear={currentYear}
       />
 

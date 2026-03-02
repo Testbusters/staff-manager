@@ -126,7 +126,7 @@ export default function CompensationList({
           <p className="text-sm text-gray-500">Nessun compenso trovato.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 overflow-hidden">
+        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
           {filtered.map((c) => (
             <Link
               key={c.id}

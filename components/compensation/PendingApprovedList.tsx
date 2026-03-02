@@ -36,7 +36,7 @@ export default function PendingApprovedList({
   const totalNetto = approved.reduce((s, c) => s + (c.importo_netto ?? 0), 0);
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-amber-700/30 overflow-hidden mb-6">
+    <div className="rounded-xl bg-gray-900 border border-amber-700/30 mb-6">
       <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-2">
         <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
         <p className="text-sm font-medium text-amber-300">Da ricevere</p>
@@ -91,27 +91,18 @@ export default function PendingApprovedList({
         </tbody>
         <tfoot>
           <tr className="border-t border-gray-700 bg-gray-800/30">
-            <td colSpan={3} className="px-4 py-2.5 text-xs font-medium text-gray-500 hidden md:table-cell">
-              Totale da ricevere
-            </td>
-            <td colSpan={3} className="px-4 py-2.5 text-xs font-medium text-gray-500 md:hidden">
-              Totale da ricevere
-            </td>
-            <td className="px-4 py-2.5 text-right text-sm font-semibold text-gray-300 tabular-nums hidden md:table-cell">
-              {fmt(totalLordo)}
-            </td>
-            <td className="px-4 py-2.5 text-right text-sm font-semibold text-amber-300 tabular-nums hidden md:table-cell">
-              {fmt(totalNetto)}
-            </td>
-            <td className="px-4 py-2.5 hidden md:table-cell" />
-          </tr>
-          <tr className="border-t border-gray-700 bg-gray-800/30 md:hidden">
-            <td colSpan={6} className="px-4 py-2.5">
+            <td colSpan={6} className="px-4 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500">Totale</span>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-300 tabular-nums">{fmt(totalLordo)}</span>
-                  <span className="text-sm font-semibold text-amber-300 tabular-nums">{fmt(totalNetto)}</span>
+                <span className="text-xs font-medium text-gray-500">Totale da ricevere</span>
+                <div className="flex items-center gap-6">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[10px] text-gray-600 mb-0.5">Lordo</p>
+                    <span className="text-sm font-semibold text-gray-300 tabular-nums">{fmt(totalLordo)}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-600 mb-0.5">Netto</p>
+                    <span className="text-sm font-semibold text-amber-300 tabular-nums">{fmt(totalNetto)}</span>
+                  </div>
                 </div>
               </div>
             </td>
