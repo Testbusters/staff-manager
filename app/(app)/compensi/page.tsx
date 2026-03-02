@@ -31,8 +31,8 @@ function groupCompByYear(rows: { stato: string; liquidated_at: string | null; im
     }
   }
 
-  const paidByYear = Object.keys(nettoMap)
-    .map((y) => ({ year: Number(y), netto: nettoMap[Number(y)], lordo: lordoMap[Number(y)] ?? 0 }))
+  const paidByYear = Object.entries(nettoMap)
+    .map(([y, netto]) => ({ year: Number(y), netto, lordo: lordoMap[Number(y)] ?? 0 }))
     .sort((a, b) => b.year - a.year);
 
   return { paidByYear, approvedLordo, approvedNetto, inAttesaNetto };
@@ -57,8 +57,8 @@ function groupExpByYear(rows: { stato: string; liquidated_at: string | null; imp
     }
   }
 
-  const paidByYear = Object.keys(map)
-    .map((y) => ({ year: Number(y), total: map[Number(y)] }))
+  const paidByYear = Object.entries(map)
+    .map(([y, total]) => ({ year: Number(y), total }))
     .sort((a, b) => b.year - a.year);
 
   return { paidByYear, approved, inAttesa };

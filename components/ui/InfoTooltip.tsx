@@ -8,8 +8,11 @@ export function InfoTooltip({ tip }: { tip: string }) {
   return (
     <span
       className="relative inline-block leading-none"
+      tabIndex={0}
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
     >
       <span className={`cursor-default text-xs select-none transition-colors ${show ? 'text-gray-300' : 'text-gray-500'}`}>
         ℹ
