@@ -7,20 +7,13 @@ import type { AdminDashboardData } from '@/components/admin/types';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
 import DashboardBarChart from '@/components/compensation/DashboardBarChart';
 import type { BarMonthData } from '@/components/compensation/DashboardBarChart';
+import DashboardUpdates from '@/components/compensation/DashboardUpdates';
+import type { DashboardDocItem } from '@/components/compensation/DashboardUpdates';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
   'IN_ATTESA', 'APPROVATO',
 ]);
-
-const ACTION_LABELS: Record<string, string> = {
-  submit:         'inviato',
-  withdraw:       'ritirato',
-  reopen:         'riaperto',
-  approve:        'approvato',
-  reject:         'rifiutato',
-  mark_liquidated: 'liquidato',
-};
 
 // ── Types ──────────────────────────────────────────────────
 type CompRow = {
@@ -43,6 +36,11 @@ type CommStat = {
   stalloCount: number;
 };
 
+
+// ── Helpers ────────────────────────────────────────────────
+const sectionCls = 'rounded-2xl bg-gray-900 border border-gray-800';
+
+// ── Types used by responsabile feed ─────────────────────────
 type FeedItem = {
   key:  string;
   icon: 'comp' | 'exp' | 'ticket' | 'ann';
@@ -51,8 +49,29 @@ type FeedItem = {
   href: string;
 };
 
-// ── Helpers ────────────────────────────────────────────────
-const sectionCls = 'rounded-2xl bg-gray-900 border border-gray-800';
+const FEED_ICONS: Record<FeedItem['icon'], string> = {
+  comp:   '💼',
+  exp:    '🧾',
+  ticket: '💬',
+  ann:    '📣',
+};
+
+function FeedRow({ item }: { item: FeedItem }) {
+  return (
+    <Link
+      href={item.href}
+      className="flex items-start gap-3 py-2.5 px-1 rounded-lg hover:bg-gray-800/50 transition group"
+    >
+      <span className="text-base mt-0.5 flex-shrink-0">{FEED_ICONS[item.icon]}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-gray-300 group-hover:text-gray-100 truncate transition">{item.text}</p>
+        <p className="text-xs text-gray-600 mt-0.5">
+          {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 function eur(n: number) {
   return n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
@@ -179,30 +198,6 @@ function CommCard({ stat }: { stat: CommStat }) {
         </p>
       )}
     </div>
-  );
-}
-
-const FEED_ICONS: Record<FeedItem['icon'], string> = {
-  comp:   '💼',
-  exp:    '🧾',
-  ticket: '💬',
-  ann:    '📣',
-};
-
-function FeedRow({ item }: { item: FeedItem }) {
-  return (
-    <Link
-      href={item.href}
-      className="flex items-start gap-3 py-2.5 px-1 rounded-lg hover:bg-gray-800/50 transition group"
-    >
-      <span className="text-base mt-0.5 flex-shrink-0">{FEED_ICONS[item.icon]}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-300 group-hover:text-gray-100 truncate transition">{item.text}</p>
-        <p className="text-xs text-gray-600 mt-0.5">
-          {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
-        </p>
-      </div>
-    </Link>
   );
 }
 
@@ -974,36 +969,28 @@ export default async function DashboardPage() {
 
   // Parallel main fetches
   const docsQuery = collaborator
-    ? supabase.from('documents').select('id, titolo').eq('collaborator_id', collaborator.id).eq('stato_firma', 'DA_FIRMARE')
-    : Promise.resolve({ data: null as { id: string; titolo: string }[] | null, error: null });
+    ? supabase.from('documents')
+        .select('id, titolo, tipo, created_at')
+        .eq('collaborator_id', collaborator.id)
+        .eq('stato_firma', 'DA_FIRMARE')
+        .order('created_at', { ascending: false })
+    : Promise.resolve({ data: null as DashboardDocItem[] | null, error: null });
 
   const [
     { data: compensations },
     { data: expenses },
     { data: docsToSign },
     { data: allTickets },
-    { data: announcements },
   ] = await Promise.all([
     supabase.from('compensations').select('id, stato, importo_netto, importo_lordo, liquidated_at'),
     supabase.from('expense_reimbursements').select('id, stato, importo, liquidated_at'),
     docsQuery,
     supabase.from('tickets').select('id, oggetto, stato').eq('creator_user_id', user.id),
-    supabase
-      .from('announcements')
-      .select('id, titolo, published_at')
-      .order('pinned', { ascending: false })
-      .order('published_at', { ascending: false })
-      .limit(3),
   ]);
 
   // Derive IDs for second-tier queries
-  const compIds = (compensations ?? []).map((c: CompRow) => c.id);
-  const expIds   = (expenses ?? []).map((e: ExpRow) => e.id);
-  const openTickets     = (allTickets ?? []).filter((t: { id: string; oggetto: string; stato: string }) => t.stato !== 'CHIUSO');
-  const openTicketIds   = openTickets.map((t: { id: string }) => t.id);
-  const ticketOggettoMap: Record<string, string> = Object.fromEntries(
-    (allTickets ?? []).map((t: { id: string; oggetto: string }) => [t.id, t.oggetto]),
-  );
+  const openTickets   = (allTickets ?? []).filter((t: { id: string; oggetto: string; stato: string }) => t.stato !== 'CHIUSO');
+  const openTicketIds = openTickets.map((t: { id: string }) => t.id);
 
   // Service client for ticket_messages (bypasses RLS — ticket service role pattern)
   const serviceClient = createServiceClient(
@@ -1011,26 +998,13 @@ export default async function DashboardPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Parallel second-tier fetches
-  type CompHistRow = { compensation_id: string; azione: string; created_at: string };
-  type ExpHistRow  = { reimbursement_id: string; azione: string; created_at: string };
-  type MsgRow      = { id: string; ticket_id: string; author_user_id: string; created_at: string };
+  type MsgRow = { id: string; ticket_id: string; author_user_id: string; created_at: string };
 
-  const [
-    { data: compHistory },
-    { data: expHistory },
-    { data: ticketMsgs },
-  ] = await Promise.all([
-    compIds.length > 0
-      ? supabase.from('compensation_history').select('compensation_id, azione, created_at').in('compensation_id', compIds).order('created_at', { ascending: false }).limit(5)
-      : Promise.resolve({ data: null as CompHistRow[] | null, error: null }),
-    expIds.length > 0
-      ? supabase.from('expense_history').select('reimbursement_id, azione, created_at').in('reimbursement_id', expIds).order('created_at', { ascending: false }).limit(5)
-      : Promise.resolve({ data: null as ExpHistRow[] | null, error: null }),
+  const { data: ticketMsgs } = await (
     openTicketIds.length > 0
       ? serviceClient.from('ticket_messages').select('id, ticket_id, author_user_id, created_at').in('ticket_id', openTicketIds).order('created_at', { ascending: false })
-      : Promise.resolve({ data: null as MsgRow[] | null, error: null }),
-  ]);
+      : Promise.resolve({ data: null as MsgRow[] | null, error: null })
+  );
 
   // ── Aggregations ──────────────────────────────────────────
 
@@ -1084,11 +1058,8 @@ export default async function DashboardPage() {
   const barData = buildBarData(compensations ?? [], expenses ?? []);
   const barHasData = barData.some((d) => d.compensi > 0 || d.rimborsi > 0);
 
-  // Da fare — sostituisce "Cosa mi manca" con voci specifiche
+  // Da fare — ticket senza risposta + profilo incompleto (docs shown in Ultimi aggiornamenti)
   const daFare: { text: string; href: string }[] = [];
-  for (const doc of (docsToSign ?? []) as { id: string; titolo: string }[]) {
-    daFare.push({ text: `"${doc.titolo}" in attesa di firma`, href: `/documenti/${doc.id}` });
-  }
   if (ticketNeedsReply > 0) {
     daFare.push({
       text: `${ticketNeedsReply} ticket in attesa di risposta`,
@@ -1107,56 +1078,6 @@ export default async function DashboardPage() {
   const todayStr = new Date().toLocaleDateString('it-IT', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   }).replace(/^\w/, (c) => c.toUpperCase());
-
-  // Feed
-  const feedItems: FeedItem[] = [];
-
-  for (const h of (compHistory ?? []) as CompHistRow[]) {
-    feedItems.push({
-      key:  `ch-${h.compensation_id}-${h.created_at}`,
-      icon: 'comp',
-      text: `Compenso ${ACTION_LABELS[h.azione] ?? h.azione}`,
-      date: h.created_at,
-      href: `/compensi/${h.compensation_id}`,
-    });
-  }
-
-  for (const h of (expHistory ?? []) as ExpHistRow[]) {
-    feedItems.push({
-      key:  `eh-${h.reimbursement_id}-${h.created_at}`,
-      icon: 'exp',
-      text: `Rimborso ${ACTION_LABELS[h.azione] ?? h.azione}`,
-      date: h.created_at,
-      href: `/rimborsi/${h.reimbursement_id}`,
-    });
-  }
-
-  const seenTicketFeed = new Set<string>();
-  for (const m of (ticketMsgs ?? []) as MsgRow[]) {
-    if (m.author_user_id !== user.id && !seenTicketFeed.has(m.ticket_id)) {
-      seenTicketFeed.add(m.ticket_id);
-      feedItems.push({
-        key:  `tm-${m.id}`,
-        icon: 'ticket',
-        text: `Risposta ricevuta: "${ticketOggettoMap[m.ticket_id] ?? 'Ticket'}"`,
-        date: m.created_at,
-        href: `/ticket/${m.ticket_id}`,
-      });
-    }
-  }
-
-  for (const a of (announcements ?? []) as { id: string; titolo: string; published_at: string }[]) {
-    feedItems.push({
-      key:  `ann-${a.id}`,
-      icon: 'ann',
-      text: a.titolo,
-      date: a.published_at,
-      href: '/contenuti?tab=bacheca',
-    });
-  }
-
-  feedItems.sort((a, b) => b.date.localeCompare(a.date));
-  const feed = feedItems.slice(0, 10);
 
   // ── Render ─────────────────────────────────────────────────
   return (
@@ -1215,7 +1136,10 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* Da fare */}
+      {/* Ultimi aggiornamenti — tabs (Documenti functional; others coming in Block 12) */}
+      <DashboardUpdates documents={(docsToSign ?? []) as DashboardDocItem[]} />
+
+      {/* Da fare — ticket senza risposta + profilo incompleto */}
       {daFare.length > 0 && (
         <div className={sectionCls}>
           <div className="px-5 py-4 border-b border-gray-800">
@@ -1290,12 +1214,12 @@ export default async function DashboardPage() {
           <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-3">
             <h2 className="text-sm font-medium text-gray-200">Ultimi 6 mesi</h2>
             <div className="flex items-center gap-4 ml-auto">
-              <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
+              <span className="flex items-center gap-1.5 text-xs text-blue-400">
+                <span className="inline-block w-3 h-3 rounded bg-blue-500 flex-shrink-0" />
                 Compensi
               </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span className="inline-block w-2.5 h-2.5 rounded-sm bg-teal-500" />
+              <span className="flex items-center gap-1.5 text-xs text-teal-400">
+                <span className="inline-block w-3 h-3 rounded bg-teal-500 flex-shrink-0" />
                 Rimborsi
               </span>
             </div>
@@ -1305,20 +1229,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Ultimi aggiornamenti */}
-      <div className={sectionCls}>
-        <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-medium text-gray-200">Ultimi aggiornamenti</h2>
-        </div>
-        <div className="px-4 py-2 divide-y divide-gray-800/50">
-          {feed.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-6">Nessun aggiornamento recente.</p>
-          ) : (
-            feed.map((item) => <FeedRow key={item.key} item={item} />)
-          )}
-        </div>
-      </div>
     </div>
   );
 }
