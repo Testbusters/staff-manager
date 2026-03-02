@@ -27,8 +27,7 @@ export default function PendingApprovedList({
   return (
     <div className="rounded-xl bg-gray-900 border border-amber-700/30 mb-6">
       <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-2">
-        <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
-        <p className="text-sm font-medium text-amber-300">Da ricevere</p>
+        <p className="text-sm font-semibold text-amber-300">Da ricevere</p>
         <span className="text-xs text-gray-500">
           — {approved.length} {approved.length === 1 ? 'compenso approvato' : 'compensi approvati'}, in attesa di liquidazione
         </span>
@@ -40,9 +39,7 @@ export default function PendingApprovedList({
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Descrizione</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Community</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Periodo</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">
-              <span className="inline-flex items-center gap-1">Lordo <InfoTooltip tip={TOOLTIP_TEXT} /></span>
-            </th>
+            <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Lordo</th>
             <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">
               <span className="inline-flex items-center gap-1">Netto <InfoTooltip tip={TOOLTIP_TEXT} /></span>
             </th>
