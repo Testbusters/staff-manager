@@ -154,16 +154,18 @@ components/
     NotificationPageClient.tsx   → Full notifications page: "solo non lette" filter toggle, pagination (20/page), mark-read + dismiss per row
   ProfileForm.tsx                → Profile edit form (avatar, fiscal data, guide collassabili)
   compensation/
-    PaymentOverview.tsx          → Server component: payments by year (PAGATO) + pending balance
-  compensation/
+    PaymentOverview.tsx          → Server component: CompensazioniCard (netto per year + ritenuta 20% + APPROVATO section + IN_ATTESA dimmed) + RimborsiCard (total per year + approved + in_attesa) + massimale progress bar
+    CompenseTabs.tsx             → Client: tab switcher compensi/rimborsi with count badges
+    PendingApprovedList.tsx      → "Da ricevere" amber card: table of APPROVATO compensations with lordo/netto + total footer
     StatusBadge.tsx              → Pill badge for CompensationStatus | ExpenseStatus
     CompensationCreateWizard.tsx → 3-step creation wizard for responsabile/admin (choice→search collab→data→summary+create)
-    CompensationList.tsx         → Table with status filter
+    CompensationList.tsx         → Card list with status filter chips + chevron; meta row: community dot + Competenza + Inviato; tooltip only on netto
     CompensationDetail.tsx       → Read-only detail card
     Timeline.tsx                 → Chronological event list (accepts HistoryEvent[])
     ActionPanel.tsx              → Role-aware action buttons + modals
   expense/
-    ExpenseList.tsx              → Reimbursement table with status filter
+    ExpenseList.tsx              → Card list with status filter chips + chevron; date labels: Spesa/Inviato
+    PendingApprovedExpenseList.tsx → "Da liquidare" amber card: table of APPROVATO expenses with importo + total footer
     ExpenseDetail.tsx            → Read-only reimbursement detail card
     ExpenseActionPanel.tsx       → Role-aware action buttons + modals for reimbursements
     ExpenseForm.tsx              → Single-step creation form (categoria, data, importo, descrizione + file upload)
@@ -176,6 +178,8 @@ components/
     DocumentSignFlow.tsx         → Collaboratore: download original + checkbox confirmation gate + upload signed PDF
     DocumentDeleteButton.tsx     → Client component: delete CONTRATTO (admin only) via DELETE API + redirect
     CUBatchUpload.tsx            → Admin: ZIP + CSV + year batch import with success/duplicate/error detail
+  ui/
+    InfoTooltip.tsx              → Client component: hover + keyboard-accessible ℹ tooltip (useState, tabIndex=0, onFocus/onBlur)
   ticket/
     TicketStatusBadge.tsx        → Pill badge for ticket status (APERTO=green, IN_LAVORAZIONE=yellow, CHIUSO=gray)
     TicketList.tsx               → Ticket table with status/priority filters + Collaboratore column for admin
@@ -235,7 +239,7 @@ supabase/migrations/
   023_workflow_refactor.sql      → (skipped — superseded by 024)
   024_remove_bozza_add_corso.sql → Remove BOZZA state (migrate→IN_ATTESA, update CHECK, DEFAULT IN_ATTESA); ADD COLUMN corso_appartenenza TEXT on compensations
 
-__tests__/                         → 156 tests total (vitest)
+__tests__/                         → 156 tests total (vitest)  <!-- Block 9: no new tests (UI-only block) -->
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
   export-utils.test.ts             → Unit tests for CSV/XLSX builders

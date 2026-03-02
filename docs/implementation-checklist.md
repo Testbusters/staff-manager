@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-02-27. Blocco 7 ✅ Blocco 8 ✅. Prossimo: definire Blocco 9.
+> Aggiornato 2026-03-02. Blocco 9 ✅. Prossimo: definire Blocco 10.
 
 ---
 
@@ -17,6 +17,7 @@
 | 2026-02-27 | Blocco 5 — Editing profilo responsabile_compensi + security fix + contratto profilo | ✅ | tsc ✅, build ✅, vitest 141/141 ✅, e2e ⏸ (sospeso) | Fix community check su PATCH username. Nuovo `PATCH /api/admin/collaboratori/[id]/profile` (no IBAN). Form edit in CollaboratoreDetail. `docs/profile-editing-contract.md`. Username `collaboratore_test` generato per utente canonico. |
 | 2026-02-27 | Blocco 6 — Wizard rimborso 3-step + aggiornamento categorie | ✅ | tsc ✅, build ✅, vitest 153/153 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 022 (descrizione nullable). ExpenseForm refactored wizard 3-step (Dati→Allegati→Riepilogo+Conferma). EXPENSE_CATEGORIES: Trasporti/Materiali/Cancelleria. TICKET_CATEGORIES: Generale/Compensi/Documenti/Accesso/Altro. |
 | 2026-02-27 | Blocco 7 — Refactor workflow compensi + Blocco 8 — Wizard carico compensi | ✅ | tsc ✅, build ✅, vitest 156/156 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 024 (rimozione BOZZA, DEFAULT IN_ATTESA, cors_appartenenza). Workflow: IN_ATTESA→APPROVATO→LIQUIDATO/RIFIUTATO; reopen RIFIUTATO→IN_ATTESA. POST /api/compensations riscritto (responsabile/admin only). GET /api/admin/collaboratori (ricerca community-scoped). CompensationCreateWizard 3-step. /approvazioni/carica. |
+| 2026-03-02 | Blocco 9 — Finalizzazione sezione Collaboratore - Compensi e Rimborsi | ✅ | tsc ✅, build ✅, vitest 156/156 ✅, e2e ⏸ (sospeso, CLAUDE.local.md), smoke test OK | PaymentOverview redesign: verbose labels ("Netto ricevuto nel {year}", ritenuta 20% con InfoTooltip), sezione APPROVATO separata, IN_ATTESA dimmed. Tab Compensi: PendingApprovedList (card "Da ricevere"), CompensationList con chevron + meta labeling (Competenza/Inviato). Tab Rimborsi: PendingApprovedExpenseList (card "Da liquidare"), ExpenseList con date etichettate (Spesa/Inviato) + chevron. InfoTooltip client component (useState, keyboard-accessible). Rimossi file obsoleti: CompensationWizard.tsx, compensi/nuova/page.tsx, attachments route. TicketQuickModal → bg-blue-600. |
 
 ---
 
@@ -187,6 +188,23 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | 8a — GET /api/admin/collaboratori (ricerca) | ✅ | Scoped per community del responsabile, filtri q/community_id/active_only |
 | 8b — CompensationCreateWizard (3-step) | ✅ | choice→cerca collab→dati (ritenuta 20% auto)→riepilogo+crea |
 | 8c — /approvazioni/carica + bottone | ✅ | Server page con managedCommunities prop; bottone in /approvazioni |
+
+---
+
+## Blocco 9 — Finalizzazione sezione Collaboratore - Compensi e Rimborsi ✅
+
+> Requisito: `docs/requirements.md` §13 — Sezione Compensi e Rimborsi (collaboratore)
+> Dipendenze: Blocco 7, Blocco 8
+
+| Sotto-blocco | Stato | Note |
+|---|---|---|
+| 9a — PaymentOverview redesign | ✅ | CompensazioniCard + RimborsiCard, verbose labels, ritenuta 20%, APPROVATO section, IN_ATTESA dimmed, massimale CTA link |
+| 9b — CompenseTabs: tab Compensi | ✅ | PendingApprovedList card "Da ricevere", CompensationList chevron + tooltip netti, meta row (dot+community · Competenza · Inviato) |
+| 9c — CompenseTabs: tab Rimborsi | ✅ | PendingApprovedExpenseList card "Da liquidare", ExpenseList date labels (Spesa/Inviato) + chevron |
+| 9d — InfoTooltip client component | ✅ | useState hover + keyboard focus/blur, tabIndex=0, replaces broken CSS-only group/tip pattern (Tailwind v4 incompatibility) |
+| 9e — Cleanup file obsoleti | ✅ | Rimossi: CompensationWizard.tsx, compensi/nuova/page.tsx, api/compensations/[id]/attachments/route.ts |
+| 9f — TicketQuickModal CTA | ✅ | Trigger button → bg-blue-600 hover:bg-blue-500 text-white |
+| 9g — Simplify review | ✅ | Object.entries per grouping functions; InfoTooltip keyboard support; formatDate/formatCurrency extraction → backlog S8 |
 
 ---
 

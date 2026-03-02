@@ -46,6 +46,7 @@ Non bloccanti per le funzionalità correnti salvo dove indicato **CRITICO/ALTO**
 | SEC6 | Nessuna rotation policy documentata per RESEND_API_KEY | BASSO |
 | N1 | `compensi/nuova/page.tsx` è codice morto (redirect tutti i ruoli) — da rimuovere con `CompensationWizard` | BASSO |
 | N2 | `contenuti/page.tsx` accessibile ai collaboratori ma non in nav — valutare redirect a /comunicazioni | BASSO |
+| S8 | `formatDate` e `formatCurrency` duplicati in 4+ componenti — estrarre in `lib/format-utils.ts` | BASSO |
 
 ---
 
@@ -136,6 +137,12 @@ Non bloccanti per le funzionalità correnti salvo dove indicato **CRITICO/ALTO**
 - **File**: `app/api/documents/route.ts:109`
 - **Impatto**: BASSO
 - **Fix**: Sostituire tutti i filtri `.like('tipo', '...')` con `.eq('macro_type', '...')`.
+
+### S8 — `formatDate` e `formatCurrency` duplicati in 4+ componenti
+- **Problema**: `formatDate` (toLocaleDateString it-IT DD/MM/YYYY) e `formatCurrency` (Intl.NumberFormat EUR) sono definite localmente in `CompensationList.tsx`, `ExpenseList.tsx`, `PendingApprovedList.tsx`, `PendingApprovedExpenseList.tsx` e altri. Cambiare il formato richiede aggiornare tutti.
+- **File**: `components/compensation/CompensationList.tsx`, `components/compensation/PendingApprovedList.tsx`, `components/expense/ExpenseList.tsx`, `components/expense/PendingApprovedExpenseList.tsx`
+- **Impatto**: BASSO
+- **Fix**: Estrarre in `lib/format-utils.ts` e importare in tutti i consumer.
 
 ### S7 — Nessun check `file.size` prima del Buffer upload
 - **Problema**: Le route di upload non validano la dimensione del file prima della conversione in Buffer. Il bucket ha policy da 10MB ma il check avviene a posteriori (dopo che il server ha già letto il body).
@@ -255,11 +262,11 @@ Non bloccanti per le funzionalità correnti salvo dove indicato **CRITICO/ALTO**
 
 ## TC — Test coverage
 
-### TC1 — Nessun test unit per `reject_manager` in compensation-transitions
-- **Problema**: L'azione `reject_manager` esiste nella state machine ma non è coperta dai 20 test vitest esistenti.
-- **File**: `__tests__/compensation-transitions.test.ts`
+### TC1 — Test unit per nuove azioni workflow (Block 7)
+- **Problema**: Le nuove azioni `reopen` (RIFIUTATO → BOZZA) e `approve_all` non hanno copertura unit.
+- **File**: `__tests__/compensation-transitions.test.ts`, `__tests__/expense-transitions.test.ts`
 - **Impatto**: MEDIO
-- **Fix**: Aggiungere test: `INVIATO → reject_manager → RIFIUTATO` e `INTEGRAZIONI_RICHIESTE → reject_manager → RIFIUTATO`.
+- **Fix**: Aggiungere test per reopen, approve_all, reject (con rejection_note). Da fare in Blocco 7c.
 
 ### TC2 — Nessun test unit per null values in `buildCSV`
 - **Problema**: `buildCSV` usa `?? ''` per campi null ma nessun test verifica l'output per un item con `importo=null`.
@@ -271,7 +278,7 @@ Non bloccanti per le funzionalità correnti salvo dove indicato **CRITICO/ALTO**
 - **Problema**: `POST /api/export/mark-paid` con array di ID multipli non è coperto da nessun test Playwright.
 - **File**: `e2e/export.spec.ts`
 - **Impatto**: MEDIO
-- **Fix**: Aggiungere scenario `S9: seleziona 3 compensi → bulk mark-paid → verifica DB status=PAGATO`.
+- **Fix**: Aggiungere scenario `S9: seleziona 3 compensi → bulk mark-liquidated → verifica DB stato=LIQUIDATO`. Da aggiornare in Blocco 7c.
 
 ### TC4 — Nessun test per failure path email Resend
 - **Problema**: `sendEmail().catch(() => {})` non è mai testato. Il path di errore non viene mai esercitato.
