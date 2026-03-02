@@ -40,7 +40,7 @@ export default function ExpenseList({
 
   return (
     <div className="space-y-4">
-      {/* Filter bar */}
+      {/* Filter chips + CTA */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
           <button
@@ -78,57 +78,46 @@ export default function ExpenseList({
         )}
       </div>
 
-      {/* Table */}
+      {/* Card list */}
       {filtered.length === 0 ? (
         <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
           <p className="text-sm text-gray-500">Nessun rimborso trovato.</p>
           {role === 'collaboratore' && (
-            <Link href="/rimborsi/nuova" className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300">
+            <Link
+              href="/rimborsi/nuova"
+              className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300"
+            >
               Crea la prima richiesta →
             </Link>
           )}
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-800">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Stato</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Categoria</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Data spesa</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Importo</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell">Inviato il</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {filtered.map((e) => (
-                <tr key={e.id} className="hover:bg-gray-800/50 transition">
-                  <td className="px-4 py-3">
-                    <StatusBadge stato={e.stato} />
-                  </td>
-                  <td className="px-4 py-3 text-gray-300">{e.categoria}</td>
-                  <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">
-                    {formatDate(e.data_spesa)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-200 font-medium tabular-nums">
-                    {formatCurrency(e.importo)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-500 hidden lg:table-cell tabular-nums">
-                    {formatDate(e.created_at)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/rimborsi/${e.id}`}
-                      className="text-xs text-blue-400 hover:text-blue-300"
-                    >
-                      Dettaglio →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 overflow-hidden">
+          {filtered.map((e) => (
+            <Link
+              key={e.id}
+              href={`/rimborsi/${e.id}`}
+              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-gray-800/50 transition"
+            >
+              {/* Left: category + meta */}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-100">{e.categoria}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                  <span>{formatDate(e.data_spesa)}</span>
+                  <span className="text-gray-700">·</span>
+                  <span>inviato {formatDate(e.created_at)}</span>
+                </div>
+              </div>
+
+              {/* Right: amount + badge */}
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <span className="tabular-nums font-medium text-gray-200 text-sm">
+                  {formatCurrency(e.importo)}
+                </span>
+                <StatusBadge stato={e.stato} />
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </div>

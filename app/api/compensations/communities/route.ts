@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 /**
  * GET /api/compensations/communities
  * Returns the communities the current collaboratore belongs to.
- * Used by the CompensationWizard to populate the community selector.
+ * Used by the compensation creation wizard (responsabile) to populate the community selector.
  */
 export async function GET() {
   const supabase = await createClient();

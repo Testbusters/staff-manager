@@ -201,10 +201,10 @@ test.describe.serial('Dashboard collaboratore UAT', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Nuovo compenso
-    await page.click('a[href="/compensi/nuova"]');
-    await page.waitForURL('**/compensi/nuova', { timeout: 10_000 });
-    await expect(page).toHaveURL(/\/compensi\/nuova/);
+    // Nuovo compenso — /compensi/nuova reindirizza a /compensi (collaboratore non crea compensi)
+    await page.goto('/compensi/nuova');
+    await page.waitForURL('**/compensi', { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/compensi/);
 
     // Nuovo rimborso
     await page.goto('/');

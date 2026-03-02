@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import CompensationList from '@/components/compensation/CompensationList';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
-import ExpenseList from '@/components/expense/ExpenseList';
+import CompenseTabs from '@/components/compensation/CompenseTabs';
 import TicketQuickModal from '@/components/ticket/TicketQuickModal';
 import type { Role } from '@/lib/types';
 
@@ -90,13 +89,16 @@ export default async function CompensiPage() {
     groupByYear(allExpenses ?? [], ACTIVE_STATES);
 
   const massimale = collabRecord?.importo_lordo_massimale ?? null;
-  // Sum gross amount of compensations liquidated in the current year
-  const paidCurrentYear = massimale != null
-    ? (allCompens ?? [])
-        .filter((c) => c.stato === 'LIQUIDATO' && c.liquidated_at &&
-          new Date(c.liquidated_at).getFullYear() === currentYear)
-        .reduce((sum, c) => sum + (c.importo_lordo ?? 0), 0)
-    : 0;
+
+  // Gross LIQUIDATO in current year — always computed (used both for massimale bar and gross row)
+  const grossCurrentYear = (allCompens ?? [])
+    .filter(
+      (c) =>
+        c.stato === 'LIQUIDATO' &&
+        c.liquidated_at &&
+        new Date(c.liquidated_at).getFullYear() === currentYear,
+    )
+    .reduce((sum, c) => sum + (c.importo_lordo ?? 0), 0);
 
   return (
     <div className="p-6 max-w-5xl">
@@ -113,32 +115,19 @@ export default async function CompensiPage() {
       <PaymentOverview
         compensPaidByYear={compensPaidByYear}
         compensPending={compensPending}
+        compensGrossCurrentYear={grossCurrentYear}
         expensePaidByYear={expensePaidByYear}
         expensePending={expensePending}
         massimale={massimale}
-        paidCurrentYear={paidCurrentYear}
+        paidCurrentYear={grossCurrentYear}
         currentYear={currentYear}
       />
 
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
-          Compensi
-        </h2>
-        <CompensationList
-          compensations={compensations ?? []}
-          role={profile.role as Role}
-        />
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
-          Rimborsi
-        </h2>
-        <ExpenseList
-          expenses={expenses ?? []}
-          role={profile.role as Role}
-        />
-      </div>
+      <CompenseTabs
+        compensations={compensations ?? []}
+        expenses={expenses ?? []}
+        role={profile.role as Role}
+      />
     </div>
   );
 }

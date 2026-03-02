@@ -6,6 +6,7 @@ type YearBreakdown = { year: number; total: number };
 type Props = {
   compensPaidByYear: YearBreakdown[];
   compensPending: number;
+  compensGrossCurrentYear: number;
   expensePaidByYear: YearBreakdown[];
   expensePending: number;
   massimale: number | null;
@@ -17,12 +18,17 @@ function OverviewCard({
   title,
   paidByYear,
   pending,
+  grossCurrentYear,
+  currentYear,
 }: {
   title: string;
   paidByYear: YearBreakdown[];
   pending: number;
+  grossCurrentYear?: number;
+  currentYear?: number;
 }) {
   const totalPaid = paidByYear.reduce((s, r) => s + r.total, 0);
+  const isEmpty = paidByYear.length === 0 && pending === 0 && !grossCurrentYear;
 
   return (
     <div className="rounded-2xl bg-gray-900 border border-gray-800 flex-1 min-w-0">
@@ -30,7 +36,7 @@ function OverviewCard({
         <h2 className="text-sm font-medium text-gray-200">{title}</h2>
       </div>
       <div className="p-5 space-y-3">
-        {paidByYear.length === 0 && pending === 0 ? (
+        {isEmpty ? (
           <p className="text-xs text-gray-600 italic">Nessun dato disponibile.</p>
         ) : (
           <>
@@ -44,6 +50,12 @@ function OverviewCard({
               <div className="flex items-center justify-between pt-1 border-t border-gray-800">
                 <span className="text-xs text-gray-400">Totale liquidato</span>
                 <span className="text-sm font-semibold text-green-400">{fmt(totalPaid)}</span>
+              </div>
+            )}
+            {grossCurrentYear != null && grossCurrentYear > 0 && currentYear != null && (
+              <div className="flex items-center justify-between pt-1 border-t border-gray-800">
+                <span className="text-xs text-gray-500">Lordo {currentYear}</span>
+                <span className="text-sm font-medium text-gray-300">{fmt(grossCurrentYear)}</span>
               </div>
             )}
             {pending > 0 && (
@@ -60,12 +72,12 @@ function OverviewCard({
 }
 
 export default function PaymentOverview({
-  compensPaidByYear, compensPending,
+  compensPaidByYear, compensPending, compensGrossCurrentYear,
   expensePaidByYear, expensePending,
   massimale, paidCurrentYear, currentYear,
 }: Props) {
   const hasData =
-    compensPaidByYear.length > 0 || compensPending > 0 ||
+    compensPaidByYear.length > 0 || compensPending > 0 || compensGrossCurrentYear > 0 ||
     expensePaidByYear.length > 0 || expensePending > 0;
 
   const showMassimale = massimale != null && massimale > 0;
@@ -80,7 +92,9 @@ export default function PaymentOverview({
       {showMassimale && (
         <div className="rounded-2xl bg-gray-900 border border-gray-800 p-5">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-medium text-gray-200">Massimale annuo {currentYear}</h2>
+            <h2 className="text-sm font-medium text-gray-200">
+              Massimale annuo {currentYear} lordo
+            </h2>
             <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-400' : isNearLimit ? 'text-yellow-400' : 'text-gray-400'}`}>
               {fmt(paidCurrentYear)} / {fmt(massimale)}
             </span>
@@ -95,7 +109,9 @@ export default function PaymentOverview({
             <p className="text-xs text-red-400 mt-2">Hai raggiunto il massimale impostato.</p>
           )}
           {isNearLimit && pct < 100 && (
-            <p className="text-xs text-yellow-400 mt-2">Stai avvicinandoti al massimale ({pct.toFixed(0)}%).</p>
+            <p className="text-xs text-yellow-400 mt-2">
+              Stai avvicinandoti al massimale ({pct.toFixed(0)}%).
+            </p>
           )}
         </div>
       )}
@@ -108,6 +124,8 @@ export default function PaymentOverview({
               title="Compensi liquidati"
               paidByYear={compensPaidByYear}
               pending={compensPending}
+              grossCurrentYear={compensGrossCurrentYear}
+              currentYear={currentYear}
             />
             <OverviewCard
               title="Rimborsi liquidati"
