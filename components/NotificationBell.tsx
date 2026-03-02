@@ -10,6 +10,10 @@ function entityHref(n: Notification): string | null {
   if (n.entity_type === 'reimbursement') return `/rimborsi/${n.entity_id}`;
   if (n.entity_type === 'document')      return `/documenti/${n.entity_id}`;
   if (n.entity_type === 'ticket')        return `/ticket/${n.entity_id}`;
+  if (n.entity_type === 'communication') return `/comunicazioni/${n.entity_id}`;
+  if (n.entity_type === 'event')         return `/eventi/${n.entity_id}`;
+  if (n.entity_type === 'opportunity')   return `/opportunita/${n.entity_id}`;
+  if (n.entity_type === 'discount')      return `/sconti/${n.entity_id}`;
   return null;
 }
 

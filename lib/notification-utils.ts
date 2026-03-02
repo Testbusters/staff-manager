@@ -1,7 +1,7 @@
 // Pure utility functions for building notification payloads.
 // Used by API route handlers to insert into the `notifications` table.
 
-export type NotificationEntityType = 'compensation' | 'reimbursement' | 'document' | 'ticket';
+export type NotificationEntityType = 'compensation' | 'reimbursement' | 'document' | 'ticket' | 'communication' | 'event' | 'opportunity' | 'discount';
 
 export interface NotificationPayload {
   user_id: string;
@@ -163,6 +163,45 @@ export function buildTicketCollabReplyNotification(
     messaggio: `Il collaboratore ha risposto al ticket: ${ticketOggetto}`,
     entity_type: 'ticket',
     entity_id: ticketId,
+  };
+}
+
+export function buildCompensationReopenNotification(
+  responsabileUserId: string,
+  entityId: string,
+): NotificationPayload {
+  return {
+    user_id: responsabileUserId,
+    tipo: 'comp_inviato',
+    titolo: 'Compenso rimandato in approvazione',
+    messaggio: 'Un collaboratore ha riaperto un compenso rifiutato, ora in attesa di approvazione.',
+    entity_type: 'compensation',
+    entity_id: entityId,
+  };
+}
+
+export type ContentEntityType = 'communication' | 'event' | 'opportunity' | 'discount';
+
+export function buildContentNotification(
+  userId: string,
+  contentType: ContentEntityType,
+  contentId: string,
+  titolo: string,
+): NotificationPayload {
+  const meta: Record<ContentEntityType, { tipo: string; notifTitolo: string; messaggio: string }> = {
+    communication: { tipo: 'comunicazione_pubblicata', notifTitolo: 'Nuova comunicazione',   messaggio: `Nuova comunicazione: ${titolo}` },
+    event:         { tipo: 'evento_pubblicato',        notifTitolo: 'Nuovo evento',           messaggio: `Nuovo evento in programma: ${titolo}` },
+    opportunity:   { tipo: 'opportunita_pubblicata',   notifTitolo: 'Nuova opportunità',      messaggio: `Nuova opportunità disponibile: ${titolo}` },
+    discount:      { tipo: 'sconto_pubblicato',        notifTitolo: 'Nuovo sconto',           messaggio: `Nuovo sconto disponibile: ${titolo}` },
+  };
+  const { tipo, notifTitolo, messaggio } = meta[contentType];
+  return {
+    user_id: userId,
+    tipo,
+    titolo: notifTitolo,
+    messaggio,
+    entity_type: contentType,
+    entity_id: contentId,
   };
 }
 

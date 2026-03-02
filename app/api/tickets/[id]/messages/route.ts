@@ -10,7 +10,7 @@ import {
   getResponsabiliForUser,
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
-import { emailNuovoTicket } from '@/lib/email-templates';
+import { emailNuovoTicket, emailRispostaTicket } from '@/lib/email-templates';
 
 const BUCKET = 'tickets';
 
@@ -123,7 +123,23 @@ export async function POST(
       );
       await serviceClient.from('notifications').insert(notif);
     }
-    // Email not implemented for ticket replies (no template for ticket_risposta)
+    if (setting?.email_enabled) {
+      const { data: creatorAuth } = await serviceClient.auth.admin.getUserById(ticket.creator_user_id);
+      const creatorEmail = creatorAuth?.user?.email;
+      const { data: creatorCollab } = await serviceClient
+        .from('collaborators')
+        .select('nome')
+        .eq('user_id', ticket.creator_user_id)
+        .single();
+      if (creatorEmail) {
+        const { subject, html } = emailRispostaTicket({
+          nome: creatorCollab?.nome ?? '',
+          oggetto: ticket.oggetto,
+          data: new Date().toLocaleDateString('it-IT'),
+        });
+        sendEmail(creatorEmail, subject, html).catch(() => {});
+      }
+    }
   } else {
     // Collaboratore (creator) replied → notify responsabili (ticket_risposta_collab:responsabile)
     const setting = settings.get('ticket_risposta_collab:responsabile_compensi');

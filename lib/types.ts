@@ -340,7 +340,7 @@ export interface Notification {
   tipo: string;
   titolo: string;
   messaggio: string | null;
-  entity_type: 'compensation' | 'reimbursement' | 'document' | 'ticket' | null;
+  entity_type: 'compensation' | 'reimbursement' | 'document' | 'ticket' | 'communication' | 'event' | 'opportunity' | 'discount' | null;
   entity_id: string | null;
   read: boolean;
   created_at: string;

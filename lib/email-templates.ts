@@ -276,6 +276,93 @@ export function emailInvito(p: {
   };
 }
 
+// ── E9 — Risposta al ticket (→ collaboratore) ───────────────
+export function emailRispostaTicket(p: {
+  nome: string;
+  oggetto: string;
+  data: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`Hai ricevuto una risposta al tuo ticket <strong>${p.oggetto}</strong>.`)}
+    ${highlight([
+      { label: 'Oggetto', value: p.oggetto },
+      { label: 'Data risposta', value: p.data },
+    ])}
+    ${bodyText("Accedi all'app per leggere la risposta e continuare la conversazione.")}
+    ${ctaButton('Vai al ticket')}
+  `;
+  return {
+    subject: `Risposta al tuo ticket — ${p.oggetto}`,
+    html: layout(body),
+  };
+}
+
+// ── E10 — Nuova comunicazione (→ collaboratore) ──────────────
+export function emailNuovaComunicazione(p: {
+  nome: string;
+  titolo: string;
+  data: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText('È disponibile una nuova comunicazione dalla tua community.')}
+    ${highlight([
+      { label: 'Titolo', value: p.titolo },
+      { label: 'Pubblicata il', value: p.data },
+    ])}
+    ${ctaButton('Leggi la comunicazione')}
+  `;
+  return {
+    subject: `Nuova comunicazione: ${p.titolo}`,
+    html: layout(body),
+  };
+}
+
+// ── E11 — Nuovo evento (→ collaboratore) ────────────────────
+export function emailNuovoEvento(p: {
+  nome: string;
+  titolo: string;
+  data: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText('È stato pubblicato un nuovo evento.')}
+    ${highlight([
+      { label: 'Evento', value: p.titolo },
+      { label: 'Pubblicato il', value: p.data },
+    ])}
+    ${ctaButton('Vedi i dettagli')}
+  `;
+  return {
+    subject: `Nuovo evento in programma — ${p.titolo}`,
+    html: layout(body),
+  };
+}
+
+// ── E12 — Nuovo contenuto generico (→ collaboratore) ─────────
+// Used for opportunità and sconti (tipo = 'Opportunità' | 'Sconto').
+export function emailNuovoContenuto(p: {
+  nome: string;
+  tipo: string;
+  titolo: string;
+  data: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`È disponibile un nuovo contenuto nella sezione <strong>${p.tipo}</strong>.`)}
+    ${highlight([
+      { label: p.tipo, value: p.titolo },
+      { label: 'Pubblicato il', value: p.data },
+    ])}
+    ${ctaButton("Vai all'app")}
+  `;
+  return {
+    subject: `Nuov${p.tipo === 'Sconto' ? 'o' : 'a'} ${p.tipo.toLowerCase()}: ${p.titolo}`,
+    html: layout(body),
+  };
+}
+
 // ── E7 — Nuovo ticket (→ responsabile) ─────────────────────
 export function emailNuovoTicket(p: {
   nomeResponsabile: string;

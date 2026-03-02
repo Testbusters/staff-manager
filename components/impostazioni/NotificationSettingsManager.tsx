@@ -14,25 +14,30 @@ type Setting = {
 const SECTIONS: { title: string; keys: string[] }[] = [
   {
     title: 'Compensi',
-    keys: ['comp_inviato', 'comp_integrazioni', 'comp_approvato', 'comp_rifiutato', 'comp_pagato'],
+    keys: ['comp_inviato', 'comp_approvato', 'comp_rifiutato', 'comp_pagato'],
   },
   {
     title: 'Rimborsi',
-    keys: ['rimborso_inviato', 'rimborso_integrazioni', 'rimborso_approvato', 'rimborso_rifiutato', 'rimborso_pagato'],
+    keys: ['rimborso_inviato', 'rimborso_approvato', 'rimborso_rifiutato', 'rimborso_pagato'],
   },
   {
     title: 'Documenti',
-    keys: ['documento_da_firmare'],
+    keys: ['documento_da_firmare', 'documento_firmato'],
   },
   {
     title: 'Ticket',
     keys: ['ticket_creato', 'ticket_risposta', 'ticket_risposta_collab', 'ticket_stato'],
+  },
+  {
+    title: 'Contenuti',
+    keys: ['comunicazione_pubblicata', 'evento_pubblicato', 'opportunita_pubblicata', 'sconto_pubblicato'],
   },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
   collaboratore:         'Collaboratore',
   responsabile_compensi: 'Responsabile Compensi',
+  amministrazione:       'Amministrazione',
 };
 
 function Toggle({

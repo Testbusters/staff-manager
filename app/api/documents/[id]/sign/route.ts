@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { getNotificationSettings } from '@/lib/notification-helpers';
 
 export async function POST(
   request: Request,
@@ -77,32 +78,37 @@ export async function POST(
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
 
-  // Notify all admins
-  const { data: admins } = await serviceClient
-    .from('user_profiles')
-    .select('user_id')
-    .in('role', ['amministrazione'])
-    .eq('is_active', true);
+  // Notify admins (settings-driven)
+  const settings = await getNotificationSettings(serviceClient);
+  const setting = settings.get('documento_firmato:amministrazione');
 
-  if (admins && admins.length > 0) {
-    const { data: collab } = await serviceClient
-      .from('collaborators')
-      .select('nome, cognome')
-      .eq('id', doc.collaborator_id)
-      .single();
+  if (!setting || setting.inapp_enabled) {
+    const { data: admins } = await serviceClient
+      .from('user_profiles')
+      .select('user_id')
+      .eq('role', 'amministrazione')
+      .eq('is_active', true);
 
-    const nome = collab ? `${collab.nome} ${collab.cognome}` : 'Un collaboratore';
+    if (admins && admins.length > 0) {
+      const { data: collab } = await serviceClient
+        .from('collaborators')
+        .select('nome, cognome')
+        .eq('id', doc.collaborator_id)
+        .single();
 
-    const notifications = admins.map((a: { user_id: string }) => ({
-      user_id: a.user_id,
-      tipo: 'documento_firmato',
-      titolo: 'Documento firmato ricevuto',
-      messaggio: `${nome} ha caricato il documento firmato.`,
-      entity_type: 'document',
-      entity_id: id,
-    }));
+      const nome = collab ? `${collab.nome} ${collab.cognome}` : 'Un collaboratore';
 
-    await serviceClient.from('notifications').insert(notifications);
+      const notifications = admins.map((a: { user_id: string }) => ({
+        user_id: a.user_id,
+        tipo: 'documento_firmato',
+        titolo: 'Documento firmato ricevuto',
+        messaggio: `${nome} ha caricato il documento firmato.`,
+        entity_type: 'document',
+        entity_id: id,
+      }));
+
+      await serviceClient.from('notifications').insert(notifications);
+    }
   }
 
   return NextResponse.json({ stato_firma: 'FIRMATO', signed_at: now });

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { getNotificationSettings, getAllActiveCollaboratori } from '@/lib/notification-helpers';
+import { buildContentNotification } from '@/lib/notification-utils';
+import { sendEmail } from '@/lib/email';
+import { emailNuovoEvento } from '@/lib/email-templates';
 
 const WRITE_ROLES = ['amministrazione'];
 
@@ -79,6 +83,34 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire content notifications
+  try {
+    const [settings, collaboratori] = await Promise.all([
+      getNotificationSettings(serviceClient),
+      getAllActiveCollaboratori(serviceClient),
+    ]);
+    const setting = settings.get('evento_pubblicato:collaboratore');
+    if ((!setting || setting.inapp_enabled) && collaboratori.length > 0) {
+      const notifs = collaboratori.map((c) =>
+        buildContentNotification(c.user_id, 'event', data.id, titolo.trim()),
+      );
+      await serviceClient.from('notifications').insert(notifs).then(({ error: e }) => {
+        if (e) console.error('Event notification insert failed:', e.message);
+      });
+    }
+    if (setting?.email_enabled) {
+      const today = new Date().toLocaleDateString('it-IT');
+      for (const c of collaboratori) {
+        if (c.email) {
+          const { subject, html } = emailNuovoEvento({ nome: c.nome, titolo: titolo.trim(), data: today });
+          sendEmail(c.email, subject, html).catch(() => {});
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Content notification dispatch failed:', e);
+  }
 
   return NextResponse.json({ event: data }, { status: 201 });
 }

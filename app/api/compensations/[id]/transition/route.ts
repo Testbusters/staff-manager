@@ -8,6 +8,7 @@ import { ROLE_LABELS } from '@/lib/types';
 import type { Role, CompensationStatus } from '@/lib/types';
 import {
   buildCompensationNotification,
+  buildCompensationReopenNotification,
   COMPENSATION_NOTIFIED_ACTIONS,
 } from '@/lib/notification-utils';
 import type { NotificationPayload } from '@/lib/notification-utils';
@@ -132,6 +133,22 @@ export async function POST(
 
   // Load notification settings
   const settings = await getNotificationSettings(serviceClient);
+
+  // ── Notify responsabili when collaboratore reopens a compensation ───
+  if (action === 'reopen' && comp.community_id) {
+    const setting = settings.get('comp_inviato:responsabile_compensi');
+    if (!setting || setting.inapp_enabled || setting.email_enabled) {
+      const responsabili = await getResponsabiliForCommunity(comp.community_id, serviceClient);
+      for (const resp of responsabili) {
+        if (!setting || setting.inapp_enabled) {
+          const notif = buildCompensationReopenNotification(resp.user_id, id);
+          await serviceClient.from('notifications').insert(notif).then(({ error }) => {
+            if (error) console.error('Reopen notification insert failed:', error.message);
+          });
+        }
+      }
+    }
+  }
 
   // ── Notify collaboratore on manager/admin actions ─────────────
   if ((COMPENSATION_NOTIFIED_ACTIONS as string[]).includes(action)) {

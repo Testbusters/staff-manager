@@ -151,6 +151,35 @@ export async function getResponsabiliForCollaborator(
   }));
 }
 
+// Returns all active collaboratori with their email (for broadcast content notifications).
+export async function getAllActiveCollaboratori(svc: Svc): Promise<PersonInfo[]> {
+  const { data: profiles } = await svc
+    .from('user_profiles')
+    .select('user_id')
+    .eq('role', 'collaboratore')
+    .eq('is_active', true);
+
+  const activeIds = (profiles ?? []).map((p) => p.user_id);
+  if (activeIds.length === 0) return [];
+
+  const [{ data: collabs }, { data: authData }] = await Promise.all([
+    svc.from('collaborators').select('user_id, nome, cognome').in('user_id', activeIds),
+    svc.auth.admin.listUsers(),
+  ]);
+
+  const collabMap = Object.fromEntries((collabs ?? []).map((c) => [c.user_id, c]));
+  const emailMap = Object.fromEntries(
+    (authData?.users ?? []).map((u) => [u.id, u.email ?? '']),
+  );
+
+  return activeIds.map((uid) => ({
+    user_id: uid,
+    email: emailMap[uid] ?? '',
+    nome: collabMap[uid]?.nome ?? '',
+    cognome: collabMap[uid]?.cognome ?? '',
+  }));
+}
+
 // Shortcut: get responsabili for a user (via their collaborator record → communities).
 export async function getResponsabiliForUser(
   userId: string,

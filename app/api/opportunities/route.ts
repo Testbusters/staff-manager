@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { getNotificationSettings, getAllActiveCollaboratori } from '@/lib/notification-helpers';
+import { buildContentNotification } from '@/lib/notification-utils';
+import { sendEmail } from '@/lib/email';
+import { emailNuovoContenuto } from '@/lib/email-templates';
 
 const VALID_TIPO = ['LAVORO', 'FORMAZIONE', 'STAGE', 'PROGETTO', 'ALTRO'];
 
@@ -61,6 +65,34 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire content notifications
+  try {
+    const [settings, collaboratori] = await Promise.all([
+      getNotificationSettings(svc),
+      getAllActiveCollaboratori(svc),
+    ]);
+    const setting = settings.get('opportunita_pubblicata:collaboratore');
+    if ((!setting || setting.inapp_enabled) && collaboratori.length > 0) {
+      const notifs = collaboratori.map((c) =>
+        buildContentNotification(c.user_id, 'opportunity', data.id, titolo.trim()),
+      );
+      await svc.from('notifications').insert(notifs).then(({ error: e }) => {
+        if (e) console.error('Opportunity notification insert failed:', e.message);
+      });
+    }
+    if (setting?.email_enabled) {
+      const today = new Date().toLocaleDateString('it-IT');
+      for (const c of collaboratori) {
+        if (c.email) {
+          const { subject, html } = emailNuovoContenuto({ nome: c.nome, tipo: 'Opportunità', titolo: titolo.trim(), data: today });
+          sendEmail(c.email, subject, html).catch(() => {});
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Content notification dispatch failed:', e);
+  }
 
   return NextResponse.json({ opportunity: data }, { status: 201 });
 }
