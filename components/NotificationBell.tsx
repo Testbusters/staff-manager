@@ -17,11 +17,28 @@ function entityHref(n: Notification): string | null {
   return null;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('it-IT', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
+const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
+  compensation:  { label: 'Compenso',      cls: 'bg-blue-900/60 text-blue-300 border-blue-800/60' },
+  reimbursement: { label: 'Rimborso',      cls: 'bg-purple-900/60 text-purple-300 border-purple-800/60' },
+  document:      { label: 'Documento',     cls: 'bg-yellow-900/60 text-yellow-300 border-yellow-800/60' },
+  ticket:        { label: 'Ticket',        cls: 'bg-orange-900/60 text-orange-300 border-orange-800/60' },
+  communication: { label: 'Comunicazione', cls: 'bg-green-900/60 text-green-300 border-green-800/60' },
+  event:         { label: 'Evento',        cls: 'bg-cyan-900/60 text-cyan-300 border-cyan-800/60' },
+  opportunity:   { label: 'Opportunità',   cls: 'bg-indigo-900/60 text-indigo-300 border-indigo-800/60' },
+  discount:      { label: 'Sconto',        cls: 'bg-rose-900/60 text-rose-300 border-rose-800/60' },
+};
+
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'adesso';
+  if (mins < 60) return `${mins} min fa`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? 'ora' : 'ore'} fa`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'ieri';
+  if (days < 7) return `${days} giorni fa`;
+  return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
 }
 
 export default function NotificationBell() {
@@ -136,6 +153,7 @@ export default function NotificationBell() {
             ) : (
               notifications.map((n) => {
                 const href = entityHref(n);
+                const badge = n.entity_type ? TYPE_BADGE[n.entity_type] : undefined;
                 const inner = (
                   <div
                     className={`group px-4 py-3 border-b border-gray-800 last:border-0
@@ -152,16 +170,23 @@ export default function NotificationBell() {
                       ×
                     </button>
 
-                    {!n.read && (
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 mb-0.5 align-middle" />
-                    )}
-                    <span className="text-xs font-medium text-gray-200 leading-snug pr-4">
+                    <div className="flex items-center gap-1.5 pr-4">
+                      {!n.read && (
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                      )}
+                      {badge && (
+                        <span className={`shrink-0 rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide ${badge.cls}`}>
+                          {badge.label}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs font-medium text-gray-200 leading-snug pr-4 mt-0.5 block">
                       {n.titolo}
                     </span>
                     {n.messaggio && (
-                      <p className="text-xs text-gray-400 mt-0.5 leading-snug">{n.messaggio}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 leading-snug line-clamp-1">{n.messaggio}</p>
                     )}
-                    <p className="text-[10px] text-gray-600 mt-1">{formatDate(n.created_at)}</p>
+                    <p className="text-[10px] text-gray-600 mt-1">{formatRelativeTime(n.created_at)}</p>
                   </div>
                 );
 
