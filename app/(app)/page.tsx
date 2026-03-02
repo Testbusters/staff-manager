@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import type { AdminDashboardData } from '@/components/admin/types';
+import PaymentOverview from '@/components/compensation/PaymentOverview';
+import DashboardBarChart from '@/components/compensation/DashboardBarChart';
+import type { BarMonthData } from '@/components/compensation/DashboardBarChart';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
@@ -24,9 +27,11 @@ type CompRow = {
   id: string;
   stato: string;
   importo_netto: number | null;
+  importo_lordo: number | null;
+  liquidated_at: string | null;
 };
 
-type ExpRow = { id: string; stato: string; importo: number | null };
+type ExpRow = { id: string; stato: string; importo: number | null; liquidated_at: string | null };
 
 type CommStat = {
   id: string;
@@ -199,6 +204,94 @@ function FeedRow({ item }: { item: FeedItem }) {
       </div>
     </Link>
   );
+}
+
+// ── Collaboratore data helpers ──────────────────────────────
+
+type CompYearBreakdown = { year: number; netto: number; lordo: number };
+type ExpYearBreakdown  = { year: number; total: number };
+
+function groupCompByYear(rows: CompRow[]) {
+  const nettoMap: Record<number, number> = {};
+  const lordoMap: Record<number, number> = {};
+  let approvedLordo = 0, approvedNetto = 0, inAttesaNetto = 0;
+
+  for (const row of rows) {
+    if (row.stato === 'LIQUIDATO' && row.liquidated_at) {
+      const y = new Date(row.liquidated_at).getFullYear();
+      nettoMap[y] = (nettoMap[y] ?? 0) + (row.importo_netto ?? 0);
+      lordoMap[y] = (lordoMap[y] ?? 0) + (row.importo_lordo ?? 0);
+    } else if (row.stato === 'APPROVATO') {
+      approvedLordo += row.importo_lordo ?? 0;
+      approvedNetto  += row.importo_netto ?? 0;
+    } else if (row.stato === 'IN_ATTESA') {
+      inAttesaNetto += row.importo_netto ?? 0;
+    }
+  }
+
+  const paidByYear: CompYearBreakdown[] = Object.entries(nettoMap)
+    .map(([y, netto]) => ({ year: Number(y), netto, lordo: lordoMap[Number(y)] ?? 0 }))
+    .sort((a, b) => b.year - a.year);
+
+  return { paidByYear, approvedLordo, approvedNetto, inAttesaNetto };
+}
+
+function groupExpByYear(rows: ExpRow[]) {
+  const map: Record<number, number> = {};
+  let approved = 0, inAttesa = 0;
+
+  for (const row of rows) {
+    if (row.stato === 'LIQUIDATO' && row.liquidated_at) {
+      const y = new Date(row.liquidated_at).getFullYear();
+      map[y] = (map[y] ?? 0) + (row.importo ?? 0);
+    } else if (row.stato === 'APPROVATO') {
+      approved += row.importo ?? 0;
+    } else if (row.stato === 'IN_ATTESA') {
+      inAttesa += row.importo ?? 0;
+    }
+  }
+
+  const paidByYear: ExpYearBreakdown[] = Object.entries(map)
+    .map(([y, total]) => ({ year: Number(y), total }))
+    .sort((a, b) => b.year - a.year);
+
+  return { paidByYear, approved, inAttesa };
+}
+
+function buildBarData(comps: CompRow[], exps: ExpRow[]): BarMonthData[] {
+  const now = new Date();
+  const months: { key: string; label: string }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('it-IT', { month: 'short' })
+      .replace('.', '').replace(/^\w/, (c) => c.toUpperCase());
+    months.push({ key, label });
+  }
+
+  const compMap: Record<string, number> = {};
+  const expMap:  Record<string, number> = {};
+
+  for (const c of comps) {
+    if (c.stato === 'LIQUIDATO' && c.liquidated_at) {
+      const d = new Date(c.liquidated_at);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      compMap[k] = (compMap[k] ?? 0) + (c.importo_netto ?? 0);
+    }
+  }
+  for (const e of exps) {
+    if (e.stato === 'LIQUIDATO' && e.liquidated_at) {
+      const d = new Date(e.liquidated_at);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      expMap[k] = (expMap[k] ?? 0) + (e.importo ?? 0);
+    }
+  }
+
+  return months.map(({ key, label }) => ({
+    month: label,
+    compensi: compMap[key] ?? 0,
+    rimborsi: expMap[key] ?? 0,
+  }));
 }
 
 // ── Page ───────────────────────────────────────────────────
@@ -872,17 +965,17 @@ export default async function DashboardPage() {
     return <AdminDashboard data={dashData} />;
   }
 
-  // Fetch collaborator record (needed for documents filter + profile completeness)
+  // Fetch collaborator record
   const { data: collaborator } = await supabase
     .from('collaborators')
-    .select('id, iban, codice_fiscale')
+    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale')
     .eq('user_id', user.id)
     .single();
 
   // Parallel main fetches
   const docsQuery = collaborator
-    ? supabase.from('documents').select('id').eq('collaborator_id', collaborator.id).eq('stato_firma', 'DA_FIRMARE')
-    : Promise.resolve({ data: null as { id: string }[] | null, error: null });
+    ? supabase.from('documents').select('id, titolo').eq('collaborator_id', collaborator.id).eq('stato_firma', 'DA_FIRMARE')
+    : Promise.resolve({ data: null as { id: string; titolo: string }[] | null, error: null });
 
   const [
     { data: compensations },
@@ -891,8 +984,8 @@ export default async function DashboardPage() {
     { data: allTickets },
     { data: announcements },
   ] = await Promise.all([
-    supabase.from('compensations').select('id, stato, importo_netto'),
-    supabase.from('expense_reimbursements').select('id, stato, importo'),
+    supabase.from('compensations').select('id, stato, importo_netto, importo_lordo, liquidated_at'),
+    supabase.from('expense_reimbursements').select('id, stato, importo, liquidated_at'),
     docsQuery,
     supabase.from('tickets').select('id, oggetto, stato').eq('creator_user_id', user.id),
     supabase
@@ -968,20 +1061,52 @@ export default async function DashboardPage() {
 
   const profiloIncompleto = !collaborator?.iban || !collaborator?.codice_fiscale;
 
-  const cosaMiManca = [
-    daFirmareCount > 0 && {
-      text: `${daFirmareCount} documento${daFirmareCount === 1 ? '' : 'i'} da firmare`,
-      href: '/documenti',
-    },
-    ticketNeedsReply > 0 && {
+  // Da ricevere — APPROVATO netto compensi + APPROVATO rimborsi
+  const daRicevere = compPendingTot + expPendingTot;
+
+  // PaymentOverview data
+  const currentYear = new Date().getFullYear();
+  const {
+    paidByYear: compensPaidByYear,
+    approvedLordo: compensApprovedLordo,
+    approvedNetto: compensApprovedNetto,
+    inAttesaNetto: compensInAttesaNetto,
+  } = groupCompByYear(compensations ?? []);
+  const {
+    paidByYear: expensePaidByYear,
+    approved: expenseApproved,
+    inAttesa: expenseInAttesa,
+  } = groupExpByYear(expenses ?? []);
+  const massimale = collaborator?.importo_lordo_massimale ?? null;
+  const paidCurrentYear = compensPaidByYear.find((y) => y.year === currentYear)?.lordo ?? 0;
+
+  // Bar chart — ultimi 6 mesi
+  const barData = buildBarData(compensations ?? [], expenses ?? []);
+  const barHasData = barData.some((d) => d.compensi > 0 || d.rimborsi > 0);
+
+  // Da fare — sostituisce "Cosa mi manca" con voci specifiche
+  const daFare: { text: string; href: string }[] = [];
+  for (const doc of (docsToSign ?? []) as { id: string; titolo: string }[]) {
+    daFare.push({ text: `"${doc.titolo}" in attesa di firma`, href: `/documenti/${doc.id}` });
+  }
+  if (ticketNeedsReply > 0) {
+    daFare.push({
       text: `${ticketNeedsReply} ticket in attesa di risposta`,
       href: '/ticket',
-    },
-    profiloIncompleto && {
-      text: 'Completa il tuo profilo (IBAN o codice fiscale mancante)',
+    });
+  }
+  if (profiloIncompleto) {
+    const missing = [...(!collaborator?.iban ? ['IBAN'] : []), ...(!collaborator?.codice_fiscale ? ['codice fiscale'] : [])];
+    daFare.push({
+      text: `Profilo incompleto: ${missing.join(' e ')} mancante${missing.length > 1 ? 'i' : ''}`,
       href: '/profilo',
-    },
-  ].filter(Boolean) as { text: string; href: string }[];
+    });
+  }
+
+  // Data corrente in italiano per il saluto
+  const todayStr = new Date().toLocaleDateString('it-IT', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).replace(/^\w/, (c) => c.toUpperCase());
 
   // Feed
   const feedItems: FeedItem[] = [];
@@ -1035,27 +1160,82 @@ export default async function DashboardPage() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-3xl space-y-6">
-      <h1 className="text-xl font-semibold text-gray-100">Dashboard</h1>
+    <div className="p-6 max-w-4xl space-y-6">
 
-      {/* Card di riepilogo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Compensi"
-          count={activeComps.length}
-          total={compTotal}
-          pendingCount={pendingComps.length}
-          pendingTotal={compPendingTot}
-        />
-        <StatCard
-          label="Rimborsi"
-          count={activeExps.length}
-          total={expTotal}
-          pendingCount={pendingExps.length}
-          pendingTotal={expPendingTot}
-        />
-        <DocCard count={daFirmareCount} />
+      {/* Header — saluto + data */}
+      <div>
+        <h1 className="text-xl font-semibold text-gray-100">
+          Ciao{collaborator?.nome ? `, ${collaborator.nome}` : ''}!
+        </h1>
+        <p className="text-sm text-gray-500 mt-0.5">{todayStr}</p>
       </div>
+
+      {/* 4 KPI card */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Compensi in corso */}
+        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs text-gray-400 truncate">Compensi</span>
+            <span className="flex-shrink-0 rounded-full bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs text-gray-400 tabular-nums">
+              {activeComps.length}
+            </span>
+          </div>
+          <p className="text-lg font-semibold text-gray-100 tabular-nums leading-tight">{eur(compTotal)}</p>
+          <p className="text-xs text-gray-600">in corso</p>
+        </Link>
+
+        {/* Rimborsi in corso */}
+        <Link href="/rimborsi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs text-gray-400 truncate">Rimborsi</span>
+            <span className="flex-shrink-0 rounded-full bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs text-gray-400 tabular-nums">
+              {activeExps.length}
+            </span>
+          </div>
+          <p className="text-lg font-semibold text-gray-100 tabular-nums leading-tight">{eur(expTotal)}</p>
+          <p className="text-xs text-gray-600">in corso</p>
+        </Link>
+
+        {/* Da ricevere */}
+        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
+          <span className="text-xs text-gray-400">Da ricevere</span>
+          <p className={`text-lg font-semibold tabular-nums leading-tight ${daRicevere > 0 ? 'text-amber-300' : 'text-gray-600'}`}>
+            {eur(daRicevere)}
+          </p>
+          <p className="text-xs text-gray-600">approvato</p>
+        </Link>
+
+        {/* Da firmare */}
+        <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
+          <span className="text-xs text-gray-400">Da firmare</span>
+          <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-300' : 'text-gray-600'}`}>
+            {daFirmareCount}
+          </p>
+          <p className="text-xs text-gray-600">document{daFirmareCount === 1 ? 'o' : 'i'}</p>
+        </Link>
+      </div>
+
+      {/* Da fare */}
+      {daFare.length > 0 && (
+        <div className={sectionCls}>
+          <div className="px-5 py-4 border-b border-gray-800">
+            <h2 className="text-sm font-medium text-gray-200">Da fare</h2>
+          </div>
+          <div className="p-4 space-y-2">
+            {daFare.map((item) => (
+              <Link
+                key={item.href + item.text}
+                href={item.href}
+                className="flex items-center gap-2.5 rounded-lg bg-amber-950/30 border border-amber-800/30 px-3 py-2.5 text-sm text-amber-300 hover:bg-amber-950/50 transition"
+              >
+                <span className="flex-shrink-0">⚠</span>
+                <span className="flex-1 min-w-0 truncate">{item.text}</span>
+                <span className="flex-shrink-0 text-xs text-amber-500/60">→</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Azioni rapide */}
       <div className={sectionCls}>
@@ -1065,9 +1245,21 @@ export default async function DashboardPage() {
         <div className="p-5 flex flex-wrap gap-3">
           <Link
             href="/rimborsi/nuova"
-            className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition"
+            className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
           >
             + Nuovo rimborso
+          </Link>
+          <Link
+            href="/compensi"
+            className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition"
+          >
+            Compensi e rimborsi
+          </Link>
+          <Link
+            href="/profilo?tab=documenti"
+            className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition"
+          >
+            Carica documento
           </Link>
           <Link
             href="/ticket/nuova"
@@ -1078,23 +1270,38 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Cosa mi manca */}
-      {cosaMiManca.length > 0 && (
+      {/* I miei pagamenti — PaymentOverview */}
+      <PaymentOverview
+        compensPaidByYear={compensPaidByYear}
+        compensApprovedLordo={compensApprovedLordo}
+        compensApprovedNetto={compensApprovedNetto}
+        compensInAttesaNetto={compensInAttesaNetto}
+        expensePaidByYear={expensePaidByYear}
+        expenseApproved={expenseApproved}
+        expenseInAttesa={expenseInAttesa}
+        massimale={massimale}
+        paidCurrentYear={paidCurrentYear}
+        currentYear={currentYear}
+      />
+
+      {/* Bar chart — ultimi 6 mesi */}
+      {barHasData && (
         <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">Cosa mi manca</h2>
+          <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-3">
+            <h2 className="text-sm font-medium text-gray-200">Ultimi 6 mesi</h2>
+            <div className="flex items-center gap-4 ml-auto">
+              <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
+                Compensi
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="inline-block w-2.5 h-2.5 rounded-sm bg-teal-500" />
+                Rimborsi
+              </span>
+            </div>
           </div>
-          <div className="p-5 space-y-2">
-            {cosaMiManca.map((item) => (
-              <Link
-                key={item.href + item.text}
-                href={item.href}
-                className="flex items-center gap-2 rounded-lg bg-amber-950/30 border border-amber-800/30 px-3 py-2.5 text-sm text-amber-300 hover:bg-amber-950/50 transition"
-              >
-                <span className="flex-shrink-0 text-base">⚠</span>
-                {item.text}
-              </Link>
-            ))}
+          <div className="px-4 pt-4 pb-2">
+            <DashboardBarChart data={barData} />
           </div>
         </div>
       )}
