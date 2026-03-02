@@ -103,9 +103,9 @@ export default function ExpenseList({
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-gray-100">{e.categoria}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                  <span>{formatDate(e.data_spesa)}</span>
+                  <span>Spesa: {formatDate(e.data_spesa)}</span>
                   <span className="text-gray-700">·</span>
-                  <span>inviato {formatDate(e.created_at)}</span>
+                  <span>Inviato: {formatDate(e.created_at)}</span>
                 </div>
               </div>
 

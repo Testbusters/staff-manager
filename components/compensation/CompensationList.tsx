@@ -146,13 +146,14 @@ export default function CompensationList({
                       <span className="text-gray-400">{c.communities.name}</span>
                     </span>
                   )}
-                  <span>{formatDate(c.created_at)}</span>
                   {c.periodo_riferimento && (
                     <>
                       <span className="text-gray-700">·</span>
-                      <span>{c.periodo_riferimento}</span>
+                      <span>Competenza: {c.periodo_riferimento}</span>
                     </>
                   )}
+                  {(c.communities || c.periodo_riferimento) && <span className="text-gray-700">·</span>}
+                  <span>Inviato: {formatDate(c.created_at)}</span>
                 </div>
               </div>
 

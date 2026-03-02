@@ -5,6 +5,7 @@ import type { Compensation, Expense, Role } from '@/lib/types';
 import CompensationList from './CompensationList';
 import PendingApprovedList from './PendingApprovedList';
 import ExpenseList from '@/components/expense/ExpenseList';
+import PendingApprovedExpenseList from '@/components/expense/PendingApprovedExpenseList';
 
 type CompensationRow = Compensation & { communities?: { name: string } | null };
 
@@ -71,7 +72,10 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
       )}
 
       {activeTab === 'rimborsi' && (
-        <ExpenseList expenses={expenses} role={role} />
+        <>
+          <PendingApprovedExpenseList expenses={expenses} />
+          <ExpenseList expenses={expenses} role={role} />
+        </>
       )}
     </div>
   );
