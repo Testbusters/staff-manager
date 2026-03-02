@@ -25,7 +25,6 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Collaboratori',href: '/collaboratori',icon: '👥' },
     { label: 'Documenti',    href: '/documenti',    icon: '📄' },
     { label: 'Ticket',       href: '/ticket',       icon: '🎫' },
-    { label: 'Contenuti',    href: '/contenuti',    icon: '📋' },
   ],
 
   responsabile_cittadino: [],

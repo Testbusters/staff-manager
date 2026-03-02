@@ -1,293 +1,342 @@
 # Refactoring Backlog
 
-Criticità strutturali, di naming DB e architetturali da affrontare in sessioni dedicate.
-Non bloccanti per le funzionalità correnti salvo dove indicato **CRITICO/ALTO**.
+Structural, DB naming, and architectural issues to address in dedicated sessions.
+Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 
-> Aggiornare questo file ogni volta che emerge una criticità strutturale non risolta nel blocco corrente.
+> Update this file whenever a structural issue emerges that is not resolved in the current block.
 
 ---
 
-## Indice priorità
+## Priority index
 
-| ID | Titolo | Impatto |
+| ID | Title | Impact |
 |----|--------|---------|
-| SEC7 | PAT Supabase in plain text in MEMORY.md | CRITICO |
-| TC5 | Nessun test RLS su leakage compensation_history | ALTO |
-| B4 | Typo `data_compenso` vs `data_competenza` nel transition route | ALTO |
-| SEC1 | Password temporanea restituita in chiaro dalla API | ALTO |
-| S5 | Operazione mark-paid non atomica (no transazione) | ALTO |
-| SEC3 | Nessun rate limiting su POST compensi/rimborsi | MEDIO |
-| SEC4 | Nessun rate limiting su create-user | MEDIO |
-| SEC5 | RLS su compensation_history non testata | MEDIO |
-| A1 | Duplicazione logica notification-utils + helpers | MEDIO |
-| A2 | Email fire-and-forget senza log di failure | MEDIO |
-| S4 | Validazione input route API non standardizzata (manca Zod) | MEDIO |
-| S7 | Nessun check `file.size` prima del Buffer upload | MEDIO |
-| TC1 | Nessun test unit per `reject_manager` su compensi | MEDIO |
-| TC3 | Nessun e2e per mark-paid bulk | MEDIO |
-| TC4 | Nessun test per email Resend failure path | MEDIO |
-| P3 | `getNotificationSettings` chiamata ad ogni transizione senza cache | MEDIO |
-| P4 | `getResponsabiliForCommunity` fa triple join non ottimizzato | MEDIO |
-| B2 | Naming disuniforme tabella rimborsi e FK columns | MEDIO |
-| B3 | `community_id` nullable su expense_reimbursements | MEDIO |
-| A3 | `createServiceClient()` istanziato in ogni route (no singleton) | BASSO |
-| A4 | Logica RBAC sparsa nei componenti React | BASSO |
-| S1 | `CreateUserForm.tsx` troppo grande (409 righe) | BASSO |
-| S2 | `CollaboratoreDetail.tsx` troppo grande (474 righe) | BASSO |
-| S3 | `OnboardingWizard.tsx` stato locale complesso (408 righe) | BASSO |
-| S6 | Query con `.like('tipo', 'CONTRATTO_%')` non usa `macro_type` | BASSO |
-| T1 | `SupabaseClient<any, any, any>` in notification-helpers.ts | BASSO |
-| T2 | Cast `action as CompensationAction` senza guardia | BASSO |
-| T3 | `Record<string, unknown>` per updatePayload senza narrowing | BASSO |
-| T4 | State machine action non è discriminated union | BASSO |
-| T5 | Colonna `tipo` in documents non è PostgreSQL ENUM | BASSO |
-| TC2 | Nessun test unit per null values in buildCSV | BASSO |
-| P2 | Index su `collaborators.user_id` non documentato | BASSO |
-| SEC6 | Nessuna rotation policy documentata per RESEND_API_KEY | BASSO |
-| N1 | `compensi/nuova/page.tsx` è codice morto (redirect tutti i ruoli) — da rimuovere con `CompensationWizard` | BASSO |
-| N2 | `contenuti/page.tsx` accessibile ai collaboratori ma non in nav — valutare redirect a /comunicazioni | BASSO |
-| S8 | `formatDate` e `formatCurrency` duplicati in 4+ componenti — estrarre in `lib/format-utils.ts` | BASSO |
+| SEC7 | Supabase PAT in plain text in MEMORY.md | CRITICAL |
+| TC5 | No RLS test for compensation_history leakage | HIGH |
+| B4 | Typo `data_compenso` vs `data_competenza` in transition route | HIGH |
+| SEC1 | Temporary password returned in plain text by the API | HIGH |
+| S5 | mark-paid operation is not atomic (no transaction) | HIGH |
+| SEC3 | No rate limiting on POST compensations/reimbursements | MEDIUM |
+| SEC4 | No rate limiting on create-user | MEDIUM |
+| SEC5 | RLS on compensation_history not covered by tests | MEDIUM |
+| A1 | Logic duplication between notification-utils and notification-helpers | MEDIUM |
+| A2 | Fire-and-forget email with no failure log | MEDIUM |
+| S4 | API route input validation not standardized (missing Zod) | MEDIUM |
+| S7 | No `file.size` check before Buffer upload | MEDIUM |
+| TC1 | No unit test for `reject_manager` on compensations | MEDIUM |
+| TC3 | No e2e test for bulk mark-paid | MEDIUM |
+| TC4 | No test for Resend email failure path | MEDIUM |
+| P3 | `getNotificationSettings` called on every transition without cache | MEDIUM |
+| P4 | `getResponsabiliForCommunity` uses unoptimized triple join | MEDIUM |
+| B2 | Inconsistent naming across reimbursements table and FK columns | MEDIUM |
+| B3 | `community_id` nullable on expense_reimbursements | MEDIUM |
+| A3 | `createServiceClient()` instantiated in every route (no singleton) | LOW |
+| A4 | RBAC logic scattered across React components | LOW |
+| S1 | `CreateUserForm.tsx` too large (409 lines) | LOW |
+| S2 | `CollaboratoreDetail.tsx` too large (474 lines) | LOW |
+| S3 | `OnboardingWizard.tsx` complex local state (408 lines) | LOW |
+| S6 | Documents query uses `.like('tipo', 'CONTRATTO_%')` instead of `macro_type` | LOW |
+| T1 | `SupabaseClient<any, any, any>` in notification-helpers.ts | LOW |
+| T2 | `action as CompensationAction` cast without type guard | LOW |
+| T3 | `Record<string, unknown>` for updatePayload without narrowing | LOW |
+| T4 | State machine action is not a discriminated union | LOW |
+| T5 | `tipo` column in documents is `text + CHECK` instead of a PostgreSQL ENUM | LOW |
+| TC2 | No unit test for null values in `buildCSV` | LOW |
+| P2 | Index on `collaborators.user_id` not documented | LOW |
+| SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW |
+| N1 | `compensi/nuova/page.tsx` is dead code (all roles redirect) — remove with `CompensationWizard` | LOW |
+| N2 | `contenuti/page.tsx` accessible to collaboratori but not in nav — consider redirect to /comunicazioni | LOW |
+| S8 | `formatDate` and `formatCurrency` duplicated across 4+ components — extract to `lib/format-utils.ts` | LOW |
+| N3 | Italian URL routes — rename to English | LOW |
+| N4 | Italian DB column names — rename to English | LOW |
+| N5 | Italian PostgreSQL enum values — translate to English | LOW |
 
 ---
 
-## B — Naming DB / Semantica schema
+## B — DB Naming / Schema semantics
 
-### B2 — Naming disuniforme tabella rimborsi e FK columns
-- **Problema**: Tabella `expense_reimbursements`, interfaccia TS `Expense`, FK nelle tabelle collegate si chiama `reimbursement_id`. Tre naming diversi per lo stesso concetto.
-- **File**: `app/api/expenses/route.ts`, `lib/types.ts:375-412`, `supabase/migrations/001_schema.sql:147-180`
-- **Impatto**: MEDIO
-- **Fix**: Standardizzare tutto su `expense_reimbursements`; rinominare FK `reimbursement_id` → `expense_id` in `expense_attachments` e `expense_history`.
+### B2 — Inconsistent naming across reimbursements table and FK columns
+- **Problem**: Table is `expense_reimbursements`, TS interface is `Expense`, FK in related tables is named `reimbursement_id`. Three different names for the same concept.
+- **Files**: `app/api/expenses/route.ts`, `lib/types.ts:375-412`, `supabase/migrations/001_schema.sql:147-180`
+- **Impact**: MEDIUM
+- **Fix**: Standardize everything on `expense_reimbursements`; rename FK `reimbursement_id` → `expense_id` in `expense_attachments` and `expense_history`.
 
-### B3 — `community_id` nullable su `expense_reimbursements`
-- **Problema**: `expense_reimbursements.community_id` non è `NOT NULL`, ma è richiesto logicamente da ogni rimborso. Rimborsi orfani causano anomalie in query di aggregazione.
-- **File**: `supabase/migrations/001_schema.sql:150`
-- **Impatto**: MEDIO
-- **Fix**: Verificare se esistono rimborsi senza community_id → se no, aggiungere `NOT NULL`.
+### B3 — `community_id` nullable on `expense_reimbursements`
+- **Problem**: `expense_reimbursements.community_id` is not `NOT NULL`, but every reimbursement logically requires it. Orphaned reimbursements cause anomalies in aggregation queries.
+- **Files**: `supabase/migrations/001_schema.sql:150`
+- **Impact**: MEDIUM
+- **Fix**: Check whether any reimbursements have no community_id → if not, add `NOT NULL`.
 
-### B4 — Typo `data_compenso` vs `data_competenza` nel transition route
-- **Problema**: Nel codice del transition route si accede a `comp.data_compenso` ma la colonna reale è `data_competenza`. Causa runtime error su accesso a proprietà inesistente.
-- **File**: `app/api/compensations/[id]/transition/route.ts:160,215`
-- **Impatto**: ALTO
-- **Fix**: Correggere il typo usando il nome colonna reale `data_competenza`.
-
----
-
-## A — Architettura / Accoppiamento
-
-### A1 — Duplicazione logica tra notification-utils.ts e notification-helpers.ts
-- **Problema**: I due file sono sempre importati insieme. Non esiste layer di astrazione unificato. Ogni route di transizione ha 6+ import da questi due file.
-- **File**: `lib/notification-utils.ts`, `lib/notification-helpers.ts`, `app/api/compensations/[id]/transition/route.ts:9-19`
-- **Impatto**: MEDIO
-- **Fix**: Creare `lib/notification-service.ts` che re-esporta builder + helpers da un unico entry point.
-
-### A2 — Email fire-and-forget senza log di failure
-- **Problema**: `sendEmail(...).catch(() => {})` silenzia ogni errore Resend. Se il provider è down, nessun utente riceve notifiche e nessun admin viene avvisato.
-- **File**: `lib/email.ts:5-20` (usato in 8+ route)
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere log asincrono su errore (console.error o tabella `email_errors`) per visibilità operativa.
-
-### A3 — `createServiceClient()` istanziato in ogni route (no singleton)
-- **Problema**: Ogni API route crea una nuova istanza del service client con le stesse credenziali. Violazione DRY.
-- **File**: tutti i route handler in `app/api/`
-- **Impatto**: BASSO
-- **Fix**: Creare `lib/supabase/service-client.ts` con singleton esportato e riusarlo.
-
-### A4 — Logica RBAC sparsa nei componenti React
-- **Problema**: `CreateUserForm` e `NotificationSettingsManager` embeddano check di ruolo inline. Cambiare un permesso richiede cercare nei componenti.
-- **File**: `components/impostazioni/CreateUserForm.tsx:97-98`, `components/impostazioni/NotificationSettingsManager.tsx`
-- **Impatto**: BASSO
-- **Fix**: Creare `lib/auth-guards.ts` con funzioni pure (`canCreateFullUser(role)`, ecc.) e importarle nei componenti.
+### B4 — Typo `data_compenso` vs `data_competenza` in transition route
+- **Problem**: The transition route accesses `comp.data_compenso` but the real column is `data_competenza`. Causes a runtime error on property access.
+- **Files**: `app/api/compensations/[id]/transition/route.ts:160,215`
+- **Impact**: HIGH
+- **Fix**: Replace the typo with the real column name `data_competenza`.
 
 ---
 
-## S — Struttura / Code quality
+## A — Architecture / Coupling
 
-### S1 — `CreateUserForm.tsx` troppo grande (409 righe)
-- **Problema**: Un singolo componente gestisce mode toggle, validazione form, risultato invito e display credenziali.
-- **File**: `components/impostazioni/CreateUserForm.tsx`
-- **Impatto**: BASSO
-- **Fix**: Estrarre `InviteResultCard` (display email/password) e tenere solo la form logic nel componente principale.
+### A1 — Logic duplication between notification-utils.ts and notification-helpers.ts
+- **Problem**: The two files are always imported together. No unified abstraction layer. Each transition route has 6+ imports from these two files.
+- **Files**: `lib/notification-utils.ts`, `lib/notification-helpers.ts`, `app/api/compensations/[id]/transition/route.ts:9-19`
+- **Impact**: MEDIUM
+- **Fix**: Create `lib/notification-service.ts` that re-exports builders + helpers from a single entry point.
 
-### S2 — `CollaboratoreDetail.tsx` troppo grande (474 righe)
-- **Problema**: Anagrafica + compensi + rimborsi + documenti tutto inline in un unico componente client.
-- **File**: `components/responsabile/CollaboratoreDetail.tsx`
-- **Impatto**: BASSO
-- **Fix**: Spezzare in `CollaboratoreHeader`, `CollaboratoreCompensazioni`, `CollaboratoreDocumenti`.
+### A2 — Fire-and-forget email with no failure log
+- **Problem**: `sendEmail(...).catch(() => {})` silences every Resend error. If the provider is down, no user receives notifications and no admin is alerted.
+- **Files**: `lib/email.ts:5-20` (used in 8+ routes)
+- **Impact**: MEDIUM
+- **Fix**: Add async error logging (console.error or an `email_errors` table) for operational visibility.
 
-### S3 — `OnboardingWizard.tsx` stato locale complesso (408 righe)
-- **Problema**: Step 1 e 2 rigidamente accoppiati nello stato. Logica generazione contratto inline.
-- **File**: `components/onboarding/OnboardingWizard.tsx`
-- **Impatto**: BASSO
-- **Fix**: Estrarre step logic in sub-component; spostare generazione contratto in hook dedicato.
+### A3 — `createServiceClient()` instantiated in every route (no singleton)
+- **Problem**: Every API route creates a new service client instance with the same credentials. DRY violation.
+- **Files**: all route handlers in `app/api/`
+- **Impact**: LOW
+- **Fix**: Create `lib/supabase/service-client.ts` with an exported singleton and reuse it everywhere.
 
-### S4 — Validazione input nelle route API non standardizzata
-- **Problema**: `admin/create-user` usa Zod, ma `tickets/route.ts` e `documents/route.ts` validano manualmente con if-chain. Incoerenza strutturale.
-- **File**: `app/api/tickets/route.ts:82-91`, `app/api/documents/route.ts:68-72`
-- **Impatto**: MEDIO
-- **Fix**: Standardizzare tutte le route su Zod; creare schema condivisi per payload ricorrenti (es. `PaginationSchema`, `AttachmentSchema`).
+### A4 — RBAC logic scattered across React components
+- **Problem**: `CreateUserForm` and `NotificationSettingsManager` embed inline role checks. Changing a permission requires searching across components.
+- **Files**: `components/impostazioni/CreateUserForm.tsx:97-98`, `components/impostazioni/NotificationSettingsManager.tsx`
+- **Impact**: LOW
+- **Fix**: Create `lib/auth-guards.ts` with pure functions (`canCreateFullUser(role)`, etc.) and import them in components.
 
-### S5 — Operazione mark-paid non atomica
-- **Problema**: `POST /api/export/mark-paid` aggiorna compensazioni + inserisce history in step separati. Se il secondo step fallisce il record rimane in stato inconsistente.
-- **File**: `app/api/export/mark-paid/route.ts:47-84`
-- **Impatto**: ALTO
-- **Fix**: Wrappare in PostgreSQL stored procedure (RPC) per atomicità, oppure implementare rollback esplicito su errore.
+---
 
-### S6 — Query documenti usa `.like('tipo', 'CONTRATTO_%')` invece di `macro_type`
-- **Problema**: La colonna generata `macro_type` esiste esattamente per questo scopo ma non è usata in modo sistematico.
-- **File**: `app/api/documents/route.ts:109`
-- **Impatto**: BASSO
-- **Fix**: Sostituire tutti i filtri `.like('tipo', '...')` con `.eq('macro_type', '...')`.
+## S — Structure / Code quality
 
-### S8 — `formatDate` e `formatCurrency` duplicati in 4+ componenti
-- **Problema**: `formatDate` (toLocaleDateString it-IT DD/MM/YYYY) e `formatCurrency` (Intl.NumberFormat EUR) sono definite localmente in `CompensationList.tsx`, `ExpenseList.tsx`, `PendingApprovedList.tsx`, `PendingApprovedExpenseList.tsx` e altri. Cambiare il formato richiede aggiornare tutti.
-- **File**: `components/compensation/CompensationList.tsx`, `components/compensation/PendingApprovedList.tsx`, `components/expense/ExpenseList.tsx`, `components/expense/PendingApprovedExpenseList.tsx`
-- **Impatto**: BASSO
-- **Fix**: Estrarre in `lib/format-utils.ts` e importare in tutti i consumer.
+### S1 — `CreateUserForm.tsx` too large (409 lines)
+- **Problem**: A single component handles mode toggle, form validation, invite result, and credentials display.
+- **Files**: `components/impostazioni/CreateUserForm.tsx`
+- **Impact**: LOW
+- **Fix**: Extract `InviteResultCard` (email/password display) and keep only form logic in the main component.
 
-### S7 — Nessun check `file.size` prima del Buffer upload
-- **Problema**: Le route di upload non validano la dimensione del file prima della conversione in Buffer. Il bucket ha policy da 10MB ma il check avviene a posteriori (dopo che il server ha già letto il body).
-- **File**: `app/api/documents/route.ts:128-137`, `app/api/tickets/[id]/messages/route.ts:77-95`
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere `if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: 'File troppo grande' }, { status: 413 })` prima dell'upload.
+### S2 — `CollaboratoreDetail.tsx` too large (474 lines)
+- **Problem**: Profile, compensations, reimbursements, and documents all inline in a single client component.
+- **Files**: `components/responsabile/CollaboratoreDetail.tsx`
+- **Impact**: LOW
+- **Fix**: Split into `CollaboratoreHeader`, `CollaboratoreCompensazioni`, `CollaboratoreDocumenti`.
+
+### S3 — `OnboardingWizard.tsx` complex local state (408 lines)
+- **Problem**: Steps 1 and 2 are tightly coupled in state. Contract generation logic is inline.
+- **Files**: `components/onboarding/OnboardingWizard.tsx`
+- **Impact**: LOW
+- **Fix**: Extract step logic into sub-components; move contract generation to a dedicated hook.
+
+### S4 — API route input validation not standardized
+- **Problem**: `admin/create-user` uses Zod, but `tickets/route.ts` and `documents/route.ts` validate manually with if-chains. Structural inconsistency.
+- **Files**: `app/api/tickets/route.ts:82-91`, `app/api/documents/route.ts:68-72`
+- **Impact**: MEDIUM
+- **Fix**: Standardize all routes on Zod; create shared schemas for recurring payloads (e.g. `PaginationSchema`, `AttachmentSchema`).
+
+### S5 — mark-paid operation is not atomic
+- **Problem**: `POST /api/export/mark-paid` updates compensations then inserts history in separate steps. If the second step fails, the record is left in an inconsistent state.
+- **Files**: `app/api/export/mark-paid/route.ts:47-84`
+- **Impact**: HIGH
+- **Fix**: Wrap in a PostgreSQL stored procedure (RPC) for atomicity, or implement explicit rollback on error.
+
+### S6 — Documents query uses `.like('tipo', 'CONTRATTO_%')` instead of `macro_type`
+- **Problem**: The generated column `macro_type` exists exactly for this purpose but is not used consistently.
+- **Files**: `app/api/documents/route.ts:109`
+- **Impact**: LOW
+- **Fix**: Replace all `.like('tipo', '...')` filters with `.eq('macro_type', '...')`.
+
+### S7 — No `file.size` check before Buffer upload
+- **Problem**: Upload routes do not validate file size before converting to Buffer. The bucket has a 10 MB policy but the check happens after the server has already read the full body.
+- **Files**: `app/api/documents/route.ts:128-137`, `app/api/tickets/[id]/messages/route.ts:77-95`
+- **Impact**: MEDIUM
+- **Fix**: Add `if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: 'File too large' }, { status: 413 })` before the upload.
+
+### S8 — `formatDate` and `formatCurrency` duplicated across 4+ components
+- **Problem**: `formatDate` (toLocaleDateString it-IT DD/MM/YYYY) and `formatCurrency` (Intl.NumberFormat EUR) are defined locally in `CompensationList.tsx`, `ExpenseList.tsx`, `PendingApprovedList.tsx`, `PendingApprovedExpenseList.tsx`, and others. Changing the format requires updating all of them.
+- **Files**: `components/compensation/CompensationList.tsx`, `components/compensation/PendingApprovedList.tsx`, `components/expense/ExpenseList.tsx`, `components/expense/PendingApprovedExpenseList.tsx`
+- **Impact**: LOW
+- **Fix**: Extract to `lib/format-utils.ts` and import in all consumers.
 
 ---
 
 ## T — Type safety
 
 ### T1 — `SupabaseClient<any, any, any>` in notification-helpers.ts
-- **Problema**: Il tipo del service client è `any`, perdendo tutti i type hint e l'autocomplete IDE.
-- **File**: `lib/notification-helpers.ts:7`
-- **Impatto**: BASSO
-- **Fix**: Usare il tipo corretto `SupabaseClient<Database>` importando il type generato da supabase-codegen.
+- **Problem**: The service client type is `any`, losing all type hints and IDE autocomplete.
+- **Files**: `lib/notification-helpers.ts:7`
+- **Impact**: LOW
+- **Fix**: Use the correct type `SupabaseClient<Database>` by importing the type generated by supabase-codegen.
 
-### T2 — Cast `action as CompensationAction` senza type guard
-- **Problema**: `action` è castato con `as` dopo validazione Zod. Il cast è ridondante e nasconde il fatto che Zod già garantisce il tipo.
-- **File**: `app/api/compensations/[id]/transition/route.ts:87`, `app/api/expenses/[id]/transition/route.ts:82`
-- **Impatto**: BASSO
-- **Fix**: Rimuovere il cast `as`; lasciare che TypeScript inferisca il tipo dall'output Zod.
+### T2 — `action as CompensationAction` cast without type guard
+- **Problem**: `action` is cast with `as` after Zod validation. The cast is redundant and hides the fact that Zod already guarantees the type.
+- **Files**: `app/api/compensations/[id]/transition/route.ts:87`, `app/api/expenses/[id]/transition/route.ts:82`
+- **Impact**: LOW
+- **Fix**: Remove the `as` cast; let TypeScript infer the type from the Zod output.
 
-### T3 — `Record<string, unknown>` per updatePayload senza narrowing
-- **Problema**: `updatePayload` costruito come `Record<string, unknown>` non ha garanzie sulla shape prima dell'insert in DB.
-- **File**: `app/api/compensations/[id]/transition/route.ts:95`, `app/api/expenses/[id]/transition/route.ts:89`
-- **Impatto**: BASSO
-- **Fix**: Tipare come `Partial<Compensation>` o `Partial<Expense>`.
+### T3 — `Record<string, unknown>` for updatePayload without narrowing
+- **Problem**: `updatePayload` built as `Record<string, unknown>` has no shape guarantees before DB insert.
+- **Files**: `app/api/compensations/[id]/transition/route.ts:95`, `app/api/expenses/[id]/transition/route.ts:89`
+- **Impact**: LOW
+- **Fix**: Type as `Partial<Compensation>` or `Partial<Expense>`.
 
-### T4 — State machine action non usa discriminated union
-- **Problema**: Le azioni della state machine non sono discriminated union. Lo switch/if-chain non ha exhaustive check da TypeScript, rendendo facile dimenticare un caso aggiungendo nuove azioni.
-- **File**: `app/api/compensations/[id]/transition/route.ts:97-113`
-- **Impatto**: BASSO
-- **Fix**: Definire `type TransitionPayload = { action: 'approve_manager' } | { action: 'request_integration'; note: string } | ...` e usarlo come discriminated union.
+### T4 — State machine action is not a discriminated union
+- **Problem**: State machine actions are not discriminated unions. The switch/if-chain has no exhaustive check from TypeScript, making it easy to miss a case when adding new actions.
+- **Files**: `app/api/compensations/[id]/transition/route.ts:97-113`
+- **Impact**: LOW
+- **Fix**: Define `type TransitionPayload = { action: 'approve_manager' } | { action: 'request_integration'; note: string } | ...` and use it as a discriminated union.
 
-### T5 — Colonna `tipo` in `documents` è `text + CHECK` invece di PostgreSQL ENUM
-- **Problema**: Nessuna garanzia compile-time che un valore non valido venga inserito direttamente via SQL.
-- **File**: `supabase/migrations/001_schema.sql:205`
-- **Impatto**: BASSO
-- **Fix**: Creare `CREATE TYPE document_tipo AS ENUM (...)` e migrare la colonna.
+### T5 — `tipo` column in `documents` is `text + CHECK` instead of a PostgreSQL ENUM
+- **Problem**: No compile-time guarantee that an invalid value cannot be inserted directly via SQL.
+- **Files**: `supabase/migrations/001_schema.sql:205`
+- **Impact**: LOW
+- **Fix**: Create `CREATE TYPE document_tipo AS ENUM (...)` and migrate the column.
 
 ---
 
-## SEC — Sicurezza / Auth
+## SEC — Security / Auth
 
-### SEC1 — Password temporanea restituita in chiaro dalla create-user API
-- **Problema**: `POST /api/admin/create-user` risponde con `{ email, password }` in plain text nel body JSON. Visibile nel browser network tab e nei log server.
-- **File**: `app/api/admin/create-user/route.ts:159-162`
-- **Impatto**: ALTO
-- **Fix**: Valutare magic link Supabase invece di password temporanea. Se si mantiene la password, comunicarla solo via email (mai nel response body).
+### SEC1 — Temporary password returned in plain text by the create-user API
+- **Problem**: `POST /api/admin/create-user` responds with `{ email, password }` in plain text in the JSON body. Visible in the browser network tab and server logs.
+- **Files**: `app/api/admin/create-user/route.ts:159-162`
+- **Impact**: HIGH
+- **Fix**: Consider Supabase magic link instead of a temporary password. If password is kept, send it only via email — never in the response body.
 
-### SEC2 — Email invito non contiene link diretto con token
-- **Problema**: Il template email invito non include un link all'app con token pre-autenticato. L'utente deve ricordare email/password da console admin.
-- **File**: `lib/email-templates.ts` (template E8)
-- **Impatto**: MEDIO
-- **Fix**: Usare `supabase.auth.admin.generateLink({ type: 'magiclink', email })` per aggiungere link one-time nell'email invito.
+### SEC2 — Invite email does not include a direct link with token
+- **Problem**: The invite email template does not include a pre-authenticated app link. The user must remember email/password from the admin console.
+- **Files**: `lib/email-templates.ts` (template E8)
+- **Impact**: MEDIUM
+- **Fix**: Use `supabase.auth.admin.generateLink({ type: 'magiclink', email })` to add a one-time link to the invite email.
 
-### SEC3 — Nessun rate limiting su POST compensi/rimborsi
-- **Problema**: Un collaboratore autenticato può inviare richieste illimitate, potenziale spam o DoS applicativo.
-- **File**: `app/api/compensations/route.ts`, `app/api/expenses/route.ts`
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere check applicativo: massimo N compensi in stato BOZZA/INVIATO per collaboratore (es. 20). Alternativamente rate limit su middleware.
+### SEC3 — No rate limiting on POST compensations/reimbursements
+- **Problem**: An authenticated collaborator can submit unlimited requests — potential application spam or DoS.
+- **Files**: `app/api/compensations/route.ts`, `app/api/expenses/route.ts`
+- **Impact**: MEDIUM
+- **Fix**: Add application-level check: maximum N compensations in IN_ATTESA/BOZZA state per collaborator (e.g. 20). Alternatively, rate-limit via middleware.
 
-### SEC4 — Nessun rate limiting su create-user
-- **Problema**: Un admin compromesso può creare utenti illimitati.
-- **File**: `app/api/admin/create-user/route.ts`
-- **Impatto**: MEDIO
-- **Fix**: Rate limit per admin user (es. 10 utenti/ora) tramite middleware o check DB.
+### SEC4 — No rate limiting on create-user
+- **Problem**: A compromised admin can create unlimited users.
+- **Files**: `app/api/admin/create-user/route.ts`
+- **Impact**: MEDIUM
+- **Fix**: Rate-limit per admin user (e.g. 10 users/hour) via middleware or DB check.
 
-### SEC5 — RLS su `compensation_history` non verificata da test
-- **Problema**: Non esiste test che verifica che un collaboratore non possa leggere la history di compensi altrui.
-- **File**: `supabase/migrations/002_rls.sql`
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere test RLS: collaboratore B chiama GET `/api/compensations/[id_di_A]/` → deve ricevere 403/404.
+### SEC5 — RLS on `compensation_history` not covered by tests
+- **Problem**: No test verifies that a collaborator cannot read another collaborator's compensation history.
+- **Files**: `supabase/migrations/002_rls.sql`
+- **Impact**: MEDIUM
+- **Fix**: Add RLS test: collaborator B calls GET `/api/compensations/[id_of_A]/` → must receive 403/404.
 
-### SEC6 — Nessuna rotation policy documentata per `RESEND_API_KEY`
-- **Problema**: `RESEND_API_KEY` in `.env.local` senza procedura di rotation documentata.
-- **File**: `lib/email.ts:3`, `.env.local.example`
-- **Impatto**: BASSO
-- **Fix**: Documentare in README: "Ruotare RESEND_API_KEY ogni 90 giorni" + aggiungere nota in `.env.local.example`.
+### SEC6 — No documented rotation policy for `RESEND_API_KEY`
+- **Problem**: `RESEND_API_KEY` is in `.env.local` with no documented rotation procedure.
+- **Files**: `lib/email.ts:3`, `.env.local.example`
+- **Impact**: LOW
+- **Fix**: Document in README: "Rotate RESEND_API_KEY every 90 days" + add note in `.env.local.example`.
 
 ### SEC7 — Supabase Personal Access Token in plain text in MEMORY.md
-- **Problema**: `SUPABASE_ACCESS_TOKEN` (PAT con accesso Management API) è archiviato in chiaro nel file di memoria persistente.
-- **File**: `~/.claude/projects/.../memory/MEMORY.md`
-- **Impatto**: CRITICO
-- **Fix**: Revocare immediatamente il token in Supabase org settings → generare nuovo → aggiornare MEMORY.md con solo un placeholder (es. `sbp_...`).
+- **Problem**: `SUPABASE_ACCESS_TOKEN` (PAT with Management API access) is stored in plain text in the persistent memory file.
+- **Files**: `~/.claude/projects/.../memory/MEMORY.md`
+- **Impact**: CRITICAL
+- **Fix**: Revoke the token immediately in Supabase org settings → generate a new one → update MEMORY.md with a placeholder only (e.g. `sbp_...`).
 
 ---
 
 ## P — Performance
 
-### P1 — Join PostgREST in GET compensations non arricchisce dati collaboratore
-- **Problema**: La route admin non include nome/cognome del collaboratore nella select, obbligando il frontend a fare join in-memory o una seconda fetch.
-- **File**: `app/api/compensations/route.ts:44-47`
-- **Impatto**: BASSO
-- **Fix**: Aggiungere `collaborators(nome, cognome)` nella select quando il chiamante è admin/responsabile.
+### P1 — GET compensations join does not enrich collaborator data
+- **Problem**: The admin route does not include the collaborator's name/surname in the select, forcing the frontend to merge in-memory or make a second fetch.
+- **Files**: `app/api/compensations/route.ts:44-47`
+- **Impact**: LOW
+- **Fix**: Add `collaborators(nome, cognome)` to the select when the caller is admin/responsabile.
 
-### P2 — Index su `collaborators.user_id` non documentato
-- **Problema**: `UNIQUE` su `collaborators.user_id` crea automaticamente un index in Postgres, ma non è esplicito nella migration. Confonde chi legge lo schema.
-- **File**: `supabase/migrations/001_schema.sql:45`
-- **Impatto**: BASSO
-- **Fix**: Aggiungere commento `-- UNIQUE crea index automatico su user_id` oppure creare l'indice esplicitamente.
+### P2 — Index on `collaborators.user_id` not documented
+- **Problem**: `UNIQUE` on `collaborators.user_id` automatically creates an index in Postgres, but it is not explicit in the migration. Confusing for anyone reading the schema.
+- **Files**: `supabase/migrations/001_schema.sql:45`
+- **Impact**: LOW
+- **Fix**: Add comment `-- UNIQUE automatically creates an index on user_id` or create the index explicitly.
 
-### P3 — `getNotificationSettings` eseguita ad ogni transizione senza cache
-- **Problema**: 15 righe lette dal DB ad ogni transizione compenso/rimborso. Con 100 transizioni/giorno = 1500 query identiche.
-- **File**: `lib/notification-helpers.ts` (getNotificationSettings), usato in transition routes
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere cache in-memory con TTL 5 minuti (es. `Map` + timestamp) oppure pre-caricare in startup.
+### P3 — `getNotificationSettings` called on every transition without cache
+- **Problem**: 15 rows read from DB on every compensation/reimbursement transition. At 100 transitions/day = 1,500 identical queries.
+- **Files**: `lib/notification-helpers.ts` (getNotificationSettings), used in transition routes
+- **Impact**: MEDIUM
+- **Fix**: Add in-memory cache with TTL 5 minutes (e.g. `Map` + timestamp) or preload at startup.
 
-### P4 — `getResponsabiliForCommunity` fa triple join non ottimizzato
-- **Problema**: La funzione esegue: select user_community_access → filter user_profiles → fetch collaborators → chiamata `auth.admin.listUsers()` globale. Inefficiente su organizzazioni grandi.
-- **File**: `lib/notification-helpers.ts:62-101`
-- **Impatto**: MEDIO
-- **Fix**: Convertire in PostgreSQL RPC che ritorna già `PersonInfo[]` in una singola query con JOIN.
+### P4 — `getResponsabiliForCommunity` uses unoptimized triple join
+- **Problem**: The function executes: select user_community_access → filter user_profiles → fetch collaborators → global `auth.admin.listUsers()` call. Inefficient at scale.
+- **Files**: `lib/notification-helpers.ts:62-101`
+- **Impact**: MEDIUM
+- **Fix**: Convert to a PostgreSQL RPC that returns `PersonInfo[]` directly in a single query with JOINs.
 
 ---
 
 ## TC — Test coverage
 
-### TC1 — Test unit per nuove azioni workflow (Block 7)
-- **Problema**: Le nuove azioni `reopen` (RIFIUTATO → BOZZA) e `approve_all` non hanno copertura unit.
-- **File**: `__tests__/compensation-transitions.test.ts`, `__tests__/expense-transitions.test.ts`
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere test per reopen, approve_all, reject (con rejection_note). Da fare in Blocco 7c.
+### TC1 — No unit test for new workflow actions (Block 7)
+- **Problem**: The new `reopen` (RIFIUTATO → BOZZA) and `approve_all` actions have no unit coverage.
+- **Files**: `__tests__/compensation-transitions.test.ts`, `__tests__/expense-transitions.test.ts`
+- **Impact**: MEDIUM
+- **Fix**: Add tests for reopen, approve_all, reject (with rejection_note). To be done in Block 7c.
 
-### TC2 — Nessun test unit per null values in `buildCSV`
-- **Problema**: `buildCSV` usa `?? ''` per campi null ma nessun test verifica l'output per un item con `importo=null`.
-- **File**: `__tests__/export-utils.test.ts`
-- **Impatto**: BASSO
-- **Fix**: Aggiungere test `buildCSV([{ ...item, importo: null }])` → verifica colonna vuota.
+### TC2 — No unit test for null values in `buildCSV`
+- **Problem**: `buildCSV` uses `?? ''` for null fields but no test verifies the output for an item with `importo=null`.
+- **Files**: `__tests__/export-utils.test.ts`
+- **Impact**: LOW
+- **Fix**: Add test `buildCSV([{ ...item, importo: null }])` → verify empty column.
 
-### TC3 — Nessun e2e per mark-paid bulk
-- **Problema**: `POST /api/export/mark-paid` con array di ID multipli non è coperto da nessun test Playwright.
-- **File**: `e2e/export.spec.ts`
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere scenario `S9: seleziona 3 compensi → bulk mark-liquidated → verifica DB stato=LIQUIDATO`. Da aggiornare in Blocco 7c.
+### TC3 — No e2e test for bulk mark-paid
+- **Problem**: `POST /api/export/mark-paid` with an array of multiple IDs is not covered by any Playwright test.
+- **Files**: `e2e/export.spec.ts`
+- **Impact**: MEDIUM
+- **Fix**: Add scenario `S9: select 3 compensations → bulk mark-liquidated → verify DB state=LIQUIDATO`. To be updated in Block 7c.
 
-### TC4 — Nessun test per failure path email Resend
-- **Problema**: `sendEmail().catch(() => {})` non è mai testato. Il path di errore non viene mai esercitato.
-- **File**: `lib/email.ts`, `__tests__/`
-- **Impatto**: MEDIO
-- **Fix**: Aggiungere test vitest con mock Resend che lancia eccezione → verifica che il catch non propaghi.
+### TC4 — No test for Resend email failure path
+- **Problem**: `sendEmail().catch(() => {})` is never exercised. The error path is never tested.
+- **Files**: `lib/email.ts`, `__tests__/`
+- **Impact**: MEDIUM
+- **Fix**: Add vitest test with a mocked Resend that throws → verify the catch does not propagate.
 
-### TC5 — Nessun test RLS su leakage `compensation_history`
-- **Problema**: Non esiste test (unit o e2e) che verifica che un collaboratore non possa leggere la history di compensi altrui.
-- **File**: `__tests__/`, `supabase/migrations/002_rls.sql`
-- **Impatto**: ALTO
-- **Fix**: Aggiungere test: collaboratore B chiama `GET /api/compensations/[id_compenso_di_A]` → risposta 403 o 404.
+### TC5 — No RLS test for `compensation_history` leakage
+- **Problem**: No test (unit or e2e) verifies that a collaborator cannot read another collaborator's compensation history.
+- **Files**: `__tests__/`, `supabase/migrations/002_rls.sql`
+- **Impact**: HIGH
+- **Fix**: Add test: collaborator B calls `GET /api/compensations/[id_of_A]` → response 403 or 404.
+
+---
+
+## N — Naming / Conventions
+
+### N3 — Italian URL routes — rename to English
+- **Problem**: All app routes use Italian names (`/compensi`, `/rimborsi`, `/documenti`, `/approvazioni`, etc.). There are 30 Italian-named directories under `app/(app)/` and ~60–80 source files with hardcoded references. Inconsistent with the "code in English" convention declared in CLAUDE.md.
+- **Scope**:
+  - 30 `app/(app)/` directories to rename
+  - ~60–80 `.ts`/`.tsx` files with `href`, `redirect()`, `router.push()` to update
+  - `proxy.ts` — explicit route whitelist (risk: broken session if a route is missing post-rename)
+  - `lib/nav.ts` — central navigation hub
+  - `__tests__/api/` — ~15–20 files with hardcoded routes
+  - `e2e/` — ~10–15 Playwright specs with `goto('/...')` calls to update
+- **Route mapping**: `/compensi→/compensations`, `/rimborsi→/reimbursements`, `/documenti→/documents`, `/approvazioni→/approvals`, `/collaboratori→/collaborators`, `/contenuti→/content`, `/impostazioni→/settings`, `/profilo→/profile`, `/notifiche→/notifications`, `/coda→/queue`, `/ticket→/tickets`, sub-route `/nuova→/new`
+- **Impact**: LOW (internal URLs, admin-only portal, no end-user impact)
+- **Estimated effort**: ~1–1.5 days (find+replace script + proxy verification + test fixes)
+- **Risks**: proxy.ts whitelist, hardcoded redirects in API routes, Next.js type generation after rename
+- **Fix**: dedicated block outside the current feature cycle. Procedure: (1) rename directories via script, (2) global find+replace per route, (3) update `proxy.ts` whitelist, (4) `npx tsc --noEmit` + build + full test run.
+
+### N4 — Italian DB column names — rename to English
+- **Problem**: Many DB columns use Italian names, inconsistent with the "code in English" convention. Only FE-visible labels and UI text should remain in Italian.
+- **Affected columns (non-exhaustive)**:
+  - `collaborators`: `nome`, `cognome`, `data_nascita`, `luogo_nascita`, `comune_residenza`, `cap_residenza`, `indirizzo_residenza`, `civico_residenza`, `taglia_tshirt`, `partita_iva`, `sono_un_figlio_a_carico`, `tipo_contratto`, `data_inizio`, `data_fine`
+  - `compensations`: `data_competenza`, `periodo_riferimento`, `importo_netto`, `ritenuta_acconto`, `rejection_note` (already English — keep)
+  - `documents`: `tipo`, `data_caricamento`, `firma_richiesta_il`
+  - `expense_reimbursements`: `data_competenza`, `descrizione`, `importo`
+  - All `_history` tables: `role_label`, `note` (already English — keep)
+- **Scope**: every renamed column requires: (1) migration `ALTER TABLE t RENAME COLUMN old TO new`, (2) RLS policy review (filter on renamed columns), (3) global grep+replace in `.ts`/`.tsx`, (4) update `lib/types.ts` interface definitions, (5) update all Supabase `.select()` strings
+- **Impact**: LOW urgency, HIGH effort — touches the entire schema, all queries, all TS types, and all RLS policies
+- **Risk**: RLS policies referencing renamed columns silently stop filtering if not updated. Verify every policy after each rename.
+- **Fix**: dedicated block per table group (not all at once). Prerequisite: complete N3 (route rename) first to reduce concurrent churn.
+
+### N5 — Italian PostgreSQL enum values — translate to English
+- **Problem**: Status enum values are stored in Italian and used throughout application code. Only FE display labels should be in Italian.
+- **Affected enums and values**:
+  - Compensation/expense status: `IN_ATTESA → PENDING`, `APPROVATO → APPROVED`, `RIFIUTATO → REJECTED`, `LIQUIDATO → PAID`, `BOZZA → DRAFT`
+  - Document status: `DA_FIRMARE → TO_SIGN`, `FIRMATO → SIGNED`
+  - Member status: `ATTIVO → ACTIVE`, `USCENTE_CON_COMPENSO → LEAVING_WITH_PAY`, `USCENTE_SENZA_COMPENSO → LEAVING_WITHOUT_PAY`
+- **Migration pattern** (per value, in a single migration file):
+  1. `ALTER TYPE enum_name ADD VALUE 'NEW_VALUE';`
+  2. `UPDATE table SET col = 'NEW_VALUE' WHERE col = 'OLD_VALUE';` (repeat for all tables using this enum)
+  3. Cannot `DROP VALUE` from a PostgreSQL enum — old values remain harmless if no row references them, or migrate to `text + CHECK` constraint first to allow full replacement
+- **Scope**: ~15 enum values across 3 enums; affects all transition routes, state machine logic, Zod schemas, TS union types, RLS policies, and FE display-label maps
+- **Impact**: LOW urgency, HIGH risk — enum value renames are irreversible in PostgreSQL without a full type rebuild; must be done carefully with rollback SQL in migration headers
+- **Fix**: dedicated block. Recommended order: (1) document status (smallest blast radius), (2) member status, (3) compensation/expense status (largest — most consumers). FE label maps (`STATUS_LABEL` etc.) must be updated in the same PR to keep display in Italian.

@@ -16,4 +16,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'off',
   },
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true, // usa il server già avviato se presente
+    timeout: 60_000,
+  },
 });

@@ -1,0 +1,61 @@
+# Staff Manager — API Tests
+# Istruzioni:
+#   1. Copia il token dalla console browser (Application > Cookies > sb-*-auth-token)
+#   2. Sostituisci il valore di @token qui sotto
+#   3. Clicca "Send Request" sopra ogni ###
+
+@baseUrl = http://localhost:3000
+@token = INCOLLA_QUI_IL_TOKEN_JWT
+
+###
+# ── AUTH ──────────────────────────────────────────
+# Verifica sessione corrente
+GET {{baseUrl}}/api/auth/me
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── PROFILE ───────────────────────────────────────
+# Leggi profilo collaboratore corrente
+GET {{baseUrl}}/api/profile
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── COMPENSATIONS ─────────────────────────────────
+# Lista compensazioni (collaboratore)
+GET {{baseUrl}}/api/compensations
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# Lista compensazioni (admin — tutte)
+GET {{baseUrl}}/api/admin/compensations
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── EXPENSES ──────────────────────────────────────
+# Lista rimborsi (collaboratore)
+GET {{baseUrl}}/api/expenses
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── TICKETS ───────────────────────────────────────
+# Lista ticket
+GET {{baseUrl}}/api/tickets
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── NOTIFICATIONS ─────────────────────────────────
+# Notifiche non lette
+GET {{baseUrl}}/api/notifications
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── ADMIN — COLLABORATORI ─────────────────────────
+# Lista collaboratori (admin)
+GET {{baseUrl}}/api/admin/collaboratori
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
+
+###
+# ── DOCUMENTS ─────────────────────────────────────
+# Lista documenti
+GET {{baseUrl}}/api/documents
+Cookie: sb-nyajqcjqmgxctlqighql-auth-token={{token}}
