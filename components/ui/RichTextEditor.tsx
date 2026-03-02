@@ -20,6 +20,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
       StarterKit.configure({ heading: { levels: [2, 3] } }),
     ],
     content: value,
+    immediatelyRender: false,
     onUpdate: ({ editor: e }) => onChange(e.getHTML()),
     editorProps: {
       attributes: {
