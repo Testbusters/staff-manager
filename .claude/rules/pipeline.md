@@ -42,6 +42,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Write the code. Follow the project's Coding Conventions.
 - Do not add unrequested features. No unrequested refactoring.
 - **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB via Management API (Node.js `https.request` with `SUPABASE_ACCESS_TOKEN` from `.env.local` — `curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
+- **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
 - **PostgREST join syntax** (`table!relation`, `!inner`): verify FK existence before using it. If FK absent → two-step query (separate fetches + in-memory merge). Verification query: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f';`
 - **DROP CONSTRAINT before UPDATE** (migrations): if a column has a CHECK constraint and the UPDATE sets a value not allowed by the current constraint (e.g. renaming an enum value), the UPDATE fails. Pattern inside a single migration: (1) `ALTER TABLE t DROP CONSTRAINT c;` (2) `UPDATE t SET col = new_val WHERE ...;` (3) `ALTER TABLE t ADD CONSTRAINT c CHECK (...);` — all three statements in the same migration file so they run atomically.
 - **Security checklist** (before intermediate commit): for every new/modified API route verify: (1) auth check before any operation, (2) input validated (Zod), (3) no sensitive data exposed in response, (4) RLS not implicitly bypassed; for every new Supabase table: (5) `ALTER TABLE t ENABLE ROW LEVEL SECURITY` is present in the migration and at least one policy covers each relevant role.
@@ -67,20 +68,18 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Run `npx vitest run __tests__/api/` — all green.
 - Output: summary line only. Do not proceed with open errors.
 
-**Phase 4 — UAT definition**
+**Phase 4 — UAT definition + Playwright e2e**
 - Identify only **core** coverage scenarios: happy path, main edge case, post-operation DB check. Avoid redundant or purely cosmetic UI scenarios.
-- List Playwright scenarios (S1, S2, …) with: action, input data, expected outcome.
-- *** STOP — present scenario list and wait for explicit confirmation before writing the e2e spec. ***
-
-**Phase 5 — Playwright e2e**
-- Write `e2e/<block>.spec.ts` based on approved scenarios.
+- Draft Playwright scenarios (S1, S2, …) with: action, input data, expected outcome.
+- *** STOP — present scenario list + draft spec outline and wait for explicit confirmation before writing the final e2e spec. ***
+- Write `e2e/<block>.spec.ts` based on confirmed scenarios.
 - Run `npx playwright test e2e/<block>.spec.ts`.
 - **Before writing CSS selectors**: read the target component file (Read tool) and derive classes from real JSX — never assume from memory. Distinguish shared classes (e.g. `px-5 py-4` on both header and rows) from unique ones (e.g. `space-y-2` on rows only).
 - Expected output: summary line only (e.g. `9 passed (45s)`).
 - If something fails: paste only the failing scenario with error, fix, and re-run. Do not proceed with red tests.
 - Selectors: use explicit CSS class selectors (e.g. `span.text-green-300`) — never `getByText()` for status values (captures partial matches from raw DB Timeline entries).
 
-**Phase 5.4 — Test data setup** *(before smoke test)*
+**Phase 5b — Test data setup** *(before smoke test)*
 - Determine the test user(s) from the role scope of the block:
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
@@ -88,11 +87,11 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   - Multi-role blocks: use all relevant accounts.
 - Identify the entities and states involved in the block (tables, state machines, relevant DB records).
 - Insert representative test records covering all relevant states via Node.js one-shot script (service role, cleanup-first pattern — delete existing UAT records before inserting fresh ones).
-- Goal: the smoke test account has realistic data for every UI state that must be visible in Phase 5.5.
-- Leave test data in DB for the smoke test. Clean up after Phase 5.5 only if the records would break other tests.
+- Goal: the smoke test account has realistic data for every UI state that must be visible in Phase 5c.
+- Leave test data in DB for the smoke test. Clean up after Phase 5c only if the records would break other tests.
 
-**Phase 5.5 — Manual smoke test** *(before the formal checklist)*
-- Use the test account established in Phase 5.4 (or the role-mapped account if Phase 5.4 was skipped):
+**Phase 5c — Manual smoke test** *(before the formal checklist)*
+- Use the test account established in Phase 5b (or the role-mapped account if Phase 5b was skipped):
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
   - Admin → `admin_test@test.com`
@@ -100,8 +99,8 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
 
-**Phase 6 — Outcome checklist**
-Present this checklist filled with actual results:
+**Phase 6 — Outcome checklist + confirmation**
+Present this checklist filled with actual results, then wait for explicit confirmation before proceeding to Phase 8:
 
 ```
 ## Block checklist — [Block Name]
@@ -127,7 +126,6 @@ SELECT …;
 - path/to/file.ts — description
 ```
 
-**Phase 7 — Human confirmation**
 - *** STOP — do not declare the block complete, do not update any documents, do not move to the next block until the user responds with explicit confirmation. ***
 
 **Phase 8 — Block closure**
