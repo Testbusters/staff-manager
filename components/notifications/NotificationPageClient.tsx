@@ -145,27 +145,36 @@ export default function NotificationPageClient() {
             </p>
           )}
         </div>
-        {unread > 0 && (
+        <div className="flex items-center gap-3 mt-0.5 shrink-0">
           <button
-            onClick={handleMarkAllRead}
-            className="shrink-0 text-xs text-blue-400 hover:text-blue-300 transition mt-1"
+            onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
+            className={`text-xs px-3 py-1.5 rounded-full border transition ${
+              unreadOnly
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-transparent text-gray-400 border-gray-700 hover:border-gray-500'
+            }`}
           >
-            Segna tutte come lette
+            Solo non lette
           </button>
-        )}
+          {unread > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              className="text-xs text-blue-400 hover:text-blue-300 transition"
+            >
+              Segna tutte come lette
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Filter chips */}
+      {/* Type filter chips */}
       <div className="flex flex-wrap gap-1.5">
-        {/* All */}
         <button
           onClick={() => pushParams({ entity_type: '', page: '1' })}
           className={`${chipBase} ${!entityType ? chipActive : chipInactive}`}
         >
           Tutte
         </button>
-
-        {/* Type chips */}
         {TYPE_FILTERS.map(({ key, label }) => (
           <button
             key={key}
@@ -175,23 +184,6 @@ export default function NotificationPageClient() {
             {label}
           </button>
         ))}
-
-        {/* Divider */}
-        <span className="w-px bg-gray-700 mx-1 self-stretch" />
-
-        {/* Unread toggle */}
-        <button
-          onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
-          className={`${chipBase} ${unreadOnly
-            ? 'bg-blue-600 text-white border-blue-600'
-            : chipInactive
-          }`}
-        >
-          <span className="flex items-center gap-1.5">
-            {unreadOnly && <span className="inline-block w-1.5 h-1.5 rounded-full bg-white" />}
-            Solo non lette
-          </span>
-        </button>
       </div>
 
       {/* List */}

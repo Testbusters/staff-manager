@@ -35,6 +35,15 @@ export type DashboardOppItem = {
   kind: 'opp' | 'discount';
 };
 
+// Colored badge classes per content category
+const EVENT_BADGE_CLS  = 'bg-cyan-900/60 text-cyan-300 border-cyan-800/60';
+const COMM_BADGE_CLS   = 'bg-green-900/60 text-green-300 border-green-800/60';
+const RES_BADGE_CLS    = 'bg-blue-900/60 text-blue-300 border-blue-800/60';
+const OPP_BADGE_CLS    = 'bg-indigo-900/60 text-indigo-300 border-indigo-800/60';
+const DISC_BADGE_CLS   = 'bg-rose-900/60 text-rose-300 border-rose-800/60';
+
+const BADGE_BASE = 'flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide';
+
 type Tab = { key: string; label: string };
 
 const TABS: Tab[] = [
@@ -121,7 +130,7 @@ export default function DashboardUpdates({
                   {new Date(doc.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
-              <span className="flex-shrink-0 rounded px-2 py-0.5 text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+              <span className="flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-yellow-900/60 text-yellow-300 border-yellow-800/60">
                 {DOCUMENT_TYPE_LABELS[doc.tipo]}
               </span>
               <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
@@ -143,7 +152,7 @@ export default function DashboardUpdates({
                 </p>
               </div>
               {ev.tipo && (
-                <span className="flex-shrink-0 rounded px-2 py-0.5 text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+                <span className={`${BADGE_BASE} ${EVENT_BADGE_CLS}`}>
                   {ev.tipo}
                 </span>
               )}
@@ -163,7 +172,7 @@ export default function DashboardUpdates({
                   {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
-              <span className="flex-shrink-0 rounded px-2 py-0.5 text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+              <span className={`${BADGE_BASE} ${item.kind === 'comm' ? COMM_BADGE_CLS : RES_BADGE_CLS}`}>
                 {item.kind === 'comm' ? 'Comunicazione' : (item.categoria ?? 'Risorsa')}
               </span>
               <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
@@ -182,7 +191,7 @@ export default function DashboardUpdates({
                   {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
-              <span className="flex-shrink-0 rounded px-2 py-0.5 text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+              <span className={`${BADGE_BASE} ${item.kind === 'opp' ? OPP_BADGE_CLS : DISC_BADGE_CLS}`}>
                 {item.kind === 'opp' ? (item.tipo ?? 'Opportunità') : 'Sconto'}
               </span>
               <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
