@@ -68,6 +68,17 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Run `npx vitest run __tests__/api/` — all green.
 - Output: summary line only. Do not proceed with open errors.
 
+**Phase 3c — HTTP integration tests (Bruno CLI)** *(only if the block modifies `proxy.ts`, auth flow, or introduces routes where cookie/header/redirect behavior is critical and cannot be covered by Vitest)*
+- Write `.bru` request files in `api-tests/<block-name>/` (one file per endpoint or scenario).
+- Minimum cases to cover:
+  - No token → 401 (or redirect to `/login`, depending on route type)
+  - Valid session → expected status code + response shape
+  - `must_change_password=true` → redirect to `/change-password` (proxy-level check)
+  - Role boundary: unauthorized role → 403
+- Run against the running dev server (`npm run dev`): `npx @usebruno/cli run api-tests/<block-name>/`
+- `.bru` files are committed in `api-tests/`. Never commit Bruno environment files containing secrets (add to `.gitignore`).
+- Output: summary line only. If something fails: paste the failing request + response body, fix, re-run. Do not proceed with open failures.
+
 **Phase 4 — UAT definition + Playwright e2e**
 - Identify only **core** coverage scenarios: happy path, main edge case, post-operation DB check. Avoid redundant or purely cosmetic UI scenarios.
 - Draft Playwright scenarios (S1, S2, …) with: action, input data, expected outcome.
@@ -78,6 +89,23 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Expected output: summary line only (e.g. `9 passed (45s)`).
 - If something fails: paste only the failing scenario with error, fix, and re-run. Do not proceed with red tests.
 - Selectors: use explicit CSS class selectors (e.g. `span.text-green-300`) — never `getByText()` for status values (captures partial matches from raw DB Timeline entries).
+
+**Phase 4b — Visual baseline + structural check** *(only if the block introduces new pages or significant UI components)*
+- Prerequisite: `npm install --save-dev @axe-core/playwright` (one-time setup — verify it is already in `package.json` before installing).
+- Write `e2e/<block>-visual.spec.ts` with two checks per new page/component:
+  1. **Screenshot baseline**: `await expect(page).toHaveScreenshot('<page-name>.png', { fullPage: true })` — first run writes the baseline to `e2e/snapshots/`; subsequent runs diff pixel-by-pixel against it.
+  2. **axe-core structural check**:
+     ```ts
+     import AxeBuilder from '@axe-core/playwright';
+     const results = await new AxeBuilder({ page }).analyze();
+     expect(results.violations).toHaveLength(0);
+     ```
+- Run: `npx playwright test e2e/<block>-visual.spec.ts`
+- **First run (baseline creation)**: Playwright exits with "snapshot does not exist" — expected. Commit the generated `.png` files from `e2e/snapshots/`, then re-run to confirm green.
+- **On axe violations**: paste the violation list (`id`, `impact`, `description`), fix the structural issue, re-run. Do not proceed with `critical` or `serious` violations open.
+- Output: summary line only for subsequent runs.
+- **What this catches**: broken layouts visible in render, missing UI sections, spacing regressions, heading hierarchy breaks (h1→h2→h3), form fields without labels, missing ARIA attributes, color contrast failures.
+- **What this does NOT catch**: subjective design quality — flag those in Phase 5c smoke test instead.
 
 **Phase 5b — Test data setup** *(before smoke test)*
 - Determine the test user(s) from the role scope of the block:
@@ -110,7 +138,9 @@ Present this checklist filled with actual results, then wait for explicit confir
 - [ ] npm run build: success
 - [ ] Vitest unit: N/N passed
 - [ ] Vitest API: N/N passed *(if Phase 3b executed)*
+- [ ] HTTP integration (Bruno CLI): N/N passed *(if Phase 3c executed)*
 - [ ] Playwright e2e: N/N passed *(⏸ suspended if CLAUDE.local.md active)*
+- [ ] Visual baseline + axe-core: passed *(if Phase 4b executed)*
 
 ### Implemented features
 - [ ] [feature 1]: [outcome]
