@@ -60,7 +60,7 @@ app/
   (app)/
     page.tsx                     → Dashboard collaboratore (cards, quick actions, cosa mi manca, feed) + responsabile (CommCard per community, cosa devo fare, feed pending) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
     layout.tsx                   → Protected layout (auth guard + Sidebar)
-    profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | DocumentList)
+    profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | blue CTA "Nuovo rimborso" + DocumentUploadForm + DocumentList)
     impostazioni/page.tsx        → Settings: 5-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event)
     compensi/page.tsx            → Collaboratore: unified Compensi e Rimborsi page (PaymentOverview + CompensationList + ExpenseList + TicketQuickModal)
     compensi/nuova/page.tsx      → (removed in Block 7)
@@ -173,8 +173,8 @@ components/
     ExportSection.tsx            → Client: tab bar + action buttons (CSV/XLSX/mark-paid) + modal
     ExportTable.tsx              → Table with checkboxes, columns vary by tab
   documents/
-    DocumentList.tsx             → Documents grouped by macro-type (CONTRATTO/RICEVUTA/CU) with type badges (violet/teal/blue) + delete button for admin on CONTRATTO
-    DocumentUploadForm.tsx       → Bifurcated admin/non-admin: admin gets collaboratore selector + tipo optgroup + firma toggle (CONTRATTO only); non-admin gets simplified form (NON_RICHIESTO enforced server-side)
+    DocumentList.tsx             → Documents grouped by macro-type (CONTRATTO/CU) with type badges (violet/blue) + delete button for admin on CONTRATTO
+    DocumentUploadForm.tsx       → Bifurcated admin/non-admin: admin gets collaboratore selector + firma toggle (CONTRATTO only); non-admin gets 2-option flat dropdown (CONTRATTO_OCCASIONALE/CU, NON_RICHIESTO enforced server-side)
     DocumentSignFlow.tsx         → Collaboratore: download original + checkbox confirmation gate + upload signed PDF
     DocumentDeleteButton.tsx     → Client component: delete CONTRATTO (admin only) via DELETE API + redirect
     CUBatchUpload.tsx            → Admin: ZIP + CSV + year batch import with success/duplicate/error detail
@@ -238,8 +238,9 @@ supabase/migrations/
   022_expense_descrizione_nullable.sql → ALTER TABLE expense_reimbursements ALTER COLUMN descrizione DROP NOT NULL
   023_workflow_refactor.sql      → (skipped — superseded by 024)
   024_remove_bozza_add_corso.sql → Remove BOZZA state (migrate→IN_ATTESA, update CHECK, DEFAULT IN_ATTESA); ADD COLUMN corso_appartenenza TEXT on compensations
+  025_remove_ricevuta_pagamento.sql → Remove RICEVUTA_PAGAMENTO type; CHECK restricted to (CONTRATTO_OCCASIONALE, CU); recreate macro_type + unique index
 
-__tests__/                         → 156 tests total (vitest)  <!-- Block 9: no new tests (UI-only block) -->
+__tests__/                         → 167 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
   export-utils.test.ts             → Unit tests for CSV/XLSX builders
@@ -252,6 +253,7 @@ __tests__/                         → 156 tests total (vitest)  <!-- Block 9: n
     expense-form.test.ts           → Unit tests for expense form Zod schema (12 cases)
     transition-schema.test.ts      → Unit tests for compensation/expense/mark-paid/approve-all Zod schemas (22 cases)
     username.test.ts               → Unit tests for username generation and validation (23 cases)
+    documents.test.ts              → Unit tests for documents validTipi and type mapping (11 cases)
 
 e2e/
   rimborsi.spec.ts                 → Playwright UAT: reimbursement full flow (S1–S10, 11 tests)
@@ -288,7 +290,7 @@ next.config.ts
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Run unit tests (106 cases) + Playwright e2e (187 tests across 21 spec files)
+npm test           # Run unit tests (167 cases) + Playwright e2e (187 tests across 21 spec files)
 npm run build      # Production build (TypeScript check included)
 ```
 

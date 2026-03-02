@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-02. Blocco 9 ✅. Prossimo: definire Blocco 10.
+> Aggiornato 2026-03-02. Blocco 10 ✅. Prossimo: definire Blocco 11.
 
 ---
 
@@ -18,6 +18,7 @@
 | 2026-02-27 | Blocco 6 — Wizard rimborso 3-step + aggiornamento categorie | ✅ | tsc ✅, build ✅, vitest 153/153 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 022 (descrizione nullable). ExpenseForm refactored wizard 3-step (Dati→Allegati→Riepilogo+Conferma). EXPENSE_CATEGORIES: Trasporti/Materiali/Cancelleria. TICKET_CATEGORIES: Generale/Compensi/Documenti/Accesso/Altro. |
 | 2026-02-27 | Blocco 7 — Refactor workflow compensi + Blocco 8 — Wizard carico compensi | ✅ | tsc ✅, build ✅, vitest 156/156 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 024 (rimozione BOZZA, DEFAULT IN_ATTESA, cors_appartenenza). Workflow: IN_ATTESA→APPROVATO→LIQUIDATO/RIFIUTATO; reopen RIFIUTATO→IN_ATTESA. POST /api/compensations riscritto (responsabile/admin only). GET /api/admin/collaboratori (ricerca community-scoped). CompensationCreateWizard 3-step. /approvazioni/carica. |
 | 2026-03-02 | Blocco 9 — Finalizzazione sezione Collaboratore - Compensi e Rimborsi | ✅ | tsc ✅, build ✅, vitest 156/156 ✅, e2e ⏸ (sospeso, CLAUDE.local.md), smoke test OK | PaymentOverview redesign: verbose labels ("Netto ricevuto nel {year}", ritenuta 20% con InfoTooltip), sezione APPROVATO separata, IN_ATTESA dimmed. Tab Compensi: PendingApprovedList (card "Da ricevere"), CompensationList con chevron + meta labeling (Competenza/Inviato). Tab Rimborsi: PendingApprovedExpenseList (card "Da liquidare"), ExpenseList con date etichettate (Spesa/Inviato) + chevron. InfoTooltip client component (useState, keyboard-accessible). Rimossi file obsoleti: CompensationWizard.tsx, compensi/nuova/page.tsx, attachments route. TicketQuickModal → bg-blue-600. |
+| 2026-03-02 | Blocco 10 — Sezione Documenti Collaboratore | ✅ | tsc ✅, build ✅, vitest 167/167 ✅ (11 nuovi in documents.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 025: RICEVUTA_PAGAMENTO rimosso da DB CHECK + macro_type. DocumentType/DocumentMacroType aggiornati. API validTipi ristretto a 2 valori. DocumentList dead code rimosso. DocumentUploadForm dropdown semplificato. profilo/page.tsx: form self-upload + CTA "Nuovo rimborso" nel tab documenti. |
 
 ---
 
@@ -205,6 +206,22 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | 9e — Cleanup file obsoleti | ✅ | Rimossi: CompensationWizard.tsx, compensi/nuova/page.tsx, api/compensations/[id]/attachments/route.ts |
 | 9f — TicketQuickModal CTA | ✅ | Trigger button → bg-blue-600 hover:bg-blue-500 text-white |
 | 9g — Simplify review | ✅ | Object.entries per grouping functions; InfoTooltip keyboard support; formatDate/formatCurrency extraction → backlog S8 |
+
+---
+
+## Blocco 10 — Sezione Documenti Collaboratore ✅
+
+> Requisito: `docs/requirements.md` — Sezione Documenti Collaboratore (Block 10)
+> Dipendenze: Blocco 3 (rimozione COCOCO/PIVA), Blocco 9 (layout profilo)
+
+| Sotto-blocco | Stato | Note |
+|---|---|---|
+| 10a — Migration 025 + DB cleanup | ✅ | RICEVUTA_PAGAMENTO rimossa; CHECK aggiornato; macro_type + unique index ricreati |
+| 10b — lib/types.ts cleanup | ✅ | DocumentType/DocumentMacroType a 2 valori; rimozione RICEVUTA_PAGAMENTO da tutti i record |
+| 10c — API validTipi | ✅ | `['CONTRATTO_OCCASIONALE', 'CU']` — 400 per COCOCO/PIVA/RICEVUTA |
+| 10d — DocumentList dead code | ✅ | TypeBadge: rimossi casi COCOCO, PIVA, RICEVUTA; MACRO_ORDER aggiornato |
+| 10e — DocumentUploadForm dropdown | ✅ | Dropdown semplificato a 2 opzioni flat (no optgroup) |
+| 10f — profilo/page.tsx documenti tab | ✅ | DocumentUploadForm + CTA "Nuovo rimborso" → /rimborsi/nuova |
 
 ---
 

@@ -109,7 +109,7 @@ ExpenseAttachment(id, reimbursement_id, file_url, file_name, created_at)
 ExpenseHistory(id, reimbursement_id, stato_precedente, stato_nuovo,
                changed_by, role_label, note?, created_at)
 
-Document(id, collaborator_id, community_id, tipo[CONTRATTO_OCCASIONALE|RICEVUTA_PAGAMENTO|CU],  -- CONTRATTO_COCOCO/PIVA rimossi (Block 3)
+Document(id, collaborator_id, community_id, tipo[CONTRATTO_OCCASIONALE|CU],  -- COCOCO/PIVA rimossi (Block 3); RICEVUTA_PAGAMENTO rimossa (Block 10)
          anno?, titolo, file_original_url, stato_firma[DA_FIRMARE|FIRMATO|NON_RICHIESTO],
          file_firmato_url?, requested_at, signed_at?, note?, created_at)
 
@@ -416,3 +416,61 @@ Tutti i dati sono raccolti in stato React locale; la submit reale avviene solo a
 - Disponibile solo via `TicketQuickModal` nella pagina `/compensi` (header in alto a destra).
 - Categorie ticket (Block 6 — aggiornate): `Generale, Compensi, Documenti, Accesso, Altro`.
 - Destinatario implicito: `responsabile_compensi` (workflow da rivedere in blocco dedicato).
+
+### Finalizzazione sezione Collaboratore — Compensi e Rimborsi (Block 9)
+
+**Regola strutturale**: le sezioni di navigazione del collaboratore (8 voci) sono fisse — non aggiungere nuove route o pagine. Tutti i nuovi elementi vanno integrati dentro `/compensi`.
+
+#### Layout pagina — tab Compensi / Rimborsi
+Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab orizzontali:
+- Header tab: `Compensi (N)` | `Rimborsi (N)` — N = conteggio totale richieste per tipo
+- Tab Compensi: sezione "Da ricevere" (se APPROVATO > 0) + filtri chip + lista card
+- Tab Rimborsi: filtri chip + lista card + pulsante "Nuovo rimborso"
+- Filtri chip per stato (Tutti / In attesa / Approvato / Rifiutato / Liquidato) in entrambi i tab
+
+#### PaymentOverview — modifiche
+- Label progress bar massimale: `Massimale annuo {anno}` → `Massimale annuo {anno} lordo`
+- Card "Compensi liquidati": riga `Lordo {anno corrente}: X €` sempre visibile (non gated su massimale). Somma di `importo_lordo` per compensazioni LIQUIDATO nell'anno solare corrente.
+
+#### Sezione "Da ricevere" (nel tab Compensi, solo se APPROVATO > 0)
+- Colonne: Descrizione, Community, Periodo, Lordo ℹ, Netto ℹ, link dettaglio
+- Riga totale: somma Lordo + somma Netto
+- Tooltip ℹ su colonne lordo/netto con testo esplicativo sulla ritenuta
+
+#### Design lista compensi — card style (Block 9)
+- Sostituisce la tabella con header con righe card:
+  - LEFT: Descrizione (bold), Community (dot colorato + nome), Data, Periodo
+  - RIGHT: `X,XX € lordi ℹ` + `X,XX € netti ℹ` (colore contestuale) + badge stato (pill)
+- Community dot: colore deterministico da hash dell'ID community (palette Tailwind fissa)
+- Colore netto: APPROVATO → amber-400; LIQUIDATO → green-400; IN_ATTESA / RIFIUTATO → gray-400
+- Tooltip ℹ CSS-only (hover): "Lordo: compenso prima della ritenuta d'acconto (20%). Netto = Lordo − 20% = importo accreditato sul conto."
+
+#### Design lista rimborsi — card style (Block 9)
+- Layout card equivalente ma con singolo importo (rimborsi non hanno ritenuta d'acconto)
+
+### Sezione Documenti Collaboratore — Tab Documenti (Block 10)
+
+**Scope**: `/profilo?tab=documenti` — pulizia tipi documento e aggiunta funzionalità self-service.
+
+#### Modifiche al tipo documento
+- Rimosso tipo `RICEVUTA_PAGAMENTO` (le ricevute appartengono agli allegati rimborso, non ai documenti generali)
+- Tipi validi: `CONTRATTO_OCCASIONALE` | `CU`
+- `DocumentMacroType`: `CONTRATTO` | `CU` (rimosso `RICEVUTA_PAGAMENTO`)
+
+#### Tab Documenti — layout aggiornato
+- **CTA blu** in alto a destra: "Nuovo rimborso" → `/rimborsi/nuova`
+- **Form self-upload** (`DocumentUploadForm`, `isAdmin=false`): collaboratore può caricare `CONTRATTO_OCCASIONALE` o `CU` direttamente
+  - Dropdown tipo: solo 2 opzioni (niente optgroup)
+  - `stato_firma` sempre `NON_RICHIESTO` (forzato lato API per non-admin)
+  - Unicità contratto: 409 se esiste già un CONTRATTO per il collaboratore
+- **DocumentList**: invariato sotto il form
+
+#### Sicurezza API
+- `POST /api/documents`: `validTipi` ristretto a `['CONTRATTO_OCCASIONALE', 'CU']`
+  - CONTRATTO_COCOCO, CONTRATTO_PIVA, RICEVUTA_PAGAMENTO → 400
+
+#### Migration 025
+- `DELETE FROM documents WHERE tipo = 'RICEVUTA_PAGAMENTO'`
+- DROP + recreate `macro_type` generated column (solo CONTRATTO/CU)
+- CHECK constraint aggiornato a `('CONTRATTO_OCCASIONALE', 'CU')`
+- Unique index `uq_one_contratto_per_collaborator` ricreato
