@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import CompensationList from '@/components/compensation/CompensationList';
-import ExpenseList from '@/components/expense/ExpenseList';
-import type { Role } from '@/lib/types';
+import ApprovazioniCompensazioni from '@/components/compensation/ApprovazioniCompensazioni';
+import ApprovazioniRimborsi from '@/components/expense/ApprovazioniRimborsi';
 
 export default async function ApprovazioniPage({
   searchParams,
@@ -27,26 +26,45 @@ export default async function ApprovazioniPage({
   const { tab } = await searchParams;
   const activeTab = tab === 'rimborsi' ? 'rimborsi' : 'compensi';
 
-  // Fetch data only for the active tab
+  // Fetch all states for the active tab, including collaborator name
   const compensations = activeTab === 'compensi'
     ? await supabase
         .from('compensations')
-        .select('*, communities(name)')
-        .eq('stato', 'IN_ATTESA')
-        .order('created_at', { ascending: true })
+        .select('*, communities(name), collaborators(nome, cognome)')
+        .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])
     : [];
 
   const expenses = activeTab === 'rimborsi'
     ? await supabase
         .from('expense_reimbursements')
-        .select('*')
-        .eq('stato', 'IN_ATTESA')
-        .order('created_at', { ascending: true })
+        .select('*, communities(name), collaborators(nome, cognome)')
+        .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])
     : [];
 
-  const role = profile.role as Role;
+  // KPI aggregation — server-side
+  const compKpi = {
+    inAttesa: compensations.filter((c) => c.stato === 'IN_ATTESA').length,
+    totaleLordoInAttesa: compensations
+      .filter((c) => c.stato === 'IN_ATTESA')
+      .reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
+    approvati: compensations.filter((c) => c.stato === 'APPROVATO').length,
+    totaleLordoApprovati: compensations
+      .filter((c) => c.stato === 'APPROVATO')
+      .reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
+  };
+
+  const expKpi = {
+    inAttesa: expenses.filter((e) => e.stato === 'IN_ATTESA').length,
+    totaleInAttesa: expenses
+      .filter((e) => e.stato === 'IN_ATTESA')
+      .reduce((s, e) => s + (e.importo ?? 0), 0),
+    approvati: expenses.filter((e) => e.stato === 'APPROVATO').length,
+    totaleApprovati: expenses
+      .filter((e) => e.stato === 'APPROVATO')
+      .reduce((s, e) => s + (e.importo ?? 0), 0),
+  };
 
   const tabCls = (t: string) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
@@ -57,32 +75,23 @@ export default async function ApprovazioniPage({
 
   return (
     <div className="p-6 max-w-5xl">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-100">Approvazioni</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Richieste in attesa di revisione nelle community a te assegnate.
-          </p>
-        </div>
-        <Link
-          href="/approvazioni/carica"
-          className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
-        >
-          + Carica compensi
-        </Link>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-100">Compensi e rimborsi</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Gestione compensi e rimborsi nelle community a te assegnate.
+        </p>
       </div>
 
-      {/* Tab bar */}
       <div className="flex gap-2 mb-6">
         <Link href="?tab=compensi" className={tabCls('compensi')}>Compensi</Link>
         <Link href="?tab=rimborsi" className={tabCls('rimborsi')}>Rimborsi</Link>
       </div>
 
       {activeTab === 'compensi' && (
-        <CompensationList compensations={compensations} role={role} />
+        <ApprovazioniCompensazioni compensations={compensations} kpi={compKpi} />
       )}
       {activeTab === 'rimborsi' && (
-        <ExpenseList expenses={expenses} role={role} />
+        <ApprovazioniRimborsi expenses={expenses} kpi={expKpi} />
       )}
     </div>
   );

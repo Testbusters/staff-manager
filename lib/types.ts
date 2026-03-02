@@ -350,6 +350,7 @@ export interface Notification {
 export interface Expense {
   id: string;
   collaborator_id: string;
+  community_id: string | null;
   categoria: ExpenseCategory;
   data_spesa: string;
   importo: number;
