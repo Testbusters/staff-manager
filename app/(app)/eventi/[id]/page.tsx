@@ -72,6 +72,10 @@ export default async function EventDetailPage({
 
   if (!ev) notFound();
 
+  // Mark associated unread notification as read
+  await supabase.from('notifications').update({ is_read: true })
+    .eq('user_id', user.id).eq('entity_type', 'event').eq('entity_id', id).eq('is_read', false);
+
   const event = ev as ContentEvent;
 
   return (

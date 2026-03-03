@@ -494,7 +494,12 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
 4. **Azioni rapide** (4 button): `+ Nuovo rimborso`, `Compensi e rimborsi`, `Carica documento`, `+ Apri ticket`
 5. **PaymentOverview**: riuso diretto del componente esistente (massimale + compensi liquidati/approvati + rimborsi)
 6. **DashboardBarChart** (nuovo client component, Recharts): bar chart ultimi 6 mesi, 2 bar per mese (blu = compensi lordi liquidati, teal = rimborsi liquidati). Nascosto se tutti i valori sono zero.
-7. **Ultimi aggiornamenti**: feed invariato
+7. **Ultimi aggiornamenti**: feed con badge contatori non letti sui tab:
+   - Badge numerico su **Eventi**, **Comunicazioni e risorse**, **Opportunità e sconti**
+   - Contatore = notifiche in-app non lette per gli `entity_type` corrispondenti al tab (nessuna nuova tabella, riuso `notifications`)
+   - Mapping: `event` → tab Eventi; `communication`+`resource` → tab Comunicazioni e risorse; `opportunity`+`discount` → tab Opportunità e sconti
+   - Decremento: quando il collaboratore apre il dettaglio di un item, le notifiche unread con quel `entity_type`+`entity_id` vengono marcate read (write server-side nella page di dettaglio, service role)
+   - Copertura: solo item pubblicati dopo Block 13 (quando le notifiche contenuto sono state introdotte)
 
 #### Dati aggiuntivi necessari (espansione select esistenti, zero query nuove)
 - `collaborators`: aggiungere `nome, cognome, importo_lordo_massimale`

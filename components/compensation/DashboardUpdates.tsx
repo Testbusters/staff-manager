@@ -45,6 +45,7 @@ const DISC_BADGE_CLS   = 'bg-rose-900/60 text-rose-300 border-rose-800/60';
 const BADGE_BASE = 'flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide';
 
 type Tab = { key: string; label: string };
+type UnreadCounts = { events: number; communicationsResources: number; opportunitiesDiscounts: number };
 
 const TABS: Tab[] = [
   { key: 'documenti',     label: 'Documenti' },
@@ -60,11 +61,13 @@ export default function DashboardUpdates({
   events,
   comunicazioni,
   opportunita,
+  unreadCounts,
 }: {
   documents: DashboardDocItem[];
   events: DashboardEventItem[];
   comunicazioni: DashboardCommItem[];
   opportunita: DashboardOppItem[];
+  unreadCounts?: UnreadCounts;
 }) {
   const [activeTab, setActiveTab] = useState<string>('documenti');
   const [page, setPage] = useState(0);
@@ -90,19 +93,30 @@ export default function DashboardUpdates({
       <div className="flex flex-wrap items-center gap-1 px-5 py-4 border-b border-gray-800">
         <h2 className="text-sm font-medium text-gray-200 mr-3">Ultimi aggiornamenti</h2>
         <div className="flex items-center gap-0.5 flex-wrap">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                activeTab === tab.key
-                  ? 'bg-gray-700 text-gray-100'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {TABS.map((tab) => {
+            const count =
+              tab.key === 'eventi'        ? (unreadCounts?.events ?? 0) :
+              tab.key === 'comunicazioni' ? (unreadCounts?.communicationsResources ?? 0) :
+              tab.key === 'opportunita'   ? (unreadCounts?.opportunitiesDiscounts ?? 0) : 0;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  activeTab === tab.key
+                    ? 'bg-gray-700 text-gray-100'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                }`}
+              >
+                {tab.label}
+                {count > 0 && (
+                  <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none tabular-nums">
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
