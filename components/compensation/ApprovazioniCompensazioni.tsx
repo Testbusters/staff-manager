@@ -4,12 +4,11 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Compensation, CompensationStatus } from '@/lib/types';
-import { COMPENSATION_STATUS_LABELS, ROLE_LABELS } from '@/lib/types';
+import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 import ImportSection from './ImportSection';
 
 type CompensationRow = Compensation & {
-  communities?: { name: string } | null;
   collaborators?: { nome: string; cognome: string } | null;
 };
 
@@ -18,22 +17,12 @@ type Kpi = {
   totaleLordoInAttesa: number;
   approvati: number;
   totaleLordoApprovati: number;
+  liquidato: number;
+  totaleLordoLiquidato: number;
 };
 
 const ALL_STATI: CompensationStatus[] = ['IN_ATTESA', 'APPROVATO', 'RIFIUTATO', 'LIQUIDATO'];
-const PAGE_SIZE = 25;
-
-const COMMUNITY_COLORS = [
-  'bg-blue-500', 'bg-violet-500', 'bg-emerald-500',
-  'bg-amber-500', 'bg-rose-500', 'bg-cyan-500',
-] as const;
-
-function communityDotColor(id: string | undefined): string {
-  if (!id) return COMMUNITY_COLORS[0];
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return COMMUNITY_COLORS[hash % COMMUNITY_COLORS.length];
-}
+const PAGE_SIZE = 20;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -44,12 +33,12 @@ function formatCurrency(n: number | null | undefined) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
-function KpiCard({ label, value, sub, color }: { label: string; value: string | number; sub: string; color: string }) {
+function KpiCard({ label, count, amount, countColor }: { label: string; count: number; amount: number; countColor: string }) {
   return (
     <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`text-xl font-semibold tabular-nums ${color}`}>{value}</p>
-      <p className="text-xs text-gray-600 mt-0.5">{sub}</p>
+      <p className="text-xs text-gray-500 mb-2">{label}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
+      <p className="text-sm tabular-nums text-gray-400 mt-0.5">{formatCurrency(amount)}</p>
     </div>
   );
 }
@@ -139,28 +128,35 @@ export default function ApprovazioniCompensazioni({
 
   return (
     <div className="space-y-6">
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiCard label="In attesa" value={kpi.inAttesa} sub="da revisionare" color="text-blue-400" />
-        <KpiCard label="Totale lordo" value={formatCurrency(kpi.totaleLordoInAttesa)} sub="in attesa" color="text-blue-300" />
-        <KpiCard label="Approvati" value={kpi.approvati} sub="da liquidare" color="text-amber-400" />
-        <KpiCard label="Totale lordo" value={formatCurrency(kpi.totaleLordoApprovati)} sub="approvati" color="text-amber-300" />
+      {/* KPI cards — 3 unified cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleLordoInAttesa} countColor="text-blue-400" />
+        <KpiCard label="Approvati" count={kpi.approvati} amount={kpi.totaleLordoApprovati} countColor="text-amber-400" />
+        <KpiCard label="Liquidati" count={kpi.liquidato} amount={kpi.totaleLordoLiquidato} countColor="text-emerald-400" />
       </div>
 
-      {/* GSheet import section */}
-      <ImportSection />
+      {/* Creation modes — two stacked peer cards */}
+      <div className="space-y-3">
+        <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-200">Inserimento manuale</p>
+            <p className="text-xs text-gray-500 mt-0.5">Crea un compenso per un singolo collaboratore.</p>
+          </div>
+          <Link
+            href="/approvazioni/carica"
+            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition"
+          >
+            + Inserimento manuale
+          </Link>
+        </div>
+        <ImportSection />
+      </div>
 
-      {/* List header + manual entry button */}
-      <div className="flex items-center justify-between gap-4">
+      {/* List header */}
+      <div className="flex items-center gap-4">
         <h2 className="text-sm font-medium text-gray-400">
           Compensi{filtered.length !== compensations.length ? ` (${filtered.length} di ${compensations.length})` : ` (${compensations.length})`}
         </h2>
-        <Link
-          href="/approvazioni/carica"
-          className="shrink-0 rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-gray-200 transition"
-        >
-          + Inserimento manuale
-        </Link>
       </div>
 
       {/* Search */}
@@ -265,16 +261,12 @@ export default function ApprovazioniCompensazioni({
                     </p>
                     <p className="text-xs text-gray-400 truncate mt-0.5">{c.nome_servizio_ruolo ?? '—'}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                      {c.communities && (
-                        <span className="flex items-center gap-1">
-                          <span className={`h-2 w-2 rounded-full shrink-0 ${communityDotColor(c.community_id ?? undefined)}`} />
-                          <span className="text-gray-400">{c.communities.name}</span>
-                        </span>
+                      {c.periodo_riferimento && (
+                        <span>{c.periodo_riferimento}</span>
                       )}
                       {c.periodo_riferimento && (
-                        <><span className="text-gray-700">·</span><span>{c.periodo_riferimento}</span></>
+                        <span className="text-gray-700">·</span>
                       )}
-                      <span className="text-gray-700">·</span>
                       <span>{formatDate(c.created_at)}</span>
                     </div>
                   </div>

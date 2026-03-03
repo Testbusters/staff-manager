@@ -30,7 +30,7 @@ export default async function ApprovazioniPage({
   const compensations = activeTab === 'compensi'
     ? await supabase
         .from('compensations')
-        .select('*, communities(name), collaborators(nome, cognome)')
+        .select('*, collaborators(nome, cognome)')
         .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])
     : [];
@@ -52,6 +52,10 @@ export default async function ApprovazioniPage({
     approvati: compensations.filter((c) => c.stato === 'APPROVATO').length,
     totaleLordoApprovati: compensations
       .filter((c) => c.stato === 'APPROVATO')
+      .reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
+    liquidato: compensations.filter((c) => c.stato === 'LIQUIDATO').length,
+    totaleLordoLiquidato: compensations
+      .filter((c) => c.stato === 'LIQUIDATO')
       .reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
   };
 

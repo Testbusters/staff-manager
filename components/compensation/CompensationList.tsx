@@ -7,7 +7,7 @@ import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
-type CompensationRow = Compensation & { communities?: { name: string } | null };
+type CompensationRow = Compensation;
 
 const ALL_STATI: CompensationStatus[] = [
   'IN_ATTESA',
@@ -19,22 +19,7 @@ const ALL_STATI: CompensationStatus[] = [
 const TOOLTIP_TEXT =
   "Lordo: compenso prima della ritenuta d'acconto (20%). Netto = Lordo − 20% = importo accreditato sul conto.";
 
-// Deterministic community dot color from ID hash
-const COMMUNITY_COLORS = [
-  'bg-blue-500',
-  'bg-violet-500',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-] as const;
-
-function communityDotColor(id: string | undefined): string {
-  if (!id) return COMMUNITY_COLORS[0];
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return COMMUNITY_COLORS[hash % COMMUNITY_COLORS.length];
-}
+const PAGE_SIZE = 20;
 
 function nettoColorClass(stato: string): string {
   if (stato === 'LIQUIDATO') return 'text-green-400';
@@ -85,17 +70,27 @@ export default function CompensationList({
   role: Role;
 }) {
   const [filterStato, setFilterStato] = useState<CompensationStatus | 'ALL'>('ALL');
+  const [page, setPage] = useState(1);
 
   const filtered = filterStato === 'ALL'
     ? compensations
     : compensations.filter((c) => c.stato === filterStato);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function handleFilterChange(stato: CompensationStatus | 'ALL') {
+    setFilterStato(stato);
+    setPage(1);
+  }
 
   return (
     <div className="space-y-4">
       {/* Filter chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
         <button
-          onClick={() => setFilterStato('ALL')}
+          onClick={() => handleFilterChange('ALL')}
           className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
             filterStato === 'ALL'
               ? 'bg-blue-600 text-white'
@@ -107,7 +102,7 @@ export default function CompensationList({
         {ALL_STATI.map((s) => (
           <button
             key={s}
-            onClick={() => setFilterStato(s)}
+            onClick={() => handleFilterChange(s)}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
                 ? 'bg-blue-600 text-white'
@@ -126,7 +121,7 @@ export default function CompensationList({
         </div>
       ) : (
         <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
-          {filtered.map((c) => (
+          {paginated.map((c) => (
             <Link
               key={c.id}
               href={`/compensi/${c.id}`}
@@ -138,21 +133,12 @@ export default function CompensationList({
                   {c.nome_servizio_ruolo ?? '—'}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                  {c.communities && (
-                    <span className="flex items-center gap-1">
-                      <span
-                        className={`h-2 w-2 rounded-full shrink-0 ${communityDotColor(c.community_id ?? undefined)}`}
-                      />
-                      <span className="text-gray-400">{c.communities.name}</span>
-                    </span>
-                  )}
                   {c.periodo_riferimento && (
                     <>
-                      <span className="text-gray-700">·</span>
                       <span>Competenza: {c.periodo_riferimento}</span>
+                      <span className="text-gray-700">·</span>
                     </>
                   )}
-                  {(c.communities || c.periodo_riferimento) && <span className="text-gray-700">·</span>}
                   <span>Inviato: {formatDate(c.created_at)}</span>
                 </div>
               </div>
@@ -180,6 +166,27 @@ export default function CompensationList({
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+          >
+            ‹
+          </button>
+          <span className="text-xs text-gray-500">{safePage} / {totalPages}</span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+          >
+            ›
+          </button>
         </div>
       )}
     </div>

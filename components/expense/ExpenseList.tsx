@@ -25,6 +25,8 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
+const PAGE_SIZE = 20;
+
 export default function ExpenseList({
   expenses,
   role,
@@ -33,10 +35,20 @@ export default function ExpenseList({
   role: Role;
 }) {
   const [filterStato, setFilterStato] = useState<ExpenseStatus | 'ALL'>('ALL');
+  const [page, setPage] = useState(1);
 
   const filtered = filterStato === 'ALL'
     ? expenses
     : expenses.filter((e) => e.stato === filterStato);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function handleFilterChange(stato: ExpenseStatus | 'ALL') {
+    setFilterStato(stato);
+    setPage(1);
+  }
 
   return (
     <div className="space-y-4">
@@ -44,7 +56,7 @@ export default function ExpenseList({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
           <button
-            onClick={() => setFilterStato('ALL')}
+            onClick={() => handleFilterChange('ALL')}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === 'ALL'
                 ? 'bg-blue-600 text-white'
@@ -56,7 +68,7 @@ export default function ExpenseList({
           {ALL_STATI.map((s) => (
             <button
               key={s}
-              onClick={() => setFilterStato(s)}
+              onClick={() => handleFilterChange(s)}
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
                 filterStato === s
                   ? 'bg-blue-600 text-white'
@@ -93,7 +105,7 @@ export default function ExpenseList({
         </div>
       ) : (
         <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
-          {filtered.map((e) => (
+          {paginated.map((e) => (
             <Link
               key={e.id}
               href={`/rimborsi/${e.id}`}
@@ -123,6 +135,27 @@ export default function ExpenseList({
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+          >
+            ‹
+          </button>
+          <span className="text-xs text-gray-500">{safePage} / {totalPages}</span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+          >
+            ›
+          </button>
         </div>
       )}
     </div>

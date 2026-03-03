@@ -20,7 +20,7 @@ type Kpi = {
 };
 
 const ALL_STATI: ExpenseStatus[] = ['IN_ATTESA', 'APPROVATO', 'RIFIUTATO', 'LIQUIDATO'];
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 
 const COMMUNITY_COLORS = [
   'bg-blue-500', 'bg-violet-500', 'bg-emerald-500',
