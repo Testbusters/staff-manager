@@ -211,22 +211,28 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
             )}
           </div>
           <div className="flex-1">
-            <div className="mb-3 space-y-1.5">
-              <p className="text-xs text-gray-400">
-                <span className="text-gray-600">Ruolo: </span>
-                {ROLE_LABELS[role as Role] ?? role}
-              </p>
+            <div className="mb-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Ruolo:</span>
+                <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+                  {ROLE_LABELS[role as Role] ?? role}
+                </span>
+              </div>
               {collaborator.username && (
-                <p className="text-xs text-gray-400">
-                  <span className="text-gray-600">Username: </span>
-                  {collaborator.username}
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">Username:</span>
+                  <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300 font-mono">
+                    {collaborator.username}
+                  </span>
+                </div>
               )}
               {collaborator.data_ingresso && (
-                <p className="text-xs text-gray-400">
-                  <span className="text-gray-600">Data di ingresso: </span>
-                  {new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">Data di ingresso:</span>
+                  <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+                    {new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </span>
+                </div>
               )}
             </div>
             <input
