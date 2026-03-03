@@ -1164,36 +1164,39 @@ export default async function DashboardPage() {
     .filter(Boolean)
     .map((n) => n!.charAt(0).toUpperCase())
     .join('') || '?';
-  const joinYear = collaborator?.data_ingresso
-    ? new Date(collaborator.data_ingresso).getFullYear()
+  const joinDate = collaborator?.data_ingresso
+    ? new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
 
   // ── Render ─────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-4xl space-y-6">
 
-      {/* Header — avatar + saluto */}
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
-          {collaborator?.foto_profilo_url ? (
-            <img src={collaborator.foto_profilo_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-lg font-medium text-gray-300 select-none">{initials}</span>
-          )}
+      {/* Hero — avatar + saluto + data */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+            {collaborator?.foto_profilo_url ? (
+              <img src={collaborator.foto_profilo_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-lg font-medium text-gray-300 select-none">{initials}</span>
+            )}
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-100">
+              Ciao{fullName ? `, ${fullName}` : ''}!
+            </h1>
+            {role && (
+              <span className="mt-1.5 inline-flex items-center rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+                {roleLabel}
+              </span>
+            )}
+            {joinDate && (
+              <p className="text-xs text-gray-500 mt-1.5">Dal {joinDate}</p>
+            )}
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold text-gray-100">
-            Ciao{collaborator?.nome ? `, ${collaborator.nome}` : ''}!
-          </h1>
-          {fullName && (
-            <p className="text-sm text-gray-300 mt-0.5">
-              {fullName}{role ? ` · ${roleLabel}` : ''}
-            </p>
-          )}
-          <p className="text-xs text-gray-500 mt-0.5">
-            {joinYear ? `Dal ${joinYear} · ` : ''}{todayStr}
-          </p>
-        </div>
+        <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{todayStr}</p>
       </div>
 
       {/* 4 KPI card */}
