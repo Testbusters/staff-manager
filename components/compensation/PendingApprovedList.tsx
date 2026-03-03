@@ -36,7 +36,7 @@ export default function PendingApprovedList({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800">
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Descrizione</th>
+            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Nome servizio / Ruolo</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Community</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Periodo</th>
             <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Lordo</th>
@@ -50,7 +50,7 @@ export default function PendingApprovedList({
           {approved.map((c) => (
             <tr key={c.id} className="hover:bg-gray-800/40 transition">
               <td className="px-4 py-3 text-gray-200 font-medium truncate max-w-[180px]">
-                {c.descrizione ?? '—'}
+                {c.nome_servizio_ruolo ?? '—'}
               </td>
               <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">
                 {c.communities?.name ?? '—'}

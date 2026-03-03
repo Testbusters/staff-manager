@@ -10,11 +10,12 @@ const createSchema = z.object({
   community_id: z.string().uuid().optional(),
   periodo_riferimento: z.string().optional(),
   data_competenza: z.string().optional(),
-  descrizione: z.string().optional(),
+  nome_servizio_ruolo: z.string().optional(),
+  competenza: z.string().optional(),
+  info_specifiche: z.string().optional(),
   importo_lordo: z.number().positive('Importo lordo deve essere positivo'),
   ritenuta_acconto: z.number().min(0),
   importo_netto: z.number().positive(),
-  corso_appartenenza: z.string().optional(),
 });
 
 export async function GET(request: Request) {

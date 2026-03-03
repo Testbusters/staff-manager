@@ -289,8 +289,9 @@ export interface Collaborator {
 export interface Compensation {
   id: string;
   collaborator_id: string;
-  community_id: string;
-  descrizione: string;
+  community_id: string | null;
+  nome_servizio_ruolo: string | null;
+  competenza: string | null;
   periodo_riferimento: string | null;
   data_competenza: string | null;
   importo_lordo: number | null;
@@ -303,7 +304,7 @@ export interface Compensation {
   liquidated_at: string | null;
   liquidated_by: string | null;
   payment_reference: string | null;
-  note_interne: string | null;
+  info_specifiche: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -347,6 +348,7 @@ export interface Notification {
 export interface Expense {
   id: string;
   collaborator_id: string;
+  community_id: string | null;
   categoria: ExpenseCategory;
   data_spesa: string;
   importo: number;

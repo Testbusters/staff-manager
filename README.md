@@ -68,7 +68,7 @@ app/
     rimborsi/page.tsx            → Redirect → /compensi (unified page)
     rimborsi/nuova/page.tsx      → Reimbursement creation form (single step)
     rimborsi/[id]/page.tsx       → Reimbursement detail + timeline + actions
-    approvazioni/page.tsx        → Responsabile: pending queue (?tab=compensi|rimborsi) + "Carica compensi" button
+    approvazioni/page.tsx        → Responsabile: "Compensi e rimborsi" — 4 KPI cards + ApprovazioniCompensazioni (search/filter/checkbox/bulk approve/Import stub) | ApprovazioniRimborsi (?tab=compensi|rimborsi)
     approvazioni/carica/page.tsx → Responsabile/admin: choice screen (Singolo per docente | Excel placeholder) + CompensationCreateWizard
     collaboratori/page.tsx       → Responsabile + admin: paginated list (20/page) with URL-driven filters (all/doc-da-firmare/stallo)
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
@@ -108,10 +108,12 @@ app/
     admin/notification-settings/ → GET list all 19 settings + PATCH toggle inapp_enabled/email_enabled (admin only)
     feedback/route.ts            → POST create feedback entry (authenticated; FormData: categoria/pagina/messaggio/screenshot)
     compensations/route.ts       → GET (list, role-filtered) + POST (create, responsabile/admin only, always IN_ATTESA)
+    compensations/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
     compensations/[id]/route.ts  → GET (detail + history)
     compensations/[id]/transition/route.ts → POST (state machine: reopen/approve/reject/mark_liquidated)
     compensations/communities/route.ts → GET (collaboratore's communities)
     expenses/route.ts            → GET (list) + POST (create, always INVIATO)
+    expenses/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
     expenses/[id]/route.ts       → GET (detail + history + attachments)
     expenses/[id]/transition/route.ts → POST (reimbursement state machine)
     expenses/[id]/attachments/route.ts → POST (register uploaded file)
@@ -168,11 +170,13 @@ components/
     PendingApprovedList.tsx      → "Da ricevere" amber card: table of APPROVATO compensations with lordo/netto + total footer
     StatusBadge.tsx              → Pill badge for CompensationStatus | ExpenseStatus
     CompensationCreateWizard.tsx → 3-step creation wizard for responsabile/admin (choice→search collab→data→summary+create)
+    ApprovazioniCompensazioni.tsx → Responsabile: search + state filters + checkboxes + bulk approve bar + Import section (disabled) + pagination 25/page
     CompensationList.tsx         → Card list with status filter chips + chevron; meta row: community dot + Competenza + Inviato; tooltip only on netto
     CompensationDetail.tsx       → Read-only detail card
     Timeline.tsx                 → Chronological event list (accepts HistoryEvent[])
     ActionPanel.tsx              → Role-aware action buttons + modals
   expense/
+    ApprovazioniRimborsi.tsx     → Responsabile: same structure as ApprovazioniCompensazioni without Import section
     ExpenseList.tsx              → Card list with status filter chips + chevron; date labels: Spesa/Inviato
     PendingApprovedExpenseList.tsx → "Da liquidare" amber card: table of APPROVATO expenses with importo + total footer
     ExpenseDetail.tsx            → Read-only reimbursement detail card
@@ -225,6 +229,7 @@ lib/
   notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User, getAllActiveCollaboratori (broadcast), getCollaboratoriForCommunities (targeted community dispatch)
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
   email-templates.ts             → 12 branded HTML templates E1–E12 (Testbusters logo + legal footer; APP_URL env controls all CTA links; E9=ticket reply, E10=nuova comunicazione, E11=nuovo evento, E12=nuovo contenuto)
+  google-sheets.ts               → Google Sheets API wrapper: fetchPendingRows (TO_PROCESS rows), markRowsProcessed (writeback)
 
 supabase/migrations/
   001_schema.sql                 → Full schema (compensations, expense_reimbursements, communities, documents, etc.)
@@ -256,8 +261,9 @@ supabase/migrations/
   027_notifications_redesign.sql  → Remove stale integrazioni event_keys; add documento_firmato:amministrazione; enable ticket reply email; add 4 content event_keys (comunicazione/evento/opportunita/sconto pubblicata)
   028_ticket_categories.sql      → DELETE non-conforming tickets; UPDATE 'Compensi'→'Compenso'; ADD CHECK constraint (categoria IN ('Compenso','Rimborso'))
   029_content_community_targeting.sql → Replace community_id UUID with community_ids UUID[] on all 5 content tables (communications/events/opportunities/discounts/resources); backfill existing rows; empty array = all communities
+  030_compensation_schema_alignment.sql → Rename descrizione→nome_servizio_ruolo, note_interne→info_specifiche; DROP corso_appartenenza; community_id nullable; CREATE compensation_competenze + RLS + seed; ADD competenza FK; rewrite responsabile RLS (collaborator_id-based)
 
-__tests__/                         → 202 tests total (vitest)
+__tests__/                         → 217 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
   export-utils.test.ts             → Unit tests for CSV/XLSX builders
@@ -272,6 +278,7 @@ __tests__/                         → 202 tests total (vitest)
     username.test.ts               → Unit tests for username generation and validation (23 cases)
     documents.test.ts              → Unit tests for documents validTipi and type mapping (11 cases)
     notifications-block13.test.ts  → Unit tests for NotificationEntityType, buildContentNotification (4 types), buildCompensationReopenNotification, E9–E12 templates, entity_type whitelist (35 cases)
+    compensation-import.test.ts    → Unit tests for import parse utilities (parseDate, parseImporto, ritenuta calc) (15 cases)
 
 e2e/
   rimborsi.spec.ts                 → Playwright UAT: reimbursement full flow (S1–S10, 11 tests)

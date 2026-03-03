@@ -509,6 +509,56 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
 
 ---
 
+## Block 13 — Compensi e rimborsi (responsabile_compensi) + Importazione da Google Sheet
+
+### 13a — Redesign sezione Approvazioni (✅ completato)
+
+**Scope**: `/approvazioni` — redesign completo per `responsabile_compensi`: KPI cards, ricerca per nome, filtri stato, selezione checkbox, bulk approve. Stessa struttura per tab Rimborsi. Import section placeholder (disabilitato).
+
+**Campi KPI compensi**: count IN_ATTESA, totale lordo IN_ATTESA, count APPROVATO, totale lordo APPROVATO.
+**Campi KPI rimborsi**: count IN_ATTESA, totale IN_ATTESA, count APPROVATO, totale APPROVATO.
+
+**File**: `app/(app)/approvazioni/page.tsx`, `components/compensation/ApprovazioniCompensazioni.tsx`, `components/expense/ApprovazioniRimborsi.tsx`, `app/api/compensations/approve-bulk/route.ts`, `app/api/expenses/approve-bulk/route.ts`, `lib/types.ts` (community_id nullable on Expense), `lib/nav.ts` (label → "Compensi e rimborsi").
+
+### 13b-I — Schema alignment compensations (migration 030)
+
+**Obiettivo**: allineare struttura DB di `compensations` ai campi del Google Sheet sorgente (mapping 1:1).
+
+**Migration 030**:
+- RENAME `compensations.descrizione` → `nome_servizio_ruolo`
+- RENAME `compensations.note_interne` → `info_specifiche`
+- DROP `compensations.corso_appartenenza` (superseded da `nome_servizio_ruolo`)
+- ALTER `compensations.community_id` → nullable (compensi non legati a community per evitare duplicazione dati su collaboratori multi-community)
+- ADD `compensations.competenza text` FK → `compensation_competenze.key`
+- CREATE TABLE `compensation_competenze` (id, key UNIQUE, label, active, sort_order, created_at) con seed: corsi/Corsi, produzione_materiale/Produzione Materiale, sb/Schoolbusters, extra/Extra
+- RLS `compensations_responsabile_read` + `_update`: riscritta su `collaborator_id IN (collaborator_communities JOIN user_community_access)` — indipendente da `community_id` sul record
+- DROP policy stale `compensations_own_update_bozza` (stato BOZZA rimosso da workflow)
+
+**Consumer aggiornati**: `lib/types.ts`, `CompensationDetail`, `CompensationList`, `PendingApprovedList`, `ApprovazioniCompensazioni`, `CompensationCreateWizard`, `app/api/compensations/route.ts`.
+
+### 13b-II — Import da Google Sheet
+
+**Flusso**: fetch GSheet (googleapis service account) → filtra `stato = TO_PROCESS` → valida → preview paginata → conferma → bulk insert IN_ATTESA + writeback `PROCESSED`. Re-pull disponibile dopo correzioni.
+
+**GSheet**: `GOOGLE_SHEET_ID` + `GOOGLE_SERVICE_ACCOUNT_JSON` in `.env.local`. URL/tab configurabile da admin in /impostazioni.
+
+**Errori file-level** (bloccano tutto): file irraggiungibile, formato non valido, header mancante.
+**Errori row-level** (skip riga): campo mancante, importo non valido, data non valida, username non trovato, collaboratore fuori community, uscente_senza_compenso.
+
+**Valori fissi su import**: `community_id = null`, `ritenuta_acconto = 20`, `importo_netto = lordo × 0.80`, `periodo_riferimento = "MMM YYYY"` derivato da `data_competenza`, `stato = IN_ATTESA`.
+
+**Mapping colonne GSheet → DB**: Data competenza → `data_competenza`, Importo → `importo_lordo`, collaboratore → match su `collaborators.username`, nome servizio / ruolo → `nome_servizio_ruolo`, Info specifiche → `info_specifiche`, competenza → `competenza`.
+
+### 13b-III — Form creazione compenso individuale
+
+**Scope**: sostituisce `/approvazioni/carica` per admin + responsabile_compensi.
+
+**Campi**: collaboratore (autocomplete username), competenza (select da `compensation_competenze`), data_competenza, importo_lordo (lordo → netto calcolato 20%), nome_servizio_ruolo, info_specifiche (opzionale), periodo_riferimento (testo manuale).
+
+**Valori fissi**: `community_id = null`, `ritenuta_acconto = 20`, `importo_netto` calcolato server-side, `stato = IN_ATTESA`.
+
+---
+
 ## Block 14 — Rich Text Editor + Notification Alerts
 
 ### Feature 1 — Rich Text Editor (Tiptap)

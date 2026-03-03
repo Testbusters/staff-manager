@@ -16,16 +16,18 @@ type CollaboratorResult = {
   communities: Community[];
 };
 
-type WizardStep = 'choice' | 'step1' | 'step2' | 'step3';
+type WizardStep = 'step1' | 'step2' | 'step3';
 
 type FormData = {
-  community_id: string;
   periodo_riferimento: string;
   data_competenza: string;
-  descrizione: string;
-  corso_appartenenza: string;
+  nome_servizio_ruolo: string;
+  competenza: string;
+  info_specifiche: string;
   importo_lordo: string;
 };
+
+type Competenza = { key: string; label: string };
 
 const RITENUTA_RATE = 0.2;
 
@@ -59,11 +61,13 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
 
 export default function CompensationCreateWizard({
   managedCommunities,
+  competenze,
 }: {
   managedCommunities: Community[];
+  competenze: Competenza[];
 }) {
   const router = useRouter();
-  const [step, setStep] = useState<WizardStep>('choice');
+  const [step, setStep] = useState<WizardStep>('step1');
 
   // Step 1 state
   const [searchQ, setSearchQ] = useState('');
@@ -75,11 +79,11 @@ export default function CompensationCreateWizard({
 
   // Step 2 state
   const [formData, setFormData] = useState<FormData>({
-    community_id: '',
     periodo_riferimento: '',
     data_competenza: '',
-    descrizione: '',
-    corso_appartenenza: '',
+    nome_servizio_ruolo: '',
+    competenza: '',
+    info_specifiche: '',
     importo_lordo: '',
   });
   const [step2Error, setStep2Error] = useState('');
@@ -114,14 +118,6 @@ export default function CompensationCreateWizard({
 
   function handleSelectCollab(c: CollaboratorResult) {
     setSelectedCollab(c);
-    // Pre-fill community_id from filter or first available community in intersection
-    const intersectionCommunities = managedCommunities.length > 0
-      ? c.communities.filter((cc) => managedCommunities.some((mc) => mc.id === cc.id))
-      : c.communities;
-    const prefilledCommunity = communityFilter
-      ? intersectionCommunities.find((cc) => cc.id === communityFilter)?.id ?? ''
-      : intersectionCommunities[0]?.id ?? '';
-    setFormData((prev) => ({ ...prev, community_id: prefilledCommunity }));
     setStep('step2');
   }
 
@@ -154,11 +150,11 @@ export default function CompensationCreateWizard({
       ritenuta_acconto: ritenuta,
       importo_netto: netto,
     };
-    if (formData.community_id) payload.community_id = formData.community_id;
     if (formData.periodo_riferimento.trim()) payload.periodo_riferimento = formData.periodo_riferimento.trim();
     if (formData.data_competenza) payload.data_competenza = formData.data_competenza;
-    if (formData.descrizione.trim()) payload.descrizione = formData.descrizione.trim();
-    if (formData.corso_appartenenza.trim()) payload.corso_appartenenza = formData.corso_appartenenza.trim();
+    if (formData.nome_servizio_ruolo.trim()) payload.nome_servizio_ruolo = formData.nome_servizio_ruolo.trim();
+    if (formData.competenza) payload.competenza = formData.competenza;
+    if (formData.info_specifiche.trim()) payload.info_specifiche = formData.info_specifiche.trim();
 
     try {
       const res = await fetch('/api/compensations', {
@@ -180,41 +176,6 @@ export default function CompensationCreateWizard({
   }
 
   // ── Choice screen ──────────────────────────────────────────────────────────
-  if (step === 'choice') {
-    return (
-      <div className="p-6 max-w-2xl">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-gray-100">Carica compensi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Scegli la modalità di caricamento.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => setStep('step1')}
-            className="rounded-xl bg-gray-900 border border-gray-800 hover:border-blue-600 p-6 text-left transition group"
-          >
-            <div className="text-2xl mb-3">👤</div>
-            <p className="font-medium text-gray-100 group-hover:text-blue-400 transition">
-              Singolo per docente
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Inserisci un compenso per un collaboratore specifico.
-            </p>
-          </button>
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 opacity-50 cursor-not-allowed">
-            <div className="text-2xl mb-3">📊</div>
-            <p className="font-medium text-gray-400">Caricamento da Excel</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Carica più compensi da un file .xlsx.
-            </p>
-            <span className="mt-2 inline-block text-xs bg-gray-800 text-gray-500 px-2 py-0.5 rounded">
-              Prossimamente
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ── Step 1 — Seleziona collaboratore ──────────────────────────────────────
   if (step === 'step1') {
     return (
@@ -300,7 +261,7 @@ export default function CompensationCreateWizard({
 
         <div className="mt-4">
           <button
-            onClick={() => setStep('choice')}
+            onClick={() => router.back()}
             className="text-sm text-gray-500 hover:text-gray-300 transition"
           >
             ← Indietro
@@ -316,10 +277,6 @@ export default function CompensationCreateWizard({
     const ritenuta = Math.round(lordo * RITENUTA_RATE * 100) / 100;
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
-    const availableCommunities = managedCommunities.length > 0
-      ? selectedCollab.communities.filter((cc) => managedCommunities.some((mc) => mc.id === cc.id))
-      : selectedCollab.communities;
-
     return (
       <div className="p-6 max-w-xl">
         <div className="mb-2">
@@ -331,32 +288,14 @@ export default function CompensationCreateWizard({
         <StepIndicator current={2} />
 
         <div className="space-y-4">
-          {availableCommunities.length > 0 && (
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
-                Community
-              </label>
-              <select
-                value={formData.community_id}
-                onChange={(e) => setFormData((prev) => ({ ...prev, community_id: e.target.value }))}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
-              >
-                <option value="">— Nessuna community —</option>
-                {availableCommunities.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
-              Descrizione <span className="text-gray-600">(opzionale)</span>
+              Nome servizio / Ruolo <span className="text-gray-600">(opzionale)</span>
             </label>
             <input
               type="text"
-              value={formData.descrizione}
-              onChange={(e) => setFormData((prev) => ({ ...prev, descrizione: e.target.value }))}
+              value={formData.nome_servizio_ruolo}
+              onChange={(e) => setFormData((prev) => ({ ...prev, nome_servizio_ruolo: e.target.value }))}
               className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
               placeholder="Es. Compenso lezioni marzo"
             />
@@ -387,16 +326,34 @@ export default function CompensationCreateWizard({
             />
           </div>
 
+          {competenze.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                Competenza <span className="text-gray-600">(opzionale)</span>
+              </label>
+              <select
+                value={formData.competenza}
+                onChange={(e) => setFormData((prev) => ({ ...prev, competenza: e.target.value }))}
+                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">— Nessuna —</option>
+                {competenze.map((c) => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
-              Corso di appartenenza <span className="text-gray-600">(opzionale)</span>
+              Info specifiche <span className="text-gray-600">(opzionale)</span>
             </label>
-            <input
-              type="text"
-              value={formData.corso_appartenenza}
-              onChange={(e) => setFormData((prev) => ({ ...prev, corso_appartenenza: e.target.value }))}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-              placeholder="Es. Corso Python avanzato"
+            <textarea
+              value={formData.info_specifiche}
+              onChange={(e) => setFormData((prev) => ({ ...prev, info_specifiche: e.target.value }))}
+              rows={2}
+              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+              placeholder="Note aggiuntive sul compenso"
             />
           </div>
 
@@ -456,17 +413,17 @@ export default function CompensationCreateWizard({
     const lordo = parseFloat(formData.importo_lordo) || 0;
     const ritenuta = Math.round(lordo * RITENUTA_RATE * 100) / 100;
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
-    const communityName = selectedCollab.communities.find((c) => c.id === formData.community_id)?.name;
+    const competenzaLabel = competenze.find((c) => c.key === formData.competenza)?.label;
 
     const rows: { label: string; value: string }[] = [
       { label: 'Collaboratore', value: `${selectedCollab.cognome} ${selectedCollab.nome}` },
       { label: 'Stato', value: 'In attesa' },
     ];
-    if (communityName) rows.push({ label: 'Community', value: communityName });
+    if (competenzaLabel) rows.push({ label: 'Competenza', value: competenzaLabel });
     if (formData.periodo_riferimento.trim()) rows.push({ label: 'Periodo', value: formData.periodo_riferimento.trim() });
     if (formData.data_competenza) rows.push({ label: 'Data competenza', value: new Date(formData.data_competenza).toLocaleDateString('it-IT') });
-    if (formData.corso_appartenenza.trim()) rows.push({ label: 'Corso', value: formData.corso_appartenenza.trim() });
-    if (formData.descrizione.trim()) rows.push({ label: 'Descrizione', value: formData.descrizione.trim() });
+    if (formData.nome_servizio_ruolo.trim()) rows.push({ label: 'Nome servizio / Ruolo', value: formData.nome_servizio_ruolo.trim() });
+    if (formData.info_specifiche.trim()) rows.push({ label: 'Info specifiche', value: formData.info_specifiche.trim() });
     rows.push(
       { label: 'Importo lordo', value: formatCurrency(lordo) },
       { label: 'Ritenuta (20%)', value: `-${formatCurrency(ritenuta)}` },
