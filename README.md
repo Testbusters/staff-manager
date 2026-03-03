@@ -326,11 +326,16 @@ npm run build      # Production build (TypeScript check included)
 ## Environment Variables
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-RESEND_API_KEY=           # Transactional email (Resend)
-APP_URL=                  # e.g. https://staff-manager.testbusters.it (used in email CTAs)
+NEXT_PUBLIC_SUPABASE_URL=        # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=   # Supabase anon/public key
+SUPABASE_SERVICE_ROLE_KEY=       # Supabase service role key (server-side only)
+SUPABASE_ACCESS_TOKEN=           # Supabase Personal Access Token (Management API, migrations)
+RESEND_API_KEY=                  # Transactional email (Resend)
+APP_URL=                         # e.g. https://staff-manager.testbusters.it (used in email CTAs)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=    # Google OAuth client ID (Calendar/Maps embeds)
+GOOGLE_SERVICE_ACCOUNT_JSON=     # Google service account JSON (Sheets API, GSheet import)
+GOOGLE_SHEET_ID=                 # Spreadsheet ID for compensation import
+GOOGLE_SHEET_TAB_NAME=           # Tab/sheet name for compensation import
 ```
 
 ## Storage Setup (Supabase)
