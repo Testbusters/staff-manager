@@ -67,8 +67,8 @@ app/
     compensi/[id]/page.tsx       → Compensation detail + timeline + actions
     rimborsi/page.tsx            → Redirect → /compensi (unified page)
     rimborsi/nuova/page.tsx      → Reimbursement creation form (single step)
-    rimborsi/[id]/page.tsx       → Reimbursement detail + timeline + actions
-    approvazioni/page.tsx        → Responsabile: "Compensi e rimborsi" — 3 unified KPI cards (IN_ATTESA/APPROVATO/LIQUIDATO, count+lordo) + two stacked creation-mode cards (manual blue CTA + GSheet import) + ApprovazioniCompensazioni (search/filter/checkbox/bulk approve, 20/p) | ApprovazioniRimborsi (?tab=compensi|rimborsi)
+    rimborsi/[id]/page.tsx       → Reimbursement detail + timeline + actions (collaborator name for admin/responsabile; history enriched with changed_by_name role-gated)
+    approvazioni/page.tsx        → Responsabile: "Compensi e rimborsi" — tab Compensi: 3 unified KPI cards (count+lordo) + two creation-mode cards + ApprovazioniCompensazioni (search/filter/checkbox/bulk approve, 20/p) | tab Rimborsi: 3 unified KPI cards (count+importo) + ApprovazioniRimborsi (search, stato+categoria filter chips, colored badges, importo totale in bulk bar, 20/p)
     approvazioni/carica/page.tsx → Responsabile/admin: choice screen (Singolo per docente | Excel placeholder) + CompensationCreateWizard
     collaboratori/page.tsx       → Responsabile + admin: paginated list (20/page) with URL-driven filters (all/doc-da-firmare/stallo)
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
