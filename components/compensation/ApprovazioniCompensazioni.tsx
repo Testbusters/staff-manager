@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { Compensation, CompensationStatus } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS, ROLE_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
+import ImportSection from './ImportSection';
 
 type CompensationRow = Compensation & {
   communities?: { name: string } | null;
@@ -53,28 +54,6 @@ function KpiCard({ label, value, sub, color }: { label: string; value: string | 
   );
 }
 
-function ImportSection() {
-  return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800">
-        <span className="text-sm font-medium text-gray-300">Import da file</span>
-        <span className="rounded-full bg-gray-700 px-2 py-0.5 text-xs text-gray-400">In configurazione</span>
-      </div>
-      <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
-        {[1, 2, 3, 4].map((n) => (
-          <div
-            key={n}
-            className="rounded-lg bg-gray-800/50 border border-gray-700/50 px-3 py-4 opacity-50 cursor-not-allowed text-center"
-          >
-            <div className="text-2xl mb-2">📄</div>
-            <p className="text-xs font-medium text-gray-400">Tipologia {n}</p>
-            <p className="text-xs text-gray-600 mt-1">— non configurato —</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function ApprovazioniCompensazioni({
   compensations,
@@ -168,7 +147,7 @@ export default function ApprovazioniCompensazioni({
         <KpiCard label="Totale lordo" value={formatCurrency(kpi.totaleLordoApprovati)} sub="approvati" color="text-amber-300" />
       </div>
 
-      {/* Import section — disabled, pending configuration */}
+      {/* GSheet import section */}
       <ImportSection />
 
       {/* List header + manual entry button */}
