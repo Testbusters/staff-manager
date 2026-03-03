@@ -2,6 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { ROLE_LABELS } from '@/lib/types';
+import type { Role } from '@/lib/types';
 
 type Collaborator = {
   nome: string;
@@ -209,11 +211,24 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
             )}
           </div>
           <div className="flex-1">
-            {collaborator.username && (
-              <span className="inline-block mb-2 text-xs font-mono bg-indigo-900/30 text-indigo-300 border border-indigo-700/40 px-2.5 py-1 rounded-full">
-                @{collaborator.username}
-              </span>
-            )}
+            <div className="mb-3 space-y-1.5">
+              <p className="text-xs text-gray-400">
+                <span className="text-gray-600">Ruolo: </span>
+                {ROLE_LABELS[role as Role] ?? role}
+              </p>
+              {collaborator.username && (
+                <p className="text-xs text-gray-400">
+                  <span className="text-gray-600">Username: </span>
+                  {collaborator.username}
+                </p>
+              )}
+              {collaborator.data_ingresso && (
+                <p className="text-xs text-gray-400">
+                  <span className="text-gray-600">Data di ingresso: </span>
+                  {new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              )}
+            </div>
             <input
               ref={fileInputRef}
               type="file"
@@ -551,23 +566,6 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         </div>
       </div>
 
-      {/* Role badge + data di ingresso */}
-      <div className="flex items-center flex-wrap gap-x-6 gap-y-2 px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-600">Ruolo:</span>
-          <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300 capitalize">
-            {role.replace('_', ' ')}
-          </span>
-        </div>
-        {collaborator?.data_ingresso && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">Data di ingresso:</span>
-            <span className="text-xs text-gray-300">
-              {new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-          </div>
-        )}
-      </div>
 
       {error && (
         <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">
