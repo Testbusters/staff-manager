@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-03. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + fix minori + ticket categories fix + community targeting ✅ + feedback management ✅. Prossimo: definire Blocco 15.
+> Aggiornato 2026-03-03. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + fix minori + ticket categories fix + community targeting ✅ + feedback management ✅ + revisione Compensi e Rimborsi ✅. Prossimo: definire Blocco 15.
 
 ---
 
@@ -29,6 +29,7 @@
 | 2026-03-03 | Fix — Ticket categories (semplificazione) | ✅ | tsc ✅, build ✅, vitest 202/202 ✅ | Migration 028: DELETE ticket non-conformi, UPDATE 'Compensi'→'Compenso', ADD CONSTRAINT tickets_categoria_check. TICKET_CATEGORIES=['Compenso','Rimborso']. Label UI "Categoria"→"Riferimento" in TicketForm, TicketQuickModal, TicketList, email template. |
 | 2026-03-03 | Community targeting for content | ✅ | tsc ✅, build ✅, vitest 202/202 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 029: `community_id UUID` → `community_ids UUID[] DEFAULT '{}'` on all 5 content tables (communications, events, opportunities, discounts, resources). `lib/types.ts`: community_ids field on all 5 interfaces. 5 POST/PATCH API routes: array field + targeted notifications via `getCollaboratoriForCommunities()`. 5 admin form components: multi-select checkboxes (empty = all communities). 3 collaborator list pages: in-memory community filter. 5 detail pages: community access check → notFound(). Dashboard: `contentVisible()` filter on feed. `lib/notification-helpers.ts`: `getCollaboratoriForCommunities()` helper. |
 | 2026-03-03 | Feedback management | ✅ | tsc ✅, build ✅, vitest 217/217 ✅ | Migration 031: ADD COLUMN `stato TEXT NOT NULL DEFAULT 'nuovo' CHECK (stato IN ('nuovo','completato'))` on feedback + `feedback_admin_update` RLS policy. API `PATCH /feedback/[id]` (completato) + `DELETE /feedback/[id]` (hard delete + storage cleanup). `FeedbackActions` client component. Feedback page: two structured sections Nuovi/Completati with count badges + divider. |
+| 2026-03-03 | Revisione sezione Compensi e Rimborsi | ✅ | tsc ✅, build ✅, vitest 217/217 ✅ | No DB migration. 3 unified KPI cards per stato (IN_ATTESA/APPROVATO/LIQUIDATO — count large + lordo medium) replacing 4 split cards. Two stacked creation-mode cards (manual blue CTA + GSheet ImportSection). Community dot removed from ApprovazioniCompensazioni rows and CompensationList rows. PAGE_SIZE 20 on all 4 components (ApprovazioniCompensazioni, ApprovazioniRimborsi, CompensationList, ExpenseList); CompensationList and ExpenseList had pagination added from scratch. |
 
 ---
 
