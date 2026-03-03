@@ -16,7 +16,6 @@ Automatically loaded at session start
 CLAUDE.md                        ← project context (official, committed)
 .claude/CLAUDE.local.md          ← personal overrides (official, gitignored)
 .claude/rules/pipeline.md        ← workflow rules (official, committed)
-.claude/settings.json            ← shared config (official, committed)
 .claude/settings.local.json      ← personal config (official, gitignored)
 ~/.claude/projects/.../MEMORY.md ← auto-memory (Claude Code system, NOT committed)
 
@@ -155,7 +154,6 @@ variables, model selection, sandbox mode, and more.
 
 | File | Scope | Committed? | Purpose |
 |---|---|---|---|
-| `.claude/settings.json` | Project, all team members | Yes | Shared team configuration |
 | `.claude/settings.local.json` | Project, personal only | No (gitignored) | Personal permission overrides |
 | `~/.claude/settings.json` | All projects on this machine | No | Personal global preferences |
 
@@ -174,7 +172,7 @@ so Claude does not ask for permission at every pipeline command (tsc, vitest, pl
 | Development pipeline, phase gates, cross-cutting rules | `.claude/rules/pipeline.md` |
 | Phase 8.5 compliance checklist (C1–C9) | `.claude/rules/context-review.md` |
 | Temporary suspension or personal override | `CLAUDE.local.md` |
-| Tool permission settings | `.claude/settings.local.json` |
+| Tool permission settings | `.claude/settings.local.json` (personal, gitignored) |
 | Current work in progress, session state | `MEMORY.md` → Active plan |
 | Bug or pattern discovered during implementation | `MEMORY.md` → Lessons/Patterns |
 | DB migration applied | `docs/migrations-log.md` |
