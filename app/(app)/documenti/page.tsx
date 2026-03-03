@@ -28,8 +28,9 @@ export default async function DocumentiPage({
 
   // Collaboratori access documents via Profilo e Documenti
   if (role === 'collaboratore') redirect('/profilo?tab=documenti');
+  if (role === 'responsabile_compensi') redirect('/');
   const isAdmin = ['amministrazione'].includes(role);
-  const canUpload = isAdmin || ['collaboratore', 'responsabile_compensi'].includes(role);
+  const canUpload = isAdmin;
 
   const { tab: rawTab } = await searchParams;
   const tab = isAdmin

@@ -104,6 +104,13 @@ function DocCard({ count }: { count: number }) {
 
 
 // ── Responsabile helpers ────────────────────────────────────
+const COMP_COMPETENZA_BADGE: Record<string, string> = {
+  corsi:                'bg-blue-900/40 text-blue-300 border-blue-700/50',
+  sb:                   'bg-violet-900/40 text-violet-300 border-violet-700/50',
+  produzione_materiale: 'bg-amber-900/40 text-amber-300 border-amber-700/50',
+  extra:                'bg-emerald-900/40 text-emerald-300 border-emerald-700/50',
+};
+
 function formatAgeR(iso: string): string {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (days === 0) return 'Oggi';
@@ -270,7 +277,7 @@ export default async function DashboardPage() {
     const noCollabs    = allCollabIds.length === 0;
 
     // Round 3 — compensations, expenses, collab names, ticket collab names (all in parallel)
-    type RComp    = { id: string; collaborator_id: string; importo_lordo: number | null; stato: string; created_at: string };
+    type RComp    = { id: string; collaborator_id: string; importo_lordo: number | null; stato: string; competenza: string | null; created_at: string };
     type RExp     = { id: string; collaborator_id: string; importo: number | null; categoria: string; stato: string; created_at: string };
     type RCollab3 = { id: string; nome: string | null; cognome: string | null };
     type RTCollab = { user_id: string; nome: string | null; cognome: string | null };
@@ -282,7 +289,7 @@ export default async function DashboardPage() {
       noCollabs
         ? resolveEmpty<RComp>([])
         : svc.from('compensations')
-            .select('id, collaborator_id, importo_lordo, stato, created_at')
+            .select('id, collaborator_id, importo_lordo, stato, competenza, created_at')
             .in('collaborator_id', allCollabIds)
             .in('stato', ['IN_ATTESA', 'APPROVATO'])
             .order('created_at', { ascending: true }),
@@ -412,6 +419,11 @@ export default async function DashboardPage() {
               <div className="divide-y divide-gray-800">
                 {pendingComps.slice(0, 8).map(c => (
                   <Link key={c.id} href={`/collaboratori/${c.collaborator_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition">
+                    {c.competenza && (
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+                        {c.competenza}
+                      </span>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-200 truncate">{collabNameMap[c.collaborator_id] ?? 'Collaboratore'}</p>
                       <p className="text-xs text-gray-500">{formatCurrencyR(c.importo_lordo ?? 0)}</p>

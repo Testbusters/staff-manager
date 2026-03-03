@@ -26,6 +26,7 @@ export default async function DocumentDetailPage({
   if (!profile?.is_active) redirect('/pending');
 
   const role = profile.role as Role;
+  if (role === 'responsabile_compensi') redirect('/');
   const isAdmin = ['amministrazione'].includes(role);
   const canSign = profile.member_status !== 'uscente_senza_compenso';
   const { id } = await params;
