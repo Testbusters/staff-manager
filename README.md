@@ -222,7 +222,7 @@ lib/
   export-utils.ts                → Pure functions: buildCSV, buildXLSXWorkbook, ExportItem type
   documents-storage.ts           → buildStoragePath, getSignedUrl, getDocumentUrls (1h TTL, service role)
   notification-utils.ts          → Pure notification payload builders (comp/expense/ticket — collaboratore + responsabile side); buildCompensationReopenNotification; buildContentNotification (4 content types)
-  notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User, getAllActiveCollaboratori (broadcast)
+  notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User, getAllActiveCollaboratori (broadcast), getCollaboratoriForCommunities (targeted community dispatch)
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
   email-templates.ts             → 12 branded HTML templates E1–E12 (Testbusters logo + legal footer; APP_URL env controls all CTA links; E9=ticket reply, E10=nuova comunicazione, E11=nuovo evento, E12=nuovo contenuto)
 
@@ -254,6 +254,8 @@ supabase/migrations/
   025_remove_ricevuta_pagamento.sql → Remove RICEVUTA_PAGAMENTO type; CHECK restricted to (CONTRATTO_OCCASIONALE, CU); recreate macro_type + unique index
   026_content_types_redesign.sql  → Rename announcements→communications, benefits→discounts; add columns; CREATE TABLE opportunities + RLS
   027_notifications_redesign.sql  → Remove stale integrazioni event_keys; add documento_firmato:amministrazione; enable ticket reply email; add 4 content event_keys (comunicazione/evento/opportunita/sconto pubblicata)
+  028_ticket_categories.sql      → DELETE non-conforming tickets; UPDATE 'Compensi'→'Compenso'; ADD CHECK constraint (categoria IN ('Compenso','Rimborso'))
+  029_content_community_targeting.sql → Replace community_id UUID with community_ids UUID[] on all 5 content tables (communications/events/opportunities/discounts/resources); backfill existing rows; empty array = all communities
 
 __tests__/                         → 202 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)

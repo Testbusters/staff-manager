@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-03. Blocco 14 ✅ + fix minori + ticket categories fix. Prossimo: definire Blocco 15.
+> Aggiornato 2026-03-03. Blocco 14 ✅ + fix minori + ticket categories fix + community targeting ✅. Prossimo: definire Blocco 15.
 
 ---
 
@@ -25,6 +25,7 @@
 | 2026-03-02 | Blocco 14 — Rich Text Editor + Notification Alerts | ✅ | tsc ✅, build ✅, vitest 202/202 ✅, e2e 3/3 ✅ (block14.spec.ts), smoke test OK | No DB migration. Tiptap 3 (@tiptap/react @tiptap/pm @tiptap/starter-kit). New components: RichTextEditor (toolbar B/I/H2/H3/bullet/ordered, immediatelyRender:false), RichTextDisplay (dangerouslySetInnerHTML + toSafeHtml backward compat + Tailwind dark prose styles). 5 admin list components (textarea→RichTextEditor). 5 detail pages (whitespace-pre-wrap→RichTextDisplay). Email E10/E11/E12: optional contenuto/descrizione param + htmlSection() sanitizer. discounts route: add email dispatch. NotificationBell: prevUnreadRef detects increase → Web Audio ping (880→1174Hz, 0.5s) + bell-pulse animation. globals.css: @keyframes bell-pulse. |
 | 2026-03-03 | Fix + feature minori (post-B14) | ✅ | tsc ✅, build ✅ | Rimozione "Apri ticket" da Azioni rapide collaboratore (duplicato). Untracked da git: CLAUDE.md, playwright-report/, test-results/, supabase/.temp/ (aggiornato .gitignore). README: fix ha_figli_a_carico→sono_un_figlio_a_carico e contatore notifiche 15→19. Badge contatori non letti su DashboardUpdates tabs (Event/Comm/Opp+Disc) con mark-read server-side nelle detail pages. |
 | 2026-03-03 | Fix — Ticket categories (semplificazione) | ✅ | tsc ✅, build ✅, vitest 202/202 ✅ | Migration 028: DELETE ticket non-conformi, UPDATE 'Compensi'→'Compenso', ADD CONSTRAINT tickets_categoria_check. TICKET_CATEGORIES=['Compenso','Rimborso']. Label UI "Categoria"→"Riferimento" in TicketForm, TicketQuickModal, TicketList, email template. |
+| 2026-03-03 | Community targeting for content | ✅ | tsc ✅, build ✅, vitest 202/202 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 029: `community_id UUID` → `community_ids UUID[] DEFAULT '{}'` on all 5 content tables (communications, events, opportunities, discounts, resources). `lib/types.ts`: community_ids field on all 5 interfaces. 5 POST/PATCH API routes: array field + targeted notifications via `getCollaboratoriForCommunities()`. 5 admin form components: multi-select checkboxes (empty = all communities). 3 collaborator list pages: in-memory community filter. 5 detail pages: community access check → notFound(). Dashboard: `contentVisible()` filter on feed. `lib/notification-helpers.ts`: `getCollaboratoriForCommunities()` helper. |
 
 ---
 
