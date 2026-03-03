@@ -227,6 +227,7 @@ lib/
   notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
   email-templates.ts             → 8 branded HTML templates E1–E8 (Testbusters logo + legal footer; APP_URL env controls all CTA links)
+  google-sheets.ts               → Google Sheets API wrapper: fetchPendingRows (TO_PROCESS rows), markRowsProcessed (writeback)
 
 supabase/migrations/
   001_schema.sql                 → Full schema (compensations, expense_reimbursements, communities, documents, etc.)
@@ -255,21 +256,23 @@ supabase/migrations/
   024_remove_bozza_add_corso.sql → Remove BOZZA state (migrate→IN_ATTESA, update CHECK, DEFAULT IN_ATTESA); ADD COLUMN corso_appartenenza TEXT on compensations
   025_remove_ricevuta_pagamento.sql → Remove RICEVUTA_PAGAMENTO type; CHECK restricted to (CONTRATTO_OCCASIONALE, CU); recreate macro_type + unique index
   026_content_types_redesign.sql  → Rename announcements→communications, benefits→discounts; add columns; CREATE TABLE opportunities + RLS
+  030_compensation_schema_alignment.sql → Rename descrizione→nome_servizio_ruolo, note_interne→info_specifiche; DROP corso_appartenenza; community_id nullable; CREATE compensation_competenze + RLS + seed; ADD competenza FK; rewrite responsabile RLS (collaborator_id-based)
 
-__tests__/                         → 167 tests total (vitest)
-  compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
-  expense-transitions.test.ts      → State machine unit tests for reimbursements
-  export-utils.test.ts             → Unit tests for CSV/XLSX builders
-  cu-batch-parser.test.ts          → Unit tests for CU batch CSV parser + dedup logic (11 cases)
-  notification-utils.test.ts       → Unit tests for notification payload builders
-  ticket-notification.test.ts      → Unit tests for buildTicketReplyNotification (6 cases)
+__tests__/                              → 182 tests total (vitest)
+  compensation-transitions.test.ts    → State machine unit tests for compensations (22 cases)
+  expense-transitions.test.ts         → State machine unit tests for reimbursements
+  export-utils.test.ts                → Unit tests for CSV/XLSX builders
+  cu-batch-parser.test.ts             → Unit tests for CU batch CSV parser + dedup logic (11 cases)
+  notification-utils.test.ts          → Unit tests for notification payload builders
+  ticket-notification.test.ts         → Unit tests for buildTicketReplyNotification (6 cases)
   api/
-    create-user-schema.test.ts     → Unit tests for create-user Zod schema validation (9 cases)
-    collaboratore-profile.test.ts  → Unit tests for collaboratore profile PATCH schema (12 cases)
-    expense-form.test.ts           → Unit tests for expense form Zod schema (12 cases)
-    transition-schema.test.ts      → Unit tests for compensation/expense/mark-paid/approve-all Zod schemas (22 cases)
-    username.test.ts               → Unit tests for username generation and validation (23 cases)
-    documents.test.ts              → Unit tests for documents validTipi and type mapping (11 cases)
+    create-user-schema.test.ts        → Unit tests for create-user Zod schema validation (9 cases)
+    collaboratore-profile.test.ts     → Unit tests for collaboratore profile PATCH schema (12 cases)
+    expense-form.test.ts              → Unit tests for expense form Zod schema (12 cases)
+    transition-schema.test.ts         → Unit tests for compensation/expense/mark-paid/approve-all Zod schemas (22 cases)
+    username.test.ts                  → Unit tests for username generation and validation (23 cases)
+    documents.test.ts                 → Unit tests for documents validTipi and type mapping (11 cases)
+    compensation-import.test.ts       → Unit tests for import parse utilities (parseDate, parseImporto, ritenuta calc) (15 cases)
 
 e2e/
   rimborsi.spec.ts                 → Playwright UAT: reimbursement full flow (S1–S10, 11 tests)

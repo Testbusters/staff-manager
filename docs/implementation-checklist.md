@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-02. Blocco 12 ✅, Blocco 13a ✅. Prossimo: Blocco 13b (Import XLS).
+> Aggiornato 2026-03-03. Blocco 13b ✅. Prossimo: da definire.
 
 ---
 
@@ -22,6 +22,7 @@
 | 2026-03-02 | Blocco 11 — Dashboard Collaboratore Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Saluto con nome + data. 4 KPI cards (Compensi in corso, Rimborsi in corso, Da ricevere, Da firmare). DashboardUpdates: 4 tab (Documenti funzionale + 3 disabilitate per Block 12), paginazione prev/next, 4 elementi/pagina. Sezione posizionata dopo KPI, prima di Azioni rapide. Legenda bar chart colorata (blu/teal). Feed collaboratore rimosso. DashboardBarChart. |
 | 2026-03-02 | Blocco 12 — Content Types Redesign | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Migration 026: rename announcements→communications, benefits→discounts; new opportunities table. API /communications, /discounts, /opportunities (admin-only); /resources + /events updated. Admin /contenuti: 5 tabs, admin-only. Read pages: /eventi, /comunicazioni/[id], /risorse/[id], /opportunita, /sconti/[id]. Dashboard 4 tabs enabled. Events: Google Calendar link + Maps. Discounts: CopyButton. Resources: categoria filter. |
 | 2026-03-02 | Blocco 13a — Compensi e rimborsi responsabile (redesign) | ✅ | tsc ✅, build ✅, vitest 167/167 ✅, e2e ⏸ (sospeso), smoke test OK | Nav rename Approvazioni→Compensi e rimborsi. Fetch tutti gli stati + join collaborators(nome,cognome). 4 KPI cards server-side. ApprovazioniCompensazioni: search LIKE, filtri stato, checkbox, bulk approve, paginazione 25/p, Import section disabilitata. ApprovazioniRimborsi: stessa struttura senza Import. POST /api/compensations/approve-bulk + /api/expenses/approve-bulk (community-scoped + history). Expense.community_id aggiunto a lib/types.ts. |
+| 2026-03-03 | Blocco 13b — Schema alignment + GSheet import + Individual form | ✅ | tsc ✅, build ✅, vitest 182/182 ✅ (15 nuovi in compensation-import.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 030: rename descrizione→nome_servizio_ruolo, note_interne→info_specifiche; DROP corso_appartenenza; community_id nullable; CREATE compensation_competenze + 4 seed; ADD competenza FK; rewrite responsabile RLS (collaborator_id-based). lib/types.ts Compensation aggiornato. 6 consumer aggiornati. lib/google-sheets.ts wrapper (fetchPendingRows + markRowsProcessed). /api/compensations/import/preview + /confirm. ImportSection.tsx sostituisce placeholder. CompensationCreateWizard: +competenza dropdown, +info_specifiche, -community_id field, -choice step. |
 
 ---
 
