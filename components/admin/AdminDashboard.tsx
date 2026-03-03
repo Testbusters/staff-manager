@@ -6,6 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import type { AdminDashboardData } from './types';
+import type { AdminHero } from './types';
 import BlocksDrawer from './BlocksDrawer';
 
 // ── Helpers ────────────────────────────────────────────────
@@ -174,11 +175,49 @@ function ChartTooltip({ active, payload, label }: {
   );
 }
 
+// ── Hero ───────────────────────────────────────────────────
+function AdminHeroSection({ hero }: { hero: AdminHero }) {
+  const fullName = [hero.nome, hero.cognome].filter(Boolean).join(' ');
+  const initials = [hero.nome, hero.cognome].filter(Boolean).map((n) => n!.charAt(0).toUpperCase()).join('') || '?';
+  const joinDate = hero.data_ingresso
+    ? new Date(hero.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+  const todayStr = new Date().toLocaleDateString('it-IT', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).replace(/^\w/, (c) => c.toUpperCase());
+
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+          {hero.foto_profilo_url ? (
+            <img src={hero.foto_profilo_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-lg font-medium text-gray-300 select-none">{initials}</span>
+          )}
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-100">
+            Ciao{fullName ? `, ${fullName}` : ''}!
+          </h1>
+          <span className="mt-1.5 inline-flex items-center rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+            {hero.roleLabel}
+          </span>
+          {joinDate && (
+            <p className="text-xs text-gray-500 mt-1.5">Data di ingresso: {joinDate}</p>
+          )}
+        </div>
+      </div>
+      <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{todayStr}</p>
+    </div>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────
 export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
   const {
     kpis, communityCards, collabBreakdown, periodMetrics,
-    urgentItems, feedItems, blockItems, communities,
+    urgentItems, feedItems, blockItems, communities, hero,
   } = data;
 
   const [search, setSearch] = useState('');
@@ -217,11 +256,13 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 py-6">
 
+      {/* ── Hero ── */}
+      <AdminHeroSection hero={hero} />
+
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Panoramica operativa</p>
+          <p className="text-sm text-gray-500">Panoramica operativa</p>
         </div>
         <button
           onClick={() => setShowBlocks(true)}

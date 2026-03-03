@@ -69,6 +69,14 @@ export type AdminBlockItem = {
   daysWaiting?: number;
 };
 
+export type AdminHero = {
+  nome: string | null;
+  cognome: string | null;
+  foto_profilo_url: string | null;
+  data_ingresso: string | null;
+  roleLabel: string;
+};
+
 export type AdminDashboardData = {
   kpis: AdminKPIs;
   communityCards: AdminCommunityCard[];
@@ -78,4 +86,5 @@ export type AdminDashboardData = {
   feedItems: AdminFeedItem[];
   blockItems: AdminBlockItem[];
   communities: { id: string; name: string }[];
+  hero: AdminHero;
 };

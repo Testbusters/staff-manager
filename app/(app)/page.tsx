@@ -313,11 +313,11 @@ export default async function DashboardPage() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    // Round 1 — community IDs for this responsabile
-    const { data: ucaRows } = await svc
-      .from('user_community_access')
-      .select('community_id')
-      .eq('user_id', user.id);
+    // Round 1 — community IDs + own collaborator record (for hero)
+    const [{ data: ucaRows }, { data: ownCollab }] = await Promise.all([
+      svc.from('user_community_access').select('community_id').eq('user_id', user.id),
+      svc.from('collaborators').select('nome, cognome, foto_profilo_url, data_ingresso').eq('user_id', user.id).maybeSingle(),
+    ]);
 
     const communityIds = (ucaRows ?? []).map((r: { community_id: string }) => r.community_id);
 
@@ -456,9 +456,43 @@ export default async function DashboardPage() {
     rFeedItems.sort((a, b) => b.date.localeCompare(a.date));
     const rFeed = rFeedItems.slice(0, 10);
 
+    const rTodayStr = new Date().toLocaleDateString('it-IT', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    }).replace(/^\w/, (c) => c.toUpperCase());
+    const rRoleLabel  = ROLE_LABELS[role as Role] ?? role;
+    const rFullName   = [ownCollab?.nome, ownCollab?.cognome].filter(Boolean).join(' ');
+    const rInitials   = [ownCollab?.nome, ownCollab?.cognome].filter(Boolean).map((n) => n!.charAt(0).toUpperCase()).join('') || '?';
+    const rJoinDate   = ownCollab?.data_ingresso
+      ? new Date(ownCollab.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null;
+
     return (
       <div className="p-6 max-w-4xl space-y-6">
-        <h1 className="text-xl font-semibold text-gray-100">Dashboard</h1>
+
+        {/* Hero — responsabile */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+              {ownCollab?.foto_profilo_url ? (
+                <img src={ownCollab.foto_profilo_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-medium text-gray-300 select-none">{rInitials}</span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-100">
+                Ciao{rFullName ? `, ${rFullName}` : ''}!
+              </h1>
+              <span className="mt-1.5 inline-flex items-center rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+                {rRoleLabel}
+              </span>
+              {rJoinDate && (
+                <p className="text-xs text-gray-500 mt-1.5">Data di ingresso: {rJoinDate}</p>
+              )}
+            </div>
+          </div>
+          <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{rTodayStr}</p>
+        </div>
 
         {/* Per-community overview cards */}
         <div className={`grid gap-4 ${communityStats.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-1 sm:grid-cols-2'}`}>
@@ -527,6 +561,13 @@ export default async function DashboardPage() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
+
+    // Fetch admin's own collaborator record (may not exist for admin-only accounts)
+    const { data: adminCollab } = await svc
+      .from('collaborators')
+      .select('nome, cognome, foto_profilo_url, data_ingresso')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -957,6 +998,13 @@ export default async function DashboardPage() {
       feedItems,
       blockItems,
       communities: (communitiesRes.data ?? []).map(c => ({ id: c.id, name: c.name })),
+      hero: {
+        nome:            adminCollab?.nome ?? null,
+        cognome:         adminCollab?.cognome ?? null,
+        foto_profilo_url: adminCollab?.foto_profilo_url ?? null,
+        data_ingresso:   adminCollab?.data_ingresso ?? null,
+        roleLabel:       ROLE_LABELS['amministrazione'],
+      },
     };
 
     return <AdminDashboard data={dashData} />;
@@ -1192,7 +1240,7 @@ export default async function DashboardPage() {
               </span>
             )}
             {joinDate && (
-              <p className="text-xs text-gray-500 mt-1.5">Dal {joinDate}</p>
+              <p className="text-xs text-gray-500 mt-1.5">Data di ingresso: {joinDate}</p>
             )}
           </div>
         </div>

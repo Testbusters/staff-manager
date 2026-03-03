@@ -305,9 +305,6 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 disabled={loading} maxLength={2} className={inputCls + ' font-mono uppercase'} />
             </div>
           </div>
-          {collaborator.data_ingresso && (
-            <Field label="Data ingresso" value={new Date(collaborator.data_ingresso).toLocaleDateString('it-IT')} />
-          )}
           {communities.length > 0 && (
             <div>
               <p className={labelCls}>Community</p>
@@ -554,12 +551,22 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         </div>
       </div>
 
-      {/* Role badge */}
-      <div className="flex items-center gap-2 px-1">
-        <span className="text-xs text-gray-600">Ruolo:</span>
-        <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300 capitalize">
-          {role.replace('_', ' ')}
-        </span>
+      {/* Role badge + data di ingresso */}
+      <div className="flex items-center flex-wrap gap-x-6 gap-y-2 px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Ruolo:</span>
+          <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300 capitalize">
+            {role.replace('_', ' ')}
+          </span>
+        </div>
+        {collaborator?.data_ingresso && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-600">Data di ingresso:</span>
+            <span className="text-xs text-gray-300">
+              {new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          </div>
+        )}
       </div>
 
       {error && (

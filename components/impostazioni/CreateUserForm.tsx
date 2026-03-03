@@ -56,6 +56,7 @@ export default function CreateUserForm() {
   const [indirizzo, setIndirizzo]     = useState('');
   const [civico, setCivico]           = useState('');
   const [telefono, setTelefono]       = useState('');
+  const [dataIngresso, setDataIngresso] = useState('');
 
   // Tipo rapporto: always OCCASIONALE
 
@@ -132,6 +133,7 @@ export default function CreateUserForm() {
         indirizzo:           indirizzo.trim() || null,
         civico_residenza:    civico.trim() || null,
         telefono:            telefono.trim() || null,
+        data_ingresso:       dataIngresso || null,
       });
     }
 
@@ -153,7 +155,7 @@ export default function CreateUserForm() {
     setNome(''); setCognome(''); setUsername(''); setUsernameManuallySet(false);
     setCodiceFiscale(''); setDataNascita('');
     setLuogoNascita(''); setProvinciaNascita(''); setComuneRes(''); setPrvinciaRes('');
-    setIndirizzo(''); setCivico(''); setTelefono('');
+    setIndirizzo(''); setCivico(''); setTelefono(''); setDataIngresso('');
   };
 
   if (credentials) {
@@ -416,6 +418,12 @@ export default function CreateUserForm() {
               <label className={labelCls}>Telefono</label>
               <input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
+                disabled={loading} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Data di ingresso</label>
+              <input type="date" value={dataIngresso}
+                onChange={(e) => setDataIngresso(e.target.value)}
                 disabled={loading} className={inputCls} />
             </div>
           </div>
