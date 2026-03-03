@@ -38,7 +38,7 @@ export default async function ApprovazioniPage({
   const expenses = activeTab === 'rimborsi'
     ? await supabase
         .from('expense_reimbursements')
-        .select('*, communities(name), collaborators(nome, cognome)')
+        .select('*, collaborators(nome, cognome)')
         .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])
     : [];
@@ -67,6 +67,10 @@ export default async function ApprovazioniPage({
     approvati: expenses.filter((e) => e.stato === 'APPROVATO').length,
     totaleApprovati: expenses
       .filter((e) => e.stato === 'APPROVATO')
+      .reduce((s, e) => s + (e.importo ?? 0), 0),
+    liquidato: expenses.filter((e) => e.stato === 'LIQUIDATO').length,
+    totaleLiquidato: expenses
+      .filter((e) => e.stato === 'LIQUIDATO')
       .reduce((s, e) => s + (e.importo ?? 0), 0),
   };
 

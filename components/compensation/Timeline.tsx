@@ -31,7 +31,9 @@ export default function Timeline({ events }: { events: HistoryEvent[] }) {
           {/* Content */}
           <div className="pb-4 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium text-gray-300">{ev.role_label}</span>
+              <span className="text-xs font-medium text-gray-300">
+                {ev.changed_by_name ? `${ev.changed_by_name} (${ev.role_label})` : ev.role_label}
+              </span>
               {ev.stato_precedente && (
                 <>
                   <span className="text-xs text-gray-600">→</span>

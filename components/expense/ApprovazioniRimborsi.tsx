@@ -3,12 +3,11 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { Expense, ExpenseStatus } from '@/lib/types';
-import { EXPENSE_STATUS_LABELS } from '@/lib/types';
+import type { Expense, ExpenseStatus, ExpenseCategory } from '@/lib/types';
+import { EXPENSE_STATUS_LABELS, EXPENSE_CATEGORIES, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
 
 type ExpenseRow = Expense & {
-  communities?: { name: string } | null;
   collaborators?: { nome: string; cognome: string } | null;
 };
 
@@ -17,22 +16,12 @@ type Kpi = {
   totaleInAttesa: number;
   approvati: number;
   totaleApprovati: number;
+  liquidato: number;
+  totaleLiquidato: number;
 };
 
 const ALL_STATI: ExpenseStatus[] = ['IN_ATTESA', 'APPROVATO', 'RIFIUTATO', 'LIQUIDATO'];
 const PAGE_SIZE = 20;
-
-const COMMUNITY_COLORS = [
-  'bg-blue-500', 'bg-violet-500', 'bg-emerald-500',
-  'bg-amber-500', 'bg-rose-500', 'bg-cyan-500',
-] as const;
-
-function communityDotColor(id: string | undefined): string {
-  if (!id) return COMMUNITY_COLORS[0];
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return COMMUNITY_COLORS[hash % COMMUNITY_COLORS.length];
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -43,12 +32,12 @@ function formatCurrency(n: number | null | undefined) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
-function KpiCard({ label, value, sub, color }: { label: string; value: string | number; sub: string; color: string }) {
+function KpiCard({ label, count, amount, countColor }: { label: string; count: number; amount: number; countColor: string }) {
   return (
     <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4">
       <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`text-xl font-semibold tabular-nums ${color}`}>{value}</p>
-      <p className="text-xs text-gray-600 mt-0.5">{sub}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
+      <p className="text-sm text-gray-400 tabular-nums mt-0.5">{formatCurrency(amount)}</p>
     </div>
   );
 }
@@ -64,6 +53,7 @@ export default function ApprovazioniRimborsi({
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
   const [filterStato, setFilterStato] = useState<ExpenseStatus | 'ALL'>('ALL');
+  const [filterCategoria, setFilterCategoria] = useState<ExpenseCategory | 'ALL'>('ALL');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -71,6 +61,7 @@ export default function ApprovazioniRimborsi({
 
   const filtered = expenses
     .filter((e) => filterStato === 'ALL' || e.stato === filterStato)
+    .filter((e) => filterCategoria === 'ALL' || e.categoria === filterCategoria)
     .filter((e) => {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
@@ -85,6 +76,9 @@ export default function ApprovazioniRimborsi({
   const approvabiliOnPage = paginated.filter((e) => e.stato === 'IN_ATTESA');
   const allPageSelected =
     approvabiliOnPage.length > 0 && approvabiliOnPage.every((e) => selectedIds.has(e.id));
+  const totaleSelezionati = expenses
+    .filter((e) => selectedIds.has(e.id))
+    .reduce((s, e) => s + (e.importo ?? 0), 0);
 
   function toggleSelectAll() {
     const next = new Set(selectedIds);
@@ -104,6 +98,12 @@ export default function ApprovazioniRimborsi({
 
   function handleFilterChange(stato: ExpenseStatus | 'ALL') {
     setFilterStato(stato);
+    setPage(1);
+    setSelectedIds(new Set());
+  }
+
+  function handleCategoriaChange(cat: ExpenseCategory | 'ALL') {
+    setFilterCategoria(cat);
     setPage(1);
     setSelectedIds(new Set());
   }
@@ -138,11 +138,10 @@ export default function ApprovazioniRimborsi({
   return (
     <div className="space-y-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiCard label="In attesa" value={kpi.inAttesa} sub="da revisionare" color="text-blue-400" />
-        <KpiCard label="Totale" value={formatCurrency(kpi.totaleInAttesa)} sub="in attesa" color="text-blue-300" />
-        <KpiCard label="Approvati" value={kpi.approvati} sub="da liquidare" color="text-amber-400" />
-        <KpiCard label="Totale" value={formatCurrency(kpi.totaleApprovati)} sub="approvati" color="text-amber-300" />
+      <div className="grid grid-cols-3 gap-3">
+        <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleInAttesa} countColor="text-blue-400" />
+        <KpiCard label="Approvati" count={kpi.approvati} amount={kpi.totaleApprovati} countColor="text-amber-400" />
+        <KpiCard label="Liquidati" count={kpi.liquidato} amount={kpi.totaleLiquidato} countColor="text-emerald-400" />
       </div>
 
       {/* List header */}
@@ -157,11 +156,11 @@ export default function ApprovazioniRimborsi({
         type="text"
         value={search}
         onChange={(e) => handleSearchChange(e.target.value)}
-        placeholder="Cerca per nome o cognome..."
+        placeholder="Cerca per nome cognome collaboratore"
         className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
       />
 
-      {/* Filter chips */}
+      {/* Filter chips — stato */}
       <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
         {(['ALL', ...ALL_STATI] as const).map((s) => (
           <button
@@ -173,7 +172,34 @@ export default function ApprovazioniRimborsi({
                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
-            {s === 'ALL' ? 'Tutti' : EXPENSE_STATUS_LABELS[s]}
+            {s === 'ALL' ? 'Tutti gli stati' : EXPENSE_STATUS_LABELS[s]}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter chips — categoria */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+        <button
+          onClick={() => handleCategoriaChange('ALL')}
+          className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
+            filterCategoria === 'ALL'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+          }`}
+        >
+          Tutte le categorie
+        </button>
+        {EXPENSE_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => handleCategoriaChange(cat)}
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
+              filterCategoria === cat
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            {cat}
           </button>
         ))}
       </div>
@@ -181,9 +207,12 @@ export default function ApprovazioniRimborsi({
       {/* Bulk approve bar */}
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between gap-4 rounded-lg bg-blue-900/40 border border-blue-700/50 px-4 py-3">
-          <span className="text-sm text-blue-200">
-            {selectedIds.size} {selectedIds.size === 1 ? 'selezionato' : 'selezionati'}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-blue-200">
+              {selectedIds.size} {selectedIds.size === 1 ? 'selezionato' : 'selezionati'}
+            </span>
+            <span className="text-xs text-blue-300 tabular-nums">{formatCurrency(totaleSelezionati)}</span>
+          </div>
           <div className="flex items-center gap-3">
             {bulkError && <span className="text-xs text-red-400">{bulkError}</span>}
             <button
@@ -253,19 +282,12 @@ export default function ApprovazioniRimborsi({
                         : '—'}
                     </p>
                     <p className="text-xs text-gray-400 truncate mt-0.5">{e.descrizione ?? '—'}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                      {e.categoria && <span className="text-gray-400">{e.categoria}</span>}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${EXPENSE_CATEGORIA_BADGE[e.categoria]}`}>
+                        {e.categoria}
+                      </span>
                       {e.data_spesa && (
                         <><span className="text-gray-700">·</span><span>Spesa: {formatDate(e.data_spesa)}</span></>
-                      )}
-                      {e.communities && (
-                        <>
-                          <span className="text-gray-700">·</span>
-                          <span className="flex items-center gap-1">
-                            <span className={`h-2 w-2 rounded-full shrink-0 ${communityDotColor(e.community_id ?? undefined)}`} />
-                            <span>{e.communities.name}</span>
-                          </span>
-                        </>
                       )}
                       <span className="text-gray-700">·</span>
                       <span>{formatDate(e.created_at)}</span>

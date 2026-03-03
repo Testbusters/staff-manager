@@ -329,7 +329,17 @@ export interface HistoryEvent {
   role_label: string;
   note: string | null;
   created_at: string;
+  changed_by_name?: string | null;
 }
+
+export const EXPENSE_CATEGORIA_BADGE: Record<ExpenseCategory, string> = {
+  Trasporti:   'bg-blue-900/40 text-blue-300 border-blue-700/50',
+  Vitto:       'bg-amber-900/40 text-amber-300 border-amber-700/50',
+  Alloggio:    'bg-violet-900/40 text-violet-300 border-violet-700/50',
+  Materiali:   'bg-emerald-900/40 text-emerald-300 border-emerald-700/50',
+  Cancelleria: 'bg-cyan-900/40 text-cyan-300 border-cyan-700/50',
+  Altro:       'bg-gray-800 text-gray-400 border-gray-700',
+};
 
 // ── Notification ─────────────────────────────────────────
 export interface Notification {

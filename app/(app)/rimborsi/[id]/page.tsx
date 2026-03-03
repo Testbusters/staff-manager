@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import ExpenseDetail from '@/components/expense/ExpenseDetail';
 import ExpenseActionPanel from '@/components/expense/ExpenseActionPanel';
 import Timeline from '@/components/compensation/Timeline';
-import type { Role, ExpenseStatus } from '@/lib/types';
+import type { Role, ExpenseStatus, HistoryEvent } from '@/lib/types';
 
 export default async function ExpenseDetailPage({
   params,
@@ -46,7 +46,51 @@ export default async function ExpenseDetailPage({
     .eq('reimbursement_id', id)
     .order('created_at', { ascending: true });
 
+  // Fetch collaborator name for admin/responsabile views
+  const { data: collaborator } = await supabase
+    .from('collaborators')
+    .select('nome, cognome')
+    .eq('id', expense.collaborator_id)
+    .single();
+
   const role = profile.role as Role;
+
+  // Enrich history with changed_by_name (role-gated — collaboratore sees role_label only)
+  const rawHistory = history ?? [];
+  let historyForTimeline: HistoryEvent[] = rawHistory.map((h) => ({
+    id: h.id,
+    stato_precedente: h.stato_precedente,
+    stato_nuovo: h.stato_nuovo,
+    role_label: h.role_label,
+    note: h.note,
+    created_at: h.created_at,
+  }));
+
+  if (role !== 'collaboratore') {
+    const changedByIds = [...new Set(
+      rawHistory.map((h) => h.changed_by).filter((id): id is string => id != null)
+    )];
+    if (changedByIds.length > 0) {
+      const { data: collabs } = await supabase
+        .from('collaborators')
+        .select('user_id, nome, cognome')
+        .in('user_id', changedByIds);
+      const nameMap = new Map<string, string>();
+      for (const c of collabs ?? []) {
+        if (c.user_id) nameMap.set(c.user_id, `${c.nome ?? ''} ${c.cognome ?? ''}`.trim());
+      }
+      historyForTimeline = rawHistory.map((h) => ({
+        id: h.id,
+        stato_precedente: h.stato_precedente,
+        stato_nuovo: h.stato_nuovo,
+        role_label: h.role_label,
+        note: h.note,
+        created_at: h.created_at,
+        changed_by_name: h.changed_by ? (nameMap.get(h.changed_by) ?? null) : null,
+      }));
+    }
+  }
+
   const backHref =
     role === 'collaboratore'
       ? '/rimborsi'
@@ -68,6 +112,7 @@ export default async function ExpenseDetailPage({
         <ExpenseDetail
           expense={expense}
           attachments={attachments ?? []}
+          collaborator={role !== 'collaboratore' ? collaborator : null}
         />
 
         <ExpenseActionPanel
@@ -76,12 +121,12 @@ export default async function ExpenseDetailPage({
           role={role}
         />
 
-        {(history ?? []).length > 0 && (
+        {historyForTimeline.length > 0 && (
           <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">
               Cronologia
             </p>
-            <Timeline events={history ?? []} />
+            <Timeline events={historyForTimeline} />
           </div>
         )}
       </div>
