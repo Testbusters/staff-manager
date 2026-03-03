@@ -2,8 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { ROLE_LABELS } from '@/lib/types';
-import type { Role } from '@/lib/types';
+import { ROLE_LABELS, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
+import type { Role, ExpenseCategory } from '@/lib/types';
+import DashboardTicketSection from '@/components/responsabile/DashboardTicketSection';
+import type { DashboardTicket } from '@/components/responsabile/DashboardTicketSection';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import type { AdminDashboardData } from '@/components/admin/types';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
@@ -28,52 +30,8 @@ type CompRow = {
 
 type ExpRow = { id: string; stato: string; importo: number | null; liquidated_at: string | null };
 
-type CommStat = {
-  id: string;
-  name: string;
-  pendingComps: number;
-  pendingExps: number;
-  docsToSign: number;
-  totalCollabs: number;
-  stalloCount: number;
-};
-
-
 // ── Helpers ────────────────────────────────────────────────
 const sectionCls = 'rounded-2xl bg-gray-900 border border-gray-800';
-
-// ── Types used by responsabile feed ─────────────────────────
-type FeedItem = {
-  key:  string;
-  icon: 'comp' | 'exp' | 'ticket' | 'ann';
-  text: string;
-  date: string;
-  href: string;
-};
-
-const FEED_ICONS: Record<FeedItem['icon'], string> = {
-  comp:   '💼',
-  exp:    '🧾',
-  ticket: '💬',
-  ann:    '📣',
-};
-
-function FeedRow({ item }: { item: FeedItem }) {
-  return (
-    <Link
-      href={item.href}
-      className="flex items-start gap-3 py-2.5 px-1 rounded-lg hover:bg-gray-800/50 transition group"
-    >
-      <span className="text-base mt-0.5 flex-shrink-0">{FEED_ICONS[item.icon]}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-300 group-hover:text-gray-100 truncate transition">{item.text}</p>
-        <p className="text-xs text-gray-600 mt-0.5">
-          {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
-        </p>
-      </div>
-    </Link>
-  );
-}
 
 function eur(n: number) {
   return n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
@@ -144,62 +102,28 @@ function DocCard({ count }: { count: number }) {
   );
 }
 
-function CommCard({ stat }: { stat: CommStat }) {
+
+// ── Responsabile helpers ────────────────────────────────────
+function formatAgeR(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days === 0) return 'Oggi';
+  if (days === 1) return '1g';
+  return `${days}g`;
+}
+
+function formatCurrencyR(n: number) {
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
+}
+
+function RKpiCard({ label, count, sub, color, href }: {
+  label: string; count: number; sub: string | null; color: string; href: string;
+}) {
   return (
-    <div className={sectionCls + ' p-5 space-y-4'}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-100">{stat.name}</h2>
-        <span className="text-xs text-gray-500">
-          {stat.totalCollabs} collaborator{stat.totalCollabs === 1 ? 'e' : 'i'}
-        </span>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <Link
-          href="/approvazioni?tab=compensi"
-          className={`flex flex-col items-center justify-center rounded-xl py-3 px-2 transition ${
-            stat.pendingComps > 0
-              ? 'bg-amber-950/40 border border-amber-800/30 hover:bg-amber-950/60'
-              : 'bg-gray-800/50 border border-gray-700/50'
-          }`}
-        >
-          <span className={`text-2xl font-bold tabular-nums ${stat.pendingComps > 0 ? 'text-amber-300' : 'text-gray-600'}`}>
-            {stat.pendingComps}
-          </span>
-          <span className="text-xs text-gray-400 mt-1 text-center leading-tight">Compensi</span>
-        </Link>
-        <Link
-          href="/approvazioni?tab=rimborsi"
-          className={`flex flex-col items-center justify-center rounded-xl py-3 px-2 transition ${
-            stat.pendingExps > 0
-              ? 'bg-amber-950/40 border border-amber-800/30 hover:bg-amber-950/60'
-              : 'bg-gray-800/50 border border-gray-700/50'
-          }`}
-        >
-          <span className={`text-2xl font-bold tabular-nums ${stat.pendingExps > 0 ? 'text-amber-300' : 'text-gray-600'}`}>
-            {stat.pendingExps}
-          </span>
-          <span className="text-xs text-gray-400 mt-1 text-center leading-tight">Rimborsi</span>
-        </Link>
-        <Link
-          href="/collaboratori?filter=documenti"
-          className={`flex flex-col items-center justify-center rounded-xl py-3 px-2 transition ${
-            stat.docsToSign > 0
-              ? 'bg-blue-950/40 border border-blue-800/30 hover:bg-blue-950/60'
-              : 'bg-gray-800/50 border border-gray-700/50'
-          }`}
-        >
-          <span className={`text-2xl font-bold tabular-nums ${stat.docsToSign > 0 ? 'text-blue-300' : 'text-gray-600'}`}>
-            {stat.docsToSign}
-          </span>
-          <span className="text-xs text-gray-400 mt-1 text-center leading-tight">Da firmare</span>
-        </Link>
-      </div>
-      {stat.stalloCount > 0 && (
-        <p className="text-xs text-gray-500 border-t border-gray-800 pt-3">
-          {stat.stalloCount} richiesta{stat.stalloCount === 1 ? '' : 'e'} in pipeline
-        </p>
-      )}
-    </div>
+    <Link href={href} className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4 hover:bg-gray-800/80 transition">
+      <p className="text-xs text-gray-500 mb-1">{label}</p>
+      <p className={`text-2xl font-semibold tabular-nums ${color}`}>{count}</p>
+      {sub && <p className="text-sm text-gray-400 tabular-nums mt-0.5">{sub}</p>}
+    </Link>
   );
 }
 
@@ -313,10 +237,10 @@ export default async function DashboardPage() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    // Round 1 — community IDs + own collaborator record (for hero)
+    // Round 1 — own collab record + community guard
     const [{ data: ucaRows }, { data: ownCollab }] = await Promise.all([
       svc.from('user_community_access').select('community_id').eq('user_id', user.id),
-      svc.from('collaborators').select('nome, cognome, foto_profilo_url, data_ingresso').eq('user_id', user.id).maybeSingle(),
+      svc.from('collaborators').select('nome, cognome, foto_profilo_url').eq('user_id', user.id).maybeSingle(),
     ]);
 
     const communityIds = (ucaRows ?? []).map((r: { community_id: string }) => r.community_id);
@@ -329,147 +253,95 @@ export default async function DashboardPage() {
       );
     }
 
-    // Round 2 — communities + collaborator IDs (separate queries, no join) + announcements
-    type CommunityRow = { id: string; name: string };
-    type CCRow        = { collaborator_id: string; community_id: string };
-    type AnnRow       = { id: string; titolo: string; published_at: string };
+    // Round 2 — collab IDs (via collaborator_communities) + open tickets
+    type RTicket = { id: string; oggetto: string; stato: string; categoria: string; created_at: string; creator_user_id: string };
 
-    const [commResult, ccResult, annResult] = await Promise.all([
-      svc.from('communities').select('id, name').in('id', communityIds),
-      svc.from('collaborator_communities').select('collaborator_id, community_id').in('community_id', communityIds),
-      svc.from('communications')
-        .select('id, titolo, published_at')
-        .order('pinned', { ascending: false })
-        .order('published_at', { ascending: false })
-        .limit(3),
+    const [ccResult, ticketsResult] = await Promise.all([
+      svc.from('collaborator_communities').select('collaborator_id').in('community_id', communityIds),
+      svc.from('tickets')
+        .select('id, oggetto, stato, categoria, created_at, creator_user_id')
+        .in('stato', ['APERTO', 'IN_LAVORAZIONE'])
+        .order('created_at', { ascending: false })
+        .limit(5),
     ]);
 
-    const commRows = commResult.data as CommunityRow[] | null;
-    const ccRows   = ccResult.data   as CCRow[] | null;
-    const annRows  = annResult.data  as AnnRow[] | null;
+    const allCollabIds = [...new Set((ccResult.data ?? []).map((r: { collaborator_id: string }) => r.collaborator_id))];
+    const rawTickets   = (ticketsResult.data ?? []) as RTicket[];
+    const noCollabs    = allCollabIds.length === 0;
 
-    // Build lookup maps from round 2
-    const allCollabIds: string[] = [...new Set((ccRows ?? []).map(r => r.collaborator_id))];
-    const collabIdsByComm: Record<string, Set<string>> = {};
-    const commNameMap: Record<string, string> = {};
+    // Round 3 — compensations, expenses, collab names, ticket collab names (all in parallel)
+    type RComp    = { id: string; collaborator_id: string; importo_lordo: number | null; stato: string; created_at: string };
+    type RExp     = { id: string; collaborator_id: string; importo: number | null; categoria: string; stato: string; created_at: string };
+    type RCollab3 = { id: string; nome: string | null; cognome: string | null };
+    type RTCollab = { user_id: string; nome: string | null; cognome: string | null };
 
-    for (const c of commRows ?? []) commNameMap[c.id] = c.name;
-    for (const row of ccRows ?? []) {
-      if (!collabIdsByComm[row.community_id]) collabIdsByComm[row.community_id] = new Set();
-      collabIdsByComm[row.community_id].add(row.collaborator_id);
-    }
+    const ticketUserIds  = [...new Set(rawTickets.map(t => t.creator_user_id).filter(Boolean))];
+    const resolveEmpty   = <T,>(v: T[]) => Promise.resolve({ data: v });
 
-    const noCollabs = allCollabIds.length === 0;
-
-    // Round 3 — all data in parallel using collabIds
-    type CollabRow = { id: string; nome: string | null; cognome: string | null };
-    type PComp     = { id: string; collaborator_id: string; community_id: string; created_at: string };
-    type PExp      = { id: string; collaborator_id: string; created_at: string };
-    type DocRow2   = { id: string; collaborator_id: string; community_id: string };
-    type SComp     = { id: string; collaborator_id: string; community_id: string };
-    type SExp      = { id: string; collaborator_id: string };
-
-    const resolve = <T,>(v: T[]) => Promise.resolve({ data: v, error: null });
-
-    const [collabsResult, pcRes, peRes, ddRes, scRes, seRes] = await Promise.all([
-      noCollabs ? resolve<CollabRow>([]) : svc.from('collaborators')
-        .select('id, nome, cognome').in('id', allCollabIds),
-      noCollabs ? resolve<PComp>([]) : svc.from('compensations')
-        .select('id, collaborator_id, community_id, created_at')
-        .in('collaborator_id', allCollabIds).eq('stato', 'IN_ATTESA')
-        .order('created_at', { ascending: false }).limit(20),
-      noCollabs ? resolve<PExp>([]) : svc.from('expense_reimbursements')
-        .select('id, collaborator_id, created_at')
-        .in('collaborator_id', allCollabIds).eq('stato', 'IN_ATTESA')
-        .order('created_at', { ascending: false }).limit(20),
-      noCollabs ? resolve<DocRow2>([]) : svc.from('documents')
-        .select('id, collaborator_id, community_id')
-        .in('collaborator_id', allCollabIds).eq('stato_firma', 'DA_FIRMARE'),
-      noCollabs ? resolve<SComp>([]) : svc.from('compensations')
-        .select('id, collaborator_id, community_id')
-        .in('collaborator_id', allCollabIds)
-        .neq('stato', 'LIQUIDATO').neq('stato', 'RIFIUTATO'),
-      noCollabs ? resolve<SExp>([]) : svc.from('expense_reimbursements')
-        .select('id, collaborator_id')
-        .in('collaborator_id', allCollabIds)
-        .neq('stato', 'LIQUIDATO').neq('stato', 'RIFIUTATO'),
+    const [compsResult, expsResult, collabsResult, tCollabsResult] = await Promise.all([
+      noCollabs
+        ? resolveEmpty<RComp>([])
+        : svc.from('compensations')
+            .select('id, collaborator_id, importo_lordo, stato, created_at')
+            .in('collaborator_id', allCollabIds)
+            .in('stato', ['IN_ATTESA', 'APPROVATO'])
+            .order('created_at', { ascending: true }),
+      noCollabs
+        ? resolveEmpty<RExp>([])
+        : svc.from('expense_reimbursements')
+            .select('id, collaborator_id, importo, categoria, stato, created_at')
+            .in('collaborator_id', allCollabIds)
+            .in('stato', ['IN_ATTESA', 'APPROVATO'])
+            .order('created_at', { ascending: true }),
+      noCollabs
+        ? resolveEmpty<RCollab3>([])
+        : svc.from('collaborators').select('id, nome, cognome').in('id', allCollabIds),
+      ticketUserIds.length > 0
+        ? svc.from('collaborators').select('user_id, nome, cognome').in('user_id', ticketUserIds)
+        : resolveEmpty<RTCollab>([]),
     ]);
 
-    const allCollabs   = (collabsResult.data ?? []) as CollabRow[];
-    const pendingComps = (pcRes.data ?? []) as PComp[];
-    const pendingExps  = (peRes.data ?? []) as PExp[];
-    const docsToSign   = (ddRes.data ?? []) as DocRow2[];
-    const stalloComps  = (scRes.data ?? []) as SComp[];
-    const stalloExps   = (seRes.data ?? []) as SExp[];
+    const allComps   = (compsResult.data ?? []) as RComp[];
+    const allExps    = (expsResult.data ?? []) as RExp[];
+    const allCollabs = (collabsResult.data ?? []) as RCollab3[];
+    const tCollabs   = (tCollabsResult.data ?? []) as RTCollab[];
 
-    const collabByCollabId: Record<string, { nome: string; cognome: string }> = {};
-    for (const c of allCollabs) collabByCollabId[c.id] = { nome: c.nome ?? '', cognome: c.cognome ?? '' };
+    // ── KPIs ─────────────────────────────────────────────────
+    const pendingComps = allComps.filter(c => c.stato === 'IN_ATTESA');
+    const pendingExps  = allExps.filter(e => e.stato === 'IN_ATTESA');
+    const liquidabile  = allComps.filter(c => c.stato === 'APPROVATO').length +
+                         allExps.filter(e => e.stato === 'APPROVATO').length;
 
-    // ── Per-community stats ──────────────────────────────────
-    const communityStats: CommStat[] = communityIds.map(commId => {
-      const collabsInComm = collabIdsByComm[commId] ?? new Set<string>();
-      return {
-        id:           commId,
-        name:         commNameMap[commId] ?? commId,
-        pendingComps: pendingComps.filter(c => c.community_id === commId).length,
-        pendingExps:  pendingExps.filter(e => collabsInComm.has(e.collaborator_id)).length,
-        docsToSign:   docsToSign.filter(d => d.community_id === commId).length,
-        totalCollabs: collabsInComm.size,
-        stalloCount:  stalloComps.filter(c => c.community_id === commId).length +
-                      stalloExps.filter(e => collabsInComm.has(e.collaborator_id)).length,
-      };
-    });
+    // ── Name maps ────────────────────────────────────────────
+    const collabNameMap: Record<string, string> = {};
+    for (const c of allCollabs) collabNameMap[c.id] = `${c.nome ?? ''} ${c.cognome ?? ''}`.trim();
 
-    // ── Cosa devo fare ───────────────────────────────────────
-    const collabsWithDocs = new Set(docsToSign.map(d => d.collaborator_id)).size;
-    const rCosaDevoFare = [
-      pendingComps.length > 0 && {
-        text: `${pendingComps.length} compensi in attesa di approvazione`,
-        href: '/approvazioni?tab=compensi',
-      },
-      pendingExps.length > 0 && {
-        text: `${pendingExps.length} rimborsi in attesa di approvazione`,
-        href: '/approvazioni?tab=rimborsi',
-      },
-      collabsWithDocs > 0 && {
-        text: `${collabsWithDocs} collaboratore${collabsWithDocs === 1 ? '' : 'i'} con documenti da firmare`,
-        href: '/collaboratori?filter=documenti',
-      },
-    ].filter(Boolean) as { text: string; href: string }[];
+    const tCollabNameMap: Record<string, string> = {};
+    for (const c of tCollabs) tCollabNameMap[c.user_id] = `${c.nome ?? ''} ${c.cognome ?? ''}`.trim();
 
-    // ── Feed ─────────────────────────────────────────────────
-    const rFeedItems: FeedItem[] = [];
+    // ── Tickets ───────────────────────────────────────────────
+    const tickets: DashboardTicket[] = rawTickets.map(t => ({
+      id:         t.id,
+      oggetto:    t.oggetto,
+      stato:      t.stato,
+      categoria:  t.categoria,
+      collabName: tCollabNameMap[t.creator_user_id] ?? 'Collaboratore',
+      created_at: t.created_at,
+    }));
 
-    for (const c of pendingComps.slice(0, 5)) {
-      const collab = collabByCollabId[c.collaborator_id];
-      const name = collab ? `${collab.nome} ${collab.cognome}`.trim() : 'Collaboratore';
-      rFeedItems.push({ key: `pc-${c.id}`, icon: 'comp', text: `Compenso inviato da ${name}`, date: c.created_at, href: `/collaboratori/${c.collaborator_id}` });
-    }
-    for (const e of pendingExps.slice(0, 5)) {
-      const collab = collabByCollabId[e.collaborator_id];
-      const name = collab ? `${collab.nome} ${collab.cognome}`.trim() : 'Collaboratore';
-      rFeedItems.push({ key: `pe-${e.id}`, icon: 'exp', text: `Rimborso inviato da ${name}`, date: e.created_at, href: `/collaboratori/${e.collaborator_id}` });
-    }
-    for (const a of annRows ?? []) {
-      rFeedItems.push({ key: `ann-${a.id}`, icon: 'ann', text: a.titolo, date: a.published_at, href: '/comunicazioni' });
-    }
-    rFeedItems.sort((a, b) => b.date.localeCompare(a.date));
-    const rFeed = rFeedItems.slice(0, 10);
-
-    const rTodayStr = new Date().toLocaleDateString('it-IT', {
+    // ── Hero data ────────────────────────────────────────────
+    const rTodayStr  = new Date().toLocaleDateString('it-IT', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     }).replace(/^\w/, (c) => c.toUpperCase());
-    const rRoleLabel  = ROLE_LABELS[role as Role] ?? role;
-    const rFullName   = [ownCollab?.nome, ownCollab?.cognome].filter(Boolean).join(' ');
-    const rInitials   = [ownCollab?.nome, ownCollab?.cognome].filter(Boolean).map((n) => n!.charAt(0).toUpperCase()).join('') || '?';
-    const rJoinDate   = ownCollab?.data_ingresso
-      ? new Date(ownCollab.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
-      : null;
+    const rRoleLabel = ROLE_LABELS[role as Role] ?? role;
+    const rFullName  = [ownCollab?.nome, ownCollab?.cognome].filter(Boolean).join(' ');
+    const rInitials  = [ownCollab?.nome, ownCollab?.cognome]
+      .filter(Boolean).map((n) => n!.charAt(0).toUpperCase()).join('') || '?';
 
     return (
-      <div className="p-6 max-w-4xl space-y-6">
+      <div className="p-6 max-w-5xl space-y-6">
 
-        {/* Hero — responsabile */}
+        {/* Hero */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
@@ -486,39 +358,103 @@ export default async function DashboardPage() {
               <span className="mt-1.5 inline-flex items-center rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
                 {rRoleLabel}
               </span>
-              {rJoinDate && (
-                <p className="text-xs text-gray-500 mt-1.5">Data di ingresso: {rJoinDate}</p>
-              )}
             </div>
           </div>
           <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{rTodayStr}</p>
         </div>
 
-        {/* Per-community overview cards */}
-        <div className={`grid gap-4 ${communityStats.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-1 sm:grid-cols-2'}`}>
-          {communityStats.map(stat => <CommCard key={stat.id} stat={stat} />)}
+        {/* KPI row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <RKpiCard
+            label="Compensi in attesa"
+            count={pendingComps.length}
+            sub={pendingComps.length > 0 ? formatCurrencyR(pendingComps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0)) : null}
+            color={pendingComps.length > 0 ? 'text-amber-300' : 'text-gray-600'}
+            href="/approvazioni?tab=compensi"
+          />
+          <RKpiCard
+            label="Rimborsi in attesa"
+            count={pendingExps.length}
+            sub={pendingExps.length > 0 ? formatCurrencyR(pendingExps.reduce((s, e) => s + (e.importo ?? 0), 0)) : null}
+            color={pendingExps.length > 0 ? 'text-amber-300' : 'text-gray-600'}
+            href="/approvazioni?tab=rimborsi"
+          />
+          <RKpiCard
+            label="Da liquidare"
+            count={liquidabile}
+            sub={null}
+            color={liquidabile > 0 ? 'text-emerald-300' : 'text-gray-600'}
+            href="/approvazioni"
+          />
+          <RKpiCard
+            label="Ticket aperti"
+            count={tickets.length}
+            sub={null}
+            color={tickets.length > 0 ? 'text-rose-300' : 'text-gray-600'}
+            href="/ticket"
+          />
         </div>
 
-        {/* Cosa devo fare */}
-        {rCosaDevoFare.length > 0 && (
+        {/* Two-column pending items */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Compensi da approvare */}
           <div className={sectionCls}>
-            <div className="px-5 py-4 border-b border-gray-800">
-              <h2 className="text-sm font-medium text-gray-200">Cosa devo fare</h2>
+            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-gray-200">Compensi da approvare</h2>
+              <Link href="/approvazioni?tab=compensi" className="text-xs text-gray-500 hover:text-gray-300 transition">
+                Vedi tutti →
+              </Link>
             </div>
-            <div className="p-5 space-y-2">
-              {rCosaDevoFare.map(item => (
-                <Link
-                  key={item.href + item.text}
-                  href={item.href}
-                  className="flex items-center gap-2 rounded-lg bg-amber-950/30 border border-amber-800/30 px-3 py-2.5 text-sm text-amber-300 hover:bg-amber-950/50 transition"
-                >
-                  <span className="flex-shrink-0 text-base">⚠</span>
-                  {item.text}
-                </Link>
-              ))}
-            </div>
+            {pendingComps.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun compenso in attesa.</p>
+            ) : (
+              <div className="divide-y divide-gray-800">
+                {pendingComps.slice(0, 8).map(c => (
+                  <Link key={c.id} href={`/collaboratori/${c.collaborator_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-200 truncate">{collabNameMap[c.collaborator_id] ?? 'Collaboratore'}</p>
+                      <p className="text-xs text-gray-500">{formatCurrencyR(c.importo_lordo ?? 0)}</p>
+                    </div>
+                    <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAgeR(c.created_at)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Rimborsi da approvare */}
+          <div className={sectionCls}>
+            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-gray-200">Rimborsi da approvare</h2>
+              <Link href="/approvazioni?tab=rimborsi" className="text-xs text-gray-500 hover:text-gray-300 transition">
+                Vedi tutti →
+              </Link>
+            </div>
+            {pendingExps.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun rimborso in attesa.</p>
+            ) : (
+              <div className="divide-y divide-gray-800">
+                {pendingExps.slice(0, 8).map(e => (
+                  <Link key={e.id} href={`/collaboratori/${e.collaborator_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition">
+                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+                      {e.categoria}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-200 truncate">{collabNameMap[e.collaborator_id] ?? 'Collaboratore'}</p>
+                      <p className="text-xs text-gray-500">{formatCurrencyR(e.importo ?? 0)}</p>
+                    </div>
+                    <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAgeR(e.created_at)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Ticket recenti */}
+        <DashboardTicketSection tickets={tickets} />
 
         {/* Azioni rapide */}
         <div className={sectionCls}>
@@ -532,25 +468,12 @@ export default async function DashboardPage() {
             <Link href="/collaboratori" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
               Collaboratori
             </Link>
-            <Link href="/ticket/nuova" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
-              + Apri ticket
+            <Link href="/ticket" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
+              Ticket
             </Link>
           </div>
         </div>
 
-        {/* Ultimi aggiornamenti */}
-        <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">Ultimi aggiornamenti</h2>
-          </div>
-          <div className="px-4 py-2 divide-y divide-gray-800/50">
-            {rFeed.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-6">Nessun aggiornamento recente.</p>
-            ) : (
-              rFeed.map(item => <FeedRow key={item.key} item={item} />)
-            )}
-          </div>
-        </div>
       </div>
     );
   }
