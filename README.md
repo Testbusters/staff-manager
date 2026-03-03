@@ -53,6 +53,69 @@ IN_ATTESA → APPROVATO → LIQUIDATO
 | reject | IN_ATTESA | RIFIUTATO | responsabile_compensi, amministrazione |
 | mark_liquidated | APPROVATO | LIQUIDATO | responsabile_compensi, amministrazione |
 
+## Compensation Import — Google Sheets
+
+Compensations can be bulk-imported from a configured Google Sheet. Roles authorized: `responsabile_compensi`, `amministrazione`.
+
+### Sheet structure
+
+| Column | Field | Notes |
+|--------|-------|-------|
+| A | `data_competenza` | Date — accepts `dd/MM/yyyy` or `yyyy-MM-dd` |
+| B | `importo_lordo` | Amount — accepts EU (`1.234,56`) or US (`1,234.56`) format |
+| C | `collaboratore` | Collaborator **username** (must match `collaborators.username`) |
+| D | `nome_servizio_ruolo` | Service / role description |
+| E | `info_specifiche` | Additional notes (ignored if value is `-`) |
+| F | `stato` | Import status — `TO_PROCESS` → `PROCESSED` (writeback) |
+| G | `competenza` | Compensation type — `corsi` \| `produzione_materiale` \| `sb` \| `extra` |
+
+Only rows where column F = `TO_PROCESS` are read. The header row (row 1) is skipped.
+
+### Import flow (two-step, stateless)
+
+```
+Sheet (TO_PROCESS rows)
+        │
+        ▼
+POST /api/compensations/import/preview   ← step 1: read + validate only
+        │  returns { rows[], errors[], total }
+        ▼
+User reviews preview table in UI
+        │  confirms
+        ▼
+POST /api/compensations/import/confirm   ← step 2: re-fetch + re-validate + insert
+        │
+        ├─▶ INSERT compensations (stato: IN_ATTESA, community_id: null)
+        ├─▶ INSERT compensation_history (note: "Importato da Google Sheet")
+        └─▶ PATCH sheet col F → PROCESSED  (non-blocking: failure doesn't roll back DB)
+```
+
+**Step 2 re-validates independently** — it does not trust the client-side preview state. If the sheet changed between preview and confirm, only currently valid rows are imported.
+
+### Validation rules
+
+| Field | Rule |
+|-------|------|
+| `collaboratore` | Must match an existing `collaborators.username`; unknown username → row error |
+| `data_competenza` | Must parse to a valid date in supported formats |
+| `importo_lordo` | Must be a positive number; zero or unparseable → row error |
+| `competenza` | Must be one of `corsi`, `produzione_materiale`, `sb`, `extra`, or empty |
+
+Rows failing validation are returned as `errors[]` with a reason string. They are **not imported** and their sheet status is **not changed** — they remain `TO_PROCESS` for correction and re-import.
+
+### Amount calculation (fixed withholding)
+
+```
+ritenuta_acconto = importo_lordo × 0.20   (20% fixed rate)
+importo_netto    = importo_lordo × 0.80
+```
+
+### UI entry point
+
+`/approvazioni/carica` → "Import da Google Sheet" card → `ImportSection.tsx` component.
+
+---
+
 ## Project Structure
 
 ```
