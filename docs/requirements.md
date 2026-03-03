@@ -414,7 +414,7 @@ Tutti i dati sono raccolti in stato React locale; la submit reale avviene solo a
 
 #### Ticket da sezione Compensi e Rimborsi
 - Disponibile solo via `TicketQuickModal` nella pagina `/compensi` (header in alto a destra).
-- Categorie ticket (Block 6 — aggiornate): `Generale, Compensi, Documenti, Accesso, Altro`.
+- **Riferimento ticket** (campo obbligatorio): `Compenso` o `Rimborso` — unici valori ammessi. I ticket non legati a questi due ambiti sono eliminati dal DB (migration 028).
 - Destinatario implicito: `responsabile_compensi` (workflow da rivedere in blocco dedicato).
 
 ### Finalizzazione sezione Collaboratore — Compensi e Rimborsi (Block 9)

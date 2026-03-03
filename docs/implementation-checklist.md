@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-03. Blocco 14 ✅ + fix minori. Prossimo: definire Blocco 15.
+> Aggiornato 2026-03-03. Blocco 14 ✅ + fix minori + ticket categories fix. Prossimo: definire Blocco 15.
 
 ---
 
@@ -24,6 +24,7 @@
 | 2026-03-02 | Blocco 13 — Notification System Overhaul | ✅ | tsc ✅, build ✅, vitest 202/202 ✅ (35 nuovi in notifications-block13.test.ts), e2e ⏸ (sospeso), smoke test OK | Migration 027: rimozione integrazioni event_keys, aggiunta documento_firmato:amministrazione, email ticket reply abilitata, 4 content event_keys. New builders: buildContentNotification (4 tipi), buildCompensationReopenNotification. Helper: getAllActiveCollaboratori (broadcast). Email E9–E12. NotificationBell: TYPE_BADGE 8 tipi + formatRelativeTime + message truncation. NotificationSettingsManager: rimozione integrazioni, sezione Contenuti. /notifiche: type filter chips (8 tipi) + "Solo non lette" in header. API entity_type filter. DashboardUpdates: colored badges per content type. 7 API routes aggiornate (comp reopen, ticket reply, doc sign, 4 content POST). |
 | 2026-03-02 | Blocco 14 — Rich Text Editor + Notification Alerts | ✅ | tsc ✅, build ✅, vitest 202/202 ✅, e2e 3/3 ✅ (block14.spec.ts), smoke test OK | No DB migration. Tiptap 3 (@tiptap/react @tiptap/pm @tiptap/starter-kit). New components: RichTextEditor (toolbar B/I/H2/H3/bullet/ordered, immediatelyRender:false), RichTextDisplay (dangerouslySetInnerHTML + toSafeHtml backward compat + Tailwind dark prose styles). 5 admin list components (textarea→RichTextEditor). 5 detail pages (whitespace-pre-wrap→RichTextDisplay). Email E10/E11/E12: optional contenuto/descrizione param + htmlSection() sanitizer. discounts route: add email dispatch. NotificationBell: prevUnreadRef detects increase → Web Audio ping (880→1174Hz, 0.5s) + bell-pulse animation. globals.css: @keyframes bell-pulse. |
 | 2026-03-03 | Fix + feature minori (post-B14) | ✅ | tsc ✅, build ✅ | Rimozione "Apri ticket" da Azioni rapide collaboratore (duplicato). Untracked da git: CLAUDE.md, playwright-report/, test-results/, supabase/.temp/ (aggiornato .gitignore). README: fix ha_figli_a_carico→sono_un_figlio_a_carico e contatore notifiche 15→19. Badge contatori non letti su DashboardUpdates tabs (Event/Comm/Opp+Disc) con mark-read server-side nelle detail pages. |
+| 2026-03-03 | Fix — Ticket categories (semplificazione) | ✅ | tsc ✅, build ✅, vitest 202/202 ✅ | Migration 028: DELETE ticket non-conformi, UPDATE 'Compensi'→'Compenso', ADD CONSTRAINT tickets_categoria_check. TICKET_CATEGORIES=['Compenso','Rimborso']. Label UI "Categoria"→"Riferimento" in TicketForm, TicketQuickModal, TicketList, email template. |
 
 ---
 
@@ -160,7 +161,7 @@ Unit test da aggiornare:
 | 6a — Migration 022 (descrizione nullable) | ✅ | `ALTER TABLE expense_reimbursements ALTER COLUMN descrizione DROP NOT NULL` |
 | 6b — ExpenseForm wizard 3-step | ✅ | Step 1 (dati), Step 2 (allegati), Step 3 (riepilogo+conferma). Submit unico in Step 3. |
 | 6c — EXPENSE_CATEGORIES aggiornate | ✅ | Trasporti, Vitto, Alloggio, Materiali, Cancelleria, Altro. API Zod aggiornato. |
-| 6d — TICKET_CATEGORIES aggiornate | ✅ | Generale, Compensi, Documenti, Accesso, Altro. TicketQuickModal e TicketForm auto-aggiornati. |
+| 6d — TICKET_CATEGORIES aggiornate | ✅ | ~~Generale, Compensi, Documenti, Accesso, Altro~~ → **Compenso, Rimborso** (semplificato 2026-03-03, migration 028). Label "Categoria"→"Riferimento". |
 
 ---
 
