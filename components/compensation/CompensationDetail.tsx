@@ -1,6 +1,12 @@
 import type { Compensation } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 
+type CollaboratorInfo = {
+  nome: string | null;
+  cognome: string | null;
+  username: string | null;
+};
+
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-3 py-2 border-b border-gray-800 last:border-0">
@@ -22,8 +28,12 @@ function formatCurrency(n: number | null) {
 
 export default function CompensationDetail({
   compensation,
+  competenzaLabel,
+  collaborator,
 }: {
-  compensation: Compensation & { communities?: { name: string } | null };
+  compensation: Compensation;
+  competenzaLabel?: string | null;
+  collaborator?: CollaboratorInfo | null;
 }) {
   const c = compensation;
 
@@ -31,21 +41,40 @@ export default function CompensationDetail({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-lg font-medium text-gray-100">{c.nome_servizio_ruolo}</p>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {c.communities?.name ?? '—'} · {c.periodo_riferimento ?? '—'}
-          </p>
+        <div className="min-w-0">
+          <p className="text-lg font-medium text-gray-100 break-words">{c.nome_servizio_ruolo ?? '—'}</p>
+          {competenzaLabel && (
+            <span className="mt-1 inline-block text-xs font-medium text-blue-300 bg-blue-900/40 border border-blue-700/40 rounded-full px-2.5 py-0.5">
+              {competenzaLabel}
+            </span>
+          )}
         </div>
-        <StatusBadge stato={c.stato} />
+        <div className="shrink-0">
+          <StatusBadge stato={c.stato} />
+        </div>
       </div>
+
+      {/* Collaborator info — visible to responsabile_compensi and amministrazione only */}
+      {collaborator && (
+        <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-3">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Collaboratore</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span className="text-sm text-gray-200">
+              {[collaborator.nome, collaborator.cognome].filter(Boolean).join(' ') || '—'}
+            </span>
+            {collaborator.username && (
+              <span className="text-sm text-gray-500">@{collaborator.username}</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* General fields */}
       <div className="rounded-xl bg-gray-900 border border-gray-800 px-4">
-        <Row label="Community" value={c.communities?.name} />
-        <Row label="Periodo" value={c.periodo_riferimento} />
         <Row label="Data competenza" value={formatDate(c.data_competenza)} />
+        {competenzaLabel && <Row label="Competenza" value={competenzaLabel} />}
         <Row label="Nome servizio / Ruolo" value={c.nome_servizio_ruolo} />
+        {c.info_specifiche && <Row label="Info specifiche" value={c.info_specifiche} />}
       </div>
 
       {/* Financial fields */}
@@ -73,7 +102,6 @@ export default function CompensationDetail({
           {c.payment_reference && <Row label="Riferimento" value={c.payment_reference} />}
         </div>
       )}
-
     </div>
   );
 }

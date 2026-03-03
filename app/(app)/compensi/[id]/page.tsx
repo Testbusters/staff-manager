@@ -29,19 +29,43 @@ export default async function CompensationDetailPage({
   // Fetch compensation (RLS ensures only authorized users can read it)
   const { data: compensation, error } = await supabase
     .from('compensations')
-    .select('*, communities(name)')
+    .select('*')
     .eq('id', id)
     .single();
 
   if (error || !compensation) notFound();
 
+  const role = profile.role as Role;
+
+  // Fetch compensation history
   const { data: history } = await supabase
     .from('compensation_history')
     .select('*')
     .eq('compensation_id', id)
     .order('created_at', { ascending: true });
 
-  const role = profile.role as Role;
+  // Fetch competenza label (if set)
+  let competenzaLabel: string | null = null;
+  if (compensation.competenza) {
+    const { data: competenzaRow } = await supabase
+      .from('compensation_competenze')
+      .select('label')
+      .eq('key', compensation.competenza)
+      .single();
+    competenzaLabel = competenzaRow?.label ?? null;
+  }
+
+  // Fetch collaborator info — only for responsabile_compensi and amministrazione
+  let collaborator: { nome: string | null; cognome: string | null; username: string | null } | null = null;
+  if (role === 'responsabile_compensi' || role === 'amministrazione') {
+    const { data: collabRow } = await supabase
+      .from('collaborators')
+      .select('nome, cognome, username')
+      .eq('id', compensation.collaborator_id)
+      .single();
+    collaborator = collabRow ?? null;
+  }
+
   const backHref = role === 'collaboratore' ? '/compensi' : role === 'responsabile_compensi' ? '/approvazioni' : '/coda';
 
   return (
@@ -57,6 +81,8 @@ export default async function CompensationDetailPage({
       <div className="space-y-6">
         <CompensationDetail
           compensation={compensation}
+          competenzaLabel={competenzaLabel}
+          collaborator={collaborator}
         />
 
         <ActionPanel

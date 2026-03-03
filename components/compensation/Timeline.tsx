@@ -1,4 +1,9 @@
 import type { HistoryEvent } from '@/lib/types';
+import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
+
+function labelStato(stato: string): string {
+  return (COMPENSATION_STATUS_LABELS as Record<string, string>)[stato] ?? stato;
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('it-IT', {
@@ -30,11 +35,11 @@ export default function Timeline({ events }: { events: HistoryEvent[] }) {
               {ev.stato_precedente && (
                 <>
                   <span className="text-xs text-gray-600">→</span>
-                  <span className="text-xs text-gray-400">{ev.stato_nuovo}</span>
+                  <span className="text-xs text-gray-400">{labelStato(ev.stato_nuovo)}</span>
                 </>
               )}
               {!ev.stato_precedente && (
-                <span className="text-xs text-gray-500">Creato come {ev.stato_nuovo}</span>
+                <span className="text-xs text-gray-500">Creato come {labelStato(ev.stato_nuovo)}</span>
               )}
               <span className="text-xs text-gray-600">{formatDate(ev.created_at)}</span>
             </div>
