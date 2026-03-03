@@ -102,7 +102,7 @@ app/
     admin/responsabili/[userId]/publish-permission/ → PATCH toggle can_publish_announcements for a responsabile
     admin/members/[id]/status/   → PATCH update member_status for a collaboratore
     admin/members/[id]/data-ingresso/ → PATCH update data_ingresso (admin only)
-    admin/contract-templates/    → GET list templates + POST upload/replace .docx per type (OCCASIONALE/COCOCO/PIVA)
+    admin/contract-templates/    → GET list templates + POST upload/replace .docx per type (OCCASIONALE only)
     admin/collaboratori/route.ts → GET search collaborators (q, community_id, active_only) scoped for responsabile
     admin/blocks/clear-flag/     → POST clear must_change_password flag for a user (admin only)
     admin/notification-settings/ → GET list all 19 settings + PATCH toggle inapp_enabled/email_enabled (admin only)
@@ -155,7 +155,7 @@ components/
     CreateUserForm.tsx            → Create user form with dual-mode toggle: "Invito rapido" (email + nome + cognome + tipo_contratto required) and "Invito completo" (full optional anagrafica pre-fill)
     CommunityManager.tsx          → Community CRUD (create/rename/toggle active) + responsabile→community assignment
     MemberStatusManager.tsx       → Collaborator list with member_status dropdown + data_ingresso inline edit
-    ContractTemplateManager.tsx   → Admin: upload/replace .docx templates per type (OCCASIONALE/COCOCO/PIVA) + placeholders reference (including 13 CoCoCo-specific vars)
+    ContractTemplateManager.tsx   → Admin: upload/replace .docx template for OCCASIONALE + placeholders reference
     NotificationSettingsManager.tsx → Admin: toggle grid for in-app + email per event×role (15 rows, optimistic updates)
   Sidebar.tsx                    → Role-based navigation sidebar (hosts NotificationBell); renders comingSoon items as non-clickable span with "Presto" badge
   NotificationBell.tsx           → Bell icon + unread badge + dropdown (30s polling, mark-read single on click, mark-all button, dismiss ×, TYPE_BADGE colored chips per entity type, relative time, message truncation, link to /notifiche)
@@ -293,7 +293,7 @@ e2e/
   impostazioni.spec.ts             → Playwright UAT: settings S1–S11 (community CRUD, member_status, responsabile assignment, 11 tests)
   profilo.spec.ts                  → Playwright UAT: extended profile S1–S11 (avatar, fiscal data, payment overview, 11 tests)
   dashboard.spec.ts                → Playwright UAT: collaboratore dashboard S1–S10 (cards, quick actions, feed, 10 tests)
-  contratti.spec.ts                → Playwright UAT: contract templates + onboarding + CoCoCo fields S1–S10 (upload, new province/civico DB fields, full COCOCO onboarding wizard, 10 tests)
+  contratti.spec.ts                → Playwright UAT: contract templates + onboarding S1–S10 (upload, new province/civico DB fields, OCCASIONALE onboarding wizard, 10 tests)
   onboarding.spec.ts               → Playwright UAT: onboarding flow S1–S10 (wizard, anagrafica, contract download, proxy redirect, 10 tests)
   collaboratori.spec.ts            → Playwright UAT: collaboratori section S1–S10 (list/filters, detail, inline actions, RBAC, 10 tests)
   dashboard-responsabile.spec.ts   → Playwright UAT: responsabile dashboard S1–S10 (CommCards, pending counters, alert, feed, RBAC, 10 tests)
@@ -306,7 +306,7 @@ e2e/
   remove-super-admin.spec.ts       → Playwright UAT: super_admin role removal S1–S4 (admin access, form options, login blocked, DB constraint, 4 tests)
   feedback.spec.ts                 → Playwright UAT: feedback tool S1–S5 (submit no screenshot, submit with screenshot, RBAC, admin list, login autofill, 5 tests)
   block14.spec.ts                  → Playwright UAT: rich text editor S1–S3 (H2 heading stored+rendered, editor loads HTML, RichTextDisplay collaboratore, 3 tests)
-  fixtures/                        → Real Testbusters .docx templates (COCOCO/OCCASIONALE/PIVA) used as stable e2e fixtures
+  fixtures/                        → Real Testbusters .docx template (OCCASIONALE) used as stable e2e fixture
 
 proxy.ts                         → Auth middleware (active check + password change redirect)
 vitest.config.ts                 → Vitest configuration

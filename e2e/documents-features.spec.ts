@@ -6,7 +6,7 @@
  *   S1  — Raggruppamento per macro-tipo + badge violet CONTRATTO
  *   S7  — Collaboratore carica CONTRATTO, stato_firma=NON_RICHIESTO (DB verify)
  *   S8  — Collaboratore tenta secondo CONTRATTO → errore 409
- *   S10 — Admin carica CONTRATTO_COCOCO con DA_FIRMARE (DB verify)
+ *   S10 — Admin carica CONTRATTO_OCCASIONALE con DA_FIRMARE (DB verify)
  *   S12 — Admin elimina contratto via UI → redirect + assenza DB
  *   S13 — File senza checkbox → pulsante Invia disabled
  *   S14 — File + checkbox → stato FIRMATO nel DB
@@ -77,7 +77,7 @@ let tempDir: string;
 let badgeDocId: string;       // CONTRATTO_OCCASIONALE seeded for S1
 let ricevutaDocId: string;    // RICEVUTA_PAGAMENTO seeded for S1
 let collabContractId: string; // CONTRATTO uploaded by collab in S7
-let adminContractId: string;  // CONTRATTO_COCOCO DA_FIRMARE created in S10, used in S12-S14
+let adminContractId: string;  // CONTRATTO_OCCASIONALE DA_FIRMARE created in S10, used in S12-S14
 
 // ── Suite ─────────────────────────────────────────────────────────────────────
 test.describe.serial('Documenti features UAT', () => {
@@ -204,7 +204,7 @@ test.describe.serial('Documenti features UAT', () => {
     await login(page, 'collaboratore');
     await page.goto('/documenti?tab=carica');
 
-    await page.locator('select').first().selectOption('CONTRATTO_COCOCO');
+    await page.locator('select').first().selectOption('CONTRATTO_OCCASIONALE');
     await page.fill('input[placeholder*="Contratto"]', 'Contratto Secondo UAT');
 
     const pdfPath = path.join(tempDir, 'contratto-secondo.pdf');
@@ -221,8 +221,8 @@ test.describe.serial('Documenti features UAT', () => {
     console.log('  ✅ S8 — Secondo CONTRATTO bloccato con messaggio errore visibile');
   });
 
-  // ── S10 — Admin carica CONTRATTO_COCOCO con DA_FIRMARE ────────────────────
-  test('S10 — Admin: carica CONTRATTO_COCOCO DA_FIRMARE, DB verifica stato', async ({ page }) => {
+  // ── S10 — Admin carica CONTRATTO_OCCASIONALE con DA_FIRMARE ─────────────
+  test('S10 — Admin: carica CONTRATTO_OCCASIONALE DA_FIRMARE, DB verifica stato', async ({ page }) => {
     // Remove all docs for this collaborator before admin upload (collab contract from S7 + seeded docs)
     const stray = await dbGet<{ id: string }>('documents',
       `collaborator_id=eq.${COLLABORATOR_ID}&select=id`);
@@ -234,8 +234,8 @@ test.describe.serial('Documenti features UAT', () => {
     // Select collaboratore (first select — admin form)
     await page.locator('select').first().selectOption(COLLABORATOR_ID);
 
-    // Select CONTRATTO_COCOCO (second select — tipo with optgroups)
-    await page.locator('select').nth(1).selectOption('CONTRATTO_COCOCO');
+    // Select CONTRATTO_OCCASIONALE (second select — tipo)
+    await page.locator('select').nth(1).selectOption('CONTRATTO_OCCASIONALE');
 
     // "Firma richiesta" toggle appears for admin + CONTRATTO
     await expect(page.locator('label:has-text("Firma richiesta")')).toBeVisible({ timeout: 5_000 });
@@ -243,10 +243,10 @@ test.describe.serial('Documenti features UAT', () => {
     // Select DA_FIRMARE
     await page.locator('input[type="radio"][value="DA_FIRMARE"]').check();
 
-    await page.fill('input[placeholder*="Contratto"]', 'Contratto Admin CoCoCo UAT');
+    await page.fill('input[placeholder*="Contratto"]', 'Contratto Admin Occasionale UAT');
 
     const pdfPath = path.join(tempDir, 'contratto-admin.pdf');
-    fs.writeFileSync(pdfPath, '%PDF-1.4 admin cococo contract UAT');
+    fs.writeFileSync(pdfPath, '%PDF-1.4 admin occasionale contract UAT');
     await page.locator('input[type="file"]').setInputFiles(pdfPath);
 
     await Promise.all([
@@ -262,13 +262,13 @@ test.describe.serial('Documenti features UAT', () => {
     // Verify DB: stato_firma = DA_FIRMARE
     const doc = await dbFirst<{ id: string; stato_firma: string }>(
       'documents',
-      `collaborator_id=eq.${COLLABORATOR_ID}&tipo=eq.CONTRATTO_COCOCO&select=id,stato_firma`,
+      `collaborator_id=eq.${COLLABORATOR_ID}&tipo=eq.CONTRATTO_OCCASIONALE&macro_type=eq.CONTRATTO&select=id,stato_firma`,
     );
     expect(doc).not.toBeNull();
     expect(doc!.stato_firma).toBe('DA_FIRMARE');
     adminContractId = doc!.id;
 
-    console.log(`  ✅ S10 — CONTRATTO_COCOCO ${adminContractId} caricato, stato_firma=DA_FIRMARE`);
+    console.log(`  ✅ S10 — CONTRATTO_OCCASIONALE ${adminContractId} caricato, stato_firma=DA_FIRMARE`);
   });
 
   // ── S13 — File selezionato, checkbox non spuntata → pulsante disabled ─────

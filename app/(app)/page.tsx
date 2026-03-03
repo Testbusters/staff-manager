@@ -780,7 +780,6 @@ export default async function DashboardPage() {
     };
     const contractLabels: Record<string, string> = {
       OCCASIONALE: 'Occasionale',
-      COCOCO: 'CoCoCo',
     };
     const statusCounts = new Map<string, number>();
     const contractCounts = new Map<string, number>();
