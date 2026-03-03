@@ -16,7 +16,7 @@ Internal portal for managing collaborators, compensation/reimbursement approvals
 | Role | Access |
 |------|--------|
 | `collaboratore` | Own profile, compensation requests, reimbursements, documents, support tickets |
-| `responsabile_compensi` | Approve compensations/reimbursements for assigned communities; own profile, documents, and support tickets |
+| `responsabile_compensi` | Approve compensations/reimbursements for assigned communities; own profile and support tickets |
 | `responsabile_cittadino` | *(in definition — access TBD)* |
 | `responsabile_servizi_individuali` | *(in definition — access TBD)* |
 | `amministrazione` | Full approval queue, payments, user management, exports, settings |
@@ -58,7 +58,7 @@ IN_ATTESA → APPROVATO → LIQUIDATO
 ```
 app/
   (app)/
-    page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, Azioni rapide, PaymentOverview, bar chart) + responsabile (CommCard per community, cosa devo fare, feed pending) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
+    page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, Azioni rapide, PaymentOverview, bar chart) + responsabile_compensi (4 KPI cards, two-column pending items with competenza/categoria badges, DashboardTicketSection inline reply, Azioni rapide) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
     layout.tsx                   → Protected layout (auth guard + Sidebar)
     profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | blue CTA "Nuovo rimborso" + DocumentUploadForm + DocumentList)
     impostazioni/page.tsx        → Settings: 5-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event)
@@ -74,7 +74,7 @@ app/
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
     coda/page.tsx                → Admin: pre-approved + approved queue (?tab=compensi|rimborsi)
     export/page.tsx              → Admin: export approved records as CSV/XLSX + bulk mark-paid (?tab=occasionali|piva|rimborsi)
-    documenti/page.tsx           → Admin: 3 tabs (list/upload/cu-batch). Responsabile: list + upload. Collaboratore: redirect → /profilo?tab=documenti
+    documenti/page.tsx           → Admin: 3 tabs (list/upload/cu-batch). Collaboratore: redirect → /profilo?tab=documenti. Responsabile: redirect → /
     eventi/page.tsx              → Collaboratore: events list (read-only, ordered by start_datetime ASC, upcoming/past sections)
     eventi/[id]/page.tsx         → Event detail: tipo, datetime, location + Maps link, Google Calendar link, descrizione, luma embed
     comunicazioni/page.tsx       → Collaboratore: 2 tabs — Comunicazioni (non-expired, pinned first) + Risorse (categoria filter chips)
