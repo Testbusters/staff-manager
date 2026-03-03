@@ -32,7 +32,7 @@ export default function CompensationDetail({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-lg font-medium text-gray-100">{c.descrizione}</p>
+          <p className="text-lg font-medium text-gray-100">{c.nome_servizio_ruolo}</p>
           <p className="text-sm text-gray-500 mt-0.5">
             {c.communities?.name ?? '—'} · {c.periodo_riferimento ?? '—'}
           </p>
@@ -45,7 +45,7 @@ export default function CompensationDetail({
         <Row label="Community" value={c.communities?.name} />
         <Row label="Periodo" value={c.periodo_riferimento} />
         <Row label="Data competenza" value={formatDate(c.data_competenza)} />
-        <Row label="Descrizione" value={c.descrizione} />
+        <Row label="Nome servizio / Ruolo" value={c.nome_servizio_ruolo} />
       </div>
 
       {/* Financial fields */}

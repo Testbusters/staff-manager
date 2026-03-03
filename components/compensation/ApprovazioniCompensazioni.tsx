@@ -284,7 +284,7 @@ export default function ApprovazioniCompensazioni({
                         ? `${c.collaborators.nome} ${c.collaborators.cognome}`
                         : '—'}
                     </p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{c.descrizione ?? '—'}</p>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{c.nome_servizio_ruolo ?? '—'}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
                       {c.communities && (
                         <span className="flex items-center gap-1">

@@ -22,8 +22,7 @@ type FormData = {
   community_id: string;
   periodo_riferimento: string;
   data_competenza: string;
-  descrizione: string;
-  corso_appartenenza: string;
+  nome_servizio_ruolo: string;
   importo_lordo: string;
 };
 
@@ -78,8 +77,7 @@ export default function CompensationCreateWizard({
     community_id: '',
     periodo_riferimento: '',
     data_competenza: '',
-    descrizione: '',
-    corso_appartenenza: '',
+    nome_servizio_ruolo: '',
     importo_lordo: '',
   });
   const [step2Error, setStep2Error] = useState('');
@@ -157,8 +155,7 @@ export default function CompensationCreateWizard({
     if (formData.community_id) payload.community_id = formData.community_id;
     if (formData.periodo_riferimento.trim()) payload.periodo_riferimento = formData.periodo_riferimento.trim();
     if (formData.data_competenza) payload.data_competenza = formData.data_competenza;
-    if (formData.descrizione.trim()) payload.descrizione = formData.descrizione.trim();
-    if (formData.corso_appartenenza.trim()) payload.corso_appartenenza = formData.corso_appartenenza.trim();
+    if (formData.nome_servizio_ruolo.trim()) payload.nome_servizio_ruolo = formData.nome_servizio_ruolo.trim();
 
     try {
       const res = await fetch('/api/compensations', {
@@ -351,12 +348,12 @@ export default function CompensationCreateWizard({
 
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
-              Descrizione <span className="text-gray-600">(opzionale)</span>
+              Nome servizio / Ruolo <span className="text-gray-600">(opzionale)</span>
             </label>
             <input
               type="text"
-              value={formData.descrizione}
-              onChange={(e) => setFormData((prev) => ({ ...prev, descrizione: e.target.value }))}
+              value={formData.nome_servizio_ruolo}
+              onChange={(e) => setFormData((prev) => ({ ...prev, nome_servizio_ruolo: e.target.value }))}
               className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
               placeholder="Es. Compenso lezioni marzo"
             />
@@ -384,19 +381,6 @@ export default function CompensationCreateWizard({
               value={formData.data_competenza}
               onChange={(e) => setFormData((prev) => ({ ...prev, data_competenza: e.target.value }))}
               className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Corso di appartenenza <span className="text-gray-600">(opzionale)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.corso_appartenenza}
-              onChange={(e) => setFormData((prev) => ({ ...prev, corso_appartenenza: e.target.value }))}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-              placeholder="Es. Corso Python avanzato"
             />
           </div>
 
@@ -465,8 +449,7 @@ export default function CompensationCreateWizard({
     if (communityName) rows.push({ label: 'Community', value: communityName });
     if (formData.periodo_riferimento.trim()) rows.push({ label: 'Periodo', value: formData.periodo_riferimento.trim() });
     if (formData.data_competenza) rows.push({ label: 'Data competenza', value: new Date(formData.data_competenza).toLocaleDateString('it-IT') });
-    if (formData.corso_appartenenza.trim()) rows.push({ label: 'Corso', value: formData.corso_appartenenza.trim() });
-    if (formData.descrizione.trim()) rows.push({ label: 'Descrizione', value: formData.descrizione.trim() });
+    if (formData.nome_servizio_ruolo.trim()) rows.push({ label: 'Nome servizio / Ruolo', value: formData.nome_servizio_ruolo.trim() });
     rows.push(
       { label: 'Importo lordo', value: formatCurrency(lordo) },
       { label: 'Ritenuta (20%)', value: `-${formatCurrency(ritenuta)}` },
