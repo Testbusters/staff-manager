@@ -30,7 +30,7 @@ export async function PATCH(
   const body = await request.json();
   const {
     titolo, descrizione, codice_sconto, link,
-    valid_from, valid_to, community_id, fornitore, logo_url, file_url,
+    valid_from, valid_to, community_ids, fornitore, logo_url, file_url,
   } = body as {
     titolo?: string;
     descrizione?: string | null;
@@ -38,7 +38,7 @@ export async function PATCH(
     link?: string | null;
     valid_from?: string | null;
     valid_to?: string | null;
-    community_id?: string | null;
+    community_ids?: string[];
     fornitore?: string;
     logo_url?: string | null;
     file_url?: string | null;
@@ -51,7 +51,7 @@ export async function PATCH(
   if (link !== undefined) update.link = link;
   if (valid_from !== undefined) update.valid_from = valid_from;
   if (valid_to !== undefined) update.valid_to = valid_to;
-  if (community_id !== undefined) update.community_id = community_id;
+  if (community_ids !== undefined) update.community_ids = community_ids;
   if (fornitore !== undefined) update.fornitore = fornitore.trim();
   if (logo_url !== undefined) update.logo_url = logo_url;
   if (file_url !== undefined) update.file_url = file_url;

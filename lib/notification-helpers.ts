@@ -151,6 +151,59 @@ export async function getResponsabiliForCollaborator(
   }));
 }
 
+// Returns active collaboratori filtered by community membership.
+// communityIds = [] means "all communities" → returns all active collaboratori.
+export async function getCollaboratoriForCommunities(
+  communityIds: string[],
+  svc: Svc,
+): Promise<PersonInfo[]> {
+  if (communityIds.length === 0) return getAllActiveCollaboratori(svc);
+
+  const { data: cc } = await svc
+    .from('collaborator_communities')
+    .select('collaborator_id')
+    .in('community_id', communityIds);
+
+  if (!cc || cc.length === 0) return [];
+
+  const collabIds = [...new Set(cc.map((r: { collaborator_id: string }) => r.collaborator_id))];
+
+  const { data: collabs } = await svc
+    .from('collaborators')
+    .select('user_id, nome, cognome')
+    .in('id', collabIds);
+
+  if (!collabs || collabs.length === 0) return [];
+
+  const userIds = collabs.map((c: { user_id: string }) => c.user_id);
+
+  const { data: profiles } = await svc
+    .from('user_profiles')
+    .select('user_id')
+    .eq('role', 'collaboratore')
+    .eq('is_active', true)
+    .in('user_id', userIds);
+
+  const activeIds = (profiles ?? []).map((p: { user_id: string }) => p.user_id);
+  if (activeIds.length === 0) return [];
+
+  const { data: authData } = await svc.auth.admin.listUsers();
+
+  const collabMap = Object.fromEntries(
+    (collabs as { user_id: string; nome: string; cognome: string }[]).map((c) => [c.user_id, c]),
+  );
+  const emailMap = Object.fromEntries(
+    (authData?.users ?? []).map((u) => [u.id, u.email ?? '']),
+  );
+
+  return activeIds.map((uid: string) => ({
+    user_id: uid,
+    email: emailMap[uid] ?? '',
+    nome: collabMap[uid]?.nome ?? '',
+    cognome: collabMap[uid]?.cognome ?? '',
+  }));
+}
+
 // Returns all active collaboratori with their email (for broadcast content notifications).
 export async function getAllActiveCollaboratori(svc: Svc): Promise<PersonInfo[]> {
   const { data: profiles } = await svc

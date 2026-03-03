@@ -36,7 +36,7 @@ export async function PATCH(
   if (body.link !== undefined) update.link = body.link?.trim() || null;
   if (body.file_url !== undefined) update.file_url = body.file_url?.trim() || null;
   if (body.tag !== undefined) update.tag = body.tag?.length ? body.tag : null;
-  if (body.community_id !== undefined) update.community_id = body.community_id;
+  if (body.community_ids !== undefined) update.community_ids = body.community_ids;
   if (body.categoria !== undefined) update.categoria = body.categoria;
 
   const serviceClient = createServiceClient(

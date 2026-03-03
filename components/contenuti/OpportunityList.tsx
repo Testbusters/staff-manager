@@ -34,7 +34,7 @@ interface FormData {
   scadenza_candidatura: string;
   link_candidatura: string;
   file_url: string;
-  community_id: string;
+  community_ids: string[];
 }
 
 function OpportunityForm({
@@ -56,7 +56,7 @@ function OpportunityForm({
     scadenza_candidatura: initial?.scadenza_candidatura ?? '',
     link_candidatura: initial?.link_candidatura ?? '',
     file_url: initial?.file_url ?? '',
-    community_id: initial?.community_id ?? '',
+    community_ids: initial?.community_ids ?? [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,13 +103,24 @@ function OpportunityForm({
         <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
       </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-400">Community:</label>
-        <select value={form.community_id} onChange={set('community_id')}
-          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-          <option value="">Tutte</option>
-          {communities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+      <div className="space-y-1">
+        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <div className="flex flex-wrap gap-3">
+          {communities.map((c) => (
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+              <input type="checkbox"
+                checked={form.community_ids.includes(c.id)}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  community_ids: e.target.checked
+                    ? [...f.community_ids, c.id]
+                    : f.community_ids.filter((id) => id !== c.id),
+                }))}
+                className="rounded border-gray-600 bg-gray-800" />
+              {c.name}
+            </label>
+          ))}
+        </div>
       </div>
       <div className="flex gap-2 pt-1">
         <button type="submit" disabled={loading}
@@ -142,7 +153,7 @@ export default function OpportunityList({
     const res = await fetch('/api/opportunities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, community_id: data.community_id || null }),
+      body: JSON.stringify({ ...data, community_ids: data.community_ids }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
     setShowForm(false);
@@ -153,7 +164,7 @@ export default function OpportunityList({
     const res = await fetch(`/api/opportunities/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, community_id: data.community_id || null }),
+      body: JSON.stringify({ ...data, community_ids: data.community_ids }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
     setEditingId(null);
@@ -188,7 +199,7 @@ export default function OpportunityList({
                 titolo: o.titolo, tipo: o.tipo, descrizione: o.descrizione,
                 requisiti: o.requisiti ?? '', scadenza_candidatura: o.scadenza_candidatura ?? '',
                 link_candidatura: o.link_candidatura ?? '', file_url: o.file_url ?? '',
-                community_id: o.community_id ?? '',
+                community_ids: o.community_ids ?? [],
               }}
               communities={communities}
               onSave={(data) => handleEdit(o.id, data)}

@@ -36,13 +36,13 @@ export async function POST(request: Request) {
   if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json();
-  const { titolo, descrizione, link, file_url, tag, community_id, categoria } = body as {
+  const { titolo, descrizione, link, file_url, tag, community_ids, categoria } = body as {
     titolo: string;
     descrizione?: string;
     link?: string;
     file_url?: string;
     tag?: string[];
-    community_id?: string | null;
+    community_ids?: string[];
     categoria?: string;
   };
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       link: link?.trim() || null,
       file_url: file_url?.trim() || null,
       tag: tag?.length ? tag : null,
-      community_id: community_id ?? null,
+      community_ids: community_ids ?? [],
       categoria: categoria ?? 'ALTRO',
     })
     .select()

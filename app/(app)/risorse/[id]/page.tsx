@@ -40,6 +40,20 @@ export default async function ResourceDetailPage({
 
   if (!res) notFound();
 
+  // Community access check for collaboratori
+  if (profile.role === 'collaboratore' && res.community_ids?.length > 0) {
+    const { data: collabRow } = await supabase
+      .from('collaborators').select('id').eq('user_id', user.id).maybeSingle();
+    if (collabRow?.id) {
+      const { data: cc } = await supabase
+        .from('collaborator_communities').select('community_id').eq('collaborator_id', collabRow.id);
+      const userCommunityIds = (cc ?? []).map((r2: { community_id: string }) => r2.community_id);
+      if (!res.community_ids.some((cid: string) => userCommunityIds.includes(cid))) notFound();
+    } else {
+      notFound();
+    }
+  }
+
   const r = res as Resource;
 
   return (

@@ -32,7 +32,7 @@ export async function PATCH(
   const body = await request.json();
   const {
     titolo, tipo, descrizione, requisiti,
-    scadenza_candidatura, link_candidatura, file_url, community_id,
+    scadenza_candidatura, link_candidatura, file_url, community_ids,
   } = body as {
     titolo?: string;
     tipo?: string;
@@ -41,7 +41,7 @@ export async function PATCH(
     scadenza_candidatura?: string | null;
     link_candidatura?: string | null;
     file_url?: string | null;
-    community_id?: string | null;
+    community_ids?: string[];
   };
 
   if (tipo && !VALID_TIPO.includes(tipo)) {
@@ -56,7 +56,7 @@ export async function PATCH(
   if (scadenza_candidatura !== undefined) update.scadenza_candidatura = scadenza_candidatura;
   if (link_candidatura !== undefined) update.link_candidatura = link_candidatura;
   if (file_url !== undefined) update.file_url = file_url;
-  if (community_id !== undefined) update.community_id = community_id;
+  if (community_ids !== undefined) update.community_ids = community_ids;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

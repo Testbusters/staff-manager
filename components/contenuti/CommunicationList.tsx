@@ -14,7 +14,7 @@ interface FormData {
   titolo: string;
   contenuto: string;
   pinned: boolean;
-  community_id: string;
+  community_ids: string[];
   expires_at: string;
   file_urls: string; // newline-separated
 }
@@ -34,7 +34,7 @@ function CommunicationForm({
     titolo: initial?.titolo ?? '',
     contenuto: initial?.contenuto ?? '',
     pinned: initial?.pinned ?? false,
-    community_id: initial?.community_id ?? '',
+    community_ids: initial?.community_ids ?? [],
     expires_at: initial?.expires_at ?? '',
     file_urls: initial?.file_urls ?? '',
   });
@@ -75,12 +75,23 @@ function CommunicationForm({
             className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Community</label>
-          <select value={form.community_id} onChange={set('community_id')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-2 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-            <option value="">Tutte</option>
-            {communities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+          <div className="flex flex-wrap gap-3">
+            {communities.map((c) => (
+              <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+                <input type="checkbox"
+                  checked={form.community_ids.includes(c.id)}
+                  onChange={(e) => setForm((f) => ({
+                    ...f,
+                    community_ids: e.target.checked
+                      ? [...f.community_ids, c.id]
+                      : f.community_ids.filter((id) => id !== c.id),
+                  }))}
+                  className="rounded border-gray-600 bg-gray-800" />
+                {c.name}
+              </label>
+            ))}
+          </div>
         </div>
       </div>
       <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
@@ -128,7 +139,7 @@ export default function CommunicationList({
         titolo: data.titolo,
         contenuto: data.contenuto,
         pinned: data.pinned,
-        community_id: data.community_id || null,
+        community_ids: data.community_ids,
         expires_at: data.expires_at || null,
         file_urls: parseFileUrls(data.file_urls),
       }),
@@ -146,7 +157,7 @@ export default function CommunicationList({
         titolo: data.titolo,
         contenuto: data.contenuto,
         pinned: data.pinned,
-        community_id: data.community_id || null,
+        community_ids: data.community_ids,
         expires_at: data.expires_at || null,
         file_urls: parseFileUrls(data.file_urls),
       }),
@@ -184,7 +195,7 @@ export default function CommunicationList({
             <CommunicationForm
               initial={{
                 titolo: c.titolo, contenuto: c.contenuto, pinned: c.pinned,
-                community_id: c.community_id ?? '', expires_at: c.expires_at ?? '',
+                community_ids: c.community_ids ?? [], expires_at: c.expires_at ?? '',
                 file_urls: (c.file_urls ?? []).join('\n'),
               }}
               communities={communities}

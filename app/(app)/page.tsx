@@ -1017,6 +1017,12 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .single();
 
+  // Fetch user's community IDs for content filtering
+  const { data: collabComms } = collaborator?.id
+    ? await supabase.from('collaborator_communities').select('community_id').eq('collaborator_id', collaborator.id)
+    : { data: null };
+  const userCommunityIds: string[] = (collabComms ?? []).map((r: { community_id: string }) => r.community_id);
+
   // Parallel main fetches
   const docsQuery = collaborator
     ? supabase.from('documents')
@@ -1045,26 +1051,26 @@ export default async function DashboardPage() {
     docsQuery,
     supabase.from('tickets').select('id, oggetto, stato').eq('creator_user_id', user.id),
     supabase.from('events')
-      .select('id, titolo, start_datetime, tipo')
+      .select('id, titolo, start_datetime, tipo, community_ids')
       .order('start_datetime', { ascending: true, nullsFirst: false })
-      .limit(4),
+      .limit(20),
     supabase.from('communications')
-      .select('id, titolo, published_at')
+      .select('id, titolo, published_at, community_ids')
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order('published_at', { ascending: false })
-      .limit(2),
+      .limit(20),
     supabase.from('resources')
-      .select('id, titolo, created_at, categoria')
+      .select('id, titolo, created_at, categoria, community_ids')
       .order('created_at', { ascending: false })
-      .limit(2),
+      .limit(20),
     supabase.from('opportunities')
-      .select('id, titolo, created_at, tipo')
+      .select('id, titolo, created_at, tipo, community_ids')
       .order('created_at', { ascending: false })
-      .limit(2),
+      .limit(20),
     supabase.from('discounts')
-      .select('id, titolo, valid_to, fornitore, created_at')
+      .select('id, titolo, valid_to, fornitore, created_at, community_ids')
       .order('created_at', { ascending: false })
-      .limit(2),
+      .limit(20),
     supabase.from('notifications')
       .select('entity_type')
       .eq('read', false)
@@ -1158,38 +1164,52 @@ export default async function DashboardPage() {
   }
 
   // Dashboard updates — events, comunicazioni, opportunita
-  const dashboardEvents: DashboardEventItem[] = ((dashEvents ?? []) as {
-    id: string; titolo: string; start_datetime: string | null; tipo: string | null;
-  }[]).map((e) => ({
-    id: e.id,
-    titolo: e.titolo,
-    start_datetime: e.start_datetime,
-    tipo: e.tipo as DashboardEventItem['tipo'],
-  }));
+  type EventRaw = { id: string; titolo: string; start_datetime: string | null; tipo: string | null; community_ids: string[] };
+  type CommRaw  = { id: string; titolo: string; published_at: string; community_ids: string[] };
+  type ResRaw   = { id: string; titolo: string; created_at: string; categoria: string; community_ids: string[] };
+  type OppRaw   = { id: string; titolo: string; created_at: string; tipo: string; community_ids: string[] };
+  type DiscRaw  = { id: string; titolo: string; valid_to: string | null; fornitore: string; created_at: string; community_ids: string[] };
 
-  type CommRaw = { id: string; titolo: string; published_at: string };
-  type ResRaw  = { id: string; titolo: string; created_at: string; categoria: string };
-  type OppRaw  = { id: string; titolo: string; created_at: string; tipo: string };
-  type DiscRaw = { id: string; titolo: string; valid_to: string | null; fornitore: string; created_at: string };
+  function contentVisible(communityIds: string[]): boolean {
+    return communityIds.length === 0 || communityIds.some((id) => userCommunityIds.includes(id));
+  }
+
+  const dashboardEvents: DashboardEventItem[] = ((dashEvents ?? []) as EventRaw[])
+    .filter((e) => contentVisible(e.community_ids))
+    .slice(0, 4)
+    .map((e) => ({
+      id: e.id,
+      titolo: e.titolo,
+      start_datetime: e.start_datetime,
+      tipo: e.tipo as DashboardEventItem['tipo'],
+    }));
 
   const commItems: DashboardCommItem[] = [
-    ...((dashComms ?? []) as CommRaw[]).map((c) => ({
-      id: c.id, titolo: c.titolo, date: c.published_at, kind: 'comm' as const,
-    })),
-    ...((dashResources ?? []) as ResRaw[]).map((r) => ({
-      id: r.id, titolo: r.titolo, date: r.created_at,
-      categoria: r.categoria as DashboardCommItem['categoria'],
-      kind: 'resource' as const,
-    })),
+    ...((dashComms ?? []) as CommRaw[])
+      .filter((c) => contentVisible(c.community_ids))
+      .map((c) => ({
+        id: c.id, titolo: c.titolo, date: c.published_at, kind: 'comm' as const,
+      })),
+    ...((dashResources ?? []) as ResRaw[])
+      .filter((r) => contentVisible(r.community_ids))
+      .map((r) => ({
+        id: r.id, titolo: r.titolo, date: r.created_at,
+        categoria: r.categoria as DashboardCommItem['categoria'],
+        kind: 'resource' as const,
+      })),
   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
 
   const oppItems: DashboardOppItem[] = [
-    ...((dashOpps ?? []) as OppRaw[]).map((o) => ({
-      id: o.id, titolo: o.titolo, date: o.created_at, tipo: o.tipo, kind: 'opp' as const,
-    })),
-    ...((dashDiscounts ?? []) as DiscRaw[]).map((d) => ({
-      id: d.id, titolo: d.titolo, date: d.created_at, kind: 'discount' as const,
-    })),
+    ...((dashOpps ?? []) as OppRaw[])
+      .filter((o) => contentVisible(o.community_ids))
+      .map((o) => ({
+        id: o.id, titolo: o.titolo, date: o.created_at, tipo: o.tipo, kind: 'opp' as const,
+      })),
+    ...((dashDiscounts ?? []) as DiscRaw[])
+      .filter((d) => contentVisible(d.community_ids))
+      .map((d) => ({
+        id: d.id, titolo: d.titolo, date: d.created_at, kind: 'discount' as const,
+      })),
   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
 
   // Unread content notification counts — grouped by tab

@@ -38,7 +38,7 @@ interface FormData {
   location: string;
   luma_url: string;
   luma_embed_url: string;
-  community_id: string;
+  community_ids: string[];
   tipo: string;
   file_url: string;
 }
@@ -62,7 +62,7 @@ function EventForm({
     location: initial?.location ?? '',
     luma_url: initial?.luma_url ?? '',
     luma_embed_url: initial?.luma_embed_url ?? '',
-    community_id: initial?.community_id ?? '',
+    community_ids: initial?.community_ids ?? [],
     tipo: initial?.tipo ?? '',
     file_url: initial?.file_url ?? '',
   });
@@ -119,13 +119,24 @@ function EventForm({
         <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none self-end" />
       </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-400">Community:</label>
-        <select value={form.community_id} onChange={set('community_id')}
-          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-          <option value="">Tutte</option>
-          {communities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+      <div className="space-y-1">
+        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <div className="flex flex-wrap gap-3">
+          {communities.map((c) => (
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+              <input type="checkbox"
+                checked={form.community_ids.includes(c.id)}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  community_ids: e.target.checked
+                    ? [...f.community_ids, c.id]
+                    : f.community_ids.filter((id) => id !== c.id),
+                }))}
+                className="rounded border-gray-600 bg-gray-800" />
+              {c.name}
+            </label>
+          ))}
+        </div>
       </div>
       <div className="flex gap-2 pt-1">
         <button type="submit" disabled={loading}
@@ -166,7 +177,7 @@ export default function EventList({
         location: data.location || null,
         luma_url: data.luma_url || null,
         luma_embed_url: data.luma_embed_url || null,
-        community_id: data.community_id || null,
+        community_ids: data.community_ids,
         tipo: data.tipo || null,
         file_url: data.file_url || null,
       }),
@@ -188,7 +199,7 @@ export default function EventList({
         location: data.location || null,
         luma_url: data.luma_url || null,
         luma_embed_url: data.luma_embed_url || null,
-        community_id: data.community_id || null,
+        community_ids: data.community_ids,
         tipo: data.tipo || null,
         file_url: data.file_url || null,
       }),
@@ -230,7 +241,7 @@ export default function EventList({
                 location: ev.location ?? '',
                 luma_url: ev.luma_url ?? '',
                 luma_embed_url: ev.luma_embed_url ?? '',
-                community_id: ev.community_id ?? '',
+                community_ids: ev.community_ids ?? [],
                 tipo: ev.tipo ?? '',
                 file_url: ev.file_url ?? '',
               }}

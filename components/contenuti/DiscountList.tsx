@@ -28,7 +28,7 @@ interface FormData {
   link: string;
   valid_from: string;
   valid_to: string;
-  community_id: string;
+  community_ids: string[];
   fornitore: string;
   logo_url: string;
   file_url: string;
@@ -52,7 +52,7 @@ function DiscountForm({
     link: initial?.link ?? '',
     valid_from: initial?.valid_from ?? '',
     valid_to: initial?.valid_to ?? '',
-    community_id: initial?.community_id ?? '',
+    community_ids: initial?.community_ids ?? [],
     fornitore: initial?.fornitore ?? '',
     logo_url: initial?.logo_url ?? '',
     file_url: initial?.file_url ?? '',
@@ -102,13 +102,24 @@ function DiscountForm({
             className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-400">Community:</label>
-        <select value={form.community_id} onChange={set('community_id')}
-          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-          <option value="">Tutte</option>
-          {communities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+      <div className="space-y-1">
+        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <div className="flex flex-wrap gap-3">
+          {communities.map((c) => (
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+              <input type="checkbox"
+                checked={form.community_ids.includes(c.id)}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  community_ids: e.target.checked
+                    ? [...f.community_ids, c.id]
+                    : f.community_ids.filter((id) => id !== c.id),
+                }))}
+                className="rounded border-gray-600 bg-gray-800" />
+              {c.name}
+            </label>
+          ))}
+        </div>
       </div>
       <div className="flex gap-2 pt-1">
         <button type="submit" disabled={loading}
@@ -141,7 +152,7 @@ export default function DiscountList({
     const res = await fetch('/api/discounts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, community_id: data.community_id || null }),
+      body: JSON.stringify({ ...data, community_ids: data.community_ids }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
     setShowForm(false);
@@ -152,7 +163,7 @@ export default function DiscountList({
     const res = await fetch(`/api/discounts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, community_id: data.community_id || null }),
+      body: JSON.stringify({ ...data, community_ids: data.community_ids }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
     setEditingId(null);
@@ -186,7 +197,7 @@ export default function DiscountList({
               initial={{
                 titolo: d.titolo, descrizione: d.descrizione ?? '', codice_sconto: d.codice_sconto ?? '',
                 link: d.link ?? '', valid_from: d.valid_from ?? '', valid_to: d.valid_to ?? '',
-                community_id: d.community_id ?? '', fornitore: d.fornitore ?? '',
+                community_ids: d.community_ids ?? [], fornitore: d.fornitore ?? '',
                 logo_url: d.logo_url ?? '', file_url: d.file_url ?? '',
               }}
               communities={communities}

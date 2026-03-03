@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { getNotificationSettings, getAllActiveCollaboratori } from '@/lib/notification-helpers';
+import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { emailNuovoEvento } from '@/lib/email-templates';
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const {
     titolo, descrizione, start_datetime, end_datetime,
-    location, luma_url, luma_embed_url, community_id, tipo, file_url,
+    location, luma_url, luma_embed_url, community_ids, tipo, file_url,
   } = body as {
     titolo: string;
     descrizione?: string;
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     location?: string;
     luma_url?: string;
     luma_embed_url?: string;
-    community_id?: string | null;
+    community_ids?: string[];
     tipo?: string;
     file_url?: string;
   };
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       location: location?.trim() || null,
       luma_url: luma_url?.trim() || null,
       luma_embed_url: luma_embed_url?.trim() || null,
-      community_id: community_id ?? null,
+      community_ids: community_ids ?? [],
       tipo: tipo?.trim() || null,
       file_url: file_url?.trim() || null,
     })
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   try {
     const [settings, collaboratori] = await Promise.all([
       getNotificationSettings(serviceClient),
-      getAllActiveCollaboratori(serviceClient),
+      getCollaboratoriForCommunities(community_ids ?? [], serviceClient),
     ]);
     const setting = settings.get('evento_pubblicato:collaboratore');
     if ((!setting || setting.inapp_enabled) && collaboratori.length > 0) {

@@ -38,7 +38,7 @@ export async function PATCH(
   if (body.location !== undefined) update.location = body.location?.trim() || null;
   if (body.luma_url !== undefined) update.luma_url = body.luma_url?.trim() || null;
   if (body.luma_embed_url !== undefined) update.luma_embed_url = body.luma_embed_url?.trim() || null;
-  if (body.community_id !== undefined) update.community_id = body.community_id;
+  if (body.community_ids !== undefined) update.community_ids = body.community_ids;
   if (body.tipo !== undefined) update.tipo = body.tipo?.trim() || null;
   if (body.file_url !== undefined) update.file_url = body.file_url?.trim() || null;
 

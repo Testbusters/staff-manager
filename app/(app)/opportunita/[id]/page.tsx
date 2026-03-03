@@ -52,6 +52,20 @@ export default async function OpportunityDetailPage({
 
   if (!opp) notFound();
 
+  // Community access check for collaboratori
+  if (profile.role === 'collaboratore' && opp.community_ids?.length > 0) {
+    const { data: collabRow } = await supabase
+      .from('collaborators').select('id').eq('user_id', user.id).maybeSingle();
+    if (collabRow?.id) {
+      const { data: cc } = await supabase
+        .from('collaborator_communities').select('community_id').eq('collaborator_id', collabRow.id);
+      const userCommunityIds = (cc ?? []).map((r: { community_id: string }) => r.community_id);
+      if (!opp.community_ids.some((cid: string) => userCommunityIds.includes(cid))) notFound();
+    } else {
+      notFound();
+    }
+  }
+
   // Mark associated unread notification as read
   await supabase.from('notifications').update({ read: true })
     .eq('user_id', user.id).eq('entity_type', 'opportunity').eq('entity_id', id).eq('read', false);

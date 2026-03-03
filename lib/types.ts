@@ -150,7 +150,7 @@ export type OpportunityTipo = 'LAVORO' | 'FORMAZIONE' | 'STAGE' | 'PROGETTO' | '
 
 export interface Communication {
   id: string;
-  community_id: string | null;
+  community_ids: string[];
   titolo: string;
   contenuto: string;
   pinned: boolean;
@@ -162,7 +162,7 @@ export interface Communication {
 
 export interface Discount {
   id: string;
-  community_id: string | null;
+  community_ids: string[];
   titolo: string;
   descrizione: string | null;
   codice_sconto: string | null;
@@ -177,7 +177,7 @@ export interface Discount {
 
 export interface Resource {
   id: string;
-  community_id: string | null;
+  community_ids: string[];
   titolo: string;
   descrizione: string | null;
   link: string | null;
@@ -189,7 +189,7 @@ export interface Resource {
 
 export interface ContentEvent {
   id: string;
-  community_id: string | null;
+  community_ids: string[];
   titolo: string;
   descrizione: string | null;
   start_datetime: string | null;
@@ -204,7 +204,7 @@ export interface ContentEvent {
 
 export interface Opportunity {
   id: string;
-  community_id: string | null;
+  community_ids: string[];
   titolo: string;
   tipo: OpportunityTipo;
   descrizione: string;

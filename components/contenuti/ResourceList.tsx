@@ -20,7 +20,7 @@ interface FormData {
   link: string;
   file_url: string;
   tag: string;  // comma-separated
-  community_id: string;
+  community_ids: string[];
   categoria: string;
 }
 
@@ -41,7 +41,7 @@ function ResourceForm({
     link: initial?.link ?? '',
     file_url: initial?.file_url ?? '',
     tag: initial?.tag ?? '',
-    community_id: initial?.community_id ?? '',
+    community_ids: initial?.community_ids ?? [],
     categoria: initial?.categoria ?? 'ALTRO',
   });
   const [loading, setLoading] = useState(false);
@@ -80,13 +80,24 @@ function ResourceForm({
       </div>
       <input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)"
         className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-400">Community:</label>
-        <select value={form.community_id} onChange={set('community_id')}
-          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-          <option value="">Tutte</option>
-          {communities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+      <div className="space-y-1">
+        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <div className="flex flex-wrap gap-3">
+          {communities.map((c) => (
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+              <input type="checkbox"
+                checked={form.community_ids.includes(c.id)}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  community_ids: e.target.checked
+                    ? [...f.community_ids, c.id]
+                    : f.community_ids.filter((id) => id !== c.id),
+                }))}
+                className="rounded border-gray-600 bg-gray-800" />
+              {c.name}
+            </label>
+          ))}
+        </div>
       </div>
       <div className="flex gap-2 pt-1">
         <button type="submit" disabled={loading}
@@ -129,7 +140,7 @@ export default function ResourceList({
         link: data.link || undefined,
         file_url: data.file_url || undefined,
         tag: parseTags(data.tag),
-        community_id: data.community_id || null,
+        community_ids: data.community_ids,
         categoria: data.categoria || 'ALTRO',
       }),
     });
@@ -148,7 +159,7 @@ export default function ResourceList({
         link: data.link || null,
         file_url: data.file_url || null,
         tag: parseTags(data.tag),
-        community_id: data.community_id || null,
+        community_ids: data.community_ids,
         categoria: data.categoria || 'ALTRO',
       }),
     });
@@ -181,7 +192,7 @@ export default function ResourceList({
         <div key={r.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
           {editingId === r.id ? (
             <ResourceForm
-              initial={{ titolo: r.titolo, descrizione: r.descrizione ?? '', link: r.link ?? '', file_url: r.file_url ?? '', tag: (r.tag ?? []).join(', '), community_id: r.community_id ?? '', categoria: r.categoria ?? 'ALTRO' }}
+              initial={{ titolo: r.titolo, descrizione: r.descrizione ?? '', link: r.link ?? '', file_url: r.file_url ?? '', tag: (r.tag ?? []).join(', '), community_ids: r.community_ids ?? [], categoria: r.categoria ?? 'ALTRO' }}
               communities={communities}
               onSave={(data) => handleEdit(r.id, data)}
               onCancel={() => setEditingId(null)}

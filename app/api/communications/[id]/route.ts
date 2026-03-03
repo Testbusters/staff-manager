@@ -28,11 +28,11 @@ export async function PATCH(
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await request.json();
-  const { titolo, contenuto, pinned, community_id, expires_at, file_urls } = body as {
+  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = body as {
     titolo?: string;
     contenuto?: string;
     pinned?: boolean;
-    community_id?: string | null;
+    community_ids?: string[];
     expires_at?: string | null;
     file_urls?: string[];
   };
@@ -41,7 +41,7 @@ export async function PATCH(
   if (titolo !== undefined) update.titolo = titolo.trim();
   if (contenuto !== undefined) update.contenuto = contenuto.trim();
   if (pinned !== undefined) update.pinned = pinned;
-  if (community_id !== undefined) update.community_id = community_id;
+  if (community_ids !== undefined) update.community_ids = community_ids;
   if (expires_at !== undefined) update.expires_at = expires_at;
   if (file_urls !== undefined) update.file_urls = file_urls;
 

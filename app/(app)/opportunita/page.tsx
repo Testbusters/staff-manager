@@ -55,24 +55,51 @@ export default async function OpportunitaPage({
   if (!profile?.is_active) redirect('/pending');
   if (profile.member_status === 'uscente_senza_compenso') redirect('/documenti');
 
+  // Fetch user's community IDs for content filtering (collaboratori only)
+  let userCommunityIds: string[] = [];
+  if (profile.role === 'collaboratore') {
+    const { data: collabRow } = await supabase
+      .from('collaborators')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (collabRow?.id) {
+      const { data: cc } = await supabase
+        .from('collaborator_communities')
+        .select('community_id')
+        .eq('collaborator_id', collabRow.id);
+      userCommunityIds = (cc ?? []).map((r: { community_id: string }) => r.community_id);
+    }
+  }
+
   const { tab } = await searchParams;
   const activeTab: Tab = tab === 'sconti' ? 'sconti' : 'opportunita';
 
-  const opportunities: Opportunity[] = activeTab === 'opportunita'
+  const allOpportunities: Opportunity[] = activeTab === 'opportunita'
     ? ((await supabase
         .from('opportunities')
-        .select('id, titolo, tipo, descrizione, scadenza_candidatura, community_id, created_at')
+        .select('id, titolo, tipo, descrizione, scadenza_candidatura, community_ids, created_at')
         .order('scadenza_candidatura', { ascending: true, nullsFirst: false })
         .then((r) => r.data ?? [])) as Opportunity[])
     : [];
 
-  const discounts: Discount[] = activeTab === 'sconti'
+  const opportunities = profile.role === 'collaboratore'
+    ? allOpportunities.filter((o) =>
+        o.community_ids.length === 0 || o.community_ids.some((id) => userCommunityIds.includes(id)))
+    : allOpportunities;
+
+  const allDiscounts: Discount[] = activeTab === 'sconti'
     ? ((await supabase
         .from('discounts')
-        .select('id, titolo, fornitore, descrizione, valid_to, community_id, created_at')
+        .select('id, titolo, fornitore, descrizione, valid_to, community_ids, created_at')
         .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])) as Discount[])
     : [];
+
+  const discounts = profile.role === 'collaboratore'
+    ? allDiscounts.filter((d) =>
+        d.community_ids.length === 0 || d.community_ids.some((id) => userCommunityIds.includes(id)))
+    : allDiscounts;
 
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${

@@ -38,6 +38,23 @@ export default async function ComunicazioniPage({
   if (!profile?.is_active) redirect('/pending');
   if (profile.member_status === 'uscente_senza_compenso') redirect('/documenti');
 
+  // Fetch user's community IDs for content filtering (collaboratori only)
+  let userCommunityIds: string[] = [];
+  if (profile.role === 'collaboratore') {
+    const { data: collabRow } = await supabase
+      .from('collaborators')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (collabRow?.id) {
+      const { data: cc } = await supabase
+        .from('collaborator_communities')
+        .select('community_id')
+        .eq('collaborator_id', collabRow.id);
+      userCommunityIds = (cc ?? []).map((r: { community_id: string }) => r.community_id);
+    }
+  }
+
   const params = await searchParams;
   const activeTab: Tab = params.tab === 'risorse' ? 'risorse' : 'comunicazioni';
   const categoriaFilter = VALID_CATEGORIA.includes(params.categoria as ResourceCategoria)
@@ -46,25 +63,35 @@ export default async function ComunicazioniPage({
 
   const now = new Date().toISOString();
 
-  const communications: Communication[] = activeTab === 'comunicazioni'
+  const allCommunications: Communication[] = activeTab === 'comunicazioni'
     ? ((await supabase
         .from('communications')
-        .select('id, titolo, contenuto, pinned, published_at, expires_at, file_urls, community_id, created_at')
+        .select('id, titolo, contenuto, pinned, published_at, expires_at, file_urls, community_ids, created_at')
         .or(`expires_at.is.null,expires_at.gt.${now}`)
         .order('pinned', { ascending: false })
         .order('published_at', { ascending: false })
         .then((r) => r.data ?? [])) as Communication[])
     : [];
 
+  const communications = profile.role === 'collaboratore'
+    ? allCommunications.filter((c) =>
+        c.community_ids.length === 0 || c.community_ids.some((id) => userCommunityIds.includes(id)))
+    : allCommunications;
+
   let resourcesQuery = supabase
     .from('resources')
-    .select('id, titolo, descrizione, categoria, tag, link, file_url, community_id, created_at')
+    .select('id, titolo, descrizione, categoria, tag, link, file_url, community_ids, created_at')
     .order('created_at', { ascending: false });
   if (categoriaFilter) resourcesQuery = resourcesQuery.eq('categoria', categoriaFilter);
 
-  const resources: Resource[] = activeTab === 'risorse'
+  const allResources: Resource[] = activeTab === 'risorse'
     ? ((await resourcesQuery.then((r) => r.data ?? [])) as Resource[])
     : [];
+
+  const resources = profile.role === 'collaboratore'
+    ? allResources.filter((r) =>
+        r.community_ids.length === 0 || r.community_ids.some((id) => userCommunityIds.includes(id)))
+    : allResources;
 
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${

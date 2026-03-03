@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { getNotificationSettings, getAllActiveCollaboratori } from '@/lib/notification-helpers';
+import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { emailNuovaComunicazione } from '@/lib/email-templates';
@@ -22,11 +22,11 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json();
-  const { titolo, contenuto, pinned, community_id, expires_at, file_urls } = body as {
+  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = body as {
     titolo: string;
     contenuto: string;
     pinned?: boolean;
-    community_id?: string | null;
+    community_ids?: string[];
     expires_at?: string | null;
     file_urls?: string[];
   };
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       titolo: titolo.trim(),
       contenuto: contenuto.trim(),
       pinned: pinned ?? false,
-      community_id: community_id ?? null,
+      community_ids: community_ids ?? [],
       expires_at: expires_at ?? null,
       file_urls: file_urls ?? [],
       published_at: new Date().toISOString(),
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   try {
     const [settings, collaboratori] = await Promise.all([
       getNotificationSettings(svc),
-      getAllActiveCollaboratori(svc),
+      getCollaboratoriForCommunities(community_ids ?? [], svc),
     ]);
     const setting = settings.get('comunicazione_pubblicata:collaboratore');
     if ((!setting || setting.inapp_enabled) && collaboratori.length > 0) {
