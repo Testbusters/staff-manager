@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { ROLE_LABELS } from '@/lib/types';
+import type { Role } from '@/lib/types';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import type { AdminDashboardData } from '@/components/admin/types';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
@@ -963,7 +965,7 @@ export default async function DashboardPage() {
   // Fetch collaborator record
   const { data: collaborator } = await supabase
     .from('collaborators')
-    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale')
+    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale, foto_profilo_url, data_ingresso')
     .eq('user_id', user.id)
     .single();
 
@@ -1155,16 +1157,43 @@ export default async function DashboardPage() {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   }).replace(/^\w/, (c) => c.toUpperCase());
 
+  // Hero — profile card data
+  const roleLabel = ROLE_LABELS[role as Role] ?? role;
+  const fullName  = [collaborator?.nome, collaborator?.cognome].filter(Boolean).join(' ');
+  const initials  = [collaborator?.nome, collaborator?.cognome]
+    .filter(Boolean)
+    .map((n) => n!.charAt(0).toUpperCase())
+    .join('') || '?';
+  const joinYear = collaborator?.data_ingresso
+    ? new Date(collaborator.data_ingresso).getFullYear()
+    : null;
+
   // ── Render ─────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-4xl space-y-6">
 
-      {/* Header — saluto + data */}
-      <div>
-        <h1 className="text-xl font-semibold text-gray-100">
-          Ciao{collaborator?.nome ? `, ${collaborator.nome}` : ''}!
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">{todayStr}</p>
+      {/* Header — avatar + saluto */}
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+          {collaborator?.foto_profilo_url ? (
+            <img src={collaborator.foto_profilo_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-lg font-medium text-gray-300 select-none">{initials}</span>
+          )}
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-100">
+            Ciao{collaborator?.nome ? `, ${collaborator.nome}` : ''}!
+          </h1>
+          {fullName && (
+            <p className="text-sm text-gray-300 mt-0.5">
+              {fullName}{role ? ` · ${roleLabel}` : ''}
+            </p>
+          )}
+          <p className="text-xs text-gray-500 mt-0.5">
+            {joinYear ? `Dal ${joinYear} · ` : ''}{todayStr}
+          </p>
+        </div>
       </div>
 
       {/* 4 KPI card */}
