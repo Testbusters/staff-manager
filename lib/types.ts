@@ -104,11 +104,8 @@ export type TicketStatus = 'APERTO' | 'IN_LAVORAZIONE' | 'CHIUSO';
 export type TicketPriority = 'BASSA' | 'NORMALE' | 'ALTA';
 
 export const TICKET_CATEGORIES = [
-  'Generale',
-  'Compensi',
-  'Documenti',
-  'Accesso',
-  'Altro',
+  'Compenso',
+  'Rimborso',
 ] as const;
 
 export type TicketCategory = typeof TICKET_CATEGORIES[number];

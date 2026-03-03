@@ -113,7 +113,7 @@ test.describe.serial('Ticket UAT', () => {
     await login(page, 'collaboratore');
     await page.goto('/ticket/nuova');
 
-    await page.selectOption('select#categoria', 'Accesso e account');
+    await page.selectOption('select#categoria', 'Compenso');
     await page.fill('input#oggetto', '[UAT Ticket] Test ticket E2E');
     await page.fill('textarea#messaggio', 'Primo messaggio di prova per il ticket E2E.');
 

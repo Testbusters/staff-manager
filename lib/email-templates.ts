@@ -389,7 +389,7 @@ export function emailNuovoTicket(p: {
     ${bodyText(`<strong>${p.nomeCollaboratore}</strong> ha aperto un nuovo ticket di supporto.`)}
     ${highlight([
       { label: 'Collaboratore', value: p.nomeCollaboratore },
-      { label: 'Categoria', value: p.categoria },
+      { label: 'Riferimento', value: p.categoria },
       { label: 'Oggetto', value: p.oggetto },
       { label: 'Data', value: p.data },
     ])}

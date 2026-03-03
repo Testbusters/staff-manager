@@ -101,7 +101,7 @@ export default function TicketList({
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Stato</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Priorità</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Oggetto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Categoria</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Riferimento</th>
                 {isManager && (
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">
                     Collaboratore

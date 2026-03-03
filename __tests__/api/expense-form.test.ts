@@ -86,14 +86,15 @@ describe('EXPENSE_CATEGORIES', () => {
 });
 
 describe('TICKET_CATEGORIES', () => {
-  it('contains the 5 expected categories', () => {
-    expect(TICKET_CATEGORIES).toEqual(['Generale', 'Compensi', 'Documenti', 'Accesso', 'Altro']);
+  it('contains exactly Compenso and Rimborso', () => {
+    expect(TICKET_CATEGORIES).toEqual(['Compenso', 'Rimborso']);
   });
 
-  it('does not contain old categories', () => {
-    expect(TICKET_CATEGORIES).not.toContain('Compensi e pagamenti');
-    expect(TICKET_CATEGORIES).not.toContain('Rimborsi spese');
-    expect(TICKET_CATEGORIES).not.toContain('Accesso e account');
-    expect(TICKET_CATEGORIES).not.toContain('Problemi tecnici');
+  it('does not contain removed categories', () => {
+    expect(TICKET_CATEGORIES).not.toContain('Generale');
+    expect(TICKET_CATEGORIES).not.toContain('Compensi');
+    expect(TICKET_CATEGORIES).not.toContain('Documenti');
+    expect(TICKET_CATEGORIES).not.toContain('Accesso');
+    expect(TICKET_CATEGORIES).not.toContain('Altro');
   });
 });
