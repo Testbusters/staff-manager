@@ -23,7 +23,7 @@ export default async function CaricoCompensiPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Fetch managed communities (for responsabile: community access list; for admin: all)
+  // Fetch managed communities (for collaborator search filter)
   let managedCommunities: { id: string; name: string }[] = [];
 
   if (profile.role === 'responsabile_compensi') {
@@ -42,7 +42,6 @@ export default async function CaricoCompensiPage() {
       managedCommunities = communities ?? [];
     }
   } else {
-    // Admin: fetch all communities
     const { data: communities } = await svc
       .from('communities')
       .select('id, name')
@@ -50,5 +49,17 @@ export default async function CaricoCompensiPage() {
     managedCommunities = communities ?? [];
   }
 
-  return <CompensationCreateWizard managedCommunities={managedCommunities} />;
+  // Fetch active competenze for dropdown
+  const { data: competenze } = await svc
+    .from('compensation_competenze')
+    .select('key, label')
+    .eq('active', true)
+    .order('sort_order');
+
+  return (
+    <CompensationCreateWizard
+      managedCommunities={managedCommunities}
+      competenze={competenze ?? []}
+    />
+  );
 }
