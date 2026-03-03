@@ -89,7 +89,7 @@ app/
     ticket/[id]/page.tsx         → Ticket detail: message thread + reply form + status change buttons
     contenuti/page.tsx           → Content hub: 5 URL-based tabs (comunicazioni/sconti/risorse/eventi/opportunita), admin-only, per-tab fetch
     notifiche/page.tsx           → Full notifications page (Suspense wrapper → NotificationPageClient)
-    feedback/page.tsx            → Admin-only: list all feedback with categoria badge, role, pagina, message, signed screenshot URL (1h TTL)
+    feedback/page.tsx            → Admin-only: two-section layout (Nuovi/Completati) with FeedbackActions (Completa + Rimuovi CTAs), signed screenshot URL (1h TTL)
   api/
     profile/route.ts             → PATCH own profile fields (nome, cognome, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, telefono, indirizzo, civico_residenza, IBAN, tshirt, partita_iva, sono_un_figlio_a_carico)
     profile/avatar/route.ts      → POST upload profile photo → avatars bucket
@@ -107,6 +107,7 @@ app/
     admin/blocks/clear-flag/     → POST clear must_change_password flag for a user (admin only)
     admin/notification-settings/ → GET list all 19 settings + PATCH toggle inapp_enabled/email_enabled (admin only)
     feedback/route.ts            → POST create feedback entry (authenticated; FormData: categoria/pagina/messaggio/screenshot)
+    feedback/[id]/route.ts       → PATCH mark completato + DELETE hard delete + storage cleanup (admin only)
     compensations/route.ts       → GET (list, role-filtered) + POST (create, responsabile/admin only, always IN_ATTESA)
     compensations/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
     compensations/[id]/route.ts  → GET (detail + history)
@@ -159,6 +160,7 @@ components/
   Sidebar.tsx                    → Role-based navigation sidebar (hosts NotificationBell); renders comingSoon items as non-clickable span with "Presto" badge
   NotificationBell.tsx           → Bell icon + unread badge + dropdown (30s polling, mark-read single on click, mark-all button, dismiss ×, TYPE_BADGE colored chips per entity type, relative time, message truncation, link to /notifiche)
   FeedbackButton.tsx             → Fixed bottom-right floating button (all app pages): opens modal form (categoria/pagina/messaggio/screenshot upload), POST to /api/feedback, success toast
+  FeedbackActions.tsx            → Client component: Completa + Rimuovi CTAs per feedback record (admin feedback page)
   notifications/
     NotificationPageClient.tsx   → Full notifications page: type filter chips (8 entity types), "solo non lette" toggle in header, pagination (20/page), mark-read + dismiss per row, TYPE_BADGE colored chips
   ProfileForm.tsx                → Profile edit form (avatar, fiscal data, guide collassabili)
@@ -261,7 +263,8 @@ supabase/migrations/
   027_notifications_redesign.sql  → Remove stale integrazioni event_keys; add documento_firmato:amministrazione; enable ticket reply email; add 4 content event_keys (comunicazione/evento/opportunita/sconto pubblicata)
   028_ticket_categories.sql      → DELETE non-conforming tickets; UPDATE 'Compensi'→'Compenso'; ADD CHECK constraint (categoria IN ('Compenso','Rimborso'))
   029_content_community_targeting.sql → Replace community_id UUID with community_ids UUID[] on all 5 content tables (communications/events/opportunities/discounts/resources); backfill existing rows; empty array = all communities
-  030_compensation_schema_alignment.sql → Rename descrizione→nome_servizio_ruolo, note_interne→info_specifiche; DROP corso_appartenenza; community_id nullable; CREATE compensation_competenze + RLS + seed; ADD competenza FK; rewrite responsabile RLS (collaborator_id-based)
+  030_compensation_schema_alignment.sql → Rename descrizione→nome_servizio_ruolo, note_interne→info_specifiche; DROP corso_apartenenza; community_id nullable; CREATE compensation_competenze + RLS + seed; ADD competenza FK; rewrite responsabile RLS (collaborator_id-based)
+  031_feedback_stato.sql          → ADD COLUMN stato TEXT NOT NULL DEFAULT 'nuovo' CHECK (stato IN ('nuovo','completato')) on feedback; ADD POLICY feedback_admin_update
 
 __tests__/                         → 217 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
