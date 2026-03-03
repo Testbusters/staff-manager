@@ -1017,8 +1017,8 @@ export default async function DashboardPage() {
       .limit(2),
     supabase.from('notifications')
       .select('entity_type')
-      .eq('is_read', false)
-      .in('entity_type', ['event', 'communication', 'resource', 'opportunity', 'discount']),
+      .eq('read', false)
+      .in('entity_type', ['event', 'communication', 'opportunity', 'discount']),
   ]);
 
   // Derive IDs for second-tier queries
@@ -1146,7 +1146,7 @@ export default async function DashboardPage() {
   const unreadCounts = { events: 0, communicationsResources: 0, opportunitiesDiscounts: 0 };
   for (const n of (unreadNotifs ?? []) as { entity_type: string }[]) {
     if (n.entity_type === 'event') unreadCounts.events++;
-    else if (n.entity_type === 'communication' || n.entity_type === 'resource') unreadCounts.communicationsResources++;
+    else if (n.entity_type === 'communication') unreadCounts.communicationsResources++;
     else if (n.entity_type === 'opportunity' || n.entity_type === 'discount') unreadCounts.opportunitiesDiscounts++;
   }
 

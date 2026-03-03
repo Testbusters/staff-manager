@@ -39,8 +39,8 @@ export default async function CommunicationDetailPage({
   if (!comm) notFound();
 
   // Mark associated unread notification as read
-  await supabase.from('notifications').update({ is_read: true })
-    .eq('user_id', user.id).eq('entity_type', 'communication').eq('entity_id', id).eq('is_read', false);
+  await supabase.from('notifications').update({ read: true })
+    .eq('user_id', user.id).eq('entity_type', 'communication').eq('entity_id', id).eq('read', false);
 
   const c = comm as Communication;
 
