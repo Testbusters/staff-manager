@@ -24,8 +24,8 @@
 
 Da eseguire prima di Fase 6. Entrambi risolvibili in una singola sessione breve:
 
-- [ ] **QW1** — `Sidebar.tsx`: migrare logout confirmation (`fixed inset-0` custom) → `AlertDialog` (installare `npx shadcn add alert-dialog`)
-- [ ] **QW2** — `StatusBadge.tsx`: aggiungere `data-stato={stato}` all'elemento `<Badge>` (prerequisito per e2e selectors in Fase 9)
+- [x] **QW1** — `Sidebar.tsx`: logout confirmation → `AlertDialog` ✅ 2026-03-04
+- [x] **QW2** — `StatusBadge.tsx`: `data-stato={stato}` aggiunto ✅ 2026-03-04
 
 ### In piano (da eseguire su main, blocchi separati)
 
@@ -136,6 +136,9 @@ I test e2e scritti post-migrazione devono usare selettori stabili basati su `dat
 ---
 
 ## Note tecniche
+
+### Turbopack + CSS "style" exports condition
+Next.js 16 Turbopack non supporta la condizione `"style"` negli `exports` di `package.json` per `@import` CSS. Colpisce `tw-animate-css` e `shadcn/tailwind.css`. Fix applicato: file copiati in `app/tw-animate.css` e `app/shadcn-tailwind.css`, importati con percorso relativo in `globals.css`. I package npm restano come riferimento di versione. **Se si aggiorna una delle due dipendenze: ricopiare il file dist.**
 
 ### Dark-only
 Il progetto è dark-only hardcoded (`<html className="dark">`). Non installare `next-themes`.
