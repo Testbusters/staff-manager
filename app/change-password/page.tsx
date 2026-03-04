@@ -51,8 +51,9 @@ export default function ChangePasswordPage() {
       email: data.email,
       password,
     });
-    console.log('[change-password] re-sign-in:', signInError?.message ?? 'ok');
-
+    if (signInError) {
+      // Re-sign-in failed — redirect anyway, proxy will enforce re-login
+    }
     router.push('/');
   };
 

@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Staff Manager",
   description: "Internal staff management platform",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

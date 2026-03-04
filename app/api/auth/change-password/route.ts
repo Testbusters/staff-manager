@@ -13,8 +13,7 @@ export async function POST(request: Request) {
     { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
   );
 
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  console.log('[change-password] getUser:', user?.id ?? 'null', authErr?.message ?? 'ok');
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { password } = await request.json();
@@ -29,7 +28,6 @@ export async function POST(request: Request) {
   );
 
   const { error: updateError } = await admin.auth.admin.updateUserById(user.id, { password });
-  console.log('[change-password] updateUserById:', updateError?.message ?? 'ok');
   if (updateError) {
     return NextResponse.json({ error: 'Errore durante l\'aggiornamento della password' }, { status: 500 });
   }
@@ -38,7 +36,6 @@ export async function POST(request: Request) {
     .from('user_profiles')
     .update({ must_change_password: false })
     .eq('user_id', user.id);
-  console.log('[change-password] clear flag:', flagErr?.message ?? 'ok');
 
   // Return email so the client can re-sign-in (password change invalidates the JWT)
   return NextResponse.json({ ok: true, email: user.email });
