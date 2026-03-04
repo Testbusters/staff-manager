@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-04. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + Blocco 15c ✅ + shadcn QW1+QW2 ✅ + shadcn Fase 6 ✅. Prossimo: shadcn Fase 7 (Select).
+> Aggiornato 2026-03-04. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + Blocco 15c ✅ + shadcn QW1+QW2 ✅ + shadcn Fase 6 ✅ + shadcn Fase 7 ✅. Prossimo: shadcn Fase 8 (Button audit).
 
 ---
 
@@ -11,6 +11,7 @@
 | Data | Blocco | Stato | Test | Note |
 |---|---|---|---|---|
 | 2026-03-04 | Blocco 15c — UI integrations (T0–G2) | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ (spec block15c.spec.ts creata, sospesa) | T0: priority select in TicketQuickModal. T1: CollabOpenTicketsSection + TicketDetailModal (collab dashboard). T2: TicketStatusBadge colori + data-ticket-stato. R1: guard responsabile_compensi in ActionPanel + ExpenseActionPanel. R2: DashboardPendingItems (comp/rimborso modali). R3: rimossi CTA hero responsabile. G1: tab DashboardUpdates riordinati. G2: row click in PendingApprovedList, PendingApprovedExpenseList, TicketList. Fix: hover:bg-gray-800 su tutte le righe interattive. Fix: DashboardTicketSection → full-row Link, inline reply rimosso. Fix: ExpModal d.expense → d.reimbursement. |
+| 2026-03-04 | shadcn Fase 7 — Select migration | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | 20 native `<select>` replaced with shadcn Select across 15 files. Pattern A (required), Pattern B (optional — value\|\|undefined + placeholder), sentinel 'all' for community filters. Removed selectCls/inputCls consts from 5 files. |
 | 2026-03-04 | shadcn Fase 6 — Input/Textarea migration | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | All `<input>` and `<textarea>` replaced with shadcn `Input`/`Textarea` across 20 files. Remaining `<select>` → Fase 7. ProfileForm tshirt select: inline className (Fase 7). DocumentUploadForm `inputCls` kept for select (Fase 7). |
 | 2026-03-04 | shadcn QW1+QW2 — AlertDialog logout + data-stato + Turbopack CSS fix | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | QW1: Sidebar logout modal → AlertDialog (rimosso useState). QW2: data-stato={stato} su StatusBadge. Fix: tooltip.tsx ripristinato. Fix: tw-animate-css + shadcn/tailwind.css vendorizzati in app/ (Turbopack non supporta "style" export condition). |
 | 2026-02-26 | Blocco 1 — Revisione ruoli e utenze di test | ✅ | tsc ✅, build ✅, vitest 106/106 ✅, e2e ⏸ (sospeso temporaneamente) | `017_roles_rename.sql` applicata. Bug fix `importo`/`data_compenso` in transition route. |
