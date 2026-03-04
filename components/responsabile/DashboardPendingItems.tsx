@@ -156,7 +156,7 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
   useEffect(() => {
     fetch(`/api/expenses/${expId}`)
       .then((r) => r.json())
-      .then((d) => { setData(d.expense); setLoading(false); })
+      .then((d) => { setData(d.reimbursement); setLoading(false); })
       .catch(() => setLoading(false));
   }, [expId]);
 
