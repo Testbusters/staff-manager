@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { AdminBlockItem } from './types';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const BLOCK_LABELS: Record<AdminBlockItem['blockType'], string> = {
   must_change_password:  'Cambio password non completato',
@@ -35,8 +36,6 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
   const [clearing, setClearing] = useState<string | null>(null);
   const [cleared, setCleared] = useState<Set<string>>(new Set());
 
-  if (!open) return null;
-
   const visibleItems = items.filter(i => !cleared.has(i.key));
 
   async function handleClearFlag(item: AdminBlockItem) {
@@ -63,28 +62,13 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
   })).filter(g => g.items.length > 0);
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 z-40"
-        onClick={onClose}
-      />
-
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
+    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <SheetContent side="right" className="w-full max-w-lg bg-gray-900 border-l border-gray-800 p-0 flex flex-col sm:max-w-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
-          <div>
-            <h2 className="text-base font-semibold text-gray-100">Situazioni di blocco</h2>
-            <p className="text-xs text-gray-500 mt-0.5">{visibleItems.length} element{visibleItems.length === 1 ? 'o' : 'i'} da risolvere</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-300 transition text-xl leading-none"
-          >
-            ✕
-          </button>
-        </div>
+        <SheetHeader className="px-6 py-5 border-b border-gray-800 flex-shrink-0 space-y-0">
+          <SheetTitle className="text-base font-semibold text-gray-100">Situazioni di blocco</SheetTitle>
+          <p className="text-xs text-gray-500">{visibleItems.length} element{visibleItems.length === 1 ? 'o' : 'i'} da risolvere</p>
+        </SheetHeader>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
@@ -156,7 +140,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
             ))
           )}
         </div>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

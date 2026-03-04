@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 import type { ExportItem, ExportTab } from '@/lib/export-utils';
 import { buildCSV, buildXLSXWorkbook } from '@/lib/export-utils';
 import ExportTable from './ExportTable';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Props {
   tab: ExportTab;
@@ -148,17 +149,17 @@ export default function ExportSection({ tab, items }: Props) {
       />
 
       {/* Mark-paid modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-700 p-6 shadow-xl">
-            <h2 className="text-base font-semibold text-gray-100 mb-1">
-              Segna come pagati
-            </h2>
-            <p className="text-sm text-gray-400 mb-4">
-              Stai per segnare <span className="font-medium text-gray-200">{selected.size}</span> record come pagati.
-              Inserisci un riferimento di pagamento (es. numero bonifico, batch ID).
-            </p>
+      <Dialog open={showModal} onOpenChange={(v) => { if (!v) { setShowModal(false); setPaymentRef(''); setError(null); } }}>
+        <DialogContent className="max-w-md bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-gray-100">Segna come pagati</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-400">
+            Stai per segnare <span className="font-medium text-gray-200">{selected.size}</span> record come pagati.
+            Inserisci un riferimento di pagamento (es. numero bonifico, batch ID).
+          </p>
 
+          <div>
             <label className="block text-xs text-gray-400 mb-1">
               Riferimento pagamento <span className="text-red-400">*</span>
             </label>
@@ -169,34 +170,30 @@ export default function ExportSection({ tab, items }: Props) {
               onChange={(e) => setPaymentRef(e.target.value)}
               className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-
-            {error && (
-              <p className="mt-2 text-xs text-red-400">{error}</p>
-            )}
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setPaymentRef('');
-                  setError(null);
-                }}
-                disabled={loading}
-                className="rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-40 px-4 py-2 text-sm font-medium text-gray-200 transition"
-              >
-                Annulla
-              </button>
-              <button
-                onClick={handleMarkPaid}
-                disabled={!paymentRef.trim() || loading}
-                className="rounded-lg bg-green-700 hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
-              >
-                {loading ? 'Salvataggio…' : 'Conferma pagamento'}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+
+          {error && (
+            <p className="text-xs text-red-400">{error}</p>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setShowModal(false); setPaymentRef(''); setError(null); }}
+              disabled={loading}
+              className="rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-40 px-4 py-2 text-sm font-medium text-gray-200 transition"
+            >
+              Annulla
+            </button>
+            <button
+              onClick={handleMarkPaid}
+              disabled={!paymentRef.trim() || loading}
+              className="rounded-lg bg-green-700 hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
+            >
+              {loading ? 'Salvataggio…' : 'Conferma pagamento'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

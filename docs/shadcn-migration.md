@@ -15,7 +15,7 @@
 - [x] docs/shadcn-migration.md generato
 - [ ] Fase 1 — Setup infrastruttura shadcn/ui
 - [ ] Fase 2 — Tooltip (Radix → sostituisce InfoTooltip)
-- [ ] Fase 3 — Dialog/Sheet (8 modal custom)
+- [x] Fase 3 — Dialog/Sheet (8 modal custom)
 - [ ] Fase 4 — Badge (status badge sistema)
 - [ ] Fase 5 — Table (solo nuove pagine, post-merge)
 
@@ -156,10 +156,47 @@ npx shadcn add sheet
 - **Sheet** → pannello laterale, form lunghi, drawer contestuale (`side="right"`)
 
 ### Dialog Pattern
-> Questa sezione viene compilata da Sonnet dopo lo Step 3a.
-> Il pattern stabilito viene usato da Haiku per gli step 3b.
 
-[DA COMPILARE dopo Step 3a]
+```tsx
+// Dialog (centered modal)
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+// State: keep useState(false) for open
+const [showModal, setShowModal] = useState(false);
+
+// onOpenChange handles both X button and Esc — call reset function there
+<Dialog open={showModal} onOpenChange={(v) => { if (!v) { setShowModal(false); resetState(); } }}>
+  <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+    <DialogHeader>
+      <DialogTitle className="text-base font-semibold text-gray-100">Titolo</DialogTitle>
+    </DialogHeader>
+    {/* body content */}
+    <div className="flex gap-3 justify-end">
+      <button onClick={() => { setShowModal(false); resetState(); }}>Annulla</button>
+      <button onClick={handleConfirm}>Conferma</button>
+    </div>
+  </DialogContent>
+</Dialog>
+
+// Sheet (lateral panel, side="right")
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+
+<Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+  <SheetContent side="right" className="w-full max-w-lg bg-gray-900 border-l border-gray-800 p-0 flex flex-col sm:max-w-lg">
+    <SheetHeader className="px-6 py-5 border-b border-gray-800 flex-shrink-0 space-y-0">
+      <SheetTitle className="text-base font-semibold text-gray-100">Titolo</SheetTitle>
+    </SheetHeader>
+    <div className="flex-1 overflow-y-auto px-6 py-4">{/* content */}</div>
+  </SheetContent>
+</Sheet>
+```
+
+**Key rules:**
+- `DialogContent` includes a built-in X close button (`showCloseButton=true` default) — no manual ✕ needed
+- `onOpenChange(false)` fires for both X click and Esc — always reset form state there
+- Keep custom Annulla buttons for explicit form reset UX
+- For scrollable Dialog bodies: `p-0 gap-0` on DialogContent + manual padding on children
+- Sheet `sm:max-w-lg` overrides the default `sm:max-w-sm`
 
 ### Validazione
 - `npx tsc --noEmit` → 0 errori

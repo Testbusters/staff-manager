@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Role, ExpenseStatus } from '@/lib/types';
 import type { ExpenseAction } from '@/lib/expense-transitions';
 import { canExpenseTransition } from '@/lib/expense-transitions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ExpenseActionPanelProps {
   expenseId: string;
@@ -104,102 +105,102 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
       </div>
 
       {/* Reject modal */}
-      {showRejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="w-full max-w-md rounded-2xl bg-gray-900 border border-gray-800 p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-semibold text-gray-100">Rifiuta rimborso</h3>
+      <Dialog open={showRejectModal} onOpenChange={(v) => { if (!v) { setShowRejectModal(false); setRejectNote(''); setError(null); } }}>
+        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-gray-100">Rifiuta rimborso</DialogTitle>
+          </DialogHeader>
 
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
-                Motivazione del rifiuto
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <textarea
-                value={rejectNote}
-                onChange={(e) => setRejectNote(e.target.value)}
-                rows={4}
-                placeholder="Descrivi il motivo del rifiuto…"
-                className={inputCls}
-              />
-            </div>
-
-            {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
-                {error}
-              </div>
-            )}
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => { setShowRejectModal(false); setRejectNote(''); setError(null); }}
-                className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition"
-              >
-                Annulla
-              </button>
-              <button
-                disabled={rejectNote.trim().length === 0 || loading !== null}
-                onClick={async () => {
-                  await perform('reject', { note: rejectNote });
-                  setShowRejectModal(false);
-                  setRejectNote('');
-                }}
-                className="rounded-lg bg-red-700 hover:bg-red-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
-              >
-                {loading === 'reject' ? 'Attendere…' : 'Conferma rifiuto'}
-              </button>
-            </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5">
+              Motivazione del rifiuto
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              rows={4}
+              placeholder="Descrivi il motivo del rifiuto…"
+              className={inputCls}
+            />
           </div>
-        </div>
-      )}
+
+          {error && (
+            <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => { setShowRejectModal(false); setRejectNote(''); setError(null); }}
+              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition"
+            >
+              Annulla
+            </button>
+            <button
+              disabled={rejectNote.trim().length === 0 || loading !== null}
+              onClick={async () => {
+                await perform('reject', { note: rejectNote });
+                setShowRejectModal(false);
+                setRejectNote('');
+              }}
+              className="rounded-lg bg-red-700 hover:bg-red-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
+            >
+              {loading === 'reject' ? 'Attendere…' : 'Conferma rifiuto'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Mark liquidated modal */}
-      {showLiquidatedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="w-full max-w-md rounded-2xl bg-gray-900 border border-gray-800 p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-semibold text-gray-100">Segna come liquidato</h3>
+      <Dialog open={showLiquidatedModal} onOpenChange={(v) => { if (!v) { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); } }}>
+        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-gray-100">Segna come liquidato</DialogTitle>
+          </DialogHeader>
 
-            <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
-                Riferimento pagamento
-                <span className="text-gray-600 ml-1">(opzionale)</span>
-              </label>
-              <input
-                type="text"
-                value={paymentReference}
-                onChange={(e) => setPaymentReference(e.target.value)}
-                placeholder="Es. CRO, numero bonifico…"
-                className={inputCls}
-              />
-            </div>
-
-            {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
-                {error}
-              </div>
-            )}
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); }}
-                className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition"
-              >
-                Annulla
-              </button>
-              <button
-                disabled={loading !== null}
-                onClick={async () => {
-                  await perform('mark_liquidated', { payment_reference: paymentReference || undefined });
-                  setShowLiquidatedModal(false);
-                  setPaymentReference('');
-                }}
-                className="rounded-lg bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
-              >
-                {loading === 'mark_liquidated' ? 'Attendere…' : 'Conferma liquidazione'}
-              </button>
-            </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5">
+              Riferimento pagamento
+              <span className="text-gray-600 ml-1">(opzionale)</span>
+            </label>
+            <input
+              type="text"
+              value={paymentReference}
+              onChange={(e) => setPaymentReference(e.target.value)}
+              placeholder="Es. CRO, numero bonifico…"
+              className={inputCls}
+            />
           </div>
-        </div>
-      )}
+
+          {error && (
+            <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); }}
+              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition"
+            >
+              Annulla
+            </button>
+            <button
+              disabled={loading !== null}
+              onClick={async () => {
+                await perform('mark_liquidated', { payment_reference: paymentReference || undefined });
+                setShowLiquidatedModal(false);
+                setPaymentReference('');
+              }}
+              className="rounded-lg bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
+            >
+              {loading === 'mark_liquidated' ? 'Attendere…' : 'Conferma liquidazione'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

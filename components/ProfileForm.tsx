@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Collaborator = {
   nome: string;
@@ -476,18 +477,12 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       </div>
 
       {/* Guida fiscale — modal */}
-      {showGuida && (
-        <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowGuida(false); }}
-        >
-          <div className="w-full max-w-lg rounded-2xl bg-gray-900 border border-gray-800 flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 flex-shrink-0">
-              <h2 className="text-base font-semibold text-gray-100">Guida fiscale — prestazione occasionale</h2>
-              <button type="button" onClick={() => setShowGuida(false)}
-                className="text-gray-500 hover:text-gray-300 transition text-xl leading-none">✕</button>
-            </div>
-            <div className="overflow-y-auto p-6 space-y-5 text-sm text-gray-300">
+      <Dialog open={showGuida} onOpenChange={(v) => { if (!v) setShowGuida(false); }}>
+        <DialogContent className="max-w-lg bg-gray-900 border-gray-800 max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 py-4 border-b border-gray-800 flex-shrink-0">
+            <DialogTitle className="text-base font-semibold text-gray-100">Guida fiscale — prestazione occasionale</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto p-6 space-y-5 text-sm text-gray-300">
 
               <section>
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cos&apos;è la prestazione occasionale?</h3>
@@ -540,16 +535,15 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 </div>
               </section>
 
-            </div>
-            <div className="px-6 py-4 border-t border-gray-800 flex-shrink-0">
-              <button type="button" onClick={() => setShowGuida(false)}
-                className="w-full rounded-lg bg-gray-800 hover:bg-gray-700 py-2 text-sm text-gray-300 transition">
-                Ho capito
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+          <div className="px-6 py-4 border-t border-gray-800 flex-shrink-0">
+            <button type="button" onClick={() => setShowGuida(false)}
+              className="w-full rounded-lg bg-gray-800 hover:bg-gray-700 py-2 text-sm text-gray-300 transition">
+              Ho capito
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Preferences — editable */}
       <div className={sectionCls}>

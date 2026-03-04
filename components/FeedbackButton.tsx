@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const CATEGORIE = ['Bug', 'Suggerimento', 'Domanda', 'Altro'] as const;
 type Categoria = typeof CATEGORIE[number];
@@ -74,30 +75,21 @@ export default function FeedbackButton() {
         <span className="hidden sm:inline">Feedback</span>
       </button>
 
-      {/* Modal overlay */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-gray-900 border border-gray-800 p-6 shadow-2xl">
+      <Dialog open={open} onOpenChange={(v) => { if (!v) closeModal(); else setOpen(true); }}>
+        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+          {success ? (
+            <div className="py-8 text-center space-y-3">
+              <div className="text-4xl">✅</div>
+              <p className="font-medium text-gray-100">Grazie per il feedback!</p>
+              <p className="text-sm text-gray-500">Il messaggio è stato inviato.</p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-base font-semibold text-gray-100">Invia feedback</DialogTitle>
+              </DialogHeader>
 
-            {success ? (
-              <div className="py-8 text-center space-y-3">
-                <div className="text-4xl">✅</div>
-                <p className="font-medium text-gray-100">Grazie per il feedback!</p>
-                <p className="text-sm text-gray-500">Il messaggio è stato inviato.</p>
-              </div>
-            ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-gray-100">Invia feedback</h3>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="text-gray-500 hover:text-gray-300 transition text-lg leading-none"
-                  >
-                    ✕
-                  </button>
-                </div>
-
                 {/* Categoria */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">Categoria</label>
@@ -185,10 +177,10 @@ export default function FeedbackButton() {
                   </button>
                 </div>
               </form>
-            )}
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

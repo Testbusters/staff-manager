@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { canTransition } from '@/lib/compensation-transitions';
 import { canExpenseTransition } from '@/lib/expense-transitions';
 import StatusBadge from '@/components/compensation/StatusBadge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -717,50 +718,50 @@ export default function CollaboratoreDetail({
       )}
 
       {/* ── Reject modal ─────────────────────────────────────────────────── */}
-      {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-5 w-[420px] max-w-[90vw]">
-            <h3 className="text-sm font-semibold text-gray-100 mb-4">
-              Rifiuta {rejectModal.type === 'comp' ? 'compenso' : 'rimborso'}
-            </h3>
+      <Dialog open={!!rejectModal} onOpenChange={(v) => { if (!v) { setRejectModal(null); setError(null); } }}>
+        <DialogContent className="max-w-[420px] bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold text-gray-100">
+              Rifiuta {rejectModal?.type === 'comp' ? 'compenso' : 'rimborso'}
+            </DialogTitle>
+          </DialogHeader>
 
-            <div className="mb-4">
-              <label className="text-xs text-gray-500 block mb-1">
-                Motivazione del rifiuto <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={rejectNote}
-                onChange={(e) => setRejectNote(e.target.value)}
-                rows={3}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200
-                           focus:outline-none focus:border-blue-500 resize-none"
-                placeholder="Descrivi il motivo del rifiuto…"
-              />
-            </div>
-
-            {error && (
-              <p className="text-xs text-red-400 mb-3">{error}</p>
-            )}
-
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => { setRejectModal(null); setError(null); }}
-                className="px-3 py-1.5 rounded-md text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition"
-              >
-                Annulla
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={!!loading || rejectNote.trim().length === 0}
-                className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-700 hover:bg-red-600
-                           text-white transition disabled:opacity-50"
-              >
-                {loading ? 'Invio…' : 'Rifiuta'}
-              </button>
-            </div>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">
+              Motivazione del rifiuto <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              rows={3}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200
+                         focus:outline-none focus:border-blue-500 resize-none"
+              placeholder="Descrivi il motivo del rifiuto…"
+            />
           </div>
-        </div>
-      )}
+
+          {error && (
+            <p className="text-xs text-red-400">{error}</p>
+          )}
+
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => { setRejectModal(null); setError(null); }}
+              className="px-3 py-1.5 rounded-md text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition"
+            >
+              Annulla
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={!!loading || rejectNote.trim().length === 0}
+              className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-700 hover:bg-red-600
+                         text-white transition disabled:opacity-50"
+            >
+              {loading ? 'Invio…' : 'Rifiuta'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
