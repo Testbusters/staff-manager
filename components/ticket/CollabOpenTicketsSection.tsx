@@ -39,7 +39,7 @@ export default function CollabOpenTicketsSection({ tickets }: { tickets: OpenTic
             <button
               key={t.id}
               onClick={() => setSelectedId(t.id)}
-              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition text-left"
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-200 truncate">{t.oggetto}</p>

@@ -46,7 +46,10 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
   );
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800/40 transition">
+    <Link
+      href={`/ticket/${ticket.id}`}
+      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition cursor-pointer"
+    >
       <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORIA_BADGE[ticket.categoria] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
         {ticket.categoria}
       </span>
@@ -63,7 +66,7 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
       </div>
 
       <span
-        className={`hidden sm:inline-flex items-center gap-1 shrink-0 text-xs text-gray-500`}
+        className="hidden sm:inline-flex items-center gap-1 shrink-0 text-xs text-gray-500"
         title={TICKET_PRIORITY_LABELS[ticket.priority as TicketPriority] ?? ticket.priority}
       >
         <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} />
@@ -74,12 +77,7 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
         {lastReply}
       </div>
 
-      <Link
-        href={`/ticket/${ticket.id}`}
-        className="shrink-0 text-xs text-blue-400 hover:text-blue-300 transition"
-      >
-        Apri →
-      </Link>
-    </div>
+      <span className="shrink-0 text-xs text-gray-600">→</span>
+    </Link>
   );
 }

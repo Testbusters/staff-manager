@@ -250,7 +250,7 @@ export default function DashboardPendingItems({
                 <button
                   key={c.id}
                   onClick={() => setSelectedComp(c.id)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition text-left"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
                 >
                   {c.competenza && (
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
@@ -285,7 +285,7 @@ export default function DashboardPendingItems({
                 <button
                   key={e.id}
                   onClick={() => setSelectedExp(e.id)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition text-left"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
                 >
                   <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
                     {e.categoria}
