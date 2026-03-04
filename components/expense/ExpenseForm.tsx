@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { EXPENSE_CATEGORIES } from '@/lib/types';
 import type { ExpenseCategory } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface FormData {
   categoria: ExpenseCategory | '';
@@ -20,13 +23,6 @@ const INITIAL_FORM: FormData = {
   descrizione: '',
 };
 
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
-
-const selectCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -162,16 +158,12 @@ export default function ExpenseForm() {
             <label className="block text-xs text-gray-400 mb-1.5">
               Categoria <span className="text-red-500">*</span>
             </label>
-            <select
-              value={form.categoria}
-              onChange={(e) => set('categoria', e.target.value)}
-              className={selectCls}
-            >
-              <option value="">— Seleziona —</option>
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <Select value={form.categoria || undefined} onValueChange={(v) => set('categoria', v)}>
+              <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+              <SelectContent>
+                {EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -179,25 +171,23 @@ export default function ExpenseForm() {
               <label className="block text-xs text-gray-400 mb-1.5">
                 Data spesa <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="date"
                 value={form.data_spesa}
                 onChange={(e) => set('data_spesa', e.target.value)}
-                className={inputCls}
               />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1.5">
                 Importo (€) <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="number"
                 min="0.01"
                 step="0.01"
                 value={form.importo}
                 onChange={(e) => set('importo', e.target.value)}
                 placeholder="0.00"
-                className={inputCls}
               />
               {!isNaN(importoNum) && importoNum > 0 && (
                 <p className="text-xs text-green-400 mt-1">{formatCurrency(importoNum)}</p>
@@ -210,12 +200,11 @@ export default function ExpenseForm() {
               Descrizione{' '}
               <span className="text-gray-600">(opzionale)</span>
             </label>
-            <textarea
+            <Textarea
               value={form.descrizione}
               onChange={(e) => set('descrizione', e.target.value)}
               rows={3}
               placeholder="Descrivi la spesa sostenuta…"
-              className={inputCls}
             />
           </div>
 

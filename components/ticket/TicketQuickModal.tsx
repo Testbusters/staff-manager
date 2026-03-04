@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { TICKET_CATEGORIES, TICKET_PRIORITY_LABELS } from '@/lib/types';
 import type { TicketPriority } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function TicketQuickModal() {
   const router = useRouter();
@@ -81,31 +84,25 @@ export default function TicketQuickModal() {
               <label className="block text-sm font-medium text-gray-300">
                 Riferimento <span className="text-red-400">*</span>
               </label>
-              <select
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="" disabled>Seleziona un riferimento</option>
-                {TICKET_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              <Select value={categoria || undefined} onValueChange={setCategoria}>
+                <SelectTrigger><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
+                <SelectContent>
+                  {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-300">
                 Oggetto <span className="text-red-400">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 value={oggetto}
                 onChange={(e) => setOggetto(e.target.value)}
                 placeholder="Descrivi brevemente il problema o la richiesta"
                 maxLength={200}
                 required
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none"
               />
             </div>
 
@@ -113,12 +110,12 @@ export default function TicketQuickModal() {
               <label className="block text-sm font-medium text-gray-300">
                 Messaggio <span className="text-gray-500 font-normal">(opzionale)</span>
               </label>
-              <textarea
+              <Textarea
                 value={messaggio}
                 onChange={(e) => setMessaggio(e.target.value)}
                 placeholder="Aggiungi dettagli o contesto..."
                 rows={4}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none"
+                className="resize-none"
               />
             </div>
 
@@ -126,16 +123,14 @@ export default function TicketQuickModal() {
               <label htmlFor="quick-priority" className="block text-sm font-medium text-gray-300">
                 Priorità
               </label>
-              <select
-                id="quick-priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TicketPriority)}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
-              >
-                {(Object.keys(TICKET_PRIORITY_LABELS) as TicketPriority[]).map((p) => (
-                  <option key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</option>
-                ))}
-              </select>
+              <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
+                <SelectTrigger id="quick-priority"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(TICKET_PRIORITY_LABELS) as TicketPriority[]).map((p) => (
+                    <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-3 pt-1">

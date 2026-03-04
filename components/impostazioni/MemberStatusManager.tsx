@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type MemberStatus = 'attivo' | 'uscente_con_compenso' | 'uscente_senza_compenso';
 
@@ -91,16 +92,14 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
                   {STATUS_LABELS[m.member_status]}
                 </p>
               </div>
-              <select
-                value={m.member_status}
-                disabled={loadingStatusId === m.id}
-                onChange={(e) => handleStatusChange(m.id, e.target.value as MemberStatus)}
-                className="rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
-              >
-                {(Object.entries(STATUS_LABELS) as [MemberStatus, string][]).map(([val, label]) => (
-                  <option key={val} value={val}>{label}</option>
-                ))}
-              </select>
+              <Select value={m.member_status} onValueChange={(v) => handleStatusChange(m.id, v as MemberStatus)} disabled={loadingStatusId === m.id}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(STATUS_LABELS) as [MemberStatus, string][]).map(([val, label]) => (
+                    <SelectItem key={val} value={val}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {loadingStatusId === m.id && <span className="text-xs text-gray-500">…</span>}
             </div>
             <div className="flex items-center gap-2">

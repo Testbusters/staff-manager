@@ -6,6 +6,7 @@ import type { Resource, ResourceCategoria, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const CATEGORIA_OPTIONS: { value: ResourceCategoria; label: string }[] = [
   { value: 'GUIDA',     label: 'Guida' },
@@ -71,10 +72,12 @@ function ResourceForm({
       <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)" />
       <div className="flex items-center gap-3">
         <label className="text-sm text-gray-400 shrink-0">Categoria:</label>
-        <select value={form.categoria} onChange={set('categoria')}
-          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-          {CATEGORIA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+        <Select value={form.categoria} onValueChange={(v) => setForm((f) => ({ ...f, categoria: v }))}>
+          <SelectTrigger className="w-auto"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {CATEGORIA_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
       <Input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)" />
       <div className="space-y-1">

@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Community = { id: string; name: string };
 
@@ -187,23 +190,22 @@ export default function CompensationCreateWizard({
         <StepIndicator current={1} />
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <input
+          <Input
             type="text"
             placeholder="Cerca per nome, cognome o username..."
             value={searchQ}
             onChange={(e) => setSearchQ(e.target.value)}
-            className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+            className="flex-1"
           />
-          <select
-            value={communityFilter}
-            onChange={(e) => setCommunityFilter(e.target.value)}
-            className="rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Tutte le community</option>
-            {managedCommunities.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <Select value={communityFilter || 'all'} onValueChange={(v) => setCommunityFilter(v === 'all' ? '' : v)}>
+            <SelectTrigger className="w-auto"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutte le community</SelectItem>
+              {managedCommunities.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <label className="flex items-center gap-2 text-sm text-gray-400 whitespace-nowrap">
             <input
               type="checkbox"
@@ -292,11 +294,10 @@ export default function CompensationCreateWizard({
             <label className="block text-xs font-medium text-gray-500 mb-1">
               Nome servizio / Ruolo
             </label>
-            <input
+            <Input
               type="text"
               value={formData.nome_servizio_ruolo}
               onChange={(e) => setFormData((prev) => ({ ...prev, nome_servizio_ruolo: e.target.value }))}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
               placeholder="Es. Compenso lezioni marzo"
             />
           </div>
@@ -306,11 +307,10 @@ export default function CompensationCreateWizard({
             <label className="block text-xs font-medium text-gray-500 mb-1">
               Data di competenza
             </label>
-            <input
+            <Input
               type="date"
               value={formData.data_competenza}
               onChange={(e) => setFormData((prev) => ({ ...prev, data_competenza: e.target.value }))}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -319,16 +319,14 @@ export default function CompensationCreateWizard({
               <label className="block text-xs font-medium text-gray-500 mb-1">
                 Competenza
               </label>
-              <select
-                value={formData.competenza}
-                onChange={(e) => setFormData((prev) => ({ ...prev, competenza: e.target.value }))}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500"
-              >
-                <option value="">— Nessuna —</option>
-                {competenze.map((c) => (
-                  <option key={c.key} value={c.key}>{c.label}</option>
-                ))}
-              </select>
+              <Select value={formData.competenza || undefined} onValueChange={(v) => setFormData((prev) => ({ ...prev, competenza: v }))}>
+                <SelectTrigger><SelectValue placeholder="— Nessuna —" /></SelectTrigger>
+                <SelectContent>
+                  {competenze.map((c) => (
+                    <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -336,11 +334,11 @@ export default function CompensationCreateWizard({
             <label className="block text-xs font-medium text-gray-500 mb-1">
               Info specifiche <span className="text-gray-600">(opzionale)</span>
             </label>
-            <textarea
+            <Textarea
               value={formData.info_specifiche}
               onChange={(e) => setFormData((prev) => ({ ...prev, info_specifiche: e.target.value }))}
               rows={2}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+              className="resize-none"
               placeholder="Note aggiuntive sul compenso"
             />
           </div>
@@ -349,13 +347,12 @@ export default function CompensationCreateWizard({
             <label className="block text-xs font-medium text-gray-500 mb-1">
               Importo lordo (€)
             </label>
-            <input
+            <Input
               type="number"
               min="0"
               step="0.01"
               value={formData.importo_lordo}
               onChange={(e) => setFormData((prev) => ({ ...prev, importo_lordo: e.target.value }))}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
               placeholder="0,00"
             />
           </div>

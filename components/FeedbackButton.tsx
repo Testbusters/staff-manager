@@ -3,13 +3,12 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const CATEGORIE = ['Bug', 'Suggerimento', 'Domanda', 'Altro'] as const;
 type Categoria = typeof CATEGORIE[number];
-
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
 
 export default function FeedbackButton() {
   const pathname = usePathname();
@@ -93,28 +92,23 @@ export default function FeedbackButton() {
                 {/* Categoria */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">Categoria</label>
-                  <select
-                    value={categoria}
-                    onChange={(e) => setCategoria(e.target.value as Categoria)}
-                    disabled={loading}
-                    className={inputCls}
-                  >
-                    {CATEGORIE.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  <Select value={categoria} onValueChange={(v) => setCategoria(v as Categoria)} disabled={loading}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIE.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Pagina */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1.5">Pagina</label>
-                  <input
+                  <Input
                     type="text"
                     value={pagina}
                     onChange={(e) => setPagina(e.target.value)}
                     disabled={loading}
                     placeholder="/compensi"
-                    className={inputCls}
                   />
                 </div>
 
@@ -123,14 +117,13 @@ export default function FeedbackButton() {
                   <label className="block text-xs text-gray-400 mb-1.5">
                     Messaggio <span className="text-red-400">*</span>
                   </label>
-                  <textarea
+                  <Textarea
                     value={messaggio}
                     onChange={(e) => setMessaggio(e.target.value)}
                     disabled={loading}
                     rows={4}
                     required
                     placeholder="Descrivi il problema o il suggerimento…"
-                    className={inputCls}
                   />
                 </div>
 

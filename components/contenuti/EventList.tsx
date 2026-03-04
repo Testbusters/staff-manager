@@ -6,6 +6,7 @@ import type { ContentEvent, EventTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'WEBINAR',   label: 'Webinar' },
@@ -105,11 +106,12 @@ function EventForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Tipo evento</label>
-          <select value={form.tipo} onChange={set('tipo')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-2 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none">
-            <option value="">— Nessun tipo —</option>
-            {TIPO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <Select value={form.tipo || undefined} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
+            <SelectTrigger><SelectValue placeholder="— Nessun tipo —" /></SelectTrigger>
+            <SelectContent>
+              {TIPO_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" className="self-end" />
       </div>

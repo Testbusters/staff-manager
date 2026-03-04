@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, DocumentSignStatus } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Collaborator {
   id: string;
@@ -18,10 +19,6 @@ interface Props {
   isAdmin: boolean;
   userCollaboratorId?: string;
 }
-
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
 
 export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   const router = useRouter();
@@ -102,18 +99,14 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
           <label className="block text-xs text-gray-400 mb-1.5">
             Collaboratore <span className="text-red-500">*</span>
           </label>
-          <select
-            value={collaboratorId}
-            onChange={(e) => setCollaboratorId(e.target.value)}
-            className={inputCls}
-          >
-            <option value="">— Seleziona collaboratore —</option>
-            {collaborators.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.cognome} {c.nome}
-              </option>
-            ))}
-          </select>
+          <Select value={collaboratorId || undefined} onValueChange={setCollaboratorId}>
+            <SelectTrigger><SelectValue placeholder="— Seleziona collaboratore —" /></SelectTrigger>
+            <SelectContent>
+              {collaborators.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.cognome} {c.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
@@ -123,15 +116,13 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
           <label className="block text-xs text-gray-400 mb-1.5">
             Tipo <span className="text-red-500">*</span>
           </label>
-          <select
-            value={tipo}
-            onChange={(e) => { setTipo(e.target.value as DocumentType); setStatoFirma('NON_RICHIESTO'); }}
-            className={inputCls}
-          >
-            <option value="">— Seleziona —</option>
-            <option value="CONTRATTO_OCCASIONALE">{DOCUMENT_TYPE_LABELS['CONTRATTO_OCCASIONALE']}</option>
-            <option value="CU">{DOCUMENT_TYPE_LABELS['CU']}</option>
-          </select>
+          <Select value={tipo || undefined} onValueChange={(v) => { setTipo(v as DocumentType); setStatoFirma('NON_RICHIESTO'); }}>
+            <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="CONTRATTO_OCCASIONALE">{DOCUMENT_TYPE_LABELS['CONTRATTO_OCCASIONALE']}</SelectItem>
+              <SelectItem value="CU">{DOCUMENT_TYPE_LABELS['CU']}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label className="block text-xs text-gray-400 mb-1.5">Anno</label>

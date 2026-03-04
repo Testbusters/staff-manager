@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { CONTRACT_TEMPLATE_LABELS, type ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Role = 'collaboratore' | 'responsabile_cittadino' | 'responsabile_compensi' | 'responsabile_servizi_individuali' | 'amministrazione';
 type Credentials = { email: string; password: string };
@@ -21,13 +23,6 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 // Roles that require tipo_contratto and have anagrafica pre-fill
 const ROLES_WITH_CONTRACT: Role[] = ['collaboratore', 'responsabile_compensi'];
 
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
-
-const selectCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
 
 const labelCls = 'block text-xs text-gray-500 mb-1.5';
 
@@ -237,17 +232,18 @@ export default function CreateUserForm() {
         <div className="space-y-3">
           <div>
             <label className={labelCls}>Email</label>
-            <input type="email" placeholder="nome@email.com" value={email}
+            <Input type="email" placeholder="nome@email.com" value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required disabled={loading} autoComplete="off" className={inputCls} />
+              required disabled={loading} autoComplete="off" />
           </div>
           <div>
             <label className={labelCls}>Ruolo</label>
-            <select value={role}
-              onChange={(e) => { setRole(e.target.value as Role); setSelectedCommunities([]); }}
-              disabled={loading} className={selectCls}>
-              {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            <Select value={role} onValueChange={(v) => { setRole(v as Role); setSelectedCommunities([]); }} disabled={loading}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -294,20 +290,20 @@ export default function CreateUserForm() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Nome <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Mario" value={nome}
+                <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  required disabled={loading} className={inputCls} />
+                  required disabled={loading} />
               </div>
               <div>
                 <label className={labelCls}>Cognome <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Rossi" value={cognome}
+                <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
-                  required disabled={loading} className={inputCls} />
+                  required disabled={loading} />
               </div>
             </div>
             <div>
               <label className={labelCls}>Username</label>
-              <input
+              <Input
                 type="text"
                 placeholder="mario_rossi"
                 value={username}
@@ -317,7 +313,7 @@ export default function CreateUserForm() {
                 }}
                 disabled={loading}
                 maxLength={50}
-                className={inputCls + ' font-mono'}
+                className="font-mono"
               />
               <p className="text-[10px] text-gray-600 mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
@@ -333,20 +329,20 @@ export default function CreateUserForm() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Nome</label>
-                <input type="text" placeholder="Mario" value={nome}
+                <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  disabled={loading} className={inputCls} />
+                  disabled={loading} />
               </div>
               <div>
                 <label className={labelCls}>Cognome</label>
-                <input type="text" placeholder="Rossi" value={cognome}
+                <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
-                  disabled={loading} className={inputCls} />
+                  disabled={loading} />
               </div>
             </div>
             <div>
               <label className={labelCls}>Username</label>
-              <input
+              <Input
                 type="text"
                 placeholder="mario_rossi"
                 value={username}
@@ -356,75 +352,75 @@ export default function CreateUserForm() {
                 }}
                 disabled={loading}
                 maxLength={50}
-                className={inputCls + ' font-mono'}
+                className="font-mono"
               />
               <p className="text-[10px] text-gray-600 mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
               <label className={labelCls}>Codice fiscale</label>
-              <input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
+              <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
                 onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                disabled={loading} maxLength={16} className={inputCls + ' font-mono'} />
+                disabled={loading} maxLength={16} className="font-mono" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Data di nascita</label>
-                <input type="date" value={dataNascita}
+                <Input type="date" value={dataNascita}
                   onChange={(e) => setDataNascita(e.target.value)}
-                  disabled={loading} className={inputCls} />
+                  disabled={loading} />
               </div>
               <div>
                 <label className={labelCls}>Città di nascita</label>
-                <input type="text" placeholder="Roma" value={luogoNascita}
+                <Input type="text" placeholder="Roma" value={luogoNascita}
                   onChange={(e) => setLuogoNascita(e.target.value)}
-                  disabled={loading} className={inputCls} />
+                  disabled={loading} />
               </div>
             </div>
             <div>
               <label className={labelCls}>Provincia di nascita (sigla)</label>
-              <input type="text" placeholder="RM" value={provinciaNascita}
+              <Input type="text" placeholder="RM" value={provinciaNascita}
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
-                disabled={loading} maxLength={2} className={inputCls + ' font-mono uppercase'} />
+                disabled={loading} maxLength={2} className="font-mono uppercase" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Comune di residenza</label>
-                <input type="text" placeholder="Milano" value={comuneRes}
+                <Input type="text" placeholder="Milano" value={comuneRes}
                   onChange={(e) => setComuneRes(e.target.value)}
-                  disabled={loading} className={inputCls} />
+                  disabled={loading} />
               </div>
               <div>
                 <label className={labelCls}>Provincia di residenza (sigla)</label>
-                <input type="text" placeholder="MI" value={provinciaRes}
+                <Input type="text" placeholder="MI" value={provinciaRes}
                   onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                  disabled={loading} maxLength={2} className={inputCls + ' font-mono uppercase'} />
+                  disabled={loading} maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
                 <label className={labelCls}>Via/Piazza</label>
-                <input type="text" placeholder="Via Roma" value={indirizzo}
+                <Input type="text" placeholder="Via Roma" value={indirizzo}
                   onChange={(e) => setIndirizzo(e.target.value)}
-                  disabled={loading} className={inputCls} />
+                  disabled={loading} />
               </div>
               <div>
                 <label className={labelCls}>Civico</label>
-                <input type="text" placeholder="1" value={civico}
+                <Input type="text" placeholder="1" value={civico}
                   onChange={(e) => setCivico(e.target.value)}
-                  disabled={loading} maxLength={10} className={inputCls} />
+                  disabled={loading} maxLength={10} />
               </div>
             </div>
             <div>
               <label className={labelCls}>Telefono</label>
-              <input type="tel" placeholder="+39 333 0000000" value={telefono}
+              <Input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
             <div>
               <label className={labelCls}>Data di ingresso</label>
-              <input type="date" value={dataIngresso}
+              <Input type="date" value={dataIngresso}
                 onChange={(e) => setDataIngresso(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
           </div>
         </div>

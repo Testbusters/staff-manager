@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type PrefillData = {
   nome: string | null;
@@ -31,13 +33,6 @@ interface Props {
 
 const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
-
-const selectCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
 
 const labelCls = 'block text-xs text-gray-500 mb-1.5';
 
@@ -272,15 +267,15 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Nome <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Mario" value={nome}
+                <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  required className={inputCls} />
+                  required />
               </div>
               <div>
                 <label className={labelCls}>Cognome <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Rossi" value={cognome}
+                <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
-                  required className={inputCls} />
+                  required />
               </div>
             </div>
             {previewUsername && (
@@ -294,29 +289,29 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             )}
             <div>
               <label className={labelCls}>Codice fiscale <span className="text-red-500">*</span></label>
-              <input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
+              <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
                 onChange={(e) => setCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                required maxLength={16} className={inputCls + ' font-mono'} />
+                required maxLength={16} className="font-mono" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Data di nascita <span className="text-red-500">*</span></label>
-                <input type="date" value={dataNascita}
+                <Input type="date" value={dataNascita}
                   onChange={(e) => setDataNascita(e.target.value)}
-                  required className={inputCls} />
+                  required />
               </div>
               <div>
                 <label className={labelCls}>Città di nascita <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Roma" value={luogoNascita}
+                <Input type="text" placeholder="Roma" value={luogoNascita}
                   onChange={(e) => setLuogo(e.target.value)}
-                  required className={inputCls} />
+                  required />
               </div>
             </div>
             <div>
               <label className={labelCls}>Provincia di nascita (sigla) <span className="text-red-500">*</span></label>
-              <input type="text" placeholder="RM" value={provinciaNascita}
+              <Input type="text" placeholder="RM" value={provinciaNascita}
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
-                required maxLength={2} className={inputCls + ' font-mono uppercase'} />
+                required maxLength={2} className="font-mono uppercase" />
             </div>
           </div>
         </div>
@@ -328,36 +323,36 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Comune <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Milano" value={comune}
+                <Input type="text" placeholder="Milano" value={comune}
                   onChange={(e) => setComune(e.target.value)}
-                  required className={inputCls} />
+                  required />
               </div>
               <div>
                 <label className={labelCls}>Provincia (sigla) <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="MI" value={provinciaRes}
+                <Input type="text" placeholder="MI" value={provinciaRes}
                   onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                  required maxLength={2} className={inputCls + ' font-mono uppercase'} />
+                  required maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
                 <label className={labelCls}>Via/Piazza di residenza <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="Via Roma" value={indirizzo}
+                <Input type="text" placeholder="Via Roma" value={indirizzo}
                   onChange={(e) => setIndirizzo(e.target.value)}
-                  required className={inputCls} />
+                  required />
               </div>
               <div>
                 <label className={labelCls}>Civico <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="1" value={civico}
+                <Input type="text" placeholder="1" value={civico}
                   onChange={(e) => setCivico(e.target.value)}
-                  required maxLength={10} className={inputCls} />
+                  required maxLength={10} />
               </div>
             </div>
             <div>
               <label className={labelCls}>Telefono di contatto <span className="text-red-500">*</span></label>
-              <input type="tel" placeholder="+39 333 0000000" value={telefono}
+              <Input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                required className={inputCls} />
+                required />
             </div>
           </div>
         </div>
@@ -368,18 +363,19 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <div className="space-y-3">
             <div>
               <label className={labelCls}>IBAN <span className="text-red-500">*</span></label>
-              <input type="text" placeholder="IT60 X054 2811 1010 0000 0123 456" value={iban}
+              <Input type="text" placeholder="IT60 X054 2811 1010 0000 0123 456" value={iban}
                 onChange={(e) => setIban(e.target.value)}
-                required maxLength={34} className={inputCls + ' font-mono'} />
+                required maxLength={34} className="font-mono" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Taglia t-shirt <span className="text-red-500">*</span></label>
-                <select value={tshirt} onChange={(e) => setTshirt(e.target.value)}
-                  required className={selectCls}>
-                  <option value="">— Seleziona —</option>
-                  {TSHIRT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <Select value={tshirt || undefined} onValueChange={setTshirt}>
+                  <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+                  <SelectContent>
+                    {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-end pb-0.5">
                 <label className="flex items-center gap-2.5 cursor-pointer">

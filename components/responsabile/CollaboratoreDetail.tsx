@@ -8,6 +8,9 @@ import { canExpenseTransition } from '@/lib/expense-transitions';
 import StatusBadge from '@/components/compensation/StatusBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -333,13 +336,13 @@ export default function CollaboratoreDetail({
                 </>
               ) : (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <input
+                  <Input
                     type="text"
                     value={usernameEdit}
                     onChange={(e) => setUsernameEdit(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                     maxLength={50}
                     placeholder="username"
-                    className="rounded-lg bg-gray-800 border border-gray-700 px-2 py-1 text-xs font-mono text-gray-100 w-40 focus:outline-none focus:border-blue-500"
+                    className="font-mono w-40"
                   />
                   <button
                     onClick={handleSaveUsername}
@@ -388,95 +391,83 @@ export default function CollaboratoreDetail({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">Nome</label>
-                <input type="text" value={fNome} onChange={(e) => setFNome(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                <Input type="text" value={fNome} onChange={(e) => setFNome(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">Cognome</label>
-                <input type="text" value={fCognome} onChange={(e) => setFCognome(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                <Input type="text" value={fCognome} onChange={(e) => setFCognome(e.target.value)} />
               </div>
             </div>
             <div>
               <label className="block text-[11px] text-gray-500 mb-1">Username</label>
-              <input type="text" value={fUsername}
+              <Input type="text" value={fUsername}
                 onChange={(e) => setFUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                maxLength={50} placeholder="username"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-blue-500" />
+                maxLength={50} placeholder="username" className="font-mono" />
             </div>
             {!isResponsabileProfile && (
               <>
                 <div>
                   <label className="block text-[11px] text-gray-500 mb-1">Codice fiscale</label>
-                  <input type="text" value={fCF}
+                  <Input type="text" value={fCF}
                     onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                    maxLength={16}
-                    className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-blue-500" />
+                    maxLength={16} className="font-mono" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] text-gray-500 mb-1">Data di nascita</label>
-                    <input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)}
-                      className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                    <Input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)} />
                   </div>
                   <div>
                     <label className="block text-[11px] text-gray-500 mb-1">Città di nascita</label>
-                    <input type="text" value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)}
-                      className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                    <Input type="text" value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)} />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] text-gray-500 mb-1">Provincia di nascita</label>
-                  <input type="text" value={fProvinciaNascita}
+                  <Input type="text" value={fProvinciaNascita}
                     onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
-                    maxLength={2}
-                    className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono uppercase focus:outline-none focus:border-blue-500" />
+                    maxLength={2} className="font-mono uppercase" />
                 </div>
               </>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">Comune di residenza</label>
-                <input type="text" value={fComune} onChange={(e) => setFComune(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                <Input type="text" value={fComune} onChange={(e) => setFComune(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">Provincia residenza</label>
-                <input type="text" value={fProvinciaRes}
+                <Input type="text" value={fProvinciaRes}
                   onChange={(e) => setFProvinciaRes(e.target.value.toUpperCase())}
-                  maxLength={2}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono uppercase focus:outline-none focus:border-blue-500" />
+                  maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
                 <label className="block text-[11px] text-gray-500 mb-1">Indirizzo</label>
-                <input type="text" value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                <Input type="text" value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">Civico</label>
-                <input type="text" value={fCivico} onChange={(e) => setFCivico(e.target.value)}
-                  maxLength={10}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                <Input type="text" value={fCivico} onChange={(e) => setFCivico(e.target.value)} maxLength={10} />
               </div>
             </div>
             <div>
               <label className="block text-[11px] text-gray-500 mb-1">Telefono</label>
-              <input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+              <Input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)} />
             </div>
             {!isResponsabileProfile && (
               <>
                 <div>
                   <label className="block text-[11px] text-gray-500 mb-1">Taglia t-shirt</label>
-                  <select value={fTshirt} onChange={(e) => setFTshirt(e.target.value)}
-                    className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
-                    <option value="">— Non specificata —</option>
-                    {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+                  <Select value={fTshirt || undefined} onValueChange={setFTshirt}>
+                    <SelectTrigger><SelectValue placeholder="— Non specificata —" /></SelectTrigger>
+                    <SelectContent>
+                      {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="flex items-center gap-2.5 cursor-pointer">
@@ -490,9 +481,9 @@ export default function CollaboratoreDetail({
                   <label className="block text-[11px] text-gray-500 mb-1">Massimale lordo annuo (max €5.000)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">€</span>
-                    <input type="number" min={1} max={5000} step={1} value={fMassimale}
+                    <Input type="number" min={1} max={5000} step={1} value={fMassimale}
                       onChange={(e) => setFMassimale(e.target.value)}
-                      className="w-full rounded-lg bg-gray-800 border border-gray-700 pl-7 pr-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                      className="pl-7" />
                   </div>
                 </div>
               </>
@@ -731,12 +722,11 @@ export default function CollaboratoreDetail({
             <label className="text-xs text-gray-500 block mb-1">
               Motivazione del rifiuto <span className="text-red-500">*</span>
             </label>
-            <textarea
+            <Textarea
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               rows={3}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200
-                         focus:outline-none focus:border-blue-500 resize-none"
+              className="resize-none"
               placeholder="Descrivi il motivo del rifiuto…"
             />
           </div>

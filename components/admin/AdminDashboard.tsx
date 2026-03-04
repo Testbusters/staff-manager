@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
@@ -465,16 +466,15 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
               onChange={e => setSearch(e.target.value)}
               className="rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500 w-36"
             />
-            <select
-              value={communityFilter}
-              onChange={e => setCommunityFilter(e.target.value)}
-              className="rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-gray-500"
-            >
-              <option value="">Tutte le community</option>
-              {communities.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <Select value={communityFilter || 'all'} onValueChange={(v) => setCommunityFilter(v === 'all' ? '' : v)}>
+              <SelectTrigger className="h-8 text-xs w-auto"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte le community</SelectItem>
+                {communities.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         {filteredFeed.length === 0 ? (
