@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-04. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + fix minori. Prossimo: Blocco 15c — UI integrations (T0–G2).
+> Aggiornato 2026-03-04. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + Blocco 15c ✅. Prossimo: da definire.
 
 ---
 
@@ -10,6 +10,7 @@
 
 | Data | Blocco | Stato | Test | Note |
 |---|---|---|---|---|
+| 2026-03-04 | Blocco 15c — UI integrations (T0–G2) | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ (spec block15c.spec.ts creata, sospesa) | T0: priority select in TicketQuickModal. T1: CollabOpenTicketsSection + TicketDetailModal (collab dashboard). T2: TicketStatusBadge colori + data-ticket-stato. R1: guard responsabile_compensi in ActionPanel + ExpenseActionPanel. R2: DashboardPendingItems (comp/rimborso modali). R3: rimossi CTA hero responsabile. G1: tab DashboardUpdates riordinati. G2: row click in PendingApprovedList, PendingApprovedExpenseList, TicketList. Fix: hover:bg-gray-800 su tutte le righe interattive. Fix: DashboardTicketSection → full-row Link, inline reply rimosso. Fix: ExpModal d.expense → d.reimbursement. |
 | 2026-02-26 | Blocco 1 — Revisione ruoli e utenze di test | ✅ | tsc ✅, build ✅, vitest 106/106 ✅, e2e ⏸ (sospeso temporaneamente) | `017_roles_rename.sql` applicata. Bug fix `importo`/`data_compenso` in transition route. |
 | 2026-02-26 | Blocco 2 — Ristrutturazione menu collaboratore | ✅ | tsc ✅, build ✅, vitest 106/106 ✅, e2e ⏸ (sospeso), smoke test OK | 8 voci nav, unified Compensi e Rimborsi, TicketQuickModal, Profilo e Documenti tabs, 3 nuove pagine (eventi/comunicazioni/opportunita). |
 | 2026-02-27 | Blocco 3 — Correzioni sezione profilo + consolidamento OCCASIONALE | ✅ | tsc ✅, build ✅, vitest 106/106 ✅, e2e ⏸ (sospeso) | Rename `ha_figli_a_carico` → `sono_un_figlio_a_carico`, add `importo_lordo_massimale` + progress bar + guide modale, rimozione P.IVA e COCOCO, consolidamento OCCASIONALE. Migrations 018-020. |

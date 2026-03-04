@@ -121,7 +121,7 @@ importo_netto    = importo_lordo × 0.80
 ```
 app/
   (app)/
-    page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, Azioni rapide, PaymentOverview, bar chart) + responsabile_compensi (4 KPI cards, two-column pending items with competenza/categoria badges, DashboardTicketSection inline reply, Azioni rapide) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
+    page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, CollabOpenTicketsSection, PaymentOverview, bar chart) + responsabile_compensi (4 KPI cards, DashboardPendingItems comp/rimborso modals, DashboardTicketSection full-row links) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
     layout.tsx                   → Protected layout (auth guard + Sidebar)
     profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | blue CTA "Nuovo rimborso" + DocumentUploadForm + DocumentList)
     impostazioni/page.tsx        → Settings: 5-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event)
@@ -239,13 +239,13 @@ components/
     CompensationList.tsx         → Card list with status filter chips + chevron; meta row: community dot + Competenza + Inviato; tooltip only on netto
     CompensationDetail.tsx       → Read-only detail card
     Timeline.tsx                 → Chronological event list (accepts HistoryEvent[])
-    ActionPanel.tsx              → Role-aware action buttons + modals
+    ActionPanel.tsx              → Role-aware action buttons + modals (approve/reject/liquidate hidden for responsabile_compensi)
   expense/
     ApprovazioniRimborsi.tsx     → Responsabile: same structure as ApprovazioniCompensazioni without Import section
     ExpenseList.tsx              → Card list with status filter chips + chevron; date labels: Spesa/Inviato
     PendingApprovedExpenseList.tsx → "Da liquidare" amber card: table of APPROVATO expenses with importo + total footer
     ExpenseDetail.tsx            → Read-only reimbursement detail card
-    ExpenseActionPanel.tsx       → Role-aware action buttons + modals for reimbursements
+    ExpenseActionPanel.tsx       → Role-aware action buttons + modals for reimbursements (approve/reject/liquidate hidden for responsabile_compensi)
     ExpenseForm.tsx              → Single-step creation form (categoria, data, importo, descrizione + file upload)
   export/
     ExportSection.tsx            → Client: tab bar + action buttons (CSV/XLSX/mark-paid) + modal
@@ -264,7 +264,9 @@ components/
   ticket/
     TicketStatusBadge.tsx        → Pill badge for ticket status (APERTO=green, IN_LAVORAZIONE=yellow, CHIUSO=gray)
     TicketStatusInline.tsx       → Client component: status badge + transition buttons (APERTO/IN_LAV → only CHIUSO; no → In lavorazione CTA)
-    TicketRecordRow.tsx          → Row component for manager ticket lists: oggetto, stato badge, priority dot, creator name, last_message_at, Apri link
+    TicketRecordRow.tsx          → Row component for manager ticket lists: full-row Link to /ticket/[id], oggetto, stato badge, priority dot, creator name, last_message_at
+    CollabOpenTicketsSection.tsx → Collab dashboard: open ticket rows as buttons → TicketDetailModal
+    TicketDetailModal.tsx        → Chat-style modal (thread + reply form, fetches /api/tickets/[id])
     TicketList.tsx               → Ticket table with status/priority filters + Collaboratore column for admin
     TicketForm.tsx               → Create form (priority select BASSA/NORMALE/ALTA, category dropdown, oggetto, optional initial message)
     TicketQuickModal.tsx         → Self-contained modal with trigger button: opens inline ticket form (categoria/oggetto/messaggio), POST /api/tickets, redirect to /ticket/[id]
@@ -276,7 +278,9 @@ components/
     AdminDashboard.tsx           → Main admin dashboard client component (KPI cards, community cards, urgenti, feed filters, Recharts period charts, blocks drawer trigger)
   responsabile/
     CollaboratoreDetail.tsx      → Client: anagrafica header + compensi/rimborsi/documenti sections with inline action buttons + integration modal
-    DashboardTicketSection.tsx   → Responsabile: two-section ticket widget (ricevuti: creator→me, recenti: last activity); TicketRow with inline reply + priority dot
+    DashboardTicketSection.tsx   → Responsabile: two-section ticket widget (ricevuti + recenti); TicketRow as full-row Link to /ticket/[id]
+  responsabile/
+    DashboardPendingItems.tsx    → Responsabile dashboard: comp/rimborso IN_ATTESA rows as buttons → CompModal/ExpModal read-only detail
   contenuti/
     CommunicationList.tsx        → Communication CRUD: pin toggle, expires_at date, file_urls (newline-separated)
     DiscountList.tsx             → Discount CRUD: fornitore, codice_sconto, valid_from/to dates, logo_url, file_url; expiry badge
@@ -377,6 +381,7 @@ e2e/
   feedback.spec.ts                 → Playwright UAT: feedback tool S1–S5 (submit no screenshot, submit with screenshot, RBAC, admin list, login autofill, 5 tests)
   block14.spec.ts                  → Playwright UAT: rich text editor S1–S3 (H2 heading stored+rendered, editor loads HTML, RichTextDisplay collaboratore, 3 tests)
   tickets-block15a.spec.ts         → Playwright UAT: ticket overhaul S1–S8 (two-list view, ALTA priority DB verify, priority dot, only→Chiuso CTA, auto IN_LAVORAZIONE, collab reply, responsabile redirect, 8 tests)
+  block15c.spec.ts                 → Playwright UAT: UI integrations S1–S9 (TicketDetailModal, CompModal/ExpModal, badge colors, priority field, row navigation — suspended)
   fixtures/                        → Real Testbusters .docx template (OCCASIONALE) used as stable e2e fixture
 
 proxy.ts                         → Auth middleware (active check + password change redirect)
