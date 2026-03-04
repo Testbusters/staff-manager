@@ -20,7 +20,6 @@ import {
 
 interface CompensationRow {
   id: string;
-  periodo_riferimento: string | null;
   importo_lordo: number | null;
   importo_netto: number | null;
   stato: CompensationStatus;
@@ -75,6 +74,7 @@ interface CollaboratoreDetailProps {
   expenses: ExpenseRow[];
   documents: DocumentRow[];
   role: Role;
+  collabRole?: Role | null;
 }
 
 const MEMBER_STATUS_LABELS: Record<string, string> = {
@@ -103,6 +103,7 @@ export default function CollaboratoreDetail({
   expenses,
   documents,
   role,
+  collabRole,
 }: CollaboratoreDetailProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -168,19 +169,21 @@ export default function CollaboratoreDetail({
     const body: Record<string, unknown> = {
       nome:                fNome.trim() || undefined,
       cognome:             fCognome.trim() || undefined,
-      codice_fiscale:      fCF.trim().toUpperCase() || null,
-      data_nascita:        fDataNascita || null,
-      luogo_nascita:       fLuogoNascita.trim() || null,
-      provincia_nascita:   fProvinciaNascita.trim().toUpperCase() || null,
       comune:              fComune.trim() || null,
       provincia_residenza: fProvinciaRes.trim().toUpperCase() || null,
       indirizzo:           fIndirizzo.trim() || null,
       civico_residenza:    fCivico.trim() || null,
       telefono:            fTelefono.trim() || null,
-      tshirt_size:         fTshirt || null,
-      sono_un_figlio_a_carico: fSonoFiglio,
-      importo_lordo_massimale: fMassimale !== '' ? parseFloat(fMassimale) : null,
     };
+    if (!isResponsabileProfile) {
+      body.codice_fiscale      = fCF.trim().toUpperCase() || null;
+      body.data_nascita        = fDataNascita || null;
+      body.luogo_nascita       = fLuogoNascita.trim() || null;
+      body.provincia_nascita   = fProvinciaNascita.trim().toUpperCase() || null;
+      body.tshirt_size         = fTshirt || null;
+      body.sono_un_figlio_a_carico = fSonoFiglio;
+      body.importo_lordo_massimale = fMassimale !== '' ? parseFloat(fMassimale) : null;
+    }
     if (fUsername.trim().length >= 3) body.username = fUsername.trim();
 
     const res = await fetch(`/api/admin/collaboratori/${collab.id}/profile`, {
@@ -218,6 +221,7 @@ export default function CollaboratoreDetail({
   };
 
   const canAct = role === 'responsabile_compensi' || role === 'amministrazione';
+  const isResponsabileProfile = collabRole === 'responsabile_compensi';
 
   // ── Approve ───────────────────────────────────────────────────────────────
   const handleApprove = async (type: 'comp' | 'exp', id: string) => {
@@ -398,32 +402,36 @@ export default function CollaboratoreDetail({
                 maxLength={50} placeholder="username"
                 className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-blue-500" />
             </div>
-            <div>
-              <label className="block text-[11px] text-gray-500 mb-1">Codice fiscale</label>
-              <input type="text" value={fCF}
-                onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                maxLength={16}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-blue-500" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Data di nascita</label>
-                <input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Città di nascita</label>
-                <input type="text" value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] text-gray-500 mb-1">Provincia di nascita</label>
-              <input type="text" value={fProvinciaNascita}
-                onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
-                maxLength={2}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono uppercase focus:outline-none focus:border-blue-500" />
-            </div>
+            {!isResponsabileProfile && (
+              <>
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Codice fiscale</label>
+                  <input type="text" value={fCF}
+                    onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                    maxLength={16}
+                    className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-blue-500" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-gray-500 mb-1">Data di nascita</label>
+                    <input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)}
+                      className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-gray-500 mb-1">Città di nascita</label>
+                    <input type="text" value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)}
+                      className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Provincia di nascita</label>
+                  <input type="text" value={fProvinciaNascita}
+                    onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
+                    maxLength={2}
+                    className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 font-mono uppercase focus:outline-none focus:border-blue-500" />
+                </div>
+              </>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] text-gray-500 mb-1">Comune di residenza</label>
@@ -456,33 +464,37 @@ export default function CollaboratoreDetail({
               <input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)}
                 className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
             </div>
-            <div>
-              <label className="block text-[11px] text-gray-500 mb-1">Taglia t-shirt</label>
-              <select value={fTshirt} onChange={(e) => setFTshirt(e.target.value)}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
-                <option value="">— Non specificata —</option>
-                {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" checked={fSonoFiglio}
-                  onChange={(e) => setFSonoFiglio(e.target.checked)}
-                  className="accent-blue-600 w-4 h-4" />
-                <span className="text-sm text-gray-300">Fiscalmente a carico</span>
-              </label>
-            </div>
-            <div>
-              <label className="block text-[11px] text-gray-500 mb-1">Massimale lordo annuo (max €5.000)</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">€</span>
-                <input type="number" min={1} max={5000} step={1} value={fMassimale}
-                  onChange={(e) => setFMassimale(e.target.value)}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 pl-7 pr-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
-              </div>
-            </div>
+            {!isResponsabileProfile && (
+              <>
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Taglia t-shirt</label>
+                  <select value={fTshirt} onChange={(e) => setFTshirt(e.target.value)}
+                    className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2.5 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+                    <option value="">— Non specificata —</option>
+                    {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={fSonoFiglio}
+                      onChange={(e) => setFSonoFiglio(e.target.checked)}
+                      className="accent-blue-600 w-4 h-4" />
+                    <span className="text-sm text-gray-300">Fiscalmente a carico</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Massimale lordo annuo (max €5.000)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">€</span>
+                    <input type="number" min={1} max={5000} step={1} value={fMassimale}
+                      onChange={(e) => setFMassimale(e.target.value)}
+                      className="w-full rounded-lg bg-gray-800 border border-gray-700 pl-7 pr-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500" />
+                  </div>
+                </div>
+              </>
+            )}
 
             {profileError && (
               <p className="text-xs text-red-400 bg-red-900/20 px-3 py-2 rounded-lg">{profileError}</p>
@@ -539,7 +551,7 @@ export default function CollaboratoreDetail({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-800">
-                  {['Stato', 'Periodo', 'Importo', 'Community', 'Data', ''].map((h) => (
+                  {['Stato', 'Importo', 'Community', 'Data', ''].map((h) => (
                     <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-gray-500 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -553,7 +565,6 @@ export default function CollaboratoreDetail({
                       <td className="px-4 py-3">
                         <StatusBadge stato={comp.stato} />
                       </td>
-                      <td className="px-4 py-3 text-gray-300 text-xs">{comp.periodo_riferimento ?? '—'}</td>
                       <td className="px-4 py-3 text-gray-200 font-medium text-xs">{displayAmount(comp)}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{comp.community_name ?? '—'}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(comp.created_at)}</td>

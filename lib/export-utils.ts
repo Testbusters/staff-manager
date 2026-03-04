@@ -10,7 +10,6 @@ export interface ExportItem {
   iban: string | null;
   partita_iva: string | null;
   community_name: string | null;
-  periodo_riferimento: string | null;
   categoria: string | null;
   data_spesa: string | null;
   importo: number;
@@ -19,7 +18,7 @@ export interface ExportItem {
 // ── Headers ─────────────────────────────────────────────────────────────────
 
 const HEADERS: Record<ExportTab, string[]> = {
-  occasionali: ['Nome', 'Cognome', 'Codice Fiscale', 'IBAN', 'Community', 'Periodo', 'Importo Netto'],
+  occasionali: ['Nome', 'Cognome', 'Codice Fiscale', 'IBAN', 'Community', 'Importo Netto'],
   rimborsi:    ['Nome', 'Cognome', 'Codice Fiscale', 'IBAN', 'Categoria', 'Data Spesa', 'Importo'],
 };
 
@@ -34,7 +33,6 @@ function toRow(item: ExportItem, tab: ExportTab): string[] {
       item.codice_fiscale ?? '',
       item.iban ?? '',
       item.community_name ?? '',
-      item.periodo_riferimento ?? '',
       importoStr,
     ];
   }

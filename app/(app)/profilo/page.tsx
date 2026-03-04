@@ -55,6 +55,7 @@ export default async function ProfiloPage({
     ) ?? [];
 
   const role = profile?.role ?? '';
+  if (role === 'responsabile_compensi') redirect('/');
   const isCollaboratore = role === 'collaboratore';
 
   const { tab } = await searchParams;

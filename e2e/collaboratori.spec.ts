@@ -88,7 +88,6 @@ test.describe.serial('Collaboratori UAT', () => {
       community_id:       COMMUNITY_ID,
       tipo:               'OCCASIONALE',
       descrizione:        'Test UAT Collaboratori',
-      periodo_riferimento:'Test UAT Collaboratori',
       importo_lordo:      77,
       importo_netto:      77,
       stato:              'INVIATO',

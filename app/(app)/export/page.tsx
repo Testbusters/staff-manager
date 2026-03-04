@@ -45,7 +45,6 @@ export default async function ExportPage({
         iban: col?.iban ?? null,
         partita_iva: null,
         community_name: null,
-        periodo_riferimento: null,
         categoria: row.categoria,
         data_spesa: row.data_spesa,
         importo: row.importo,
@@ -54,7 +53,7 @@ export default async function ExportPage({
   } else {
     const { data } = await supabase
       .from('compensations')
-      .select('id, importo_netto, periodo_riferimento, collaborators(nome, cognome, codice_fiscale, iban), communities(name)')
+      .select('id, importo_netto, collaborators(nome, cognome, codice_fiscale, iban), communities(name)')
       .eq('stato', 'APPROVATO')
       .order('created_at', { ascending: true });
 
@@ -69,7 +68,6 @@ export default async function ExportPage({
         iban: col?.iban ?? null,
         partita_iva: null,
         community_name: com?.name ?? null,
-        periodo_riferimento: row.periodo_riferimento ?? null,
         categoria: null,
         data_spesa: null,
         importo: row.importo_netto ?? 0,

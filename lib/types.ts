@@ -292,7 +292,6 @@ export interface Compensation {
   community_id: string | null;
   nome_servizio_ruolo: string | null;
   competenza: string | null;
-  periodo_riferimento: string | null;
   data_competenza: string | null;
   importo_lordo: number | null;
   ritenuta_acconto: number | null;

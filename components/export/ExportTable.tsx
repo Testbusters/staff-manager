@@ -45,7 +45,6 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
             {tab === 'occasionali' && (
               <>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">Community</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">Periodo</th>
               </>
             )}
             {tab === 'rimborsi' && (
@@ -86,9 +85,6 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
                 <>
                   <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
                     {item.community_name ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
-                    {item.periodo_riferimento ?? '—'}
                   </td>
                 </>
               )}

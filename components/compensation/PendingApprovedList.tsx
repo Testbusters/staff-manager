@@ -38,7 +38,6 @@ export default function PendingApprovedList({
           <tr className="border-b border-gray-800">
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Nome servizio / Ruolo</th>
             <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Community</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Periodo</th>
             <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Lordo</th>
             <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">
               <span className="inline-flex items-center gap-1">Netto <InfoTooltip tip={TOOLTIP_TEXT} /></span>
@@ -54,9 +53,6 @@ export default function PendingApprovedList({
               </td>
               <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">
                 {c.communities?.name ?? '—'}
-              </td>
-              <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
-                {c.periodo_riferimento ?? '—'}
               </td>
               <td className="px-4 py-3 text-right text-gray-300 tabular-nums">
                 {fmt(c.importo_lordo)}

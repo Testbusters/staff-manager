@@ -21,9 +21,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
 
   responsabile_compensi: [
     { label: 'Dashboard',    href: '/',             icon: '🏠' },
-    { label: 'Profilo',      href: '/profilo',      icon: '👤' },
     { label: 'Compensi e rimborsi', href: '/approvazioni', icon: '💶' },
-    { label: 'Collaboratori',href: '/collaboratori',icon: '👥' },
     { label: 'Ticket',       href: '/ticket',       icon: '🎫' },
   ],
 

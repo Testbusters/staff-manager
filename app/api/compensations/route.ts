@@ -8,7 +8,6 @@ import type { Role } from '@/lib/types';
 const createSchema = z.object({
   collaborator_id: z.string().uuid(),
   community_id: z.string().uuid().optional(),
-  periodo_riferimento: z.string().optional(),
   data_competenza: z.string(),
   nome_servizio_ruolo: z.string().min(1),
   competenza: z.string().min(1),

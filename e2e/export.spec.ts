@@ -75,7 +75,6 @@ test.describe.serial('Export UAT', () => {
         ritenuta_acconto: 200,
         importo_netto: 800,
         stato: 'APPROVATO_ADMIN',
-        periodo_riferimento: '2026-02',
         admin_approved_by: null,
         admin_approved_at: now,
       }),

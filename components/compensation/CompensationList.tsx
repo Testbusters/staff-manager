@@ -133,12 +133,6 @@ export default function CompensationList({
                   {c.nome_servizio_ruolo ?? '—'}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                  {c.periodo_riferimento && (
-                    <>
-                      <span>Competenza: {c.periodo_riferimento}</span>
-                      <span className="text-gray-700">·</span>
-                    </>
-                  )}
                   <span>Inviato: {formatDate(c.created_at)}</span>
                 </div>
               </div>

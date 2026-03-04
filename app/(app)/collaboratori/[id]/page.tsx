@@ -28,7 +28,7 @@ export default async function CollaboratoreDetailPage({
 
   if (!profile?.is_active) redirect('/pending');
   const role = profile?.role as Role;
-  if (!['responsabile_compensi', 'amministrazione'].includes(role)) redirect('/');
+  if (role !== 'amministrazione') redirect('/');
 
   // ── Fetch collaborator ───────────────────────────────────────────────────
   const { data: collab, error: collabErr } = await svc
@@ -38,23 +38,6 @@ export default async function CollaboratoreDetailPage({
     .maybeSingle();
 
   if (collabErr || !collab) notFound();
-
-  // ── Access check for responsabile ───────────────────────────────────────
-  if (role === 'responsabile_compensi') {
-    const { data: uca } = await svc
-      .from('user_community_access')
-      .select('community_id')
-      .eq('user_id', user.id);
-    const myCommIds = new Set((uca ?? []).map((u: { community_id: string }) => u.community_id));
-
-    const { data: cc } = await svc
-      .from('collaborator_communities')
-      .select('community_id')
-      .eq('collaborator_id', id);
-    const collabCommIds = (cc ?? []).map((c: { community_id: string }) => c.community_id);
-
-    if (!collabCommIds.some((cid: string) => myCommIds.has(cid))) redirect('/collaboratori');
-  }
 
   // ── Fetch community names ────────────────────────────────────────────────
   const { data: ccData } = await svc
@@ -81,25 +64,25 @@ export default async function CollaboratoreDetailPage({
     }
   }
 
-  // ── Fetch member_status from user_profiles ───────────────────────────────
+  // ── Fetch member_status + role from user_profiles ───────────────────────
   const { data: upData } = await svc
     .from('user_profiles')
-    .select('member_status')
+    .select('member_status, role')
     .eq('user_id', collab.user_id)
     .maybeSingle();
   const memberStatus = upData?.member_status ?? null;
+  const collabRole = (upData?.role ?? null) as Role | null;
 
   // ── Fetch compensations ──────────────────────────────────────────────────
   const { data: rawComp } = await svc
     .from('compensations')
-    .select('id, periodo_riferimento, importo_lordo, importo_netto, stato, community_id, created_at')
+    .select('id, importo_lordo, importo_netto, stato, community_id, created_at')
     .eq('collaborator_id', id)
     .order('created_at', { ascending: false })
     .limit(50);
 
   const compensations = (rawComp ?? []).map((c: {
     id: string;
-    periodo_riferimento: string | null;
     importo_lordo: number | null;
     importo_netto: number | null;
     stato: CompensationStatus;
@@ -172,6 +155,7 @@ export default async function CollaboratoreDetailPage({
       expenses={expenses}
       documents={documents}
       role={role}
+      collabRole={collabRole}
     />
   );
 }

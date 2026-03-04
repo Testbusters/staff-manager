@@ -146,7 +146,6 @@ export async function POST() {
     nome_servizio_ruolo: r.nome_servizio_ruolo,
     info_specifiche: r.info_specifiche,
     competenza: r.competenza,
-    periodo_riferimento: null,
   }));
 
   const { data: inserted, error: insertError } = await serviceClient

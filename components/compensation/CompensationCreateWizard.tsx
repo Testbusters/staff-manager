@@ -19,7 +19,6 @@ type CollaboratorResult = {
 type WizardStep = 'step1' | 'step2' | 'step3';
 
 type FormData = {
-  periodo_riferimento: string;
   data_competenza: string;
   nome_servizio_ruolo: string;
   competenza: string;
@@ -79,7 +78,6 @@ export default function CompensationCreateWizard({
 
   // Step 2 state
   const [formData, setFormData] = useState<FormData>({
-    periodo_riferimento: '',
     data_competenza: '',
     nome_servizio_ruolo: '',
     competenza: '',
@@ -156,7 +154,6 @@ export default function CompensationCreateWizard({
       ritenuta_acconto: ritenuta,
       importo_netto: netto,
     };
-    if (formData.periodo_riferimento.trim()) payload.periodo_riferimento = formData.periodo_riferimento.trim();
     if (formData.info_specifiche.trim()) payload.info_specifiche = formData.info_specifiche.trim();
 
     try {
@@ -304,18 +301,6 @@ export default function CompensationCreateWizard({
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Periodo di riferimento <span className="text-gray-600">(opzionale)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.periodo_riferimento}
-              onChange={(e) => setFormData((prev) => ({ ...prev, periodo_riferimento: e.target.value }))}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-              placeholder="Es. Febbraio 2025"
-            />
-          </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
@@ -423,7 +408,6 @@ export default function CompensationCreateWizard({
       { label: 'Stato', value: 'In attesa' },
     ];
     if (competenzaLabel) rows.push({ label: 'Competenza', value: competenzaLabel });
-    if (formData.periodo_riferimento.trim()) rows.push({ label: 'Periodo', value: formData.periodo_riferimento.trim() });
     if (formData.data_competenza) rows.push({ label: 'Data competenza', value: new Date(formData.data_competenza).toLocaleDateString('it-IT') });
     if (formData.nome_servizio_ruolo.trim()) rows.push({ label: 'Nome servizio / Ruolo', value: formData.nome_servizio_ruolo.trim() });
     if (formData.info_specifiche.trim()) rows.push({ label: 'Info specifiche', value: formData.info_specifiche.trim() });

@@ -261,12 +261,6 @@ export default function ApprovazioniCompensazioni({
                     </p>
                     <p className="text-xs text-gray-400 truncate mt-0.5">{c.nome_servizio_ruolo ?? '—'}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                      {c.periodo_riferimento && (
-                        <span>{c.periodo_riferimento}</span>
-                      )}
-                      {c.periodo_riferimento && (
-                        <span className="text-gray-700">·</span>
-                      )}
                       <span>{formatDate(c.created_at)}</span>
                     </div>
                   </div>

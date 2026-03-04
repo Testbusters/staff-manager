@@ -36,32 +36,15 @@ export default async function CollaboratoriPage({
 
   if (!profile?.is_active) redirect('/pending');
   const role = profile?.role as Role;
-  if (!['responsabile_compensi', 'amministrazione'].includes(role)) redirect('/');
+  if (role !== 'amministrazione') redirect('/');
 
   const { filter: filterParam, page: pageParam } = await searchParams;
   const filter = (['all', 'documenti', 'stallo'].includes(filterParam ?? '') ? filterParam : 'all') as Filter;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10));
 
-  // ── Step 1: collaborator IDs accessible to this user ────────────────────────
-  let allCollaboratorIds: string[] = [];
-
-  if (role === 'responsabile_compensi') {
-    const { data: uca } = await svc
-      .from('user_community_access')
-      .select('community_id')
-      .eq('user_id', user.id);
-    const communityIds = (uca ?? []).map((u: { community_id: string }) => u.community_id);
-    if (communityIds.length > 0) {
-      const { data: cc } = await svc
-        .from('collaborator_communities')
-        .select('collaborator_id')
-        .in('community_id', communityIds);
-      allCollaboratorIds = [...new Set((cc ?? []).map((c: { collaborator_id: string }) => c.collaborator_id))];
-    }
-  } else {
-    const { data: all } = await svc.from('collaborators').select('id');
-    allCollaboratorIds = (all ?? []).map((c: { id: string }) => c.id);
-  }
+  // ── Step 1: fetch all collaborator IDs ───────────────────────────────────
+  const { data: all } = await svc.from('collaborators').select('id');
+  const allCollaboratorIds: string[] = (all ?? []).map((c: { id: string }) => c.id);
 
   // ── Step 2: apply filter ─────────────────────────────────────────────────────
   let filteredIds = allCollaboratorIds;
@@ -136,10 +119,7 @@ export default async function CollaboratoriPage({
     }
   }
 
-  const subtitle =
-    role === 'responsabile_compensi'
-      ? 'Collaboratori nelle community a te assegnate'
-      : 'Tutti i collaboratori';
+  const subtitle = 'Tutti i collaboratori';
 
   return (
     <div className="p-6 max-w-5xl">
@@ -167,9 +147,7 @@ export default async function CollaboratoriPage({
 
       {allCollaboratorIds.length === 0 ? (
         <p className="text-sm text-gray-500 py-8 text-center">
-          {role === 'responsabile_compensi'
-            ? 'Nessuna community assegnata. Contatta un amministratore.'
-            : 'Nessun collaboratore presente.'}
+          Nessun collaboratore presente.
         </p>
       ) : collaborators.length === 0 ? (
         <p className="text-sm text-gray-500 py-8 text-center">Nessun collaboratore trovato per il filtro selezionato.</p>

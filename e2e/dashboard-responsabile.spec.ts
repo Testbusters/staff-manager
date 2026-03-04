@@ -78,7 +78,6 @@ test.describe.serial('Dashboard Responsabile UAT', () => {
       community_id:        COMMUNITY_ID,
       tipo:                'OCCASIONALE',
       descrizione:         'Test UAT Dashboard Responsabile',
-      periodo_riferimento: 'Test UAT Dashboard Responsabile',
       importo_lordo:       55,
       importo_netto:       55,
       stato:               'INVIATO',

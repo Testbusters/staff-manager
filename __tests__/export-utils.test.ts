@@ -10,7 +10,6 @@ const occasionaleItem: ExportItem = {
   iban: 'IT60X0542811101000000123456',
   partita_iva: null,
   community_name: 'Community A',
-  periodo_riferimento: '2026-01',
   categoria: null,
   data_spesa: null,
   importo: 1234.56,
@@ -24,7 +23,6 @@ const rimborsoItem: ExportItem = {
   iban: 'IT60X0542811101000000654321',
   partita_iva: null,
   community_name: null,
-  periodo_riferimento: null,
   categoria: 'Trasporto',
   data_spesa: '2026-02-15',
   importo: 75.00,
@@ -34,7 +32,7 @@ describe('buildCSV', () => {
   it('0 items occasionali → solo header con BOM', () => {
     const csv = buildCSV([], 'occasionali');
     expect(csv.startsWith('\uFEFF')).toBe(true);
-    expect(csv).toContain('Nome;Cognome;Codice Fiscale;IBAN;Community;Periodo;Importo Netto');
+    expect(csv).toContain('Nome;Cognome;Codice Fiscale;IBAN;Community;Importo Netto');
     // Only header line (BOM + header)
     const lines = csv.split('\r\n').filter(Boolean);
     expect(lines).toHaveLength(1);
@@ -51,7 +49,6 @@ describe('buildCSV', () => {
     expect(row).toContain('RSSMRA80A01H501Z');
     expect(row).toContain('IT60X0542811101000000123456');
     expect(row).toContain('Community A');
-    expect(row).toContain('2026-01');
     expect(row).toContain('1234.56');
   });
 
@@ -85,7 +82,6 @@ describe('buildCSV', () => {
       codice_fiscale: null,
       iban: null,
       community_name: null,
-      periodo_riferimento: null,
     };
     const csv = buildCSV([itemNulls], 'occasionali');
     const row = csv.split('\r\n')[1];
