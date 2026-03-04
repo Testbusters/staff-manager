@@ -1,0 +1,68 @@
+import Link from 'next/link';
+import TicketStatusBadge from './TicketStatusBadge';
+import type { TicketStatus } from '@/lib/types';
+
+function formatAge(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${mins}m fa`;
+  const hours = Math.floor(diffMs / 3600000);
+  if (hours < 24) return `${hours}h fa`;
+  const days = Math.floor(diffMs / 86400000);
+  return `${days}g fa`;
+}
+
+const CATEGORIA_BADGE: Record<string, string> = {
+  Compenso: 'bg-blue-900/40 text-blue-300 border-blue-700/50',
+  Rimborso: 'bg-violet-900/40 text-violet-300 border-violet-700/50',
+};
+
+export type TicketRecord = {
+  id: string;
+  categoria: string;
+  oggetto: string;
+  stato: TicketStatus;
+  creator_name?: string | null;
+  last_message_at: string | null;
+  last_message_author_name: string | null;
+};
+
+export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
+  const lastReply = ticket.last_message_at ? (
+    <span className="text-xs text-gray-500 tabular-nums">
+      {ticket.last_message_author_name ?? 'Risposta'} · {formatAge(ticket.last_message_at)}
+    </span>
+  ) : (
+    <span className="text-xs text-amber-500/80">In attesa</span>
+  );
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800/40 transition">
+      <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORIA_BADGE[ticket.categoria] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+        {ticket.categoria}
+      </span>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-gray-200 truncate">{ticket.oggetto}</p>
+        {ticket.creator_name && (
+          <p className="text-xs text-gray-500 truncate">{ticket.creator_name}</p>
+        )}
+      </div>
+
+      <div className="shrink-0">
+        <TicketStatusBadge stato={ticket.stato} />
+      </div>
+
+      <div className="shrink-0 hidden sm:block">
+        {lastReply}
+      </div>
+
+      <Link
+        href={`/ticket/${ticket.id}`}
+        className="shrink-0 text-xs text-blue-400 hover:text-blue-300 transition"
+      >
+        Apri →
+      </Link>
+    </div>
+  );
+}

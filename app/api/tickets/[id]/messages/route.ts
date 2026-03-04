@@ -109,6 +109,32 @@ export async function POST(
 
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
+  // Update denormalized last-message fields + updated_at on the ticket
+  const authorProfile = await serviceClient
+    .from('user_profiles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+  const authorRole = authorProfile.data?.role ?? 'collaboratore';
+  const authorCollab = await serviceClient
+    .from('collaborators')
+    .select('nome, cognome')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const authorName = authorCollab.data
+    ? `${authorCollab.data.nome ?? ''} ${authorCollab.data.cognome ?? ''}`.trim()
+    : authorRole;
+
+  await serviceClient
+    .from('tickets')
+    .update({
+      updated_at: new Date().toISOString(),
+      last_message_at: msg.created_at,
+      last_message_author_name: authorName || authorRole,
+      last_message_author_role: authorRole,
+    })
+    .eq('id', ticketId);
+
   // Load notification settings
   const settings = await getNotificationSettings(serviceClient);
 

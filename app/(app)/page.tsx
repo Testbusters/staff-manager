@@ -260,21 +260,33 @@ export default async function DashboardPage() {
       );
     }
 
-    // Round 2 — collab IDs (via collaborator_communities) + open tickets
-    type RTicket = { id: string; oggetto: string; stato: string; categoria: string; created_at: string; creator_user_id: string };
+    // Round 2 — collab IDs + open tickets (ricevuti) + recently active tickets (recenti)
+    type RTicket = {
+      id: string; oggetto: string; stato: string; categoria: string;
+      created_at: string; updated_at: string; creator_user_id: string;
+      last_message_at: string | null; last_message_author_name: string | null;
+    };
 
-    const [ccResult, ticketsResult] = await Promise.all([
+    const threeAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [ccResult, ricevutiResult, recentiResult] = await Promise.all([
       svc.from('collaborator_communities').select('collaborator_id').in('community_id', communityIds),
       svc.from('tickets')
-        .select('id, oggetto, stato, categoria, created_at, creator_user_id')
+        .select('id, oggetto, stato, categoria, created_at, updated_at, creator_user_id, last_message_at, last_message_author_name')
         .in('stato', ['APERTO', 'IN_LAVORAZIONE'])
         .order('created_at', { ascending: false })
         .limit(5),
+      svc.from('tickets')
+        .select('id, oggetto, stato, categoria, created_at, updated_at, creator_user_id, last_message_at, last_message_author_name')
+        .gte('updated_at', threeAgo)
+        .order('updated_at', { ascending: false })
+        .limit(5),
     ]);
 
-    const allCollabIds = [...new Set((ccResult.data ?? []).map((r: { collaborator_id: string }) => r.collaborator_id))];
-    const rawTickets   = (ticketsResult.data ?? []) as RTicket[];
-    const noCollabs    = allCollabIds.length === 0;
+    const allCollabIds   = [...new Set((ccResult.data ?? []).map((r: { collaborator_id: string }) => r.collaborator_id))];
+    const rawRicevuti    = (ricevutiResult.data ?? []) as RTicket[];
+    const rawRecenti     = (recentiResult.data ?? []) as RTicket[];
+    const noCollabs      = allCollabIds.length === 0;
 
     // Round 3 — compensations, expenses, collab names, ticket collab names (all in parallel)
     type RComp    = { id: string; collaborator_id: string; importo_lordo: number | null; stato: string; competenza: string | null; created_at: string };
@@ -282,7 +294,10 @@ export default async function DashboardPage() {
     type RCollab3 = { id: string; nome: string | null; cognome: string | null };
     type RTCollab = { user_id: string; nome: string | null; cognome: string | null };
 
-    const ticketUserIds  = [...new Set(rawTickets.map(t => t.creator_user_id).filter(Boolean))];
+    const ticketUserIds  = [...new Set([
+      ...rawRicevuti.map(t => t.creator_user_id),
+      ...rawRecenti.map(t => t.creator_user_id),
+    ].filter(Boolean))];
     const resolveEmpty   = <T,>(v: T[]) => Promise.resolve({ data: v });
 
     const [compsResult, expsResult, collabsResult, tCollabsResult] = await Promise.all([
@@ -327,14 +342,18 @@ export default async function DashboardPage() {
     for (const c of tCollabs) tCollabNameMap[c.user_id] = `${c.nome ?? ''} ${c.cognome ?? ''}`.trim();
 
     // ── Tickets ───────────────────────────────────────────────
-    const tickets: DashboardTicket[] = rawTickets.map(t => ({
-      id:         t.id,
-      oggetto:    t.oggetto,
-      stato:      t.stato,
-      categoria:  t.categoria,
-      collabName: tCollabNameMap[t.creator_user_id] ?? 'Collaboratore',
-      created_at: t.created_at,
-    }));
+    const toTicket = (t: RTicket): DashboardTicket => ({
+      id:                         t.id,
+      oggetto:                    t.oggetto,
+      stato:                      t.stato,
+      categoria:                  t.categoria,
+      collabName:                 tCollabNameMap[t.creator_user_id] ?? 'Collaboratore',
+      created_at:                 t.created_at,
+      last_message_at:            t.last_message_at,
+      last_message_author_name:   t.last_message_author_name,
+    });
+    const ticketsRicevuti = rawRicevuti.map(toTicket);
+    const ticketsRecenti  = rawRecenti.map(toTicket);
 
     // ── Hero data ────────────────────────────────────────────
     const rTodayStr  = new Date().toLocaleDateString('it-IT', {
@@ -370,6 +389,16 @@ export default async function DashboardPage() {
           <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{rTodayStr}</p>
         </div>
 
+        {/* Quick actions */}
+        <div className="flex gap-3 flex-wrap">
+          <Link href="/approvazioni" className="rounded-lg bg-blue-700 hover:bg-blue-600 px-4 py-2 text-sm font-medium text-white transition">
+            Compensi e rimborsi
+          </Link>
+          <Link href="/ticket" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
+            Ticket
+          </Link>
+        </div>
+
         {/* KPI row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <RKpiCard
@@ -395,9 +424,9 @@ export default async function DashboardPage() {
           />
           <RKpiCard
             label="Ticket aperti"
-            count={tickets.length}
+            count={ticketsRicevuti.length}
             sub={null}
-            color={tickets.length > 0 ? 'text-rose-300' : 'text-gray-600'}
+            color={ticketsRicevuti.length > 0 ? 'text-rose-300' : 'text-gray-600'}
             href="/ticket"
           />
         </div>
@@ -408,7 +437,7 @@ export default async function DashboardPage() {
           {/* Compensi da approvare */}
           <div className={sectionCls}>
             <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-200">Compensi da approvare</h2>
+              <h2 className="text-sm font-medium text-gray-200">Compensi in attesa</h2>
               <Link href="/approvazioni?tab=compensi" className="text-xs text-gray-500 hover:text-gray-300 transition">
                 Vedi tutti →
               </Link>
@@ -438,7 +467,7 @@ export default async function DashboardPage() {
           {/* Rimborsi da approvare */}
           <div className={sectionCls}>
             <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-200">Rimborsi da approvare</h2>
+              <h2 className="text-sm font-medium text-gray-200">Rimborsi in attesa</h2>
               <Link href="/approvazioni?tab=rimborsi" className="text-xs text-gray-500 hover:text-gray-300 transition">
                 Vedi tutti →
               </Link>
@@ -465,26 +494,8 @@ export default async function DashboardPage() {
 
         </div>
 
-        {/* Ticket recenti */}
-        <DashboardTicketSection tickets={tickets} />
-
-        {/* Azioni rapide */}
-        <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">Azioni rapide</h2>
-          </div>
-          <div className="p-5 flex flex-wrap gap-3">
-            <Link href="/approvazioni" className="rounded-lg bg-blue-700 hover:bg-blue-600 px-4 py-2 text-sm font-medium text-white transition">
-              Approvazioni
-            </Link>
-            <Link href="/collaboratori" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
-              Collaboratori
-            </Link>
-            <Link href="/ticket" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
-              Ticket
-            </Link>
-          </div>
-        </div>
+        {/* Ticket */}
+        <DashboardTicketSection ricevuti={ticketsRicevuti} recenti={ticketsRecenti} />
 
       </div>
     );
@@ -1271,6 +1282,36 @@ export default async function DashboardPage() {
                 <span className="flex-shrink-0">⚠</span>
                 <span className="flex-1 min-w-0 truncate">{item.text}</span>
                 <span className="flex-shrink-0 text-xs text-amber-500/60">→</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Ticket aperti */}
+      {openTickets.length > 0 && (
+        <div className={sectionCls}>
+          <div className="px-5 py-4 border-b border-gray-800">
+            <h2 className="text-sm font-medium text-gray-200">I tuoi ticket aperti</h2>
+          </div>
+          <div className="divide-y divide-gray-800">
+            {(openTickets as { id: string; oggetto: string; stato: string }[]).slice(0, 3).map((t) => (
+              <Link
+                key={t.id}
+                href={`/ticket/${t.id}`}
+                className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-200 truncate">{t.oggetto}</p>
+                </div>
+                <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+                  t.stato === 'APERTO' ? 'bg-rose-900/40 text-rose-300 border-rose-700/50' :
+                  t.stato === 'IN_LAVORAZIONE' ? 'bg-amber-900/40 text-amber-300 border-amber-700/50' :
+                  'bg-gray-800 text-gray-500 border-gray-700'
+                }`}>
+                  {t.stato === 'APERTO' ? 'Aperto' : t.stato === 'IN_LAVORAZIONE' ? 'In lavorazione' : t.stato}
+                </span>
+                <span className="shrink-0 text-xs text-blue-400">Vedi →</span>
               </Link>
             ))}
           </div>

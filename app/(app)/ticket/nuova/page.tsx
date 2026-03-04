@@ -16,6 +16,7 @@ export default async function NuovoTicketPage() {
     .single();
 
   if (!profile?.is_active) redirect('/pending');
+  if (profile.role === 'responsabile_compensi') redirect('/');
 
   return (
     <div className="p-6 max-w-2xl">

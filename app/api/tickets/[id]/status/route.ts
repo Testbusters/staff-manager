@@ -42,7 +42,7 @@ export async function PATCH(
 
   const { data: ticket, error } = await serviceClient
     .from('tickets')
-    .update({ stato })
+    .update({ stato, updated_at: new Date().toISOString() })
     .eq('id', ticketId)
     .select()
     .single();

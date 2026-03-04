@@ -2,9 +2,9 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import TicketStatusBadge from '@/components/ticket/TicketStatusBadge';
 import TicketThread from '@/components/ticket/TicketThread';
 import TicketMessageForm from '@/components/ticket/TicketMessageForm';
+import TicketStatusInline from '@/components/ticket/TicketStatusInline';
 import { TICKET_PRIORITY_LABELS, ROLE_LABELS } from '@/lib/types';
 import type { Role, TicketStatus } from '@/lib/types';
 
@@ -46,8 +46,13 @@ export default async function TicketDetailPage({
 
   const role = profile.role as Role;
 
-  // Fetch ticket (RLS ensures access)
-  const { data: ticket } = await supabase
+  const serviceClient = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // Fetch ticket via service role (access control via explicit check below)
+  const { data: ticket } = await serviceClient
     .from('tickets')
     .select('*')
     .eq('id', id)
@@ -55,19 +60,18 @@ export default async function TicketDetailPage({
 
   if (!ticket) notFound();
 
+  // Explicit access check
+  const isManager = ['amministrazione', 'responsabile_compensi'].includes(role);
+  if (!isManager && ticket.creator_user_id !== user.id) notFound();
+
   // Fetch messages
-  const { data: rawMessages } = await supabase
+  const { data: rawMessages } = await serviceClient
     .from('ticket_messages')
     .select('*')
     .eq('ticket_id', id)
     .order('created_at', { ascending: true });
 
   const messages = rawMessages ?? [];
-
-  const serviceClient = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
 
   // Resolve author role labels
   const authorIds = [...new Set(messages.map((m) => m.author_user_id))];
@@ -111,16 +115,16 @@ export default async function TicketDetailPage({
     }),
   );
 
-  const canChangeStatus = ['amministrazione', 'responsabile_compensi'].includes(role);
-
   return (
     <div className="p-6 max-w-3xl">
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-3">
-        <Link href="/ticket" className="text-sm text-gray-500 hover:text-gray-300 transition">
-          ← Ticket
-        </Link>
-        <span className="text-gray-700">/</span>
+        {isManager && (
+          <Link href="/ticket" className="text-sm text-gray-500 hover:text-gray-300 transition">
+            ← Ticket
+          </Link>
+        )}
+        {isManager && <span className="text-gray-700">/</span>}
         <h1 className="text-xl font-semibold text-gray-100 truncate">{ticket.oggetto}</h1>
       </div>
 
@@ -131,7 +135,11 @@ export default async function TicketDetailPage({
             <p className="text-xs text-gray-500 uppercase tracking-wide">{ticket.categoria}</p>
             <h2 className="text-base font-semibold text-gray-100">{ticket.oggetto}</h2>
           </div>
-          <TicketStatusBadge stato={ticket.stato as TicketStatus} />
+          {isManager ? (
+            <TicketStatusInline ticketId={id} currentStato={ticket.stato as TicketStatus} />
+          ) : (
+            <span className="text-xs text-gray-500">{ticket.stato}</span>
+          )}
         </div>
 
         <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -145,19 +153,20 @@ export default async function TicketDetailPage({
 
       {/* Thread */}
       <div className="mb-5">
-        <TicketThread messages={messagesWithMeta} ticketStato={ticket.stato as TicketStatus} />
+        <TicketThread
+          messages={messagesWithMeta}
+          ticketStato={ticket.stato as TicketStatus}
+          ticketId={id}
+        />
       </div>
 
       {/* Reply form */}
       {ticket.stato !== 'CHIUSO' && (
         <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
-          <h3 className="text-sm font-medium text-gray-300 mb-4">
-            {canChangeStatus ? 'Rispondi / Gestisci ticket' : 'Rispondi'}
-          </h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-4">Rispondi</h3>
           <TicketMessageForm
             ticketId={id}
             ticketStato={ticket.stato as TicketStatus}
-            currentUserRole={role}
           />
         </div>
       )}

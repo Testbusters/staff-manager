@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
 
@@ -24,12 +27,24 @@ function formatDateTime(iso: string) {
 export default function TicketThread({
   messages,
   ticketStato,
+  ticketId,
 }: {
   messages: MessageDisplay[];
   ticketStato: TicketStatus;
+  ticketId: string;
 }) {
+  const [lastVisitTs, setLastVisitTs] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(`ticket_last_visit_${ticketId}`);
+    setLastVisitTs(stored ? Number(stored) : null);
+    return () => {
+      localStorage.setItem(`ticket_last_visit_${ticketId}`, Date.now().toString());
+    };
+  }, [ticketId]);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {messages.length === 0 ? (
         <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 text-center">
           <p className="text-sm text-gray-500">
@@ -37,49 +52,67 @@ export default function TicketThread({
           </p>
         </div>
       ) : (
-        messages.map((m) => (
-          <div
-            key={m.id}
-            className={`rounded-xl border p-4 ${
-              m.is_own
-                ? 'bg-blue-950/40 border-blue-800/40'
-                : 'bg-gray-900 border-gray-800'
-            }`}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-semibold ${m.is_own ? 'text-blue-300' : 'text-gray-400'}`}>
-                {m.author_label}
-              </span>
-              <span className="text-xs text-gray-600">{formatDateTime(m.created_at)}</span>
-            </div>
+        messages.map((m) => {
+          const isNew =
+            lastVisitTs !== null &&
+            !m.is_own &&
+            new Date(m.created_at).getTime() > lastVisitTs;
 
-            {/* Message body */}
-            <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">{m.message}</p>
+          return (
+            <div
+              key={m.id}
+              className={`flex ${m.is_own ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[78%] rounded-2xl px-4 py-3 ${
+                  m.is_own
+                    ? 'bg-blue-600/20 border border-blue-500/30 rounded-tr-sm'
+                    : 'bg-gray-900 border border-gray-800 rounded-tl-sm'
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between gap-4 mb-1.5">
+                  <span className={`text-xs font-semibold ${m.is_own ? 'text-blue-300' : 'text-gray-400'}`}>
+                    {m.author_label}
+                  </span>
+                  <span className="text-xs text-gray-600 tabular-nums">{formatDateTime(m.created_at)}</span>
+                </div>
 
-            {/* Attachment */}
-            {m.attachment_name && (
-              <div className="mt-3">
-                {m.signed_attachment_url ? (
-                  <a
-                    href={m.signed_attachment_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-blue-400 hover:text-blue-300 transition"
-                  >
-                    📎 {m.attachment_name}
-                  </a>
-                ) : (
-                  <span className="text-xs text-gray-500">📎 {m.attachment_name}</span>
+                {/* "Nuovo" badge */}
+                {isNew && (
+                  <span className="inline-block text-[10px] font-medium text-amber-400 bg-amber-900/30 border border-amber-700/40 rounded px-1.5 py-0.5 mb-1.5">
+                    Nuovo
+                  </span>
+                )}
+
+                {/* Message body */}
+                <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">{m.message}</p>
+
+                {/* Attachment */}
+                {m.attachment_name && (
+                  <div className="mt-2.5">
+                    {m.signed_attachment_url ? (
+                      <a
+                        href={m.signed_attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-blue-400 hover:text-blue-300 transition"
+                      >
+                        📎 {m.attachment_name}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-500">📎 {m.attachment_name}</span>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        ))
+            </div>
+          );
+        })
       )}
 
       {ticketStato === 'CHIUSO' && (
-        <div className="rounded-xl bg-gray-800/50 border border-gray-700 p-4 text-center">
+        <div className="rounded-xl bg-gray-800/50 border border-gray-700 p-4 text-center mt-4">
           <p className="text-sm text-gray-500">
             Questo ticket è <span className="font-medium text-gray-400">{TICKET_STATUS_LABELS.CHIUSO}</span>. Non è possibile aggiungere nuovi messaggi.
           </p>
