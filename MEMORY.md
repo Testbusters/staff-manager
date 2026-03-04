@@ -18,6 +18,7 @@ implementation of each approved block. Working on `main`.
 |------|-------------|--------|
 | C | Guided review of `docs/requirements.md`: section-by-section comparison, user approval per change | 🔄 in progress — Blocks 1–14 + community targeting + feedback management + revisione Compensi e Rimborsi + revisione sezione Rimborsi + dashboard responsabile_compensi + fix responsabile nav/form ✅, next blocks to define |
 | D | Rebuild `docs/implementation-checklist.md` based on updated `requirements.md` | 🔄 in progress — Blocks 1–14 + community targeting + feedback management + revisione Compensi e Rimborsi + revisione sezione Rimborsi + dashboard responsabile_compensi + fix responsabile nav/form ✅, next blocks to plan |
+| E | shadcn/ui migration — Fasi 1–4 + Block 15 alignment + config alignment + QW1+QW2 + Fase 6 ✅ — Fasi 5,7–9 pending (Table on demand, Select, Button, Cleanup) | 🔄 in progress — Fase 6 (Input/Textarea) complete 2026-03-04, next: Fase 7 Select |
 
 > **Rule**: do not advance to the next step without explicit confirmation. C and D depend on
 > order — the checklist cannot be rebuilt before `requirements.md` is updated.
