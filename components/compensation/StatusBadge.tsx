@@ -21,7 +21,7 @@ const STATUS_CONFIG: Record<CompensationStatus, { variant: BadgeVariant; classNa
 export default function StatusBadge({ stato }: { stato: CompensationStatus | ExpenseStatus }) {
   const config = STATUS_CONFIG[stato as CompensationStatus] ?? { variant: 'outline' as const };
   return (
-    <Badge variant={config.variant} className={config.className}>
+    <Badge data-stato={stato} variant={config.variant} className={config.className}>
       {STATUS_LABELS[stato]}
     </Badge>
   );
