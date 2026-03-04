@@ -1,4 +1,6 @@
-import Link from 'next/link';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import type { Expense } from '@/lib/types';
 
 const fmt = (n: number) =>
@@ -13,6 +15,7 @@ function formatDate(iso: string) {
 }
 
 export default function PendingApprovedExpenseList({ expenses }: { expenses: Expense[] }) {
+  const router = useRouter();
   const approved = expenses.filter((e) => e.stato === 'APPROVATO');
   if (approved.length === 0) return null;
 
@@ -39,7 +42,11 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
         </thead>
         <tbody className="divide-y divide-gray-800">
           {approved.map((e) => (
-            <tr key={e.id} className="hover:bg-gray-800/40 transition">
+            <tr
+              key={e.id}
+              onClick={() => router.push(`/rimborsi/${e.id}`)}
+              className="hover:bg-gray-800/40 transition cursor-pointer"
+            >
               <td className="px-4 py-3 text-gray-200 font-medium">{e.categoria}</td>
               <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{formatDate(e.data_spesa)}</td>
               <td className="px-4 py-3 text-gray-400 hidden md:table-cell truncate max-w-[200px]">
@@ -48,14 +55,7 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
               <td className="px-4 py-3 text-right text-amber-400 tabular-nums font-medium">
                 {fmt(e.importo)}
               </td>
-              <td className="px-4 py-3 text-right">
-                <Link
-                  href={`/rimborsi/${e.id}`}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition"
-                >
-                  →
-                </Link>
-              </td>
+              <td className="px-4 py-3 text-right text-gray-600 text-sm">→</td>
             </tr>
           ))}
         </tbody>

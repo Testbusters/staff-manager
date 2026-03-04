@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { TicketStatus, Role } from '@/lib/types';
 import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/lib/types';
@@ -41,6 +42,7 @@ export default function TicketList({
 }) {
   const [filterStato, setFilterStato] = useState<TicketStatus | 'ALL'>('ALL');
 
+  const router = useRouter();
   const isManager = ['amministrazione', 'responsabile_compensi'].includes(role);
 
   const filtered = filterStato === 'ALL'
@@ -113,7 +115,11 @@ export default function TicketList({
             </thead>
             <tbody className="divide-y divide-gray-800">
               {filtered.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-800/50 transition">
+                <tr
+                  key={t.id}
+                  onClick={() => router.push(`/ticket/${t.id}`)}
+                  className="hover:bg-gray-800/50 transition cursor-pointer"
+                >
                   <td className="px-4 py-3">
                     <TicketStatusBadge stato={t.stato} />
                   </td>
@@ -133,14 +139,7 @@ export default function TicketList({
                   <td className="px-4 py-3 text-right text-gray-500 hidden lg:table-cell tabular-nums">
                     {formatDate(t.created_at)}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/ticket/${t.id}`}
-                      className="text-xs text-blue-400 hover:text-blue-300"
-                    >
-                      Apri →
-                    </Link>
-                  </td>
+                  <td className="px-4 py-3 text-right text-gray-600 text-sm">→</td>
                 </tr>
               ))}
             </tbody>

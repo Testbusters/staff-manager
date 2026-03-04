@@ -127,8 +127,8 @@ test.describe.serial('Ticket UAT', () => {
     // Thread shows "Tu" label for the initial message
     await expect(page.locator('text=Tu').first()).toBeVisible();
     await expect(page.locator('text=Primo messaggio di prova per il ticket E2E.')).toBeVisible();
-    // Status badge: APERTO (text-green-300)
-    await expect(page.locator('span.text-green-300')).toBeVisible();
+    // Status badge: APERTO (gray)
+    await expect(page.locator('span[data-ticket-stato="APERTO"]')).toBeVisible();
     console.log('  ✅ S2 — ticket creato, thread e badge APERTO visibili');
   });
 
@@ -206,7 +206,7 @@ test.describe.serial('Ticket UAT', () => {
     await page.goto(`/ticket/${ticketId}`);
 
     // Auto-advance: after admin replied in S5 on APERTO ticket → IN_LAVORAZIONE
-    await expect(page.locator('span.text-yellow-300')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('span[data-ticket-stato="IN_LAVORAZIONE"]')).toBeVisible({ timeout: 10_000 });
     // "→ In lavorazione" button must NOT exist (removed from transitions)
     await expect(page.locator('button:has-text("→ In lavorazione")')).not.toBeVisible();
     // Only "→ Chiuso" remains

@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { ROLE_LABELS, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
-import type { Role, ExpenseCategory } from '@/lib/types';
+import { ROLE_LABELS } from '@/lib/types';
+import type { Role } from '@/lib/types';
 import DashboardTicketSection from '@/components/responsabile/DashboardTicketSection';
 import type { DashboardTicket } from '@/components/responsabile/DashboardTicketSection';
+import DashboardPendingItems from '@/components/responsabile/DashboardPendingItems';
+import type { PendingComp, PendingExp } from '@/components/responsabile/DashboardPendingItems';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import type { AdminDashboardData } from '@/components/admin/types';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
@@ -13,6 +15,7 @@ import DashboardBarChart from '@/components/compensation/DashboardBarChart';
 import type { BarMonthData } from '@/components/compensation/DashboardBarChart';
 import DashboardUpdates from '@/components/compensation/DashboardUpdates';
 import type { DashboardDocItem, DashboardEventItem, DashboardCommItem, DashboardOppItem } from '@/components/compensation/DashboardUpdates';
+import CollabOpenTicketsSection from '@/components/ticket/CollabOpenTicketsSection';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
@@ -104,19 +107,6 @@ function DocCard({ count }: { count: number }) {
 
 
 // ── Responsabile helpers ────────────────────────────────────
-const COMP_COMPETENZA_BADGE: Record<string, string> = {
-  corsi:                'bg-blue-900/40 text-blue-300 border-blue-700/50',
-  sb:                   'bg-violet-900/40 text-violet-300 border-violet-700/50',
-  produzione_materiale: 'bg-amber-900/40 text-amber-300 border-amber-700/50',
-  extra:                'bg-emerald-900/40 text-emerald-300 border-emerald-700/50',
-};
-
-function formatAgeR(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-  if (days === 0) return 'Oggi';
-  if (days === 1) return '1g';
-  return `${days}g`;
-}
 
 function formatCurrencyR(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -391,16 +381,6 @@ export default async function DashboardPage() {
           <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{rTodayStr}</p>
         </div>
 
-        {/* Quick actions */}
-        <div className="flex gap-3 flex-wrap">
-          <Link href="/approvazioni" className="rounded-lg bg-blue-700 hover:bg-blue-600 px-4 py-2 text-sm font-medium text-white transition">
-            Compensi e rimborsi
-          </Link>
-          <Link href="/ticket" className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition">
-            Ticket
-          </Link>
-        </div>
-
         {/* KPI row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <RKpiCard
@@ -434,67 +414,11 @@ export default async function DashboardPage() {
         </div>
 
         {/* Two-column pending items */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          {/* Compensi da approvare */}
-          <div className={sectionCls}>
-            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-200">Compensi in attesa</h2>
-              <Link href="/approvazioni?tab=compensi" className="text-xs text-gray-500 hover:text-gray-300 transition">
-                Vedi tutti →
-              </Link>
-            </div>
-            {pendingComps.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun compenso in attesa.</p>
-            ) : (
-              <div className="divide-y divide-gray-800">
-                {pendingComps.slice(0, 8).map(c => (
-                  <Link key={c.id} href={`/collaboratori/${c.collaborator_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition">
-                    {c.competenza && (
-                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                        {c.competenza}
-                      </span>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-200 truncate">{collabNameMap[c.collaborator_id] ?? 'Collaboratore'}</p>
-                      <p className="text-xs text-gray-500">{formatCurrencyR(c.importo_lordo ?? 0)}</p>
-                    </div>
-                    <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAgeR(c.created_at)}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Rimborsi da approvare */}
-          <div className={sectionCls}>
-            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-200">Rimborsi in attesa</h2>
-              <Link href="/approvazioni?tab=rimborsi" className="text-xs text-gray-500 hover:text-gray-300 transition">
-                Vedi tutti →
-              </Link>
-            </div>
-            {pendingExps.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun rimborso in attesa.</p>
-            ) : (
-              <div className="divide-y divide-gray-800">
-                {pendingExps.slice(0, 8).map(e => (
-                  <Link key={e.id} href={`/collaboratori/${e.collaborator_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition">
-                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-                      {e.categoria}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-200 truncate">{collabNameMap[e.collaborator_id] ?? 'Collaboratore'}</p>
-                      <p className="text-xs text-gray-500">{formatCurrencyR(e.importo ?? 0)}</p>
-                    </div>
-                    <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAgeR(e.created_at)}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
+        <DashboardPendingItems
+          comps={allComps as PendingComp[]}
+          exps={allExps as PendingExp[]}
+          collabNameMap={collabNameMap}
+        />
 
         {/* Ticket */}
         <DashboardTicketSection ricevuti={ticketsRicevuti} recenti={ticketsRecenti} />
@@ -1291,38 +1215,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Ticket aperti */}
-      {openTickets.length > 0 && (
-        <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">I tuoi ticket aperti</h2>
-          </div>
-          <div className="divide-y divide-gray-800">
-            {(openTickets as { id: string; oggetto: string; stato: string; priority: string }[]).slice(0, 3).map((t) => (
-              <Link
-                key={t.id}
-                href={`/ticket/${t.id}`}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-200 truncate">{t.oggetto}</p>
-                </div>
-                <span className={`shrink-0 h-2 w-2 rounded-full ${
-                  t.priority === 'ALTA' ? 'bg-red-500' :
-                  t.priority === 'NORMALE' ? 'bg-yellow-500' : 'bg-gray-500'
-                }`} title={t.priority} />
-                <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
-                  t.stato === 'APERTO' ? 'bg-rose-900/40 text-rose-300 border-rose-700/50' :
-                  t.stato === 'IN_LAVORAZIONE' ? 'bg-amber-900/40 text-amber-300 border-amber-700/50' :
-                  'bg-gray-800 text-gray-500 border-gray-700'
-                }`}>
-                  {t.stato === 'APERTO' ? 'Aperto' : t.stato === 'IN_LAVORAZIONE' ? 'In lavorazione' : t.stato}
-                </span>
-                <span className="shrink-0 text-xs text-blue-400">Vedi →</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      <CollabOpenTicketsSection tickets={openTickets as { id: string; oggetto: string; stato: string; priority: string }[]} />
 
       {/* Azioni rapide */}
       <div className={sectionCls}>

@@ -1,4 +1,6 @@
-import Link from 'next/link';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import type { Compensation } from '@/lib/types';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
@@ -18,6 +20,7 @@ export default function PendingApprovedList({
 }: {
   compensations: CompensationRow[];
 }) {
+  const router = useRouter();
   const approved = compensations.filter((c) => c.stato === 'APPROVATO');
   if (approved.length === 0) return null;
 
@@ -47,7 +50,11 @@ export default function PendingApprovedList({
         </thead>
         <tbody className="divide-y divide-gray-800">
           {approved.map((c) => (
-            <tr key={c.id} className="hover:bg-gray-800/40 transition">
+            <tr
+              key={c.id}
+              onClick={() => router.push(`/compensi/${c.id}`)}
+              className="hover:bg-gray-800/40 transition cursor-pointer"
+            >
               <td className="px-4 py-3 text-gray-200 font-medium truncate max-w-[180px]">
                 {c.nome_servizio_ruolo ?? '—'}
               </td>
@@ -60,14 +67,7 @@ export default function PendingApprovedList({
               <td className="px-4 py-3 text-right text-amber-400 tabular-nums font-medium">
                 {fmt(c.importo_netto)}
               </td>
-              <td className="px-4 py-3 text-right">
-                <Link
-                  href={`/compensi/${c.id}`}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition"
-                >
-                  →
-                </Link>
-              </td>
+              <td className="px-4 py-3 text-right text-gray-600 text-sm">→</td>
             </tr>
           ))}
         </tbody>

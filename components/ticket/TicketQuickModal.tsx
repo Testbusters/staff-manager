@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TICKET_CATEGORIES } from '@/lib/types';
+import { TICKET_CATEGORIES, TICKET_PRIORITY_LABELS } from '@/lib/types';
+import type { TicketPriority } from '@/lib/types';
 
 export default function TicketQuickModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [categoria, setCategoria] = useState('');
+  const [priority, setPriority] = useState<TicketPriority>('NORMALE');
   const [oggetto, setOggetto] = useState('');
   const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,7 @@ export default function TicketQuickModal() {
   function handleClose() {
     setOpen(false);
     setCategoria('');
+    setPriority('NORMALE');
     setOggetto('');
     setMessaggio('');
     setError(null);
@@ -35,6 +38,7 @@ export default function TicketQuickModal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         categoria,
+        priority,
         oggetto: oggetto.trim(),
         messaggio: messaggio.trim() || undefined,
       }),
@@ -96,6 +100,22 @@ export default function TicketQuickModal() {
                   <option value="" disabled>Seleziona un riferimento</option>
                   {TICKET_CATEGORIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="quick-priority" className="block text-sm font-medium text-gray-300">
+                  Priorità
+                </label>
+                <select
+                  id="quick-priority"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as TicketPriority)}
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+                >
+                  {(Object.keys(TICKET_PRIORITY_LABELS) as TicketPriority[]).map((p) => (
+                    <option key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</option>
                   ))}
                 </select>
               </div>

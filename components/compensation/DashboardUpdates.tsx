@@ -48,10 +48,10 @@ type Tab = { key: string; label: string };
 type UnreadCounts = { events: number; communicationsResources: number; opportunitiesDiscounts: number };
 
 const TABS: Tab[] = [
-  { key: 'documenti',     label: 'Documenti' },
   { key: 'eventi',        label: 'Eventi' },
   { key: 'comunicazioni', label: 'Comunicazioni e risorse' },
   { key: 'opportunita',   label: 'Opportunità e sconti' },
+  { key: 'documenti',     label: 'Documenti' },
 ];
 
 const PAGE_SIZE = 4;
@@ -69,7 +69,7 @@ export default function DashboardUpdates({
   opportunita: DashboardOppItem[];
   unreadCounts?: UnreadCounts;
 }) {
-  const [activeTab, setActiveTab] = useState<string>('documenti');
+  const [activeTab, setActiveTab] = useState<string>('eventi');
   const [page, setPage] = useState(0);
 
   const currentItems =

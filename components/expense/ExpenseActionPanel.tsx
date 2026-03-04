@@ -57,14 +57,17 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
     onClick: () => void;
   }> = [];
 
-  if (canExpenseTransition(role, stato, 'approve').ok) {
-    actions.push({ action: 'approve', label: 'Approva', variant: 'primary', onClick: () => perform('approve') });
-  }
-  if (canExpenseTransition(role, stato, 'reject').ok) {
-    actions.push({ action: 'reject', label: 'Rifiuta', variant: 'danger', onClick: () => setShowRejectModal(true) });
-  }
-  if (canExpenseTransition(role, stato, 'mark_liquidated').ok) {
-    actions.push({ action: 'mark_liquidated', label: 'Segna come liquidato', variant: 'primary', onClick: () => setShowLiquidatedModal(true) });
+  // responsabile_compensi cannot approve, reject, or liquidate — admin only
+  if (role !== 'responsabile_compensi') {
+    if (canExpenseTransition(role, stato, 'approve').ok) {
+      actions.push({ action: 'approve', label: 'Approva', variant: 'primary', onClick: () => perform('approve') });
+    }
+    if (canExpenseTransition(role, stato, 'reject').ok) {
+      actions.push({ action: 'reject', label: 'Rifiuta', variant: 'danger', onClick: () => setShowRejectModal(true) });
+    }
+    if (canExpenseTransition(role, stato, 'mark_liquidated').ok) {
+      actions.push({ action: 'mark_liquidated', label: 'Segna come liquidato', variant: 'primary', onClick: () => setShowLiquidatedModal(true) });
+    }
   }
 
   if (actions.length === 0) return null;

@@ -160,8 +160,8 @@ test.describe.serial('Block 15a — Ticket overhaul UAT', () => {
     await page.goto(`/ticket/${priorityTicketId}`);
     await page.waitForLoadState('domcontentloaded');
 
-    // Status badge: APERTO (green)
-    await expect(page.locator('span.text-green-300')).toBeVisible({ timeout: 5_000 });
+    // Status badge: APERTO (gray)
+    await expect(page.locator('span[data-ticket-stato="APERTO"]')).toBeVisible({ timeout: 5_000 });
 
     // Only → Chiuso button present; no → In lavorazione
     await expect(page.locator('button:has-text("→ Chiuso")')).toBeVisible();
@@ -194,8 +194,8 @@ test.describe.serial('Block 15a — Ticket overhaul UAT', () => {
     await page.goto(`/ticket/${testTicketId}`);
     await page.waitForLoadState('domcontentloaded');
 
-    // Ticket starts APERTO
-    await expect(page.locator('span.text-green-300')).toBeVisible({ timeout: 5_000 });
+    // Ticket starts APERTO (gray badge)
+    await expect(page.locator('span[data-ticket-stato="APERTO"]')).toBeVisible({ timeout: 5_000 });
 
     await Promise.all([
       page.waitForResponse(
@@ -208,8 +208,8 @@ test.describe.serial('Block 15a — Ticket overhaul UAT', () => {
       })(),
     ]);
 
-    // After reply, page refreshes → badge should be IN_LAVORAZIONE (yellow)
-    await expect(page.locator('span.text-yellow-300')).toBeVisible({ timeout: 10_000 });
+    // After reply, page refreshes → badge should be IN_LAVORAZIONE
+    await expect(page.locator('span[data-ticket-stato="IN_LAVORAZIONE"]')).toBeVisible({ timeout: 10_000 });
 
     // Verify DB stato = IN_LAVORAZIONE
     const ticket = await dbFirst<{ stato: string; last_message_at: string }>(

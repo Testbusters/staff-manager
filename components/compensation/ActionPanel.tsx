@@ -57,17 +57,20 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
     onClick: () => void;
   }> = [];
 
+  // responsabile_compensi cannot approve, reject, or liquidate — admin only
+  if (role !== 'responsabile_compensi') {
+    if (canTransition(role, stato, 'approve').ok) {
+      actions.push({ action: 'approve', label: 'Approva', variant: 'primary', onClick: () => perform('approve') });
+    }
+    if (canTransition(role, stato, 'reject').ok) {
+      actions.push({ action: 'reject', label: 'Rifiuta', variant: 'danger', onClick: () => setShowRejectModal(true) });
+    }
+    if (canTransition(role, stato, 'mark_liquidated').ok) {
+      actions.push({ action: 'mark_liquidated', label: 'Segna come liquidato', variant: 'primary', onClick: () => setShowLiquidatedModal(true) });
+    }
+  }
   if (canTransition(role, stato, 'reopen').ok) {
     actions.push({ action: 'reopen', label: 'Riapri', variant: 'secondary', onClick: () => perform('reopen') });
-  }
-  if (canTransition(role, stato, 'approve').ok) {
-    actions.push({ action: 'approve', label: 'Approva', variant: 'primary', onClick: () => perform('approve') });
-  }
-  if (canTransition(role, stato, 'reject').ok) {
-    actions.push({ action: 'reject', label: 'Rifiuta', variant: 'danger', onClick: () => setShowRejectModal(true) });
-  }
-  if (canTransition(role, stato, 'mark_liquidated').ok) {
-    actions.push({ action: 'mark_liquidated', label: 'Segna come liquidato', variant: 'primary', onClick: () => setShowLiquidatedModal(true) });
   }
 
   if (actions.length === 0) return null;
