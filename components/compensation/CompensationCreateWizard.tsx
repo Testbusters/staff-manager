@@ -122,6 +122,9 @@ export default function CompensationCreateWizard({
   }
 
   function validateStep2(): string {
+    if (!formData.nome_servizio_ruolo.trim()) return 'Nome servizio / Ruolo obbligatorio';
+    if (!formData.data_competenza) return 'Data di competenza obbligatoria';
+    if (!formData.competenza) return 'Competenza obbligatoria';
     if (!formData.importo_lordo || parseFloat(formData.importo_lordo) <= 0) {
       return 'Importo lordo obbligatorio e deve essere positivo';
     }
@@ -146,14 +149,14 @@ export default function CompensationCreateWizard({
 
     const payload: Record<string, unknown> = {
       collaborator_id: selectedCollab.id,
+      nome_servizio_ruolo: formData.nome_servizio_ruolo.trim(),
+      data_competenza: formData.data_competenza,
+      competenza: formData.competenza,
       importo_lordo: lordo,
       ritenuta_acconto: ritenuta,
       importo_netto: netto,
     };
     if (formData.periodo_riferimento.trim()) payload.periodo_riferimento = formData.periodo_riferimento.trim();
-    if (formData.data_competenza) payload.data_competenza = formData.data_competenza;
-    if (formData.nome_servizio_ruolo.trim()) payload.nome_servizio_ruolo = formData.nome_servizio_ruolo.trim();
-    if (formData.competenza) payload.competenza = formData.competenza;
     if (formData.info_specifiche.trim()) payload.info_specifiche = formData.info_specifiche.trim();
 
     try {
@@ -290,7 +293,7 @@ export default function CompensationCreateWizard({
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
-              Nome servizio / Ruolo <span className="text-gray-600">(opzionale)</span>
+              Nome servizio / Ruolo
             </label>
             <input
               type="text"
@@ -316,7 +319,7 @@ export default function CompensationCreateWizard({
 
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
-              Data di competenza <span className="text-gray-600">(opzionale)</span>
+              Data di competenza
             </label>
             <input
               type="date"
@@ -329,7 +332,7 @@ export default function CompensationCreateWizard({
           {competenze.length > 0 && (
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">
-                Competenza <span className="text-gray-600">(opzionale)</span>
+                Competenza
               </label>
               <select
                 value={formData.competenza}
