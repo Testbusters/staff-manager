@@ -120,6 +120,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => {
                   setEmail(u.email);
+                  setPassword('Testbusters123');
                   passwordRef.current?.focus();
                 }}
                 className="rounded-lg bg-gray-900 border border-gray-800 px-2 py-2.5 text-left hover:border-gray-700 hover:bg-gray-800/60 transition"
