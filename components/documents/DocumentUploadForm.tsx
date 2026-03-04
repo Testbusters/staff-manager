@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, DocumentSignStatus } from '@/lib/types';
+import { Input } from '@/components/ui/input';
 
 interface Collaborator {
   id: string;
@@ -134,14 +135,13 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
         </div>
         <div>
           <label className="block text-xs text-gray-400 mb-1.5">Anno</label>
-          <input
+          <Input
             type="number"
             value={anno}
             onChange={(e) => setAnno(e.target.value)}
             placeholder="es. 2025"
             min={2000}
             max={2100}
-            className={inputCls}
           />
         </div>
       </div>
@@ -151,12 +151,11 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
         <label className="block text-xs text-gray-400 mb-1.5">
           Titolo <span className="text-red-500">*</span>
         </label>
-        <input
+        <Input
           type="text"
           value={titolo}
           onChange={(e) => setTitolo(e.target.value)}
           placeholder="es. Contratto collaborazione febbraio 2026"
-          className={inputCls}
         />
       </div>
 

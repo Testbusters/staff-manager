@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
 
 type MemberStatus = 'attivo' | 'uscente_con_compenso' | 'uscente_senza_compenso';
 
@@ -104,13 +105,13 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500 whitespace-nowrap">Data ingresso:</span>
-              <input
+              <Input
                 type="date"
                 value={dateValues[m.id] ?? ''}
                 onChange={(e) => setDateValues((prev) => ({ ...prev, [m.id]: e.target.value }))}
                 onBlur={() => handleDateSave(m.id, m.data_ingresso)}
                 disabled={loadingDateId === m.id}
-                className="rounded-lg bg-gray-800 border border-gray-700 px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+                className="h-auto py-1 px-2 text-xs"
               />
               {loadingDateId === m.id && <span className="text-xs text-gray-500">…</span>}
             </div>

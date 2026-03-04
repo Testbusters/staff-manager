@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { ContentEvent, EventTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
+import { Input } from '@/components/ui/input';
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'WEBINAR',   label: 'Webinar' },
@@ -86,27 +87,21 @@ function EventForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-800 bg-blue-950/30 p-4">
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
-      <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Data/ora inizio</label>
-          <input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
+          <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Data/ora fine</label>
-          <input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
+          <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
         </div>
       </div>
-      <input value={form.location} onChange={set('location')} placeholder="Luogo (es. Online, Milano)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <input value={form.luma_url} onChange={set('luma_url')} placeholder="URL pagina Luma" type="url"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <input value={form.luma_embed_url} onChange={set('luma_embed_url')} placeholder="URL embed Luma (per iframe)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.location} onChange={set('location')} placeholder="Luogo (es. Online, Milano)" />
+      <Input value={form.luma_url} onChange={set('luma_url')} placeholder="URL pagina Luma" type="url" />
+      <Input value={form.luma_embed_url} onChange={set('luma_embed_url')} placeholder="URL embed Luma (per iframe)" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Tipo evento</label>
@@ -116,8 +111,7 @@ function EventForm({
             {TIPO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
-        <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none self-end" />
+        <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" className="self-end" />
       </div>
       <div className="space-y-1">
         <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>

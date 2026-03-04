@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Input } from '@/components/ui/input';
 
 const TEST_USERS = [
   { role: 'Collaboratore',                    email: 'collaboratore_test@test.com' },
@@ -21,10 +22,6 @@ export default function LoginPage() {
 
   const router = useRouter();
   const supabase = createClient();
-
-  const inputCls =
-    'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-    'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +60,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs text-gray-400 mb-1.5">Email</label>
-              <input
+              <Input
                 type="email"
                 placeholder="nome@email.com"
                 value={email}
@@ -71,12 +68,11 @@ export default function LoginPage() {
                 disabled={loading}
                 required
                 autoComplete="email"
-                className={inputCls}
               />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1.5">Password</label>
-              <input
+              <Input
                 ref={passwordRef}
                 type="password"
                 placeholder="••••••••"
@@ -85,7 +81,6 @@ export default function LoginPage() {
                 disabled={loading}
                 required
                 autoComplete="current-password"
-                className={inputCls}
               />
             </div>
 

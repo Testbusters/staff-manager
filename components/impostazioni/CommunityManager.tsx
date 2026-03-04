@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
 
 type Community = { id: string; name: string; is_active: boolean };
 type Responsabile = { user_id: string; display_name: string; email: string; communities: { id: string; name: string }[]; can_publish_announcements: boolean };
@@ -115,9 +116,9 @@ export default function CommunityManager({
         </div>
         <div className="p-5">
           <form onSubmit={handleCreate} className="flex gap-3">
-            <input value={newName} onChange={(e) => setNewName(e.target.value)}
+            <Input value={newName} onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome community"
-              className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600" />
+              className="flex-1" />
             <button type="submit" disabled={createLoading || !newName.trim()}
               className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm font-medium text-white transition">
               {createLoading ? 'Creazione…' : 'Crea'}
@@ -141,8 +142,8 @@ export default function CommunityManager({
             <div key={c.id} className="px-5 py-3 flex items-center gap-3">
               {editingId === c.id ? (
                 <>
-                  <input value={editName} onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600" />
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)}
+                    className="flex-1" />
                   <button onClick={() => handleRename(c.id)} disabled={editLoading}
                     className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3 py-1.5 text-xs font-medium text-white transition">
                     Salva

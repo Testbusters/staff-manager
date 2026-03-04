@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 type Collaborator = {
   nome: string;
@@ -40,9 +41,6 @@ type Props = {
 
 const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
 const readonlyCls =
   'w-full rounded-lg bg-gray-850 border border-gray-800 px-3 py-2.5 text-sm text-gray-400 select-all';
 const labelCls = 'block text-xs text-gray-500 mb-1.5';
@@ -266,65 +264,64 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Nome</label>
-              <input type="text" placeholder="Mario" value={nome}
+              <Input type="text" placeholder="Mario" value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
             <div>
               <label className={labelCls}>Cognome</label>
-              <input type="text" placeholder="Rossi" value={cognome}
+              <Input type="text" placeholder="Rossi" value={cognome}
                 onChange={(e) => setCognome(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
           </div>
           <div>
             <label className={labelCls}>Email</label>
-            <input
+            <Input
               type="email"
               value={emailVal}
               onChange={(e) => setEmailVal(e.target.value)}
               disabled={loading}
-              className={inputCls}
             />
           </div>
           <div>
             <label className={labelCls}>Codice fiscale</label>
-            <input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
+            <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
               onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-              disabled={loading} maxLength={16} className={inputCls + ' font-mono'} />
+              disabled={loading} maxLength={16} className="font-mono" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Data di nascita</label>
-              <input type="date" value={dataNascita}
+              <Input type="date" value={dataNascita}
                 onChange={(e) => setDataNascita(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
             <div>
               <label className={labelCls}>Città di nascita</label>
-              <input type="text" placeholder="Roma" value={luogoNascita}
+              <Input type="text" placeholder="Roma" value={luogoNascita}
                 onChange={(e) => setLuogoNascita(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
           </div>
           <div>
             <label className={labelCls}>Provincia di nascita (sigla)</label>
-            <input type="text" placeholder="RM" value={provinciaNascita}
+            <Input type="text" placeholder="RM" value={provinciaNascita}
               onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
-              disabled={loading} maxLength={2} className={inputCls + ' font-mono uppercase'} />
+              disabled={loading} maxLength={2} className="font-mono uppercase" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Comune di residenza</label>
-              <input type="text" placeholder="Milano" value={comuneRes}
+              <Input type="text" placeholder="Milano" value={comuneRes}
                 onChange={(e) => setComuneRes(e.target.value)}
-                disabled={loading} className={inputCls} />
+                disabled={loading} />
             </div>
             <div>
               <label className={labelCls}>Provincia di residenza (sigla)</label>
-              <input type="text" placeholder="MI" value={provinciaRes}
+              <Input type="text" placeholder="MI" value={provinciaRes}
                 onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                disabled={loading} maxLength={2} className={inputCls + ' font-mono uppercase'} />
+                disabled={loading} maxLength={2} className="font-mono uppercase" />
             </div>
           </div>
           {communities.length > 0 && (
@@ -350,37 +347,34 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         <div className="p-5 space-y-4">
           <div>
             <label className={labelCls}>Telefono di contatto</label>
-            <input
+            <Input
               type="tel"
               placeholder="+39 333 0000000"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
               disabled={loading}
-              className={inputCls}
             />
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
               <label className={labelCls}>Via/Piazza di residenza</label>
-              <input
+              <Input
                 type="text"
                 placeholder="Via Roma"
                 value={indirizzo}
                 onChange={(e) => setIndirizzo(e.target.value)}
                 disabled={loading}
-                className={inputCls}
               />
             </div>
             <div>
               <label className={labelCls}>Civico</label>
-              <input
+              <Input
                 type="text"
                 placeholder="1"
                 value={civico}
                 onChange={(e) => setCivico(e.target.value)}
                 disabled={loading}
                 maxLength={10}
-                className={inputCls}
               />
             </div>
           </div>
@@ -395,13 +389,13 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         </div>
         <div className="p-5">
           <label className={labelCls}>IBAN</label>
-          <input
+          <Input
             type="text"
             placeholder="IT60 X054 2811 1010 0000 0123 456"
             value={iban}
             onChange={(e) => setIban(e.target.value)}
             disabled={loading}
-            className={inputCls + ' font-mono'}
+            className="font-mono"
             maxLength={34}
           />
           <p className="text-xs text-gray-600 mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
@@ -450,7 +444,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">€</span>
-                <input
+                <Input
                   type="number"
                   min={1}
                   max={5000}
@@ -460,7 +454,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                   onChange={(e) => setMassimale(e.target.value)}
                   disabled={loading}
                   required
-                  className={inputCls + ' pl-7'}
+                  className="pl-7"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1.5">
@@ -556,7 +550,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
             value={tshirt}
             onChange={(e) => setTshirt(e.target.value)}
             disabled={loading}
-            className={inputCls}
+            className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
           >
             <option value="">— Non specificata —</option>
             {TSHIRT_SIZES.map((s) => (

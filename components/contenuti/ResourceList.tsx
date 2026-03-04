@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Resource, ResourceCategoria, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
+import { Input } from '@/components/ui/input';
 
 const CATEGORIA_OPTIONS: { value: ResourceCategoria; label: string }[] = [
   { value: 'GUIDA',     label: 'Guida' },
@@ -64,13 +65,10 @@ function ResourceForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-800 bg-blue-950/30 p-4">
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
-      <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
-      <input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
+      <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)" />
       <div className="flex items-center gap-3">
         <label className="text-sm text-gray-400 shrink-0">Categoria:</label>
         <select value={form.categoria} onChange={set('categoria')}
@@ -78,8 +76,7 @@ function ResourceForm({
           {CATEGORIA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
-      <input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)" />
       <div className="space-y-1">
         <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
         <div className="flex flex-wrap gap-3">

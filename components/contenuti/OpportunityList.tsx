@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Opportunity, OpportunityTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
+import { Input } from '@/components/ui/input';
 
 const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
   { value: 'LAVORO',     label: 'Lavoro' },
@@ -80,8 +81,7 @@ function OpportunityForm({
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-800 bg-blue-950/30 p-4">
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
       <div className="grid grid-cols-2 gap-3">
-        <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
-          className="col-span-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+        <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required className="col-span-2" />
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Tipo</label>
           <select value={form.tipo} onChange={set('tipo')}
@@ -91,17 +91,14 @@ function OpportunityForm({
         </div>
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Scadenza candidatura</label>
-          <input type="date" value={form.scadenza_candidatura} onChange={set('scadenza_candidatura')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
+          <Input type="date" value={form.scadenza_candidatura} onChange={set('scadenza_candidatura')} />
         </div>
       </div>
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione *" />
       <RichTextEditor value={form.requisiti} onChange={setRich('requisiti')} placeholder="Requisiti (opzionale)" />
       <div className="grid grid-cols-2 gap-3">
-        <input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-        <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+        <Input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url" />
+        <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
       </div>
       <div className="space-y-1">
         <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>

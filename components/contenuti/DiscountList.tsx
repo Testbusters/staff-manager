@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Discount, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
+import { Input } from '@/components/ui/input';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -77,29 +78,21 @@ function DiscountForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-800 bg-blue-950/30 p-4">
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
-      <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-      <input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)"
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
+      <Input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)" />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-2 gap-3">
-        <input value={form.codice_sconto} onChange={set('codice_sconto')} placeholder="Codice sconto"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-        <input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-        <input value={form.logo_url} onChange={set('logo_url')} placeholder="URL logo fornitore"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
-        <input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato"
-          className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+        <Input value={form.codice_sconto} onChange={set('codice_sconto')} placeholder="Codice sconto" />
+        <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
+        <Input value={form.logo_url} onChange={set('logo_url')} placeholder="URL logo fornitore" />
+        <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Valido dal</label>
-          <input type="date" value={form.valid_from} onChange={set('valid_from')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
+          <Input type="date" value={form.valid_from} onChange={set('valid_from')} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-gray-500">Valido fino al</label>
-          <input type="date" value={form.valid_to} onChange={set('valid_to')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
+          <Input type="date" value={form.valid_to} onChange={set('valid_to')} />
         </div>
       </div>
       <div className="space-y-1">
