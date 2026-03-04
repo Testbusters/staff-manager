@@ -996,7 +996,7 @@ export default async function DashboardPage() {
     supabase.from('compensations').select('id, stato, importo_netto, importo_lordo, liquidated_at'),
     supabase.from('expense_reimbursements').select('id, stato, importo, liquidated_at'),
     docsQuery,
-    supabase.from('tickets').select('id, oggetto, stato').eq('creator_user_id', user.id),
+    supabase.from('tickets').select('id, oggetto, stato, priority').eq('creator_user_id', user.id),
     supabase.from('events')
       .select('id, titolo, start_datetime, tipo, community_ids')
       .order('start_datetime', { ascending: true, nullsFirst: false })
@@ -1025,7 +1025,7 @@ export default async function DashboardPage() {
   ]);
 
   // Derive IDs for second-tier queries
-  const openTickets   = (allTickets ?? []).filter((t: { id: string; oggetto: string; stato: string }) => t.stato !== 'CHIUSO');
+  const openTickets   = (allTickets ?? []).filter((t: { id: string; oggetto: string; stato: string; priority: string }) => t.stato !== 'CHIUSO');
   const openTicketIds = openTickets.map((t: { id: string }) => t.id);
 
   // Service client for ticket_messages (bypasses RLS — ticket service role pattern)
@@ -1297,7 +1297,7 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-medium text-gray-200">I tuoi ticket aperti</h2>
           </div>
           <div className="divide-y divide-gray-800">
-            {(openTickets as { id: string; oggetto: string; stato: string }[]).slice(0, 3).map((t) => (
+            {(openTickets as { id: string; oggetto: string; stato: string; priority: string }[]).slice(0, 3).map((t) => (
               <Link
                 key={t.id}
                 href={`/ticket/${t.id}`}
@@ -1306,6 +1306,10 @@ export default async function DashboardPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-200 truncate">{t.oggetto}</p>
                 </div>
+                <span className={`shrink-0 h-2 w-2 rounded-full ${
+                  t.priority === 'ALTA' ? 'bg-red-500' :
+                  t.priority === 'NORMALE' ? 'bg-yellow-500' : 'bg-gray-500'
+                }`} title={t.priority} />
                 <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
                   t.stato === 'APERTO' ? 'bg-rose-900/40 text-rose-300 border-rose-700/50' :
                   t.stato === 'IN_LAVORAZIONE' ? 'bg-amber-900/40 text-amber-300 border-amber-700/50' :
