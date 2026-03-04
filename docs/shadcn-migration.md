@@ -10,7 +10,7 @@
 
 ## Stato fasi
 
-### Completate (nel branch `worktree-shadcn-migration`, mergiato in main)
+### Completate
 
 - [x] Prerequisito — dashboard label fix ("da approvare" → "in attesa")
 - [x] Fase 1 — Setup infrastruttura shadcn/ui (components.json, CSS vars, utils, dark-only)
@@ -18,6 +18,7 @@
 - [x] Fase 3 — Dialog/Sheet (8 modal custom + Block 15 components)
 - [x] Fase 4 — Badge (StatusBadge sistema + ticket + dashboard components)
 - [x] Allineamento Block 15 — TicketStatusBadge, TicketDetailModal, CollabOpenTicketsSection, DashboardPendingItems, DashboardTicketSection
+- [x] Config alignment — `new-york+gray+Tailwind v4`: baseColor neutral→gray, --border/--input dark tokens fixed, cursor-pointer + overlay backdrop-blur added to @layer base
 
 ### In piano (da eseguire post-merge, blocchi separati su main)
 
