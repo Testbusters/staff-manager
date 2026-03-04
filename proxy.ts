@@ -46,8 +46,10 @@ export async function proxy(request: NextRequest) {
     ? `${forwardedProto}://${forwardedHost}`
     : request.nextUrl.origin;
 
+  const isHealthCheck = path === '/api/health';
+
   if (!user) {
-    if (!isLoginPage && !isAuthRoute) {
+    if (!isLoginPage && !isAuthRoute && !isHealthCheck) {
       return createRedirect(new URL('/login', origin), supabaseResponse);
     }
     return supabaseResponse;
