@@ -16,7 +16,7 @@
 - [ ] Fase 1 — Setup infrastruttura shadcn/ui
 - [ ] Fase 2 — Tooltip (Radix → sostituisce InfoTooltip)
 - [x] Fase 3 — Dialog/Sheet (8 modal custom)
-- [ ] Fase 4 — Badge (status badge sistema)
+- [x] Fase 4 — Badge (status badge sistema)
 - [ ] Fase 5 — Table (solo nuove pagine, post-merge)
 
 ---

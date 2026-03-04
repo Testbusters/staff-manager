@@ -7,6 +7,7 @@ import { canTransition } from '@/lib/compensation-transitions';
 import { canExpenseTransition } from '@/lib/expense-transitions';
 import StatusBadge from '@/components/compensation/StatusBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -691,12 +692,12 @@ export default function CollaboratoreDetail({
                     <td className="px-4 py-3 text-gray-200 text-xs">{doc.titolo}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-medium ${
-                        doc.stato_firma === 'DA_FIRMARE' ? 'text-yellow-400' :
-                        doc.stato_firma === 'FIRMATO' ? 'text-green-400' : 'text-gray-500'
-                      }`}>
+                      <Badge
+                        variant={doc.stato_firma === 'FIRMATO' ? 'outline' : doc.stato_firma === 'DA_FIRMARE' ? 'outline' : 'secondary'}
+                        className={doc.stato_firma === 'DA_FIRMARE' ? 'border-amber-600 text-amber-400' : doc.stato_firma === 'FIRMATO' ? 'border-green-600 text-green-400' : undefined}
+                      >
                         {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma] ?? doc.stato_firma}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(doc.created_at)}</td>
                     <td className="px-4 py-3 text-right">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Document, DocumentType, DocumentMacroType } from '@/lib/types';
 import { DOCUMENT_SIGN_STATUS_LABELS, DOCUMENT_MACRO_TYPE, DOCUMENT_MACRO_TYPE_LABELS } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 interface DocumentRow extends Document {
   collaborators?: { nome: string; cognome: string } | null;
@@ -26,15 +27,16 @@ function TypeBadge({ tipo }: { tipo: DocumentType | string }) {
 }
 
 function SignBadge({ stato }: { stato: string }) {
-  const colors: Record<string, string> = {
-    DA_FIRMARE:    'bg-yellow-900/40 text-yellow-300 border-yellow-700/40',
-    FIRMATO:       'bg-green-900/40 text-green-300 border-green-700/40',
-    NON_RICHIESTO: 'bg-gray-800 text-gray-400 border-gray-700',
+  const config: Record<string, { variant: 'outline' | 'secondary'; className?: string }> = {
+    DA_FIRMARE:    { variant: 'outline', className: 'border-amber-600 text-amber-400' },
+    FIRMATO:       { variant: 'outline', className: 'border-green-600 text-green-400' },
+    NON_RICHIESTO: { variant: 'secondary' },
   };
+  const { variant, className } = config[stato] ?? config.NON_RICHIESTO;
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${colors[stato] ?? colors.NON_RICHIESTO}`}>
+    <Badge variant={variant} className={className}>
       {DOCUMENT_SIGN_STATUS_LABELS[stato as keyof typeof DOCUMENT_SIGN_STATUS_LABELS] ?? stato}
-    </span>
+    </Badge>
   );
 }
 
