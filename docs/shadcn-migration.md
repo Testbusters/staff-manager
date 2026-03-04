@@ -15,18 +15,25 @@
 - [x] Prerequisito — dashboard label fix ("da approvare" → "in attesa")
 - [x] Fase 1 — Setup infrastruttura shadcn/ui (components.json, CSS vars, utils, dark-only)
 - [x] Fase 2 — Tooltip (InfoTooltip riscritta su Radix, `<TooltipProvider>` in app layout)
-- [x] Fase 3 — Dialog/Sheet (8 modal custom + Block 15 components)
-- [x] Fase 4 — Badge (StatusBadge sistema + ticket + dashboard components)
+- [x] Fase 3 — Dialog/Sheet (8 modal custom + Block 15 components) — ⚠️ 99%: resta logout modal in `Sidebar.tsx` → AlertDialog
+- [x] Fase 4 — Badge (StatusBadge sistema + ticket + dashboard components) — ⚠️ 95%: manca `data-stato` su `StatusBadge.tsx`
 - [x] Allineamento Block 15 — TicketStatusBadge, TicketDetailModal, CollabOpenTicketsSection, DashboardPendingItems, DashboardTicketSection
 - [x] Config alignment — `new-york+gray+Tailwind v4`: baseColor neutral→gray, --border/--input dark tokens fixed, cursor-pointer + overlay backdrop-blur added to @layer base
 
-### In piano (da eseguire post-merge, blocchi separati su main)
+### Quick wins — chiudono Fasi 3 e 4 al 100%
 
-- [ ] Fase 5 — Table (TanStack + shadcn Table, solo nuove pagine — attivare al primo bisogno)
-- [ ] Fase 6 — Input / Textarea (~22 file con elementi nativi `<input>` e `<textarea>`)
-- [ ] Fase 7 — Select (~15 file con `<select>` nativi)
-- [ ] Fase 8 — Button audit (bottoni primari → shadcn Button variants, ~30 file)
-- [ ] Fase 9 — Cleanup finale (delete questo file, sezione finale CLAUDE.md)
+Da eseguire prima di Fase 6. Entrambi risolvibili in una singola sessione breve:
+
+- [ ] **QW1** — `Sidebar.tsx`: migrare logout confirmation (`fixed inset-0` custom) → `AlertDialog` (installare `npx shadcn add alert-dialog`)
+- [ ] **QW2** — `StatusBadge.tsx`: aggiungere `data-stato={stato}` all'elemento `<Badge>` (prerequisito per e2e selectors in Fase 9)
+
+### In piano (da eseguire su main, blocchi separati)
+
+- [ ] Fase 5 — Table (TanStack + shadcn Table, solo nuove pagine — attivare al primo bisogno, nessun file esistente da migrare)
+- [ ] Fase 6 — Input / Textarea (**137 `<input>` in 30 file + 11 `<textarea>` in 11 file** — cifre da audit 2025-03-04)
+- [ ] Fase 7 — Select (**15 `<select>` in 15 file**)
+- [ ] Fase 8 — Button audit (**271+ `<button>` in 47 file** — solo CTA primari, non tutti)
+- [ ] Fase 9 — Cleanup finale (delete questo file, `data-stato` check, CLAUDE.md update)
 
 ---
 
@@ -147,7 +154,24 @@ shadcn usa `dark:` variants — funzionano perché la classe `dark` è sempre pr
 
 ---
 
-## Fasi dettagliate (da pianificare)
+## Fasi dettagliate
+
+### Quick Wins (prerequisito per Fase 6)
+
+#### QW1 — AlertDialog per Sidebar logout
+```bash
+npx shadcn add alert-dialog
+```
+- File: `components/Sidebar.tsx` — sostituire il blocco `fixed inset-0 z-50` (logout confirmation) con `AlertDialog`
+- Pattern: `AlertDialog` + `AlertDialogTrigger` + `AlertDialogContent` + `AlertDialogAction`/`AlertDialogCancel`
+
+#### QW2 — data-stato su StatusBadge
+- File: `components/compensation/StatusBadge.tsx`
+- Aggiungere `data-stato={stato}` al `<Badge>` component
+- Pattern atteso: `<Badge data-stato={stato} ...>`
+- Prerequisito obbligatorio per i selettori e2e in Fase 9
+
+---
 
 ### Fase 5 — Table
 ```bash
@@ -155,38 +179,104 @@ npx shadcn add table
 ```
 - Attivare solo quando arriva la prima pagina che necessita di DataTable
 - Pattern: TanStack Table + shadcn `<Table>` component
-- Nessun file esistente da migrare
+- **Nessun file esistente da migrare** — solo nuove pagine
+
+---
 
 ### Fase 6 — Input / Textarea
 ```bash
-npx shadcn add input
-npx shadcn add textarea
+npx shadcn add input textarea label
 ```
-**File prioritari** (~22 totali):
-- `components/ProfileForm.tsx`
-- `components/admin/CreateUserForm.tsx`
-- `components/expense/ExpenseForm.tsx`
-- `components/ticket/TicketQuickModal.tsx` (già Dialog, aggiornare campi)
-- Tutti i file con `<input ` o `<textarea ` nativi
+
+**Cifre da audit (2025-03-04):**
+- `<input>` nativi: **137 in 30 file**
+- `<textarea>` nativi: **11 in 11 file**
+
+**Strategia**: migrare per pagina/componente completo, non per tipo di elemento.
+Iniziare dalle `<textarea>` (11 file, 1 per file — rischio basso).
+
+**File `<input>` ad alto impatto (installare prima):**
+| File | Input count |
+|---|---|
+| `components/impostazioni/CreateUserForm.tsx` | 18 |
+| `components/ProfileForm.tsx` | 16 |
+| `components/responsabile/CollaboratoreDetail.tsx` | 15 |
+| `components/onboarding/OnboardingWizard.tsx` | 13 |
+| `components/contenuti/DiscountList.tsx` | 9 |
+
+**File `<textarea>` (1 per file — partire da qui):**
+`FeedbackButton.tsx`, `TicketDetailModal.tsx`, `TicketQuickModal.tsx`, `TicketForm.tsx`,
+`TicketMessageForm.tsx`, `ActionPanel.tsx`, `ExpenseActionPanel.tsx`, `ExpenseForm.tsx`,
+`CollaboratoreDetail.tsx`, `CommunicationList.tsx`, `CompensationCreateWizard.tsx`
+
+**Nota**: shadcn `Input` e `Textarea` sono controlled components — mantengono `value`/`onChange` come oggi. Non richiedono `react-hook-form`.
+
+---
 
 ### Fase 7 — Select
 ```bash
 npx shadcn add select
 ```
-**File prioritari** (~15 totali):
-- Tutti i file con `<select ` nativi
-- Valutare: shadcn Select non supporta `<option>` nativo — wrapper necessario per i casi semplici
+
+**Cifre da audit (2025-03-04):**
+- `<select>` nativi: **15 in 15 file**
+
+**File con 2 select (priorità):**
+`CompensationCreateWizard.tsx`, `TicketQuickModal.tsx`, `TicketForm.tsx`, `DocumentUploadForm.tsx`
+
+**Attenzione**: shadcn `Select` non accetta `<option>` nativi — usa `SelectItem`. Per select con poche opzioni statiche è semplice; per select con array dinamici: wrapper con `.map()` → `<SelectItem>`.
+
+---
 
 ### Fase 8 — Button audit
 ```bash
-# Button già installato (dipendenza di dialog)
+# Button già installato (dipendenza di Dialog) — nessun install necessario
 ```
-- Non sostituire TUTTI i `<button>` — solo quelli che beneficiano delle varianti shadcn
-- Target: CTA primari (submit, actions), non bottoni inline/icon
-- Varianti: `default` (primary), `outline` (secondary), `ghost` (tertiary), `destructive` (danger)
+
+**Cifre da audit (2025-03-04):**
+- `<button>` nativi: **271+ in 47+ file**
+- `Button` shadcn attualmente usato da **0 file app** (solo come dipendenza interna)
+
+**Strategia**: NON sostituire tutti i `<button>`. Target solo:
+- CTA primari di submit form → `Button` (variant `default`)
+- Azioni distruttive (elimina, rifiuta) → `Button` (variant `destructive`)
+- Azioni secondarie in modal/header → `Button` (variant `outline` o `ghost`)
+- Bottoni icon-only → considerare caso per caso
+
+**File ad alto impatto:**
+| File | Button count |
+|---|---|
+| `components/responsabile/CollaboratoreDetail.tsx` | 12 |
+| `components/impostazioni/CommunityManager.tsx` | 9 |
+| `components/notifications/NotificationPageClient.tsx` | 8 |
+| `components/expense/ExpenseForm.tsx` | 7 |
+
+---
 
 ### Fase 9 — Cleanup finale
-1. Aggiungere `data-stato={stato}` a `StatusBadge.tsx`
-2. Aggiornare CLAUDE.md Known Patterns (sezione "shadcn/ui patterns")
-3. Eliminare questo file (`docs/shadcn-migration.md`)
-4. Assicurarsi che il Component Map sia completo in CLAUDE.md
+1. Verificare `data-stato={stato}` su `StatusBadge.tsx` (QW2 — già fatto se QW2 eseguito)
+2. Aggiornare CLAUDE.md: rimuovere riferimento a `docs/shadcn-migration.md` (file temporaneo)
+3. Aggiornare `docs/ui-components.md`: aggiornare stato di ogni componente a "✅ Disponibile"
+4. Eliminare questo file (`docs/shadcn-migration.md`)
+
+---
+
+## UI kit — componenti disponibili (non ancora installati)
+
+Kit disponibile in `/tmp/shadcn-ui-kit-dashboard-main/components/ui/` (61 componenti).
+Usare `npx shadcn add <nome>` per installare (NON copiare direttamente dal kit).
+
+| Componente | Fase | Priorità |
+|---|---|---|
+| `alert-dialog` | QW1 (Sidebar logout) | Immediata |
+| `input` | 6 | Alta |
+| `textarea` | 6 | Alta |
+| `label` | 6 (companion a input) | Alta |
+| `select` | 7 | Alta |
+| `table` | 5 (on demand) | On demand |
+| `tabs` | futura | Media |
+| `pagination` | futura | Media |
+| `dropdown-menu` | 8 (button audit) | Media |
+| `checkbox`, `radio-group`, `switch` | 6/8 | Media |
+| `card`, `avatar`, `separator` | futura | Bassa |
+| `form` (react-hook-form wrapper) | futura | Bassa |
