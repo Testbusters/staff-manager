@@ -47,9 +47,35 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | N1 | `compensi/nuova/page.tsx` is dead code (all roles redirect) — remove with `CompensationWizard` | LOW |
 | N2 | `contenuti/page.tsx` accessible to collaboratori but not in nav — consider redirect to /comunicazioni | LOW |
 | S8 | `formatDate` and `formatCurrency` duplicated across 4+ components — extract to `lib/format-utils.ts` | LOW |
+| UI1 | shadcn Input/Textarea migration — ~22 files with native elements | LOW |
+| UI2 | shadcn Select migration — ~15 files with native `<select>` | LOW |
+| UI3 | shadcn Button audit — primary CTAs → Button variants | LOW |
 | N3 | Italian URL routes — rename to English | LOW |
 | N4 | Italian DB column names — rename to English | LOW |
 | N5 | Italian PostgreSQL enum values — translate to English | LOW |
+
+---
+
+## UI — shadcn/ui Migration (Fasi 6–8)
+
+> Tracked here as tech debt. Execution plan and phase details: `docs/shadcn-migration.md`.
+
+### UI1 — Input / Textarea migration (Fase 6)
+- **Problem**: ~22 files use native `<input>` and `<textarea>` elements. Inconsistent styling and no accessibility primitives.
+- **Files**: `components/ProfileForm.tsx`, `components/admin/CreateUserForm.tsx`, `components/expense/ExpenseForm.tsx`, `components/ticket/TicketQuickModal.tsx`, and ~18 others.
+- **Impact**: LOW (functional, cosmetic inconsistency)
+- **Fix**: `npx shadcn add input textarea` + replace native elements per-file. See Fase 6 in `docs/shadcn-migration.md`.
+
+### UI2 — Select migration (Fase 7)
+- **Problem**: ~15 files use native `<select>` elements. shadcn Select provides keyboard navigation, ARIA, and consistent styling.
+- **Impact**: LOW
+- **Fix**: `npx shadcn add select` + migrate per-file. Note: shadcn Select does not support native `<option>` — wrapper needed for dynamic options. See Fase 7 in `docs/shadcn-migration.md`.
+
+### UI3 — Button audit (Fase 8)
+- **Problem**: Native `<button>` elements used throughout. No variant system for primary/secondary/destructive actions.
+- **Scope**: ~30 files. Target: CTA and action buttons only — not icon buttons or inline interactive elements.
+- **Impact**: LOW
+- **Fix**: Audit per-page, replace primary actions with `Button` shadcn variants (default/outline/ghost/destructive). See Fase 8 in `docs/shadcn-migration.md`.
 
 ---
 

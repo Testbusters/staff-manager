@@ -40,6 +40,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 **Phase 2 — Implementation**
 - **First action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
 - Write the code. Follow the project's Coding Conventions.
+- **UI components**: before writing native `<button>`, `<input>`, `<select>`, `<textarea>`, or custom modal/backdrop HTML, check the Component Map in CLAUDE.md. Prefer the mapped shadcn component. If the relevant shadcn phase is not yet complete, add a note in `docs/refactoring-backlog.md`.
 - Do not add unrequested features. No unrequested refactoring.
 - **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB via Management API (Node.js `https.request` with `SUPABASE_ACCESS_TOKEN` from `.env.local` — `curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
@@ -79,33 +80,16 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - `.bru` files are committed in `api-tests/`. Never commit Bruno environment files containing secrets (add to `.gitignore`).
 - Output: summary line only. If something fails: paste the failing request + response body, fix, re-run. Do not proceed with open failures.
 
-**Phase 4 — UAT definition + Playwright e2e**
-- Identify only **core** coverage scenarios: happy path, main edge case, post-operation DB check. Avoid redundant or purely cosmetic UI scenarios.
-- Draft Playwright scenarios (S1, S2, …) with: action, input data, expected outcome.
-- *** STOP — present scenario list + draft spec outline and wait for explicit confirmation before writing the final e2e spec. ***
-- Write `e2e/<block>.spec.ts` based on confirmed scenarios.
-- Run `npx playwright test e2e/<block>.spec.ts`.
-- **Before writing CSS selectors**: read the target component file (Read tool) and derive classes from real JSX — never assume from memory. Distinguish shared classes (e.g. `px-5 py-4` on both header and rows) from unique ones (e.g. `space-y-2` on rows only).
-- Expected output: summary line only (e.g. `9 passed (45s)`).
-- If something fails: paste only the failing scenario with error, fix, and re-run. Do not proceed with red tests.
-- Selectors: use explicit CSS class selectors (e.g. `span.text-green-300`) — never `getByText()` for status values (captures partial matches from raw DB Timeline entries).
+**Phase 4 — UAT definition + Playwright e2e** ⏸ SUSPENDED
+> Suspended pending completion of shadcn/ui migration (Fasi 5–9 in `docs/shadcn-migration.md`).
+> All existing specs deleted — will be rewritten from scratch post-Fase 9 using stable `data-*` selectors.
+> **Do not write new e2e specs until migration is complete.** Re-enable this phase after Fase 9 closes.
+>
+> When re-enabling: use `data-*` attribute selectors (see CLAUDE.md "shadcn e2e selectors").
+> Never use `span.text-{color}` for status badges — Badge renders `<div>`, not `<span>`.
 
-**Phase 4b — Visual baseline + structural check** *(only if the block introduces new pages or significant UI components)*
-- Prerequisite: `npm install --save-dev @axe-core/playwright` (one-time setup — verify it is already in `package.json` before installing).
-- Write `e2e/<block>-visual.spec.ts` with two checks per new page/component:
-  1. **Screenshot baseline**: `await expect(page).toHaveScreenshot('<page-name>.png', { fullPage: true })` — first run writes the baseline to `e2e/snapshots/`; subsequent runs diff pixel-by-pixel against it.
-  2. **axe-core structural check**:
-     ```ts
-     import AxeBuilder from '@axe-core/playwright';
-     const results = await new AxeBuilder({ page }).analyze();
-     expect(results.violations).toHaveLength(0);
-     ```
-- Run: `npx playwright test e2e/<block>-visual.spec.ts`
-- **First run (baseline creation)**: Playwright exits with "snapshot does not exist" — expected. Commit the generated `.png` files from `e2e/snapshots/`, then re-run to confirm green.
-- **On axe violations**: paste the violation list (`id`, `impact`, `description`), fix the structural issue, re-run. Do not proceed with `critical` or `serious` violations open.
-- Output: summary line only for subsequent runs.
-- **What this catches**: broken layouts visible in render, missing UI sections, spacing regressions, heading hierarchy breaks (h1→h2→h3), form fields without labels, missing ARIA attributes, color contrast failures.
-- **What this does NOT catch**: subjective design quality — flag those in Phase 5c smoke test instead.
+**Phase 4b — Visual baseline + structural check** ⏸ SUSPENDED
+> Suspended for the same reason as Phase 4 above. Re-enable together with Phase 4 after Fase 9.
 
 **Phase 5b — Test data setup** *(before smoke test)*
 - Determine the test user(s) from the role scope of the block:
