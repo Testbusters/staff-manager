@@ -1,19 +1,24 @@
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
-const COLOR: Record<TicketStatus, string> = {
-  APERTO:         'text-gray-400 bg-gray-800',
-  IN_LAVORAZIONE: 'text-yellow-300 bg-yellow-900/30',
-  CHIUSO:         'text-green-300 bg-green-900/30',
+type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+
+const STATUS_CONFIG: Record<TicketStatus, { variant: BadgeVariant; className?: string }> = {
+  APERTO:         { variant: 'outline',   className: 'border-blue-600 text-blue-400' },
+  IN_LAVORAZIONE: { variant: 'outline',   className: 'border-amber-600 text-amber-400' },
+  CHIUSO:         { variant: 'secondary' },
 };
 
 export default function TicketStatusBadge({ stato }: { stato: TicketStatus }) {
+  const config = STATUS_CONFIG[stato] ?? { variant: 'outline' as const };
   return (
-    <span
+    <Badge
+      variant={config.variant}
+      className={config.className}
       data-ticket-stato={stato}
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${COLOR[stato]}`}
     >
       {TICKET_STATUS_LABELS[stato]}
-    </span>
+    </Badge>
   );
 }

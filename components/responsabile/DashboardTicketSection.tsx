@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export type DashboardTicket = {
   id: string;
@@ -70,16 +71,16 @@ function TicketRow({ ticket }: { ticket: DashboardTicket }) {
       href={`/ticket/${ticket.id}`}
       className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition cursor-pointer"
     >
-      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${CATEGORIA_BADGE[ticket.categoria] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+      <Badge variant="outline" className={`shrink-0 ${CATEGORIA_BADGE[ticket.categoria] ?? 'border-gray-700 text-gray-400'}`}>
         {ticket.categoria}
-      </span>
+      </Badge>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-gray-200 truncate">{ticket.oggetto}</p>
         <p className="text-xs text-gray-500 truncate">{ticket.collabName}</p>
       </div>
-      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${STATO_BADGE[ticket.stato] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+      <Badge variant="outline" className={`shrink-0 ${STATO_BADGE[ticket.stato] ?? 'border-gray-700 text-gray-400'}`}>
         {STATO_LABELS[ticket.stato] ?? ticket.stato}
-      </span>
+      </Badge>
       <span className={`h-2 w-2 rounded-full shrink-0 hidden sm:inline-block ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} title={ticket.priority} />
       {lastReply}
       <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAge(ticket.created_at)}</span>

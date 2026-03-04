@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { TicketStatus } from '@/lib/types';
-import { TICKET_STATUS_LABELS } from '@/lib/types';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import TicketStatusBadge from './TicketStatusBadge';
 
 type TicketMessage = {
   id: string;
@@ -20,12 +21,6 @@ type TicketDetail = {
   oggetto: string;
   stato: TicketStatus;
   categoria: string;
-};
-
-const STATUS_COLOR: Record<TicketStatus, string> = {
-  APERTO:         'text-gray-400 bg-gray-800',
-  IN_LAVORAZIONE: 'text-yellow-300 bg-yellow-900/30',
-  CHIUSO:         'text-green-300 bg-green-900/30',
 };
 
 function formatTime(iso: string) {
@@ -88,44 +83,28 @@ export default function TicketDetailModal({
   const isClosed = ticket?.stato === 'CHIUSO';
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl bg-gray-900 border border-gray-800 flex flex-col">
+    <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="w-full sm:max-w-lg max-h-[90vh] bg-gray-900 border-gray-800 p-0 gap-0 flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-800 flex-shrink-0">
+        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-800 flex-shrink-0 pr-10">
           <div className="min-w-0">
-            {ticket && (
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium mb-1 ${STATUS_COLOR[ticket.stato]}`}>
-                {TICKET_STATUS_LABELS[ticket.stato]}
-              </span>
-            )}
-            <p className="text-sm font-semibold text-gray-100 truncate">
+            {ticket && <TicketStatusBadge stato={ticket.stato} />}
+            <p className="text-sm font-semibold text-gray-100 truncate mt-1">
               {ticket?.oggetto ?? '…'}
             </p>
             {ticket && (
               <p className="text-xs text-gray-500 mt-0.5">{ticket.categoria}</p>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {ticket && (
-              <Link
-                href={`/ticket/${ticketId}`}
-                className="text-xs text-blue-400 hover:text-blue-300 transition"
-                onClick={onClose}
-              >
-                Apri →
-              </Link>
-            )}
-            <button
+          {ticket && (
+            <Link
+              href={`/ticket/${ticketId}`}
+              className="text-xs text-blue-400 hover:text-blue-300 transition flex-shrink-0"
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-300 transition text-lg leading-none"
-              aria-label="Chiudi"
             >
-              ✕
-            </button>
-          </div>
+              Apri →
+            </Link>
+          )}
         </div>
 
         {/* Thread */}
@@ -191,7 +170,7 @@ export default function TicketDetailModal({
             <p className="text-xs text-gray-500 text-center">Ticket chiuso — nessun nuovo messaggio.</p>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

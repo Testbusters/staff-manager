@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import type { ExpenseCategory } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -70,15 +72,11 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
   }, [compId]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-sm rounded-2xl bg-gray-900 border border-gray-800 p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-100">Dettaglio compenso</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 text-lg leading-none" aria-label="Chiudi">✕</button>
-        </div>
+    <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-sm bg-gray-900 border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-sm font-semibold text-gray-100">Dettaglio compenso</DialogTitle>
+        </DialogHeader>
 
         {loading ? (
           <p className="text-sm text-gray-500 text-center py-4">Caricamento…</p>
@@ -95,9 +93,9 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
             {data.competenza && (
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Competenza</p>
-                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${COMP_COMPETENZA_BADGE[data.competenza] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+                <Badge variant="outline" className={COMP_COMPETENZA_BADGE[data.competenza] ?? 'border-gray-700 text-gray-400'}>
                   {data.competenza}
-                </span>
+                </Badge>
               </div>
             )}
             {data.data_competenza && (
@@ -133,8 +131,8 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -161,15 +159,11 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
   }, [expId]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="w-full max-w-sm rounded-2xl bg-gray-900 border border-gray-800 p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-100">Dettaglio rimborso</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 text-lg leading-none" aria-label="Chiudi">✕</button>
-        </div>
+    <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-sm bg-gray-900 border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-sm font-semibold text-gray-100">Dettaglio rimborso</DialogTitle>
+        </DialogHeader>
 
         {loading ? (
           <p className="text-sm text-gray-500 text-center py-4">Caricamento…</p>
@@ -179,9 +173,9 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
           <div className="space-y-3 text-sm">
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Categoria</p>
-              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${EXPENSE_CATEGORIA_BADGE[data.categoria as ExpenseCategory] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+              <Badge variant="outline" className={EXPENSE_CATEGORIA_BADGE[data.categoria as ExpenseCategory] ?? 'border-gray-700 text-gray-400'}>
                 {data.categoria}
-              </span>
+              </Badge>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Data spesa</p>
@@ -208,8 +202,8 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -253,9 +247,9 @@ export default function DashboardPendingItems({
                   className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
                 >
                   {c.competenza && (
-                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+                    <Badge variant="outline" className={`shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'border-gray-700 text-gray-400'}`}>
                       {c.competenza}
-                    </span>
+                    </Badge>
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-200 truncate">{collabNameMap[c.collaborator_id] ?? 'Collaboratore'}</p>
@@ -287,9 +281,9 @@ export default function DashboardPendingItems({
                   onClick={() => setSelectedExp(e.id)}
                   className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
                 >
-                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+                  <Badge variant="outline" className={`shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'border-gray-700 text-gray-400'}`}>
                     {e.categoria}
-                  </span>
+                  </Badge>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-200 truncate">{collabNameMap[e.collaborator_id] ?? 'Collaboratore'}</p>
                     <p className="text-xs text-gray-500">{formatCurrency(e.importo)}</p>
