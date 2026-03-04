@@ -186,6 +186,41 @@ Stessa action table dei compensi senza submit/withdraw/reopen (creati direttamen
 
 Thread messaggi + allegati, stati APERTO / IN_LAVORAZIONE / CHIUSO, notifiche in-app minime.
 
+#### Block 15a — Ticket system overhaul
+
+**DB schema additions (migration 034):**
+- `tickets.updated_at TIMESTAMPTZ DEFAULT NOW()` — set on status change and new message
+- `tickets.last_message_at TIMESTAMPTZ` — denormalized from last ticket_message
+- `tickets.last_message_author_name TEXT` — denormalized from last ticket_message author
+- `tickets.last_message_author_role TEXT` — denormalized from last ticket_message author role
+- Fix `tickets_manager_read` RLS: replace `can_manage_community(community_id)` (fails for NULL) with JOIN on `collaborators → collaborator_communities → user_community_access`
+- Add `tickets_admin_read` policy: admin sees all tickets
+
+**Ticket list page (`/ticket`):**
+- `amministrazione` and `responsabile_compensi`: two vertical lists
+  - "Ticket ricevuti" — APERTO + IN_LAVORAZIONE, ordered by `created_at` desc
+  - "Ticket recenti" — `updated_at >= NOW() - 3 days`, any stato, ordered by `updated_at` desc
+  - Each row (TicketRecordRow): categoria badge · oggetto · collab name · stato badge · last-reply badge · "Apri →"
+- `collaboratore`: own tickets via RLS (existing TicketList behavior), no Ticket nav item
+- `responsabile_compensi`: "Nuovo ticket" link hidden (creation not allowed)
+
+**Ticket detail (`/ticket/[id]`):**
+- Chat-style bidirectional layout: own messages right (blue-600/20), others left (gray-800)
+- "Nuovo" badge: localStorage `ticket_last_visit_{id}` — messages after last visit from others = "Nuovo"
+- Inline status change (TicketStatusInline client component) in header, visible to admin + responsabile
+- TicketMessageForm: reply-only (status change moved to header)
+
+**Dashboard — responsabile_compensi:**
+- Quick actions (2 buttons: Compensi + Ticket) appear after hero, before KPIs
+- Ticket section shows two sub-lists (ricevuti max 5 + recenti max 5) with last-reply badge
+- "Azioni rapide" section at bottom removed
+
+**Dashboard — collaboratore:**
+- New ticket section: own open tickets (max 3) — oggetto + stato badge + "Vedi" link
+- Access to ticket detail via dashboard link + notification bell (no nav item)
+
+**Creation restriction:** `responsabile_compensi` → redirect from `/ticket/nuova` to `/`
+
 ### 4.5 Export
 
 **Compensi "Da pagare"** (stato = APPROVATO):

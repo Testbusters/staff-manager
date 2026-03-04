@@ -147,6 +147,7 @@ Only after explicit confirmation:
 1. Update `docs/implementation-checklist.md`: mark block ✅, add a Log row with date, files, test results, relevant notes.
 2. Update `CLAUDE.md` **only if** the block introduces non-obvious patterns, modifies RBAC, or adds a new coding convention. Do not update for simple file additions — Claude infers structure from code.
 2b. If the block touched collaborator profile fields, permissions, or edit flows: update `docs/profile-editing-contract.md` (field × entry point matrix). Mandatory per CLAUDE.md reference documents.
+2c. If the block added/removed a route, changed role access to an existing route, modified member_status restrictions, or updated sidebar items: update `docs/sitemap.md`. Sync with `lib/nav.ts`, `proxy.ts`, and the relevant `page.tsx` guards.
 3. Update `README.md` (Project Structure + test counts).
 4. Update `MEMORY.md` (project root) **only if** new lessons emerged that are not already documented. Avoid duplications.
    - If project-root MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.
@@ -163,6 +164,16 @@ After git push, before closing the session:
 - Execute checks **C4 through C9** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
 - **Phase complete only when all 9 checks pass** — not when the review "seems thorough".
+- **Mandatory closing message** (after all C1–C9 pass, before `/compact`): post a summary to the user in this exact format:
+
+```
+**Block complete ✅ — [Block name]**
+- Implemented: [one-line summary of what changed]
+- Tests: tsc ✅ · build ✅ · vitest N/N ✅ [+ any other phases run]
+- Next: [next defined block name] OR "No next block defined — ready to plan Block N"
+```
+
+  This message is **non-negotiable** — never skip it, even if the block was small or the session is long.
 - Then run `/compact` to free the current session's context.
 
 > `pipeline.md` and `files-guide.md`: update only if a process gap or structural change was explicitly identified during the block. These are not routine targets — they are covered by C5 and C8 respectively.
