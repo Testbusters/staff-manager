@@ -125,14 +125,19 @@ export async function POST(
     ? `${authorCollab.data.nome ?? ''} ${authorCollab.data.cognome ?? ''}`.trim()
     : authorRole;
 
+  const ticketUpdate: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+    last_message_at: msg.created_at,
+    last_message_author_name: authorName || authorRole,
+    last_message_author_role: authorRole,
+  };
+  // Auto-advance to IN_LAVORAZIONE when a manager replies on an open ticket
+  if (ticket.creator_user_id !== user.id && ticket.stato === 'APERTO') {
+    ticketUpdate.stato = 'IN_LAVORAZIONE';
+  }
   await serviceClient
     .from('tickets')
-    .update({
-      updated_at: new Date().toISOString(),
-      last_message_at: msg.created_at,
-      last_message_author_name: authorName || authorRole,
-      last_message_author_role: authorRole,
-    })
+    .update(ticketUpdate)
     .eq('id', ticketId);
 
   // Load notification settings

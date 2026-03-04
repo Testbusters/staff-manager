@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TICKET_CATEGORIES } from '@/lib/types';
+import { TICKET_CATEGORIES, TICKET_PRIORITY_LABELS } from '@/lib/types';
+import type { TicketPriority } from '@/lib/types';
 
 export default function TicketForm() {
   const router = useRouter();
   const [categoria, setCategoria] = useState('');
   const [oggetto, setOggetto] = useState('');
+  const [priority, setPriority] = useState<TicketPriority>('NORMALE');
   const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function TicketForm() {
       body: JSON.stringify({
         categoria,
         oggetto: oggetto.trim(),
+        priority,
         messaggio: messaggio.trim() || undefined,
       }),
     });
@@ -64,6 +67,23 @@ export default function TicketForm() {
           <option value="" disabled>Seleziona un riferimento</option>
           {TICKET_CATEGORIES.map((c) => (
             <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Priorità */}
+      <div className="space-y-1.5">
+        <label htmlFor="priority" className="block text-sm font-medium text-gray-300">
+          Priorità
+        </label>
+        <select
+          id="priority"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as TicketPriority)}
+          className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+        >
+          {(['BASSA', 'NORMALE', 'ALTA'] as TicketPriority[]).map((p) => (
+            <option key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</option>
           ))}
         </select>
       </div>

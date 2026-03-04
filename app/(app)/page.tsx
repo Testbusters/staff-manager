@@ -263,6 +263,7 @@ export default async function DashboardPage() {
     // Round 2 — collab IDs + open tickets (ricevuti) + recently active tickets (recenti)
     type RTicket = {
       id: string; oggetto: string; stato: string; categoria: string;
+      priority: string;
       created_at: string; updated_at: string; creator_user_id: string;
       last_message_at: string | null; last_message_author_name: string | null;
     };
@@ -272,12 +273,12 @@ export default async function DashboardPage() {
     const [ccResult, ricevutiResult, recentiResult] = await Promise.all([
       svc.from('collaborator_communities').select('collaborator_id').in('community_id', communityIds),
       svc.from('tickets')
-        .select('id, oggetto, stato, categoria, created_at, updated_at, creator_user_id, last_message_at, last_message_author_name')
+        .select('id, oggetto, stato, categoria, priority, created_at, updated_at, creator_user_id, last_message_at, last_message_author_name')
         .in('stato', ['APERTO', 'IN_LAVORAZIONE'])
         .order('created_at', { ascending: false })
         .limit(5),
       svc.from('tickets')
-        .select('id, oggetto, stato, categoria, created_at, updated_at, creator_user_id, last_message_at, last_message_author_name')
+        .select('id, oggetto, stato, categoria, priority, created_at, updated_at, creator_user_id, last_message_at, last_message_author_name')
         .gte('updated_at', threeAgo)
         .order('updated_at', { ascending: false })
         .limit(5),
@@ -347,6 +348,7 @@ export default async function DashboardPage() {
       oggetto:                    t.oggetto,
       stato:                      t.stato,
       categoria:                  t.categoria,
+      priority:                   t.priority,
       collabName:                 tCollabNameMap[t.creator_user_id] ?? 'Collaboratore',
       created_at:                 t.created_at,
       last_message_at:            t.last_message_at,

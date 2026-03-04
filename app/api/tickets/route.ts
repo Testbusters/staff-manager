@@ -80,15 +80,19 @@ export async function POST(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
   const body = await request.json();
-  const { categoria, oggetto, messaggio } = body as {
+  const { categoria, oggetto, messaggio, priority } = body as {
     categoria: string;
     oggetto: string;
     messaggio?: string;
+    priority?: string;
   };
 
   if (!categoria?.trim() || !oggetto?.trim()) {
     return NextResponse.json({ error: 'Categoria e oggetto sono obbligatori' }, { status: 400 });
   }
+
+  const VALID_PRIORITIES = ['BASSA', 'NORMALE', 'ALTA'];
+  const safePriority = priority && VALID_PRIORITIES.includes(priority) ? priority : 'NORMALE';
 
   const { data: ticket, error } = await supabase
     .from('tickets')
@@ -97,7 +101,7 @@ export async function POST(request: Request) {
       categoria: categoria.trim(),
       oggetto: oggetto.trim(),
       stato: 'APERTO',
-      priority: 'NORMALE',
+      priority: safePriority,
     })
     .select()
     .single();

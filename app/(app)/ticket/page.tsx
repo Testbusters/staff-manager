@@ -39,6 +39,7 @@ export default async function TicketPage() {
       oggetto: string;
       stato: string;
       categoria: string;
+      priority: string;
       creator_user_id: string;
       created_at: string;
       updated_at: string;
@@ -49,12 +50,12 @@ export default async function TicketPage() {
     const [{ data: rawRicevuti }, { data: rawRecenti }] = await Promise.all([
       svc
         .from('tickets')
-        .select('id, oggetto, stato, categoria, creator_user_id, created_at, updated_at, last_message_at, last_message_author_name')
+        .select('id, oggetto, stato, categoria, priority, creator_user_id, created_at, updated_at, last_message_at, last_message_author_name')
         .in('stato', ['APERTO', 'IN_LAVORAZIONE'])
         .order('created_at', { ascending: false }),
       svc
         .from('tickets')
-        .select('id, oggetto, stato, categoria, creator_user_id, created_at, updated_at, last_message_at, last_message_author_name')
+        .select('id, oggetto, stato, categoria, priority, creator_user_id, created_at, updated_at, last_message_at, last_message_author_name')
         .gte('updated_at', threeAgo)
         .order('updated_at', { ascending: false })
         .limit(30),
@@ -84,6 +85,7 @@ export default async function TicketPage() {
       oggetto: t.oggetto,
       stato: t.stato as TicketRecord['stato'],
       categoria: t.categoria,
+      priority: t.priority,
       creator_name: nameMap[t.creator_user_id] ?? null,
       last_message_at: t.last_message_at,
       last_message_author_name: t.last_message_author_name,

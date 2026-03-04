@@ -7,8 +7,8 @@ import { TICKET_STATUS_LABELS } from '@/lib/types';
 import TicketStatusBadge from './TicketStatusBadge';
 
 const STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
-  APERTO:         ['IN_LAVORAZIONE', 'CHIUSO'],
-  IN_LAVORAZIONE: ['APERTO', 'CHIUSO'],
+  APERTO:         ['CHIUSO'],
+  IN_LAVORAZIONE: ['CHIUSO'],
   CHIUSO:         [],
 };
 

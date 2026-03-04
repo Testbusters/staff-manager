@@ -160,11 +160,11 @@ test.describe.serial('Ticket UAT', () => {
     await page.goto('/ticket');
 
     await expect(page.locator('h1:has-text("Ticket")')).toBeVisible();
-    // Column header visible for admin
-    await expect(page.locator('th:has-text("Collaboratore")')).toBeVisible();
-    // Link to the test ticket exists
+    // Block 15a: admin sees "Ticket ricevuti" section (no table — flex rows)
+    await expect(page.locator('h2').filter({ hasText: 'Ticket ricevuti' }).first()).toBeVisible();
+    // Link to the test ticket exists (TicketRecordRow renders "Apri →" link)
     await expect(page.locator(`a[href="/ticket/${ticketId}"]`)).toBeVisible({ timeout: 10_000 });
-    console.log('  ✅ S4 — admin vede ticket + colonna Collaboratore');
+    console.log('  ✅ S4 — admin vede ticket + sezione "Ticket ricevuti"');
   });
 
   // ── S5: Admin risponde → notifica al collaboratore ────────────────────────
@@ -200,18 +200,18 @@ test.describe.serial('Ticket UAT', () => {
     console.log('  ✅ S5b — notifica risposta_ticket in DB, entity_type=ticket');
   });
 
-  // ── S6: Admin → IN_LAVORAZIONE ────────────────────────────────────────────
-  test('S6 — Admin cambia stato a IN_LAVORAZIONE, badge aggiornato', async ({ page }) => {
+  // ── S6: Stato auto-avanzato a IN_LAVORAZIONE dopo risposta admin (S5) ───────
+  test('S6 — Stato auto-avanzato a IN_LAVORAZIONE dopo risposta admin, solo "→ Chiuso" visibile', async ({ page }) => {
     await login(page, 'admin');
     await page.goto(`/ticket/${ticketId}`);
 
-    await page.click('button:has-text("→ In lavorazione")');
-
-    // Badge should now show IN_LAVORAZIONE (text-yellow-300)
+    // Auto-advance: after admin replied in S5 on APERTO ticket → IN_LAVORAZIONE
     await expect(page.locator('span.text-yellow-300')).toBeVisible({ timeout: 10_000 });
-    // "→ In lavorazione" button is no longer in STATUS_TRANSITIONS.IN_LAVORAZIONE
+    // "→ In lavorazione" button must NOT exist (removed from transitions)
     await expect(page.locator('button:has-text("→ In lavorazione")')).not.toBeVisible();
-    console.log('  ✅ S6 — stato IN_LAVORAZIONE, badge giallo visibile');
+    // Only "→ Chiuso" remains
+    await expect(page.locator('button:has-text("→ Chiuso")')).toBeVisible();
+    console.log('  ✅ S6 — stato IN_LAVORAZIONE auto-avanzato, solo "→ Chiuso" visibile');
   });
 
   // ── S7: Admin → CHIUSO, form risposta scompare ────────────────────────────

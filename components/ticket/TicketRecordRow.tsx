@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import TicketStatusBadge from './TicketStatusBadge';
 import type { TicketStatus } from '@/lib/types';
+import { TICKET_PRIORITY_LABELS } from '@/lib/types';
+import type { TicketPriority } from '@/lib/types';
 
 function formatAge(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -17,11 +19,18 @@ const CATEGORIA_BADGE: Record<string, string> = {
   Rimborso: 'bg-violet-900/40 text-violet-300 border-violet-700/50',
 };
 
+const PRIORITY_DOT: Record<string, string> = {
+  ALTA:    'bg-red-500',
+  NORMALE: 'bg-yellow-500',
+  BASSA:   'bg-gray-500',
+};
+
 export type TicketRecord = {
   id: string;
   categoria: string;
   oggetto: string;
   stato: TicketStatus;
+  priority: string;
   creator_name?: string | null;
   last_message_at: string | null;
   last_message_author_name: string | null;
@@ -52,6 +61,14 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
       <div className="shrink-0">
         <TicketStatusBadge stato={ticket.stato} />
       </div>
+
+      <span
+        className={`hidden sm:inline-flex items-center gap-1 shrink-0 text-xs text-gray-500`}
+        title={TICKET_PRIORITY_LABELS[ticket.priority as TicketPriority] ?? ticket.priority}
+      >
+        <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} />
+        <span className="hidden md:inline">{TICKET_PRIORITY_LABELS[ticket.priority as TicketPriority] ?? ticket.priority}</span>
+      </span>
 
       <div className="shrink-0 hidden sm:block">
         {lastReply}

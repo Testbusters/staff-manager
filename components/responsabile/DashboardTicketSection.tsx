@@ -9,6 +9,7 @@ export type DashboardTicket = {
   oggetto: string;
   stato: string;
   categoria: string;
+  priority: string;
   collabName: string;
   created_at: string;
   last_message_at: string | null;
@@ -32,6 +33,12 @@ const STATO_LABELS: Record<string, string> = {
   APERTO:         'Aperto',
   IN_LAVORAZIONE: 'In lavorazione',
   CHIUSO:         'Chiuso',
+};
+
+const PRIORITY_DOT: Record<string, string> = {
+  ALTA:    'bg-red-500',
+  NORMALE: 'bg-yellow-500',
+  BASSA:   'bg-gray-500',
 };
 
 function formatAge(iso: string): string {
@@ -110,6 +117,7 @@ function TicketRow({
         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${STATO_BADGE[ticket.stato] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
           {STATO_LABELS[ticket.stato] ?? ticket.stato}
         </span>
+        <span className={`h-2 w-2 rounded-full shrink-0 hidden sm:inline-block ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} title={ticket.priority} />
         {lastReply}
         <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAge(ticket.created_at)}</span>
         {showReply && ticket.stato !== 'CHIUSO' && (
