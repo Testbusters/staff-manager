@@ -7,6 +7,7 @@ import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
   { value: 'LAVORO',     label: 'Lavoro' },
@@ -123,14 +124,12 @@ function OpportunityForm({
         </div>
       </div>
       <div className="flex gap-2 pt-1">
-        <button type="submit" disabled={loading}
-          className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-1.5 text-sm font-medium text-white transition">
+        <Button type="submit" disabled={loading} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
           {loading ? 'Salvataggio…' : 'Salva'}
-        </button>
-        <button type="button" onClick={onCancel}
-          className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-4 py-1.5 text-sm text-gray-300 transition">
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} size="sm">
           Annulla
-        </button>
+        </Button>
       </div>
     </form>
   );

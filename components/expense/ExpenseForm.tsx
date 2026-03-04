@@ -8,6 +8,7 @@ import type { ExpenseCategory } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface FormData {
   categoria: ExpenseCategory | '';
@@ -209,19 +210,12 @@ export default function ExpenseForm() {
           </div>
 
           <div className="flex justify-between pt-1">
-            <button
-              onClick={() => router.push('/rimborsi')}
-              className="rounded-lg border border-gray-700 px-5 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition"
-            >
+            <Button type="button" variant="outline" onClick={() => router.push('/rimborsi')}>
               ← Annulla
-            </button>
-            <button
-              onClick={() => setStep(2)}
-              disabled={!step1Valid}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 px-6 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
-            >
+            </Button>
+            <Button onClick={() => setStep(2)} disabled={!step1Valid} className="bg-blue-600 hover:bg-blue-500 text-white">
               Avanti →
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -273,19 +267,12 @@ export default function ExpenseForm() {
           </div>
 
           <div className="flex justify-between pt-1">
-            <button
-              onClick={() => setStep(1)}
-              className="rounded-lg border border-gray-700 px-5 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition"
-            >
+            <Button type="button" variant="ghost" onClick={() => setStep(1)}>
               ← Indietro
-            </button>
-            <button
-              onClick={() => setStep(3)}
-              disabled={files.length === 0}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 px-6 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
-            >
+            </Button>
+            <Button onClick={() => setStep(3)} disabled={files.length === 0} className="bg-blue-600 hover:bg-blue-500 text-white">
               Avanti →
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -344,20 +331,12 @@ export default function ExpenseForm() {
           )}
 
           <div className="flex justify-between pt-1">
-            <button
-              onClick={() => setStep(2)}
-              disabled={loading}
-              className="rounded-lg border border-gray-700 px-5 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition disabled:opacity-50"
-            >
+            <Button type="button" variant="ghost" onClick={() => setStep(2)} disabled={loading}>
               ← Indietro
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 px-6 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
-            >
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white">
               {loading ? 'Invio in corso…' : 'Conferma e invia'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

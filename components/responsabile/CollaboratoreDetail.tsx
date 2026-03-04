@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -494,20 +495,22 @@ export default function CollaboratoreDetail({
             )}
 
             <div className="flex gap-2 justify-end pt-1">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => { setEditingProfile(false); setProfileError(null); }}
-                className="px-3 py-1.5 rounded-md text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition"
               >
                 Annulla
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
+                size="sm"
                 disabled={profileSaving}
-                className="px-4 py-1.5 rounded-md text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50"
+                className="bg-blue-600 hover:bg-blue-500 text-white"
               >
                 {profileSaving ? 'Salvataggio…' : 'Salva'}
-              </button>
+              </Button>
             </div>
           </form>
         ) : (
@@ -736,20 +739,21 @@ export default function CollaboratoreDetail({
           )}
 
           <div className="flex gap-2 justify-end">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => { setRejectModal(null); setError(null); }}
-              className="px-3 py-1.5 rounded-md text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition"
             >
               Annulla
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={handleReject}
               disabled={!!loading || rejectNote.trim().length === 0}
-              className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-700 hover:bg-red-600
-                         text-white transition disabled:opacity-50"
             >
               {loading ? 'Invio…' : 'Rifiuta'}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

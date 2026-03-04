@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 export default function TicketQuickModal() {
   const router = useRouter();
@@ -60,12 +61,9 @@ export default function TicketQuickModal() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
-      >
+      <Button onClick={() => setOpen(true)} className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white">
         Apri ticket
-      </button>
+      </Button>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
         <DialogContent className="max-w-md bg-gray-900 border-gray-800">
@@ -134,20 +132,12 @@ export default function TicketQuickModal() {
             </div>
 
             <div className="flex items-center gap-3 pt-1">
-              <button
-                type="submit"
-                disabled={loading}
-                className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-5 py-2 text-sm font-medium text-white transition"
-              >
+              <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white">
                 {loading ? 'Apertura…' : 'Apri ticket'}
-              </button>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm text-gray-300 transition"
-              >
+              </Button>
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Annulla
-              </button>
+              </Button>
             </div>
           </form>
         </DialogContent>

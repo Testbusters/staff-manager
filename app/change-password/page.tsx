@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState('');
@@ -111,14 +112,13 @@ export default function ChangePasswordPage() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading || !password || !confirm}
-              className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium
-                         text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white"
             >
               {loading ? <>{spinner} Aggiornamento…</> : 'Imposta nuova password'}
-            </button>
+            </Button>
           </form>
         </div>
 

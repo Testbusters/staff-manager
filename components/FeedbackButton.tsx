@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 const CATEGORIE = ['Bug', 'Suggerimento', 'Domanda', 'Altro'] as const;
 type Categoria = typeof CATEGORIE[number];
@@ -153,21 +154,12 @@ export default function FeedbackButton() {
                 )}
 
                 <div className="flex gap-3 justify-end pt-1">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    disabled={loading}
-                    className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition disabled:opacity-50"
-                  >
+                  <Button type="button" variant="outline" onClick={closeModal} disabled={loading}>
                     Annulla
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading || !messaggio.trim()}
-                    className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
-                  >
+                  </Button>
+                  <Button type="submit" disabled={loading || !messaggio.trim()} className="bg-blue-600 hover:bg-blue-500 text-white">
                     {loading ? 'Invio…' : 'Invia'}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </>

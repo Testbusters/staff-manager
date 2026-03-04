@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 type Community = { id: string; name: string; is_active: boolean };
 type Responsabile = { user_id: string; display_name: string; email: string; communities: { id: string; name: string }[]; can_publish_announcements: boolean };
@@ -119,10 +120,9 @@ export default function CommunityManager({
             <Input value={newName} onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome community"
               className="flex-1" />
-            <button type="submit" disabled={createLoading || !newName.trim()}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm font-medium text-white transition">
+            <Button type="submit" disabled={createLoading || !newName.trim()} className="bg-blue-600 hover:bg-blue-500 text-white">
               {createLoading ? 'Creazione…' : 'Crea'}
-            </button>
+            </Button>
           </form>
           {createError && <p className="mt-2 text-xs text-red-400">{createError}</p>}
         </div>
@@ -144,10 +144,9 @@ export default function CommunityManager({
                 <>
                   <Input value={editName} onChange={(e) => setEditName(e.target.value)}
                     className="flex-1" />
-                  <button onClick={() => handleRename(c.id)} disabled={editLoading}
-                    className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3 py-1.5 text-xs font-medium text-white transition">
+                  <Button onClick={() => handleRename(c.id)} disabled={editLoading} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
                     Salva
-                  </button>
+                  </Button>
                   <button onClick={() => setEditingId(null)}
                     className="text-xs text-gray-500 hover:text-gray-300 transition">
                     Annulla
@@ -212,10 +211,9 @@ export default function CommunityManager({
                   </label>
                 {editingUserId === resp.user_id ? (
                   <div className="flex gap-2">
-                    <button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading}
-                      className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3 py-1.5 text-xs font-medium text-white transition">
+                    <Button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
                       Salva
-                    </button>
+                    </Button>
                     <button onClick={() => setEditingUserId(null)}
                       className="text-xs text-gray-500 hover:text-gray-300 transition">
                       Annulla

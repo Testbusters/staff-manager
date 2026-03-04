@@ -5,6 +5,8 @@ import Link from 'next/link';
 import type { TicketStatus } from '@/lib/types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import TicketStatusBadge from './TicketStatusBadge';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 type TicketMessage = {
   id: string;
@@ -148,20 +150,20 @@ export default function TicketDetailModal({
               <p className="text-xs text-red-400 mb-2">{sendError}</p>
             )}
             <div className="flex gap-2">
-              <textarea
+              <Textarea
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 rows={2}
                 placeholder="Scrivi un messaggio…"
-                className="flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none"
+                className="flex-1 resize-none"
               />
-              <button
+              <Button
                 type="submit"
                 disabled={sending || !reply.trim()}
-                className="self-end rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3 py-2 text-sm font-medium text-white transition"
+                className="self-end bg-blue-600 hover:bg-blue-500 text-white"
               >
                 {sending ? '…' : 'Invia'}
-              </button>
+              </Button>
             </div>
           </form>
         )}

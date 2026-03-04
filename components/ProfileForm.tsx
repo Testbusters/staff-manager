@@ -7,6 +7,7 @@ import type { Role } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 type Collaborator = {
   nome: string;
@@ -532,10 +533,9 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
 
           </div>
           <div className="px-6 py-4 border-t border-gray-800 flex-shrink-0">
-            <button type="button" onClick={() => setShowGuida(false)}
-              className="w-full rounded-lg bg-gray-800 hover:bg-gray-700 py-2 text-sm text-gray-300 transition">
+            <Button type="button" variant="outline" onClick={() => setShowGuida(false)} className="w-full">
               Ho capito
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -563,11 +563,10 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium
-                   text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full bg-blue-600 hover:bg-blue-500 text-white"
       >
         {loading ? (
           <>
@@ -582,7 +581,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         ) : (
           'Salva modifiche'
         )}
-      </button>
+      </Button>
     </form>
   );
 }

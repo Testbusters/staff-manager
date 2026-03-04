@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const TEST_USERS = [
   { role: 'Collaboratore',                    email: 'collaboratore_test@test.com' },
@@ -90,14 +91,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium
-                         text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white"
             >
               {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
-            </button>
+            </Button>
           </form>
         </div>
 

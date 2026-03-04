@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TicketStatus } from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 export default function TicketMessageForm({
   ticketId,
@@ -61,12 +63,12 @@ export default function TicketMessageForm({
           </div>
         )}
 
-        <textarea
+        <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Scrivi un messaggio…"
           rows={4}
-          className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none"
+          className="resize-none"
         />
 
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -91,13 +93,9 @@ export default function TicketMessageForm({
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={sending || !message.trim()}
-            className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 text-sm font-medium text-white transition"
-          >
+          <Button type="submit" disabled={sending || !message.trim()} className="bg-blue-600 hover:bg-blue-500 text-white">
             {sending ? 'Invio…' : 'Invia risposta'}
-          </button>
+          </Button>
         </div>
       </form>
   );

@@ -5,6 +5,7 @@ import { CONTRACT_TEMPLATE_LABELS, type ContractTemplateType } from '@/lib/types
 import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 type Role = 'collaboratore' | 'responsabile_cittadino' | 'responsabile_compensi' | 'responsabile_servizi_individuali' | 'amministrazione';
 type Credentials = { email: string; password: string };
@@ -193,10 +194,9 @@ export default function CreateUserForm() {
           </div>
         </div>
 
-        <button onClick={() => setCredentials(null)}
-          className="w-full rounded-lg border border-gray-700 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition">
+        <Button variant="outline" onClick={() => setCredentials(null)} className="w-full">
           Crea un altro utente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -430,9 +430,11 @@ export default function CreateUserForm() {
         <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">{error}</div>
       )}
 
-      <button type="submit"
+      <Button
+        type="submit"
         disabled={loading || !email || (needsContract && (mode === 'quick' && (!nome.trim() || !cognome.trim())))}
-        className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
+        className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+      >
         {loading ? (
           <>
             <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -442,7 +444,7 @@ export default function CreateUserForm() {
             Creazione in corso…
           </>
         ) : 'Conferma'}
-      </button>
+      </Button>
     </form>
   );
 }

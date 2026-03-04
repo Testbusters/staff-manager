@@ -6,6 +6,7 @@ import type { ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 type PrefillData = {
   nome: string | null;
@@ -184,11 +185,9 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               Scarica contratto
             </button>
 
-            <button
-              onClick={handleFinish}
-              className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium text-white transition">
+            <Button onClick={handleFinish} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
               Ho scaricato il contratto — Accedi alla piattaforma
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -209,10 +208,11 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             )}
 
             {tipoContratto ? (
-              <button
+              <Button
                 onClick={handleCompleteOnboarding}
                 disabled={loading}
-                className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium text-white transition disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+              >
                 {loading ? (
                   <>
                     <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -222,13 +222,11 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                     Generazione in corso…
                   </>
                 ) : 'Genera e scarica contratto'}
-              </button>
+              </Button>
             ) : (
-              <button
-                onClick={handleFinish}
-                className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium text-white transition">
+              <Button onClick={handleFinish} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
                 Accedi alla piattaforma
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -392,12 +390,9 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">{error}</div>
         )}
 
-        <button
-          type="submit"
-          disabled={!step1Valid}
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-sm font-medium text-white transition disabled:opacity-50">
+        <Button type="submit" disabled={!step1Valid} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
           Avanti — Genera contratto
-        </button>
+        </Button>
       </form>
     </div>
   );
