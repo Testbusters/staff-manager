@@ -30,7 +30,7 @@ Da eseguire prima di Fase 6. Entrambi risolvibili in una singola sessione breve:
 ### In piano (da eseguire su main, blocchi separati)
 
 - [ ] Fase 5 — Table (TanStack + shadcn Table, solo nuove pagine — attivare al primo bisogno, nessun file esistente da migrare)
-- [ ] Fase 6 — Input / Textarea (**137 `<input>` in 30 file + 11 `<textarea>` in 11 file** — cifre da audit 2025-03-04)
+- [x] Fase 6 — Input / Textarea ✅ 2026-03-04 — all `<input>` / `<textarea>` migrated to shadcn; remaining `<select>` in Fase 7
 - [ ] Fase 7 — Select (**15 `<select>` in 15 file**)
 - [ ] Fase 8 — Button audit (**271+ `<button>` in 47 file** — solo CTA primari, non tutti)
 - [ ] Fase 9 — Cleanup finale (delete questo file, `data-stato` check, CLAUDE.md update)
