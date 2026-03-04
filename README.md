@@ -147,8 +147,8 @@ app/
     opportunita/[id]/page.tsx    → Opportunity detail: tipo, descrizione, requisiti, scadenza, link_candidatura, file
     sconti/[id]/page.tsx         → Discount detail: fornitore, logo, descrizione, codice_sconto + CopyButton, validità, link
     documenti/[id]/page.tsx      → Document detail with signed URL + sign flow (checkbox gate) + delete section for admin+CONTRATTO
-    ticket/page.tsx              → Ticket list (collaboratore: own; admin/responsabile: all + Collaboratore column)
-    ticket/nuova/page.tsx        → Create new ticket form
+    ticket/page.tsx              → Ticket list (collaboratore: own; manager: two-list layout — ricevuti + recenti, each with TicketRecordRow + priority dot)
+    ticket/nuova/page.tsx        → Create new ticket form (responsabile_compensi blocked — redirect to /)
     ticket/[id]/page.tsx         → Ticket detail: message thread + reply form + status change buttons
     contenuti/page.tsx           → Content hub: 5 URL-based tabs (comunicazioni/sconti/risorse/eventi/opportunita), admin-only, per-tab fetch
     notifiche/page.tsx           → Full notifications page (Suspense wrapper → NotificationPageClient)
@@ -263,17 +263,20 @@ components/
     RichTextDisplay.tsx          → Server-compatible: renders stored HTML via dangerouslySetInnerHTML with backward-compat toSafeHtml
   ticket/
     TicketStatusBadge.tsx        → Pill badge for ticket status (APERTO=green, IN_LAVORAZIONE=yellow, CHIUSO=gray)
+    TicketStatusInline.tsx       → Client component: status badge + transition buttons (APERTO/IN_LAV → only CHIUSO; no → In lavorazione CTA)
+    TicketRecordRow.tsx          → Row component for manager ticket lists: oggetto, stato badge, priority dot, creator name, last_message_at, Apri link
     TicketList.tsx               → Ticket table with status/priority filters + Collaboratore column for admin
-    TicketForm.tsx               → Create form (fixed category dropdown, oggetto, optional initial message)
+    TicketForm.tsx               → Create form (priority select BASSA/NORMALE/ALTA, category dropdown, oggetto, optional initial message)
     TicketQuickModal.tsx         → Self-contained modal with trigger button: opens inline ticket form (categoria/oggetto/messaggio), POST /api/tickets, redirect to /ticket/[id]
-    TicketThread.tsx             → Server-side message thread with author labels, closed banner, signed URLs
-    TicketMessageForm.tsx        → Reply form (textarea + file) + status change buttons (admin/responsabile)
+    TicketThread.tsx             → Chat-style message thread (own=right blue bubble, other=left gray bubble); localStorage "Nuovo" badge on unread messages; signed attachment URLs; closed banner
+    TicketMessageForm.tsx        → Reply-only form (textarea + file upload); no status change buttons (transitions via TicketStatusInline)
   admin/
     types.ts                     → Shared TypeScript types for admin dashboard (AdminDashboardData, AdminKPIs, AdminBlockItem, etc.)
     BlocksDrawer.tsx             → Slide-in drawer: block situations grouped by type (password, onboarding, stalled comps/exps) with direct actions
     AdminDashboard.tsx           → Main admin dashboard client component (KPI cards, community cards, urgenti, feed filters, Recharts period charts, blocks drawer trigger)
   responsabile/
     CollaboratoreDetail.tsx      → Client: anagrafica header + compensi/rimborsi/documenti sections with inline action buttons + integration modal
+    DashboardTicketSection.tsx   → Responsabile: two-section ticket widget (ricevuti: creator→me, recenti: last activity); TicketRow with inline reply + priority dot
   contenuti/
     CommunicationList.tsx        → Communication CRUD: pin toggle, expires_at date, file_urls (newline-separated)
     DiscountList.tsx             → Discount CRUD: fornitore, codice_sconto, valid_from/to dates, logo_url, file_url; expiry badge
@@ -328,8 +331,11 @@ supabase/migrations/
   029_content_community_targeting.sql → Replace community_id UUID with community_ids UUID[] on all 5 content tables (communications/events/opportunities/discounts/resources); backfill existing rows; empty array = all communities
   030_compensation_schema_alignment.sql → Rename descrizione→nome_servizio_ruolo, note_interne→info_specifiche; DROP corso_apartenenza; community_id nullable; CREATE compensation_competenze + RLS + seed; ADD competenza FK; rewrite responsabile RLS (collaborator_id-based)
   031_feedback_stato.sql          → ADD COLUMN stato TEXT NOT NULL DEFAULT 'nuovo' CHECK (stato IN ('nuovo','completato')) on feedback; ADD POLICY feedback_admin_update
+  032_fix_comp_history_rls.sql    → Fix comp_history_manager_read: can_manage_community(community_id) returns false for NULL community_id (GSheet imports); rewritten to use collaborator_id membership check
+  033_drop_periodo_riferimento.sql → DROP COLUMN periodo_riferimento from compensations (no longer part of entity)
+  034_ticket_rls_and_updates.sql  → ADD 4 denorm columns (updated_at, last_message_at, last_message_author_name/_role); DROP+recreate tickets_manager_read (creator→collaborators→collaborator_communities→user_community_access join, fixes NULL community); ADD tickets_admin_read policy
 
-__tests__/                         → 217 tests total (vitest)
+__tests__/                         → 252 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
   export-utils.test.ts             → Unit tests for CSV/XLSX builders
@@ -345,6 +351,7 @@ __tests__/                         → 217 tests total (vitest)
     documents.test.ts              → Unit tests for documents validTipi and type mapping (11 cases)
     notifications-block13.test.ts  → Unit tests for NotificationEntityType, buildContentNotification (4 types), buildCompensationReopenNotification, E9–E12 templates, entity_type whitelist (35 cases)
     compensation-import.test.ts    → Unit tests for import parse utilities (parseDate, parseImporto, ritenuta calc) (15 cases)
+    tickets-block15a.test.ts       → Unit tests for VALID_STATI, message validation, closed ticket guard, buildTicketReplyNotification, buildTicketCollabReplyNotification, buildTicketStatusNotification, buildTicketCreatedNotification (35 cases)
 
 e2e/
   rimborsi.spec.ts                 → Playwright UAT: reimbursement full flow (S1–S10, 11 tests)
@@ -369,6 +376,7 @@ e2e/
   remove-super-admin.spec.ts       → Playwright UAT: super_admin role removal S1–S4 (admin access, form options, login blocked, DB constraint, 4 tests)
   feedback.spec.ts                 → Playwright UAT: feedback tool S1–S5 (submit no screenshot, submit with screenshot, RBAC, admin list, login autofill, 5 tests)
   block14.spec.ts                  → Playwright UAT: rich text editor S1–S3 (H2 heading stored+rendered, editor loads HTML, RichTextDisplay collaboratore, 3 tests)
+  tickets-block15a.spec.ts         → Playwright UAT: ticket overhaul S1–S8 (two-list view, ALTA priority DB verify, priority dot, only→Chiuso CTA, auto IN_LAVORAZIONE, collab reply, responsabile redirect, 8 tests)
   fixtures/                        → Real Testbusters .docx template (OCCASIONALE) used as stable e2e fixture
 
 proxy.ts                         → Auth middleware (active check + password change redirect)
@@ -382,7 +390,7 @@ next.config.ts
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Run unit tests (202 cases) + Playwright e2e (190 tests across 22 spec files)
+npm test           # Run unit tests (252 cases) + Playwright e2e
 npm run build      # Production build (TypeScript check included)
 ```
 
