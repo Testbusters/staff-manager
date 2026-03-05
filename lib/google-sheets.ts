@@ -15,9 +15,15 @@ function buildAuth() {
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not set');
   const credentials = JSON.parse(raw);
-  // Replit Secrets double-escape \n in private_key — normalize to real newlines
+  // Replit Secrets can apply multiple levels of escaping to \n in private_key.
+  // Keep replacing until no literal \n sequences remain.
   if (credentials.private_key) {
-    credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+    let pk = credentials.private_key;
+    while (pk.includes('\\n')) {
+      pk = pk.replace(/\\n/g, '\n');
+    }
+    pk = pk.replace(/\r/g, '');
+    credentials.private_key = pk;
   }
   return new google.auth.GoogleAuth({
     credentials,
