@@ -5,6 +5,7 @@ import ExpenseDetail from '@/components/expense/ExpenseDetail';
 import ExpenseActionPanel from '@/components/expense/ExpenseActionPanel';
 import Timeline from '@/components/compensation/Timeline';
 import type { Role, ExpenseStatus, HistoryEvent } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default async function ExpenseDetailPage({
   params,
@@ -122,12 +123,14 @@ export default async function ExpenseDetailPage({
         />
 
         {historyForTimeline.length > 0 && (
-          <div className="rounded-xl bg-card border border-border p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
-              Cronologia
-            </p>
-            <Timeline events={historyForTimeline} />
-          </div>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                Cronologia
+              </p>
+              <Timeline events={historyForTimeline} />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { Expense, ExpenseStatus, ExpenseCategory } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS, EXPENSE_CATEGORIES, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
+import { Card, CardContent } from '@/components/ui/card';
 
 type ExpenseRow = Expense & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -36,11 +37,13 @@ function formatCurrency(n: number | null | undefined) {
 
 function KpiCard({ label, count, amount, countColor }: { label: string; count: number; amount: number; countColor: string }) {
   return (
-    <div className="rounded-xl bg-card border border-border px-4 py-4">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
-      <p className="text-sm text-muted-foreground tabular-nums mt-0.5">{formatCurrency(amount)}</p>
-    </div>
+    <Card>
+      <CardContent className="px-4 py-4">
+        <p className="text-xs text-muted-foreground mb-1">{label}</p>
+        <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
+        <p className="text-sm text-muted-foreground tabular-nums mt-0.5">{formatCurrency(amount)}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -230,11 +233,14 @@ export default function ApprovazioniRimborsi({
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
-        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="rounded-xl bg-card border border-border divide-y divide-border">
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
           {/* Select-all row */}
           {approvabiliOnPage.length > 0 && (
             <div className="flex items-center gap-3 px-4 py-2 bg-muted/40 rounded-t-xl">
@@ -307,7 +313,8 @@ export default function ApprovazioniRimborsi({
               </div>
             );
           })}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Pagination */}

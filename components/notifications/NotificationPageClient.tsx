@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { Notification } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 function entityHref(n: Notification): string | null {
   if (!n.entity_type || !n.entity_id) return null;
@@ -190,7 +191,8 @@ export default function NotificationPageClient() {
       </div>
 
       {/* List */}
-      <div className="rounded-xl bg-card border border-border overflow-hidden">
+      <Card>
+        <CardContent className="overflow-hidden p-0">
         {fetchError ? (
           <p className="text-sm text-red-400 text-center py-12">
             Errore nel caricamento delle notifiche
@@ -274,7 +276,8 @@ export default function NotificationPageClient() {
             })}
           </ul>
         )}
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Pagination */}
       {totalPages > 1 && (

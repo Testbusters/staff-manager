@@ -5,6 +5,7 @@ import CompensationDetail from '@/components/compensation/CompensationDetail';
 import Timeline from '@/components/compensation/Timeline';
 import ActionPanel from '@/components/compensation/ActionPanel';
 import type { Role, CompensationStatus } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default async function CompensationDetailPage({
   params,
@@ -93,12 +94,14 @@ export default async function CompensationDetailPage({
         />
 
         {(history ?? []).length > 0 && (
-          <div className="rounded-xl bg-card border border-border p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
-              Cronologia
-            </p>
-            <Timeline events={history ?? []} />
-          </div>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                Cronologia
+              </p>
+              <Timeline events={history ?? []} />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

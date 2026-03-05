@@ -7,6 +7,7 @@ import type { Compensation, CompensationStatus } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 import ImportSection from './ImportSection';
+import { Card, CardContent } from '@/components/ui/card';
 
 type CompensationRow = Compensation & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -35,11 +36,13 @@ function formatCurrency(n: number | null | undefined) {
 
 function KpiCard({ label, count, amount, countColor }: { label: string; count: number; amount: number; countColor: string }) {
   return (
-    <div className="rounded-xl bg-card border border-border px-4 py-4">
-      <p className="text-xs text-muted-foreground mb-2">{label}</p>
-      <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
-      <p className="text-sm tabular-nums text-muted-foreground mt-0.5">{formatCurrency(amount)}</p>
-    </div>
+    <Card>
+      <CardContent className="px-4 py-4">
+        <p className="text-xs text-muted-foreground mb-2">{label}</p>
+        <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
+        <p className="text-sm tabular-nums text-muted-foreground mt-0.5">{formatCurrency(amount)}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -89,18 +92,20 @@ export default function ApprovazioniCompensazioni({
 
       {/* Creation modes — two stacked peer cards */}
       <div className="space-y-3">
-        <div className="rounded-xl bg-card border border-border px-4 py-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-foreground">Inserimento manuale</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Crea un compenso per un singolo collaboratore.</p>
-          </div>
-          <Link
-            href="/approvazioni/carica"
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition"
-          >
-            + Inserimento manuale
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="px-4 py-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Inserimento manuale</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Crea un compenso per un singolo collaboratore.</p>
+            </div>
+            <Link
+              href="/approvazioni/carica"
+              className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition"
+            >
+              + Inserimento manuale
+            </Link>
+          </CardContent>
+        </Card>
         <ImportSection />
       </div>
 
@@ -139,11 +144,14 @@ export default function ApprovazioniCompensazioni({
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
-        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="rounded-xl bg-card border border-border divide-y divide-border">
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
           {paginated.map((c, idx) => {
             const isFirst = idx === 0;
             const isLast = idx === paginated.length - 1;
@@ -183,7 +191,8 @@ export default function ApprovazioniCompensazioni({
               </div>
             );
           })}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Pagination */}

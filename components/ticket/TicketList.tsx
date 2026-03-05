@@ -8,6 +8,7 @@ import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/lib/types';
 import TicketStatusBadge from './TicketStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 
 type TicketRow = {
   id: string;
@@ -91,14 +92,17 @@ export default function TicketList({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Nessun ticket trovato.</p>
-          <Link href="/ticket/nuova" className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300">
-            Apri il primo ticket →
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-muted-foreground">Nessun ticket trovato.</p>
+            <Link href="/ticket/nuova" className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300">
+              Apri il primo ticket →
+            </Link>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <Card>
+          <CardContent className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -144,7 +148,8 @@ export default function TicketList({
               ))}
             </TableBody>
           </Table>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

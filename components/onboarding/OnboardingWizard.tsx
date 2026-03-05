@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 
 type PrefillData = {
   nome: string | null;
@@ -137,7 +138,8 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   // ── Step 2 — contratto ───────────────────────────────────────
   if (step === 2) {
     return (
-      <div className="rounded-xl bg-card border border-border p-6 space-y-6">
+      <Card>
+        <CardContent className="p-6 space-y-6">
         {/* Progress */}
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center gap-1.5">
@@ -231,13 +233,15 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             )}
           </div>
         )}
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   // ── Step 1 — dati anagrafici ─────────────────────────────────
   return (
-    <div className="rounded-xl bg-card border border-border p-6">
+    <Card>
+      <CardContent className="p-6">
       {/* Progress */}
       <div className="flex items-center gap-3 mb-6">
         <div className="flex items-center gap-1.5">
@@ -397,6 +401,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           Avanti — Genera contratto
         </Button>
       </form>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

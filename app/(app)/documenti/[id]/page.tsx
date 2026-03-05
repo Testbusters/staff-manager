@@ -6,6 +6,7 @@ import DocumentDeleteButton from '@/components/documents/DocumentDeleteButton';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_SIGN_STATUS_LABELS } from '@/lib/types';
 import type { Role, Document } from '@/lib/types';
 import { getDocumentUrls } from '@/lib/documents-storage';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default async function DocumentDetailPage({
   params,
@@ -61,7 +62,8 @@ export default async function DocumentDetailPage({
 
       <div className="space-y-6">
         {/* Info card */}
-        <div className="rounded-xl bg-card border border-border px-4 py-4 space-y-3">
+        <Card>
+          <CardContent className="px-4 py-4 space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-base font-medium text-foreground">{doc.titolo}</p>
@@ -108,7 +110,8 @@ export default async function DocumentDetailPage({
               </div>
             )}
           </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Sign flow — for collaboratore with DA_FIRMARE, or read-only for others */}
         <DocumentSignFlow
@@ -120,13 +123,15 @@ export default async function DocumentDetailPage({
 
         {/* Delete — admin only, CONTRATTO only */}
         {isAdmin && isContratto && (
-          <div className="rounded-xl bg-card border border-border px-4 py-4 space-y-2">
-            <p className="text-sm font-medium text-foreground">Elimina contratto</p>
-            <p className="text-xs text-muted-foreground">
-              L&apos;eliminazione è definitiva. Permette di caricare un nuovo contratto per questo collaboratore.
-            </p>
-            <DocumentDeleteButton documentId={doc.id} />
-          </div>
+          <Card>
+            <CardContent className="px-4 py-4 space-y-2">
+              <p className="text-sm font-medium text-foreground">Elimina contratto</p>
+              <p className="text-xs text-muted-foreground">
+                L&apos;eliminazione è definitiva. Permette di caricare un nuovo contratto per questo collaboratore.
+              </p>
+              <DocumentDeleteButton documentId={doc.id} />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

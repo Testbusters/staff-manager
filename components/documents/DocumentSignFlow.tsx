@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Document } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
   document: Document;
@@ -50,7 +51,8 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
   };
 
   return (
-    <div className="rounded-xl bg-card border border-border p-6 space-y-5">
+    <Card>
+      <CardContent className="p-6 space-y-5">
       <h2 className="text-base font-semibold text-foreground">Documento</h2>
 
       {/* Original download */}
@@ -149,6 +151,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
           Documento firmato inviato correttamente.
         </div>
       )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

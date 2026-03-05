@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ExpenseActionPanelProps {
   expenseId: string;
@@ -74,29 +75,31 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
 
   return (
     <>
-      <div className="rounded-xl bg-card border border-border p-4 space-y-3">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Azioni</p>
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Azioni</p>
 
-        {error && (
-          <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
-            {error}
+          {error && (
+            <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {actions.map((a) => (
+              <Button
+                key={a.action}
+                onClick={a.onClick}
+                disabled={loading !== null}
+                variant={a.variant === 'danger' ? 'destructive' : a.variant === 'secondary' ? 'outline' : undefined}
+                className={a.variant === 'primary' ? 'bg-blue-600 hover:bg-blue-500 text-white' : undefined}
+              >
+                {loading === a.action ? 'Attendere…' : a.label}
+              </Button>
+            ))}
           </div>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          {actions.map((a) => (
-            <Button
-              key={a.action}
-              onClick={a.onClick}
-              disabled={loading !== null}
-              variant={a.variant === 'danger' ? 'destructive' : a.variant === 'secondary' ? 'outline' : undefined}
-              className={a.variant === 'primary' ? 'bg-blue-600 hover:bg-blue-500 text-white' : undefined}
-            >
-              {loading === a.action ? 'Attendere…' : a.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Reject modal */}
       <Dialog open={showRejectModal} onOpenChange={(v) => { if (!v) { setShowRejectModal(false); setRejectNote(''); setError(null); } }}>

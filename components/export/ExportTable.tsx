@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 
 function formatImporto(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -29,14 +30,17 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
 
   if (items.length === 0) {
     return (
-      <div className="rounded-xl bg-card border border-border p-8 text-center">
-        <p className="text-sm text-muted-foreground">Nessun record in attesa di liquidazione.</p>
-      </div>
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun record in attesa di liquidazione.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl bg-card border border-border overflow-hidden">
+    <Card>
+      <CardContent className="overflow-hidden p-0">
       <Table className="text-sm">
         <TableHeader>
           <TableRow className="border-border">
@@ -112,6 +116,7 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
           ))}
         </TableBody>
       </Table>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

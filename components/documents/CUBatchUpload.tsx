@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface BatchDetail {
   success: string[];
@@ -61,7 +62,8 @@ export default function CUBatchUpload() {
   };
 
   return (
-    <div className="rounded-xl bg-card border border-border p-6 space-y-5">
+    <Card>
+      <CardContent className="p-6 space-y-5">
       <div>
         <h2 className="text-base font-semibold text-foreground">Importazione CU batch</h2>
         <p className="text-xs text-muted-foreground mt-1">
@@ -172,6 +174,7 @@ export default function CUBatchUpload() {
           )}
         </div>
       )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

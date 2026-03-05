@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import TicketForm from '@/components/ticket/TicketForm';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default async function NuovoTicketPage() {
   const supabase = await createClient();
@@ -28,9 +29,11 @@ export default async function NuovoTicketPage() {
         <h1 className="text-xl font-semibold text-foreground">Nuovo ticket</h1>
       </div>
 
-      <div className="rounded-xl bg-card border border-border p-6">
-        <TicketForm />
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <TicketForm />
+        </CardContent>
+      </Card>
     </div>
   );
 }

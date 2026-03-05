@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PreviewRow {
   rowIndex: number;
@@ -83,7 +84,8 @@ export default function ImportSection() {
   }
 
   return (
-    <div className="rounded-xl bg-card border border-border p-5 space-y-4">
+    <Card>
+      <CardContent className="p-5 space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h3 className="text-sm font-medium text-foreground">Importa da Google Sheet</h3>
@@ -230,7 +232,8 @@ export default function ImportSection() {
           )}
         </div>
       )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 

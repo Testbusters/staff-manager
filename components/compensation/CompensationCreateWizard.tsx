@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 
 type Community = { id: string; name: string };
 
@@ -218,7 +219,8 @@ export default function CompensationCreateWizard({
           </label>
         </div>
 
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <Card>
+          <CardContent className="overflow-hidden p-0">
           {loadingSearch ? (
             <p className="p-6 text-sm text-muted-foreground text-center">Ricerca in corso...</p>
           ) : collaborators.length === 0 ? (
@@ -261,7 +263,8 @@ export default function CompensationCreateWizard({
               </TableBody>
             </Table>
           )}
-        </div>
+          </CardContent>
+        </Card>
 
         <div className="mt-4">
           <Button
@@ -424,14 +427,16 @@ export default function CompensationCreateWizard({
         </div>
         <StepIndicator current={3} />
 
-        <div className="rounded-xl bg-card border border-border divide-y divide-border">
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
           {rows.map((row) => (
             <div key={row.label} className="flex items-center justify-between px-4 py-3">
               <span className="text-xs text-muted-foreground">{row.label}</span>
               <span className="text-sm text-foreground">{row.value}</span>
             </div>
           ))}
-        </div>
+          </CardContent>
+        </Card>
 
         {submitError && (
           <p className="mt-3 text-xs text-red-400">{submitError}</p>

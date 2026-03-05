@@ -1,4 +1,5 @@
 import type { Compensation } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from './StatusBadge';
 
 type CollaboratorInfo = {
@@ -56,35 +57,41 @@ export default function CompensationDetail({
 
       {/* Collaborator info — visible to responsabile_compensi and amministrazione only */}
       {collaborator && (
-        <div className="rounded-xl bg-card border border-border px-4 py-3">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Collaboratore</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span className="text-sm text-foreground">
-              {[collaborator.nome, collaborator.cognome].filter(Boolean).join(' ') || '—'}
-            </span>
-            {collaborator.username && (
-              <span className="text-sm text-muted-foreground">@{collaborator.username}</span>
-            )}
-          </div>
-        </div>
+        <Card>
+          <CardContent className="px-4 py-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Collaboratore</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <span className="text-sm text-foreground">
+                {[collaborator.nome, collaborator.cognome].filter(Boolean).join(' ') || '—'}
+              </span>
+              {collaborator.username && (
+                <span className="text-sm text-muted-foreground">@{collaborator.username}</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* General fields */}
-      <div className="rounded-xl bg-card border border-border px-4">
-        <Row label="Data competenza" value={formatDate(c.data_competenza)} />
-        {competenzaLabel && <Row label="Competenza" value={competenzaLabel} />}
-        <Row label="Nome servizio / Ruolo" value={c.nome_servizio_ruolo} />
-        {c.info_specifiche && <Row label="Info specifiche" value={c.info_specifiche} />}
-      </div>
+      <Card>
+        <CardContent className="px-4">
+          <Row label="Data competenza" value={formatDate(c.data_competenza)} />
+          {competenzaLabel && <Row label="Competenza" value={competenzaLabel} />}
+          <Row label="Nome servizio / Ruolo" value={c.nome_servizio_ruolo} />
+          {c.info_specifiche && <Row label="Info specifiche" value={c.info_specifiche} />}
+        </CardContent>
+      </Card>
 
       {/* Financial fields */}
-      <div className="rounded-xl bg-card border border-border px-4">
-        <Row label="Importo lordo" value={formatCurrency(c.importo_lordo)} />
-        <Row label="Ritenuta acconto (20%)" value={formatCurrency(c.ritenuta_acconto)} />
-        <Row label="Importo netto" value={
-          <span className="font-medium text-green-400">{formatCurrency(c.importo_netto)}</span>
-        } />
-      </div>
+      <Card>
+        <CardContent className="px-4">
+          <Row label="Importo lordo" value={formatCurrency(c.importo_lordo)} />
+          <Row label="Ritenuta acconto (20%)" value={formatCurrency(c.ritenuta_acconto)} />
+          <Row label="Importo netto" value={
+            <span className="font-medium text-green-400">{formatCurrency(c.importo_netto)}</span>
+          } />
+        </CardContent>
+      </Card>
 
       {/* Rejection note */}
       {c.rejection_note && (

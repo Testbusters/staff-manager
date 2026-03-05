@@ -8,6 +8,7 @@ import { DOCUMENT_SIGN_STATUS_LABELS, DOCUMENT_MACRO_TYPE, DOCUMENT_MACRO_TYPE_L
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface DocumentRow extends Document {
   collaborators?: { nome: string; cognome: string } | null;
@@ -76,9 +77,11 @@ export default function DocumentList({ documents, isAdmin }: Props) {
 
   if (documents.length === 0) {
     return (
-      <div className="rounded-xl bg-card border border-border p-8 text-center">
-        <p className="text-sm text-muted-foreground">Nessun documento disponibile.</p>
-      </div>
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun documento disponibile.</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -93,7 +96,8 @@ export default function DocumentList({ documents, isAdmin }: Props) {
       {MACRO_ORDER.filter((macro) => grouped.has(macro)).map((macro) => {
         const docs = grouped.get(macro)!;
         return (
-          <div key={macro} className="rounded-xl bg-card border border-border overflow-hidden">
+          <Card key={macro}>
+            <CardContent className="overflow-hidden p-0">
             <div className="px-4 py-3 border-b border-border flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground">{DOCUMENT_MACRO_TYPE_LABELS[macro]}</h3>
               <span className="text-xs text-muted-foreground tabular-nums">({docs.length})</span>
@@ -164,7 +168,8 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                 ))}
               </TableBody>
             </Table>
-          </div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

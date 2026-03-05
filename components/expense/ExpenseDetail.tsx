@@ -1,5 +1,6 @@
 import type { Expense, ExpenseAttachment } from '@/lib/types';
 import { EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/compensation/StatusBadge';
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -65,14 +66,16 @@ export default function ExpenseDetail({
       </div>
 
       {/* Info block */}
-      <div className="rounded-xl bg-card border border-border px-4">
-        <Row label="Data spesa" value={formatDate(e.data_spesa)} />
-        <Row label="Importo" value={
-          <span className="font-medium text-green-400">{formatCurrency(e.importo)}</span>
-        } />
-        <Row label="Descrizione" value={e.descrizione} />
-        <Row label="Richiesta il" value={formatDateTime(e.created_at)} />
-      </div>
+      <Card>
+        <CardContent className="px-4">
+          <Row label="Data spesa" value={formatDate(e.data_spesa)} />
+          <Row label="Importo" value={
+            <span className="font-medium text-green-400">{formatCurrency(e.importo)}</span>
+          } />
+          <Row label="Descrizione" value={e.descrizione} />
+          <Row label="Richiesta il" value={formatDateTime(e.created_at)} />
+        </CardContent>
+      </Card>
 
       {/* Rejection note */}
       {e.rejection_note && (
@@ -93,27 +96,29 @@ export default function ExpenseDetail({
 
       {/* Attachments */}
       {attachments.length > 0 && (
-        <div className="rounded-xl bg-card border border-border px-4 py-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Allegati</p>
-          <ul className="space-y-2">
-            {attachments.map((att) => (
-              <li key={att.id} className="flex items-center gap-2">
-                <a
-                  href={att.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition min-w-0"
-                >
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                  <span className="truncate">{att.file_name}</span>
-                </a>
-                <span className="text-xs text-muted-foreground shrink-0 ml-auto">{formatDateTime(att.created_at)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Card>
+          <CardContent className="px-4 py-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Allegati</p>
+            <ul className="space-y-2">
+              {attachments.map((att) => (
+                <li key={att.id} className="flex items-center gap-2">
+                  <a
+                    href={att.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition min-w-0"
+                  >
+                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                    <span className="truncate">{att.file_name}</span>
+                  </a>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-auto">{formatDateTime(att.created_at)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { Expense, ExpenseStatus, Role } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
+import { Card, CardContent } from '@/components/ui/card';
 
 const ALL_STATI: ExpenseStatus[] = [
   'IN_ATTESA',
@@ -93,19 +94,22 @@ export default function ExpenseList({
 
       {/* Card list */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
-          {role === 'collaboratore' && (
-            <Link
-              href="/rimborsi/nuova"
-              className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300"
-            >
-              Crea la prima richiesta →
-            </Link>
-          )}
-        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
+            {role === 'collaboratore' && (
+              <Link
+                href="/rimborsi/nuova"
+                className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300"
+              >
+                Crea la prima richiesta →
+              </Link>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <div className="rounded-xl bg-card border border-border divide-y divide-border [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
+        <Card>
+          <CardContent className="divide-y divide-border [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl p-0">
           {paginated.map((e) => (
             <Link
               key={e.id}
@@ -136,7 +140,8 @@ export default function ExpenseList({
               </div>
             </Link>
           ))}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Pagination */}

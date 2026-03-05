@@ -7,6 +7,7 @@ import type { Compensation, CompensationStatus, Role } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
+import { Card, CardContent } from '@/components/ui/card';
 
 type CompensationRow = Compensation;
 
@@ -117,11 +118,14 @@ export default function CompensationList({
 
       {/* Card list */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
-        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="rounded-xl bg-card border border-border divide-y divide-border [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
+        <Card>
+          <CardContent className="divide-y divide-border [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl p-0">
           {paginated.map((c) => (
             <Link
               key={c.id}
@@ -161,7 +165,8 @@ export default function CompensationList({
               </div>
             </Link>
           ))}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Pagination */}

@@ -7,6 +7,7 @@ import type { DocumentType, DocumentSignStatus } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Collaborator {
   id: string;
@@ -79,7 +80,8 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   };
 
   return (
-    <div className="rounded-xl bg-card border border-border p-6 space-y-5">
+    <Card>
+      <CardContent className="p-6 space-y-5">
       <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
 
       {success && (
@@ -196,6 +198,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       >
         {loading ? 'Caricamento…' : 'Carica documento'}
       </Button>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

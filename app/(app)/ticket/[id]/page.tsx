@@ -7,6 +7,7 @@ import TicketMessageForm from '@/components/ticket/TicketMessageForm';
 import TicketStatusInline from '@/components/ticket/TicketStatusInline';
 import { TICKET_PRIORITY_LABELS, ROLE_LABELS } from '@/lib/types';
 import type { Role, TicketStatus } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 
 const BUCKET = 'tickets';
 const SIGNED_URL_TTL = 60 * 60;
@@ -129,7 +130,8 @@ export default async function TicketDetailPage({
       </div>
 
       {/* Ticket header */}
-      <div className="rounded-xl bg-card border border-border p-5 mb-5 space-y-3">
+      <Card className="mb-5">
+        <CardContent className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wide">{ticket.categoria}</p>
@@ -149,7 +151,8 @@ export default async function TicketDetailPage({
           </span>
           <span>Aperto il {formatDate(ticket.created_at)}</span>
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Thread */}
       <div className="mb-5">
@@ -162,13 +165,15 @@ export default async function TicketDetailPage({
 
       {/* Reply form */}
       {ticket.stato !== 'CHIUSO' && (
-        <div className="rounded-xl bg-card border border-border p-5">
-          <h3 className="text-sm font-medium text-foreground mb-4">Rispondi</h3>
-          <TicketMessageForm
-            ticketId={id}
-            ticketStato={ticket.stato as TicketStatus}
-          />
-        </div>
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="text-sm font-medium text-foreground mb-4">Rispondi</h3>
+            <TicketMessageForm
+              ticketId={id}
+              ticketStato={ticket.stato as TicketStatus}
+            />
+          </CardContent>
+        </Card>
       )}
     </div>
   );

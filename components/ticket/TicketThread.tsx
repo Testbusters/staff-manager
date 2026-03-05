@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type MessageDisplay = {
   id: string;
@@ -46,11 +47,13 @@ export default function TicketThread({
   return (
     <div className="space-y-2">
       {messages.length === 0 ? (
-        <div className="rounded-xl bg-card border border-border p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Nessun messaggio ancora. Aggiungi il primo messaggio qui sotto.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Nessun messaggio ancora. Aggiungi il primo messaggio qui sotto.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         messages.map((m) => {
           const isNew =
