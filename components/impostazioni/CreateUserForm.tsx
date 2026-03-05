@@ -6,6 +6,7 @@ import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Role = 'collaboratore' | 'responsabile_cittadino' | 'responsabile_compensi' | 'responsabile_servizi_individuali' | 'amministrazione';
 type Credentials = { email: string; password: string };
@@ -256,9 +257,11 @@ export default function CreateUserForm() {
             {communities.map((c) => (
               <label key={c.id}
                 className="flex items-center gap-3 rounded-lg bg-muted border border-border px-3 py-2.5 cursor-pointer hover:border-border transition">
-                <input type="checkbox" checked={selectedCommunities.includes(c.id)}
-                  onChange={() => toggleCommunity(c.id)} disabled={loading}
-                  className="accent-blue-600 w-4 h-4" />
+                <Checkbox
+                  checked={selectedCommunities.includes(c.id)}
+                  onCheckedChange={() => toggleCommunity(c.id)}
+                  disabled={loading}
+                />
                 <span className="text-sm text-foreground">{c.name}</span>
               </label>
             ))}

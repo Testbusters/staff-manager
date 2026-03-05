@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import type { Expense, ExpenseStatus, Role } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
@@ -141,21 +142,23 @@ export default function ExpenseList({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ‹
-          </button>
+          </Button>
           <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ›
-          </button>
+          </Button>
         </div>
       )}
     </div>

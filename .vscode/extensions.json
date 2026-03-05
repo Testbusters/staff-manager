@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    // Claude Code
+    "anthropic.claude-code",
+    // Tailwind CSS
+    "bradlc.vscode-tailwindcss",
+    // TypeScript & linting
+    "dbaeumer.vscode-eslint",
+    "usernamehw.errorlens",
+    "yoavbls.pretty-ts-errors",
+    // Testing
+    "ms-playwright.playwright",
+    // Git
+    "eamodio.gitlens",
+    "GitHub.vscode-pull-request-github",
+    // API testing
+    "humao.rest-client"
+  ]
+}

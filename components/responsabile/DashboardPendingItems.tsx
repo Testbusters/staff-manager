@@ -6,6 +6,7 @@ import { EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import type { ExpenseCategory } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -241,10 +242,11 @@ export default function DashboardPendingItems({
           ) : (
             <div className="divide-y divide-border">
               {pendingComps.slice(0, 8).map((c) => (
-                <button
+                <Button
                   key={c.id}
+                  variant="ghost"
                   onClick={() => setSelectedComp(c.id)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted transition text-left cursor-pointer"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted text-left cursor-pointer h-auto rounded-none justify-start"
                 >
                   {c.competenza && (
                     <Badge variant="outline" className={`shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'border-border text-muted-foreground'}`}>
@@ -257,7 +259,7 @@ export default function DashboardPendingItems({
                   </div>
                   <span className="text-xs text-muted-foreground tabular-nums shrink-0">{formatAge(c.created_at)}</span>
                   <span className="text-xs text-muted-foreground shrink-0">→</span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -276,10 +278,11 @@ export default function DashboardPendingItems({
           ) : (
             <div className="divide-y divide-border">
               {pendingExps.slice(0, 8).map((e) => (
-                <button
+                <Button
                   key={e.id}
+                  variant="ghost"
                   onClick={() => setSelectedExp(e.id)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted transition text-left cursor-pointer"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted text-left cursor-pointer h-auto rounded-none justify-start"
                 >
                   <Badge variant="outline" className={`shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'border-border text-muted-foreground'}`}>
                     {e.categoria}
@@ -290,7 +293,7 @@ export default function DashboardPendingItems({
                   </div>
                   <span className="text-xs text-muted-foreground tabular-nums shrink-0">{formatAge(e.created_at)}</span>
                   <span className="text-xs text-muted-foreground shrink-0">→</span>
-                </button>
+                </Button>
               ))}
             </div>
           )}

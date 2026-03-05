@@ -6,6 +6,8 @@ import Link from 'next/link';
 import type { TicketStatus, Role } from '@/lib/types';
 import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/lib/types';
 import TicketStatusBadge from './TicketStatusBadge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type TicketRow = {
   id: string;
@@ -54,28 +56,28 @@ export default function TicketList({
       {/* Filter + action bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
-          <button
+          <Button
             onClick={() => setFilterStato('ALL')}
-            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium h-auto ${
               filterStato === 'ALL'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-blue-600 text-white hover:bg-blue-500'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             Tutti
-          </button>
+          </Button>
           {ALL_STATI.map((s) => (
-            <button
+            <Button
               key={s}
               onClick={() => setFilterStato(s)}
-              className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
+              className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium h-auto ${
                 filterStato === s
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white hover:bg-blue-500'
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               {TICKET_STATUS_LABELS[s]}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -97,53 +99,51 @@ export default function TicketList({
         </div>
       ) : (
         <div className="rounded-xl bg-card border border-border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stato</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Priorità</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Oggetto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Riferimento</th>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Stato</TableHead>
+                <TableHead className="hidden sm:table-cell">Priorità</TableHead>
+                <TableHead>Oggetto</TableHead>
+                <TableHead className="hidden md:table-cell">Riferimento</TableHead>
                 {isManager && (
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden lg:table-cell">
-                    Collaboratore
-                  </th>
+                  <TableHead className="hidden lg:table-cell">Collaboratore</TableHead>
                 )}
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground hidden lg:table-cell">Aperto il</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+                <TableHead className="text-right hidden lg:table-cell">Aperto il</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.map((t) => (
-                <tr
+                <TableRow
                   key={t.id}
                   onClick={() => router.push(`/ticket/${t.id}`)}
-                  className="hover:bg-muted/50 transition cursor-pointer"
+                  className="hover:bg-muted/50 cursor-pointer"
                 >
-                  <td className="px-4 py-3">
+                  <TableCell>
                     <TicketStatusBadge stato={t.stato} />
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[t.priority] ?? 'bg-gray-500'}`} />
                       {TICKET_PRIORITY_LABELS[t.priority as keyof typeof TICKET_PRIORITY_LABELS] ?? t.priority}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-foreground max-w-xs truncate">{t.oggetto}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{t.categoria}</td>
+                  </TableCell>
+                  <TableCell className="text-foreground max-w-xs truncate">{t.oggetto}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{t.categoria}</TableCell>
                   {isManager && (
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                    <TableCell className="text-muted-foreground hidden lg:table-cell">
                       {t.creator_name ?? '—'}
-                    </td>
+                    </TableCell>
                   )}
-                  <td className="px-4 py-3 text-right text-muted-foreground hidden lg:table-cell tabular-nums">
+                  <TableCell className="text-right text-muted-foreground hidden lg:table-cell tabular-nums">
                     {formatDate(t.created_at)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-muted-foreground text-sm">→</td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground text-sm">→</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

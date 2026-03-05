@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Community = { id: string; name: string };
 
@@ -207,11 +210,9 @@ export default function CompensationCreateWizard({
             </SelectContent>
           </Select>
           <label className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={activeOnly}
-              onChange={(e) => setActiveOnly(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(v) => setActiveOnly(!!v)}
             />
             Solo attivi
           </label>
@@ -225,49 +226,50 @@ export default function CompensationCreateWizard({
               {searchQ || communityFilter ? 'Nessun collaboratore trovato.' : 'Inserisci un termine di ricerca o seleziona una community.'}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Nome</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Username</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Community</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead className="hidden sm:table-cell">Username</TableHead>
+                  <TableHead className="hidden md:table-cell">Community</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {collaborators.map((c) => (
-                  <tr key={c.id} className="hover:bg-muted/50 transition">
-                    <td className="px-4 py-3 text-foreground">
+                  <TableRow key={c.id} className="hover:bg-muted/50">
+                    <TableCell className="text-foreground">
                       {c.cognome} {c.nome}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden sm:table-cell">
                       {c.username ?? '—'}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
                       {c.communities.map((cc) => cc.name).join(', ') || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleSelectCollab(c)}
-                        className="text-xs text-blue-400 hover:text-blue-300"
                       >
                         Seleziona →
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
 
         <div className="mt-4">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.back()}
-            className="text-sm text-muted-foreground hover:text-foreground transition"
           >
             ← Indietro
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -375,18 +377,18 @@ export default function CompensationCreateWizard({
           )}
 
           <div className="flex items-center justify-between pt-2">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setStep('step1')}
-              className="text-sm text-muted-foreground hover:text-foreground transition"
             >
               ← Indietro
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleStep2Next}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+              className="bg-blue-600 hover:bg-blue-500 text-white"
             >
               Avanti →
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -436,20 +438,20 @@ export default function CompensationCreateWizard({
         )}
 
         <div className="flex items-center justify-between mt-4">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setStep('step2')}
-            className="text-sm text-muted-foreground hover:text-foreground transition"
             disabled={submitting}
           >
             ← Indietro
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-5 py-2 text-sm font-medium text-white transition"
+            className="bg-blue-600 hover:bg-blue-500 text-white"
           >
             {submitting ? 'Creazione...' : 'Crea compenso'}
-          </button>
+          </Button>
         </div>
       </div>
     );

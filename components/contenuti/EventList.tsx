@@ -8,6 +8,7 @@ import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'WEBINAR',   label: 'Webinar' },
@@ -121,15 +122,15 @@ function EventForm({
         <div className="flex flex-wrap gap-3">
           {communities.map((c) => (
             <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-              <input type="checkbox"
+              <Checkbox
                 checked={form.community_ids.includes(c.id)}
-                onChange={(e) => setForm((f) => ({
+                onCheckedChange={(v) => setForm((f) => ({
                   ...f,
-                  community_ids: e.target.checked
+                  community_ids: v
                     ? [...f.community_ids, c.id]
                     : f.community_ids.filter((id) => id !== c.id),
                 }))}
-                className="rounded border-border bg-muted" />
+              />
               {c.name}
             </label>
           ))}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CONTRACT_TEMPLATE_LABELS, type ContractTemplateType } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 
 type Template = {
   id: string;
@@ -124,10 +125,11 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
 
       {/* Placeholders reference */}
       <div className={sectionCls}>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setShowPlaceholders((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-4 text-left"
+          className="w-full flex items-center justify-between px-5 py-4 text-left h-auto rounded-none"
         >
           <div>
             <h2 className="text-sm font-medium text-foreground">Segnaposto disponibili</h2>
@@ -141,7 +143,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-        </button>
+        </Button>
         {showPlaceholders && (
           <div className="border-t border-border px-5 pb-5">
             <div className="mt-4 grid grid-cols-1 gap-1.5">

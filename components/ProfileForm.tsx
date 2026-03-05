@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Collaborator = {
   nome: string;
@@ -63,16 +64,17 @@ function GuideBox({ guide }: { guide: GuideContent }) {
   if (!guide) return null;
   return (
     <div className="mt-3 rounded-lg bg-blue-950/40 border border-blue-800/40">
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-xs text-blue-300 hover:text-blue-200 transition"
+        className="w-full flex items-center justify-between px-3 py-2.5 text-xs text-blue-300 hover:text-blue-200 h-auto rounded-none"
       >
         <span className="font-medium">{guide.titolo}</span>
         <svg className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
-      </button>
+      </Button>
       {open && guide.descrizione && (
         <div className="px-3 pb-3 text-xs text-muted-foreground whitespace-pre-wrap border-t border-blue-800/40 pt-2.5">
           {guide.descrizione}
@@ -243,14 +245,15 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               className="hidden"
               onChange={handleAvatarChange}
             />
-            <button
+            <Button
               type="button"
+              variant="outline"
               disabled={avatarLoading}
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-lg bg-muted hover:bg-accent border border-border px-3 py-2 text-xs text-foreground transition disabled:opacity-50 block"
+              className="text-xs"
             >
               {avatarLoading ? 'Caricamento…' : avatarUrl ? 'Cambia foto' : 'Carica foto'}
-            </button>
+            </Button>
             <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · max 2 MB</p>
             {avatarError && <p className="text-xs text-red-400 mt-1">{avatarError}</p>}
           </div>
@@ -409,24 +412,25 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         <div className={sectionHeader}>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-foreground">Dati fiscali</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setShowGuida(true)}
-              className="text-xs text-blue-400 hover:text-blue-300 transition underline underline-offset-2"
+              className="text-xs text-blue-400 hover:text-blue-300 h-auto p-0 underline underline-offset-2"
             >
               Come funziona la prestazione occasionale?
-            </button>
+            </Button>
           </div>
         </div>
         <div className="p-5 space-y-5">
           <div>
             <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={sonoFiglio}
-                onChange={(e) => setSonoFiglio(e.target.checked)}
+                onCheckedChange={(v) => setSonoFiglio(!!v)}
                 disabled={loading}
-                className="accent-blue-600 w-4 h-4 mt-0.5 flex-shrink-0"
+                className="mt-0.5 flex-shrink-0"
               />
               <div>
                 <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
@@ -462,10 +466,10 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               <p className="text-xs text-muted-foreground mt-1.5">
                 Importo lordo massimo che vuoi ricevere da noi nell&apos;anno solare.
                 Se hai altre collaborazioni, abbassa questo valore per rispettare i tuoi limiti personali.
-                <button type="button" onClick={() => setShowGuida(true)}
-                  className="ml-1 text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowGuida(true)}
+                  className="ml-1 text-blue-400 hover:text-blue-300 underline underline-offset-2 h-auto p-0 text-xs">
                   Come scegliere il valore?
-                </button>
+                </Button>
               </p>
             </div>
           )}

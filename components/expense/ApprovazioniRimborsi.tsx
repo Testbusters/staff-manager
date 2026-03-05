@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Expense, ExpenseStatus, ExpenseCategory } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS, EXPENSE_CATEGORIES, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
@@ -215,13 +217,13 @@ export default function ApprovazioniRimborsi({
           </div>
           <div className="flex items-center gap-3">
             {bulkError && <span className="text-xs text-red-400">{bulkError}</span>}
-            <button
+            <Button
               onClick={handleBulkApprove}
               disabled={bulkLoading || isPending}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-1.5 text-sm font-medium text-white transition"
+              className="bg-blue-600 hover:bg-blue-500 text-white"
             >
               {bulkLoading ? 'Approvazione...' : 'Approva selezionati'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -236,11 +238,9 @@ export default function ApprovazioniRimborsi({
           {/* Select-all row */}
           {approvabiliOnPage.length > 0 && (
             <div className="flex items-center gap-3 px-4 py-2 bg-muted/40 rounded-t-xl">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={allPageSelected}
-                onChange={toggleSelectAll}
-                className="h-4 w-4 rounded border-border bg-muted text-blue-600 focus:ring-blue-500"
+                onCheckedChange={() => toggleSelectAll()}
               />
               <span className="text-xs text-muted-foreground">
                 {allPageSelected ? 'Deseleziona tutti' : `Seleziona tutti in attesa (${approvabiliOnPage.length})`}
@@ -261,11 +261,9 @@ export default function ApprovazioniRimborsi({
                 {/* Checkbox column */}
                 <div className="w-5 shrink-0 flex items-center justify-center">
                   {isApprovabile && (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isSelected}
-                      onChange={() => toggleOne(e.id)}
-                      className="h-4 w-4 rounded border-border bg-muted text-blue-600 focus:ring-blue-500"
+                      onCheckedChange={() => toggleOne(e.id)}
                     />
                   )}
                 </div>
@@ -315,21 +313,23 @@ export default function ApprovazioniRimborsi({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ‹
-          </button>
+          </Button>
           <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ›
-          </button>
+          </Button>
         </div>
       )}
     </div>

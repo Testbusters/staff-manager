@@ -9,6 +9,7 @@ import {
 import type { AdminDashboardData } from './types';
 import type { AdminHero } from './types';
 import BlocksDrawer from './BlocksDrawer';
+import { Button } from '@/components/ui/button';
 
 // ── Helpers ────────────────────────────────────────────────
 function eur(n: number) {
@@ -265,10 +266,10 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         <div>
           <p className="text-sm text-muted-foreground">Panoramica operativa</p>
         </div>
-        <button
+        <Button
           onClick={() => setShowBlocks(true)}
           className={
-            'relative rounded-xl px-4 py-2 text-sm font-medium transition ' +
+            'relative rounded-xl px-4 py-2 text-sm font-medium ' +
             (blockItems.length > 0
               ? 'bg-red-900/40 border border-red-700/50 text-red-300 hover:bg-red-900/60'
               : 'bg-muted border border-border text-muted-foreground hover:text-foreground')
@@ -280,7 +281,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
             </span>
           )}
           Situazioni di blocco
-        </button>
+        </Button>
       </div>
 
       {/* ── KPI cards ── */}

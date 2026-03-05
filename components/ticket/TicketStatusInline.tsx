@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
 import TicketStatusBadge from './TicketStatusBadge';
+import { Button } from '@/components/ui/button';
 
 const STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
   APERTO:         ['CHIUSO'],
@@ -45,14 +46,16 @@ export default function TicketStatusInline({
     <div className="flex items-center gap-2 flex-wrap">
       <TicketStatusBadge stato={currentStato} />
       {nextStati.map((s) => (
-        <button
+        <Button
           key={s}
+          variant="outline"
+          size="sm"
           onClick={() => handleChange(s)}
           disabled={loading}
-          className="rounded-lg border border-border bg-muted hover:bg-accent disabled:opacity-50 px-3 py-1 text-xs font-medium text-muted-foreground transition"
+          className="text-xs font-medium text-muted-foreground"
         >
           {loading ? '…' : `→ ${TICKET_STATUS_LABELS[s]}`}
-        </button>
+        </Button>
       ))}
       {error && <span className="text-xs text-red-400">{error}</span>}
     </div>

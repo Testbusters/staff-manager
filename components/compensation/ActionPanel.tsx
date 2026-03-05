@@ -8,6 +8,7 @@ import { canTransition } from '@/lib/compensation-transitions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import CompensationEditModal from './CompensationEditModal';
 
 interface ActionPanelProps {
@@ -83,12 +84,6 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
 
   if (actions.length === 0 && !canEdit) return null;
 
-  const btnClass = (v: 'primary' | 'danger' | 'secondary') => {
-    if (v === 'primary') return 'rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50';
-    if (v === 'danger') return 'rounded-lg bg-red-700 hover:bg-red-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50';
-    return 'rounded-lg border border-border hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition disabled:opacity-50';
-  };
-
   return (
     <>
       <div className="rounded-xl bg-card border border-border p-4 space-y-3">
@@ -102,23 +97,24 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
 
         <div className="flex flex-wrap gap-2">
           {canEdit && (
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowEditModal(true)}
               disabled={loading !== null}
-              className={btnClass('secondary')}
             >
               Modifica
-            </button>
+            </Button>
           )}
           {actions.map((a) => (
-            <button
+            <Button
               key={a.action}
               onClick={a.onClick}
               disabled={loading !== null}
-              className={btnClass(a.variant)}
+              variant={a.variant === 'danger' ? 'destructive' : a.variant === 'secondary' ? 'outline' : undefined}
+              className={a.variant === 'primary' ? 'bg-blue-600 hover:bg-blue-500 text-white' : undefined}
             >
               {loading === a.action ? 'Attendere…' : a.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -150,23 +146,23 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
           )}
 
           <div className="flex gap-3 justify-end">
-            <button
+            <Button
+              variant="outline"
               onClick={() => { setShowRejectModal(false); setRejectNote(''); setError(null); }}
-              className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition"
             >
               Annulla
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="destructive"
               disabled={rejectNote.trim().length === 0 || loading !== null}
               onClick={async () => {
                 await perform('reject', { note: rejectNote });
                 setShowRejectModal(false);
                 setRejectNote('');
               }}
-              className="rounded-lg bg-red-700 hover:bg-red-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
             >
               {loading === 'reject' ? 'Attendere…' : 'Conferma rifiuto'}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -206,23 +202,23 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
           )}
 
           <div className="flex gap-3 justify-end">
-            <button
+            <Button
+              variant="outline"
               onClick={() => { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); }}
-              className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition"
             >
               Annulla
-            </button>
-            <button
+            </Button>
+            <Button
               disabled={loading !== null}
+              className="bg-emerald-700 hover:bg-emerald-600 text-white"
               onClick={async () => {
                 await perform('mark_liquidated', { payment_reference: paymentReference || undefined });
                 setShowLiquidatedModal(false);
                 setPaymentReference('');
               }}
-              className="rounded-lg bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
             >
               {loading === 'mark_liquidated' ? 'Attendere…' : 'Conferma liquidazione'}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Community = { id: string; name: string; is_active: boolean };
 type Responsabile = { user_id: string; display_name: string; email: string; communities: { id: string; name: string }[]; can_publish_announcements: boolean };
@@ -233,11 +234,12 @@ export default function CommunityManager({
                   {activeCommunities.map((c) => (
                     <label key={c.id}
                       className="flex items-center gap-2 rounded-lg bg-muted border border-border px-3 py-2 cursor-pointer hover:border-border transition">
-                      <input type="checkbox" checked={selectedComms.includes(c.id)}
-                        onChange={() => setSelectedComms((prev) =>
+                      <Checkbox
+                        checked={selectedComms.includes(c.id)}
+                        onCheckedChange={() => setSelectedComms((prev) =>
                           prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id]
                         )}
-                        className="accent-blue-600 w-4 h-4" />
+                      />
                       <span className="text-sm text-foreground">{c.name}</span>
                     </label>
                   ))}

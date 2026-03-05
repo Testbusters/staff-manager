@@ -6,6 +6,7 @@ import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, DocumentSignStatus } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface Collaborator {
   id: string;
@@ -188,13 +189,13 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
         {file && <p className="mt-1 text-xs text-muted-foreground">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>}
       </div>
 
-      <button
+      <Button
         onClick={handleSubmit}
         disabled={!isValid || loading}
-        className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
+        className="bg-blue-600 hover:bg-blue-500 text-white"
       >
         {loading ? 'Caricamento…' : 'Carica documento'}
-      </button>
+      </Button>
     </div>
   );
 }

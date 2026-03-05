@@ -7,6 +7,7 @@ import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -101,15 +102,15 @@ function DiscountForm({
         <div className="flex flex-wrap gap-3">
           {communities.map((c) => (
             <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-              <input type="checkbox"
+              <Checkbox
                 checked={form.community_ids.includes(c.id)}
-                onChange={(e) => setForm((f) => ({
+                onCheckedChange={(v) => setForm((f) => ({
                   ...f,
-                  community_ids: e.target.checked
+                  community_ids: v
                     ? [...f.community_ids, c.id]
                     : f.community_ids.filter((id) => id !== c.id),
                 }))}
-                className="rounded border-border bg-muted" />
+              />
               {c.name}
             </label>
           ))}

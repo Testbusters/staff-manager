@@ -4,6 +4,7 @@ import { useState } from 'react';
 import TicketDetailModal from './TicketDetailModal';
 import TicketStatusBadge from './TicketStatusBadge';
 import type { TicketStatus } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 
 type OpenTicket = {
   id: string;
@@ -32,10 +33,11 @@ export default function CollabOpenTicketsSection({ tickets }: { tickets: OpenTic
         </div>
         <div className="divide-y divide-border">
           {tickets.slice(0, 3).map((t) => (
-            <button
+            <Button
               key={t.id}
+              variant="ghost"
               onClick={() => setSelectedId(t.id)}
-              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted transition text-left cursor-pointer"
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted text-left cursor-pointer h-auto rounded-none justify-start"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground truncate">{t.oggetto}</p>
@@ -46,7 +48,7 @@ export default function CollabOpenTicketsSection({ tickets }: { tickets: OpenTic
               />
               <TicketStatusBadge stato={t.stato as TicketStatus} />
               <span className="shrink-0 text-xs text-muted-foreground">→</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>

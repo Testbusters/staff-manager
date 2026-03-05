@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { Expense } from '@/lib/types';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -30,46 +31,46 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
         </span>
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Categoria</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Data spesa</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Descrizione</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Importo</th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Categoria</TableHead>
+            <TableHead className="hidden sm:table-cell">Data spesa</TableHead>
+            <TableHead className="hidden md:table-cell">Descrizione</TableHead>
+            <TableHead className="text-right">Importo</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {approved.map((e) => (
-            <tr
+            <TableRow
               key={e.id}
               onClick={() => router.push(`/rimborsi/${e.id}`)}
-              className="hover:bg-muted/40 transition cursor-pointer"
+              className="hover:bg-muted/40 cursor-pointer"
             >
-              <td className="px-4 py-3 text-foreground font-medium">{e.categoria}</td>
-              <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{formatDate(e.data_spesa)}</td>
-              <td className="px-4 py-3 text-muted-foreground hidden md:table-cell truncate max-w-[200px]">
+              <TableCell className="text-foreground font-medium">{e.categoria}</TableCell>
+              <TableCell className="text-muted-foreground hidden sm:table-cell">{formatDate(e.data_spesa)}</TableCell>
+              <TableCell className="text-muted-foreground hidden md:table-cell truncate max-w-[200px]">
                 {e.descrizione || '—'}
-              </td>
-              <td className="px-4 py-3 text-right text-amber-400 tabular-nums font-medium">
+              </TableCell>
+              <TableCell className="text-right text-amber-400 tabular-nums font-medium">
                 {fmt(e.importo)}
-              </td>
-              <td className="px-4 py-3 text-right text-muted-foreground text-sm">→</td>
-            </tr>
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground text-sm">→</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-        <tfoot>
-          <tr className="border-t border-border bg-muted/30">
-            <td colSpan={5} className="px-4 py-3">
+        </TableBody>
+        <TableFooter>
+          <TableRow className="bg-muted/30">
+            <TableCell colSpan={5}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Totale da liquidare</span>
                 <span className="text-sm font-semibold text-amber-300 tabular-nums">{fmt(total)}</span>
               </div>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { Notification } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 
 function entityHref(n: Notification): string | null {
   if (!n.entity_type || !n.entity_id) return null;
@@ -146,43 +147,45 @@ export default function NotificationPageClient() {
           )}
         </div>
         <div className="flex items-center gap-3 mt-0.5 shrink-0">
-          <button
+          <Button
             onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
-            className={`text-xs px-3 py-1.5 rounded-full border transition ${
+            className={`text-xs px-3 py-1.5 rounded-full border h-auto ${
               unreadOnly
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground'
+                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-500'
+                : 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground hover:bg-transparent'
             }`}
           >
             Solo non lette
-          </button>
+          </Button>
           {unread > 0 && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleMarkAllRead}
-              className="text-xs text-blue-400 hover:text-blue-300 transition"
+              className="text-xs text-blue-400 hover:text-blue-300 h-auto p-0"
             >
               Segna tutte come lette
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Type filter chips */}
       <div className="flex flex-wrap gap-1.5">
-        <button
+        <Button
           onClick={() => pushParams({ entity_type: '', page: '1' })}
-          className={`${chipBase} ${!entityType ? chipActive : chipInactive}`}
+          className={`${chipBase} ${!entityType ? chipActive : chipInactive} h-auto`}
         >
           Tutte
-        </button>
+        </Button>
         {TYPE_FILTERS.map(({ key, label }) => (
-          <button
+          <Button
             key={key}
             onClick={() => pushParams({ entity_type: entityType === key ? '' : key, page: '1' })}
-            className={`${chipBase} ${entityType === key ? chipActive : chipInactive}`}
+            className={`${chipBase} ${entityType === key ? chipActive : chipInactive} h-auto`}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -232,20 +235,24 @@ export default function NotificationPageClient() {
                   {/* Actions (visible on hover) */}
                   <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition">
                     {!n.read && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={(e) => { e.preventDefault(); handleMarkRead(n.id); }}
-                        className="text-[10px] text-blue-400 hover:text-blue-300 whitespace-nowrap"
+                        className="text-[10px] text-blue-400 hover:text-blue-300 whitespace-nowrap h-auto p-0"
                       >
                         Segna letta
-                      </button>
+                      </Button>
                     )}
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={(e) => handleDismiss(n.id, e)}
-                      className="text-muted-foreground hover:text-foreground text-base leading-none"
+                      className="text-muted-foreground hover:text-foreground text-base leading-none h-auto p-0"
                       aria-label="Rimuovi notifica"
                     >
                       ×
-                    </button>
+                    </Button>
                   </div>
                 </li>
               );
@@ -274,23 +281,25 @@ export default function NotificationPageClient() {
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{total} notifiche totali</span>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page <= 1}
               onClick={() => pushParams({ page: String(page - 1) })}
-              className="px-3 py-1.5 rounded text-xs text-muted-foreground border border-border
-                         hover:border-muted-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
+              className="text-xs text-muted-foreground"
             >
               ← Precedente
-            </button>
+            </Button>
             <span className="text-xs text-muted-foreground">{page} / {totalPages}</span>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page >= totalPages}
               onClick={() => pushParams({ page: String(page + 1) })}
-              className="px-3 py-1.5 rounded text-xs text-muted-foreground border border-border
-                         hover:border-muted-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
+              className="text-xs text-muted-foreground"
             >
               Successiva →
-            </button>
+            </Button>
           </div>
         </div>
       )}

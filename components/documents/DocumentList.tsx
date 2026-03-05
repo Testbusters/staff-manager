@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import type { Document, DocumentType, DocumentMacroType } from '@/lib/types';
 import { DOCUMENT_SIGN_STATUS_LABELS, DOCUMENT_MACRO_TYPE, DOCUMENT_MACRO_TYPE_LABELS } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface DocumentRow extends Document {
   collaborators?: { nome: string; cognome: string } | null;
@@ -96,57 +98,59 @@ export default function DocumentList({ documents, isAdmin }: Props) {
               <h3 className="text-sm font-semibold text-foreground">{DOCUMENT_MACRO_TYPE_LABELS[macro]}</h3>
               <span className="text-xs text-muted-foreground tabular-nums">({docs.length})</span>
             </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/60">
+            <Table>
+              <TableHeader>
+                <TableRow>
                   {isAdmin && (
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Collaboratore</th>
+                    <TableHead>Collaboratore</TableHead>
                   )}
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Titolo</th>
+                  <TableHead>Titolo</TableHead>
                   {macro === 'CONTRATTO' && (
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Tipo</th>
+                    <TableHead className="hidden sm:table-cell">Tipo</TableHead>
                   )}
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Anno</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Stato</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden lg:table-cell">Data</th>
-                  <th className="px-4 py-2.5" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+                  <TableHead className="hidden md:table-cell">Anno</TableHead>
+                  <TableHead>Stato</TableHead>
+                  <TableHead className="hidden lg:table-cell">Data</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {docs.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-muted/50 transition">
+                  <TableRow key={doc.id} className="hover:bg-muted/50">
                     {isAdmin && (
-                      <td className="px-4 py-3 text-foreground text-sm">
+                      <TableCell className="text-foreground text-sm">
                         {doc.collaborators
                           ? `${doc.collaborators.nome} ${doc.collaborators.cognome}`
                           : '—'}
-                      </td>
+                      </TableCell>
                     )}
-                    <td className="px-4 py-3 text-foreground font-medium text-sm">{doc.titolo}</td>
+                    <TableCell className="text-foreground font-medium text-sm">{doc.titolo}</TableCell>
                     {macro === 'CONTRATTO' && (
-                      <td className="px-4 py-3 hidden sm:table-cell">
+                      <TableCell className="hidden sm:table-cell">
                         <TypeBadge tipo={doc.tipo} />
-                      </td>
+                      </TableCell>
                     )}
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell text-sm">
+                    <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
                       {doc.anno ?? '—'}
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <SignBadge stato={doc.stato_firma} />
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
                       {new Date(doc.requested_at).toLocaleDateString('it-IT')}
-                    </td>
-                    <td className="px-4 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-3">
                         {isAdmin && macro === 'CONTRATTO' && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDelete(doc.id)}
                             disabled={deletingId === doc.id}
-                            className="text-xs text-red-500 hover:text-red-400 disabled:opacity-40 transition"
+                            className="text-xs text-red-500 hover:text-red-400 disabled:opacity-40 h-auto p-0"
                           >
                             {deletingId === doc.id ? '…' : 'Elimina'}
-                          </button>
+                          </Button>
                         )}
                         <Link
                           href={`/documenti/${doc.id}`}
@@ -155,11 +159,11 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                           Apri →
                         </Link>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         );
       })}

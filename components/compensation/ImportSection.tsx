@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface PreviewRow {
   rowIndex: number;
@@ -91,31 +93,35 @@ export default function ImportSection() {
         </div>
 
         {state.phase === 'idle' && (
-          <button
+          <Button
             onClick={handlePreview}
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+            className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white"
           >
             Anteprima
-          </button>
+          </Button>
         )}
         {state.phase === 'loading' && (
           <span className="shrink-0 text-xs text-muted-foreground animate-pulse">Lettura foglio…</span>
         )}
         {state.phase === 'done' && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleReset}
-            className="shrink-0 rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition"
+            className="shrink-0"
           >
             Nuova importazione
-          </button>
+          </Button>
         )}
         {state.phase === 'error' && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleReset}
-            className="shrink-0 rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition"
+            className="shrink-0"
           >
             Riprova
-          </button>
+          </Button>
         )}
       </div>
 
@@ -161,32 +167,32 @@ export default function ImportSection() {
           {/* Valid rows table */}
           {state.phase === 'preview' && state.rows.length > 0 && (
             <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Riga</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Collaboratore</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Competenza</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Nome servizio / Ruolo</th>
-                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">Lordo</th>
-                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">Netto</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Riga</TableHead>
+                    <TableHead>Collaboratore</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Competenza</TableHead>
+                    <TableHead>Nome servizio / Ruolo</TableHead>
+                    <TableHead className="text-right">Lordo</TableHead>
+                    <TableHead className="text-right">Netto</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {state.rows.map((r) => (
-                    <tr key={r.rowIndex} className="hover:bg-muted/30">
-                      <td className="px-3 py-2 text-muted-foreground">{r.rowIndex}</td>
-                      <td className="px-3 py-2 text-foreground">{r.collaboratore}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{formatDate(r.data_competenza)}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{r.competenza ?? '—'}</td>
-                      <td className="px-3 py-2 text-muted-foreground max-w-[180px] truncate">{r.nome_servizio_ruolo ?? '—'}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-foreground">{formatCurrency(r.importo_lordo)}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-foreground">{formatCurrency(r.importo_netto)}</td>
-                    </tr>
+                    <TableRow key={r.rowIndex} className="hover:bg-muted/30">
+                      <TableCell className="text-muted-foreground">{r.rowIndex}</TableCell>
+                      <TableCell className="text-foreground">{r.collaboratore}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(r.data_competenza)}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.competenza ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground max-w-[180px] truncate">{r.nome_servizio_ruolo ?? '—'}</TableCell>
+                      <TableCell className="text-right tabular-nums text-foreground">{formatCurrency(r.importo_lordo)}</TableCell>
+                      <TableCell className="text-right tabular-nums text-foreground">{formatCurrency(r.importo_netto)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
 
@@ -200,19 +206,19 @@ export default function ImportSection() {
           {/* Action buttons */}
           {state.phase === 'preview' && (
             <div className="flex items-center justify-end gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={handleReset}
-                className="rounded-lg bg-muted hover:bg-accent px-4 py-2 text-sm font-medium text-muted-foreground transition"
               >
                 Annulla
-              </button>
+              </Button>
               {state.rows.length > 0 && (
-                <button
+                <Button
                   onClick={handleConfirm}
-                  className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+                  className="bg-blue-600 hover:bg-blue-500 text-white"
                 >
                   Importa {state.rows.length} {state.rows.length === 1 ? 'compenso' : 'compensi'}
-                </button>
+                </Button>
               )}
             </div>
           )}

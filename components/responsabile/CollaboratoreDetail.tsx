@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -472,9 +474,10 @@ export default function CollaboratoreDetail({
                 </div>
                 <div>
                   <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" checked={fSonoFiglio}
-                      onChange={(e) => setFSonoFiglio(e.target.checked)}
-                      className="accent-blue-600 w-4 h-4" />
+                    <Checkbox
+                      checked={fSonoFiglio}
+                      onCheckedChange={(v) => setFSonoFiglio(!!v)}
+                    />
                     <span className="text-sm text-foreground">Fiscalmente a carico</span>
                   </label>
                 </div>
@@ -544,27 +547,27 @@ export default function CollaboratoreDetail({
           emptyRow('Nessun compenso.')
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
                   {['Stato', 'Importo', 'Community', 'Data', ''].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{h}</th>
+                    <TableHead key={h}>{h}</TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {compensations.map((comp) => {
                   const canApprove = canAct && canTransition(role, comp.stato, 'approve').ok;
                   const canReject = canAct && canTransition(role, comp.stato, 'reject').ok;
                   return (
-                    <tr key={comp.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition">
-                      <td className="px-4 py-3">
+                    <TableRow key={comp.id} className="hover:bg-muted/30">
+                      <TableCell>
                         <StatusBadge stato={comp.stato} />
-                      </td>
-                      <td className="px-4 py-3 text-foreground font-medium text-xs">{displayAmount(comp)}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">{comp.community_name ?? '—'}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(comp.created_at)}</td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="text-foreground font-medium text-xs">{displayAmount(comp)}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{comp.community_name ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{formatDate(comp.created_at)}</TableCell>
+                      <TableCell>
                         <div className="flex gap-2 justify-end">
                           {canApprove && (
                             <button
@@ -590,12 +593,12 @@ export default function CollaboratoreDetail({
                             </Link>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -607,29 +610,29 @@ export default function CollaboratoreDetail({
           emptyRow('Nessun rimborso.')
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
                   {['Stato', 'Categoria', 'Data spesa', 'Importo', ''].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{h}</th>
+                    <TableHead key={h}>{h}</TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {expenses.map((exp) => {
                   const canApprove = canAct && canExpenseTransition(role, exp.stato, 'approve').ok;
                   const canReject = canAct && canExpenseTransition(role, exp.stato, 'reject').ok;
                   return (
-                    <tr key={exp.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition">
-                      <td className="px-4 py-3">
+                    <TableRow key={exp.id} className="hover:bg-muted/30">
+                      <TableCell>
                         <StatusBadge stato={exp.stato} />
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs">{exp.categoria}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(exp.data_spesa)}</td>
-                      <td className="px-4 py-3 text-foreground font-medium text-xs">
+                      </TableCell>
+                      <TableCell className="text-foreground text-xs">{exp.categoria}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{formatDate(exp.data_spesa)}</TableCell>
+                      <TableCell className="text-foreground font-medium text-xs">
                         {exp.importo.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex gap-2 justify-end">
                           {canApprove && (
                             <button
@@ -655,12 +658,12 @@ export default function CollaboratoreDetail({
                             </Link>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -672,37 +675,37 @@ export default function CollaboratoreDetail({
           emptyRow('Nessun documento.')
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
                   {['Titolo', 'Tipo', 'Firma', 'Data', ''].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{h}</th>
+                    <TableHead key={h}>{h}</TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition">
-                    <td className="px-4 py-3 text-foreground text-xs">{doc.titolo}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}</td>
-                    <td className="px-4 py-3">
+                  <TableRow key={doc.id} className="hover:bg-muted/30">
+                    <TableCell className="text-foreground text-xs">{doc.titolo}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}</TableCell>
+                    <TableCell>
                       <Badge
                         variant={doc.stato_firma === 'FIRMATO' ? 'outline' : doc.stato_firma === 'DA_FIRMARE' ? 'outline' : 'secondary'}
                         className={doc.stato_firma === 'DA_FIRMARE' ? 'border-amber-600 text-amber-400' : doc.stato_firma === 'FIRMATO' ? 'border-green-600 text-green-400' : undefined}
                       >
                         {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma] ?? doc.stato_firma}
                       </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(doc.created_at)}</td>
-                    <td className="px-4 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{formatDate(doc.created_at)}</TableCell>
+                    <TableCell className="text-right">
                       <Link href={`/documenti/${doc.id}`} className="text-xs text-blue-400 hover:text-blue-300">
                         Vedi →
                       </Link>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>

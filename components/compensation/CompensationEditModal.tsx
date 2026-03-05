@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import type { Compensation } from '@/lib/types';
 
 type Competenza = { key: string; label: string };
@@ -214,20 +215,20 @@ export default function CompensationEditModal({
           )}
 
           <div className="flex gap-3 justify-end pt-1">
-            <button
+            <Button
+              variant="outline"
               onClick={handleClose}
               disabled={loading}
-              className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition disabled:opacity-50"
             >
               Annulla
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSave}
               disabled={loading || !isValid}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-500 text-white"
             >
               {loading ? 'Salvataggio…' : 'Salva'}
-            </button>
+            </Button>
           </div>
         </div>
       </DialogContent>

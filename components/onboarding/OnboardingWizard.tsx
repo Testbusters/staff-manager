@@ -7,6 +7,7 @@ import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type PrefillData = {
   nome: string | null;
@@ -377,8 +378,10 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               </div>
               <div className="flex items-end pb-0.5">
                 <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input type="checkbox" checked={sonoFiglio} onChange={(e) => setSonoFiglio(e.target.checked)}
-                    className="accent-blue-600 w-4 h-4 rounded" />
+                  <Checkbox
+                    checked={sonoFiglio}
+                    onCheckedChange={(v) => setSonoFiglio(!!v)}
+                  />
                   <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
                 </label>
               </div>

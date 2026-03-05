@@ -1,0 +1,31 @@
+{
+  // Claude Code
+  "claudeCode.initialPermissionMode": "plan",
+
+  // Editor
+  "files.autoSave": "off",
+  "editor.formatOnSave": false,
+  "editor.wordWrap": "on",
+
+  // TypeScript
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // File explorer — nasconde cartelle rumore
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/playwright-report": true,
+    "**/test-results": true
+  },
+
+  // Search — esclude le stesse cartelle
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/playwright-report": true
+  },
+
+  // Terminal
+  "terminal.integrated.defaultProfile.osx": "zsh"
+}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Role } from '@/lib/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Filter = 'all' | 'documenti' | 'stallo';
 
@@ -153,39 +154,34 @@ export default async function CollaboratoriPage({
         <p className="text-sm text-muted-foreground py-8 text-center">Nessun collaboratore trovato per il filtro selezionato.</p>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {['Nome', 'Cognome', 'Codice fiscale', 'Telefono', 'Community', ''].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide"
-                  >
-                    {h}
-                  </th>
+                  <TableHead key={h}>{h}</TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {collaborators.map((c) => (
-                <tr key={c.id} className="border-b border-border last:border-0 hover:bg-muted/40 transition">
-                  <td className="px-4 py-3 text-foreground">{c.nome ?? '—'}</td>
-                  <td className="px-4 py-3 text-foreground font-medium">{c.cognome ?? '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{c.codice_fiscale ?? '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{c.telefono ?? '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{(communityByCollab[c.id] ?? []).join(', ') || '—'}</td>
-                  <td className="px-4 py-3 text-right">
+                <TableRow key={c.id} className="hover:bg-muted/40">
+                  <TableCell className="text-foreground">{c.nome ?? '—'}</TableCell>
+                  <TableCell className="text-foreground font-medium">{c.cognome ?? '—'}</TableCell>
+                  <TableCell className="text-muted-foreground font-mono text-xs">{c.codice_fiscale ?? '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.telefono ?? '—'}</TableCell>
+                  <TableCell className="text-muted-foreground">{(communityByCollab[c.id] ?? []).join(', ') || '—'}</TableCell>
+                  <TableCell className="text-right">
                     <Link
                       href={`/collaboratori/${c.id}`}
                       className="text-blue-400 hover:text-blue-300 text-xs font-medium"
                     >
                       Dettaglio →
                     </Link>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 

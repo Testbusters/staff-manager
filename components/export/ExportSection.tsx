@@ -8,6 +8,7 @@ import type { ExportItem, ExportTab } from '@/lib/export-utils';
 import { buildCSV, buildXLSXWorkbook } from '@/lib/export-utils';
 import ExportTable from './ExportTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   tab: ExportTab;
@@ -107,30 +108,30 @@ export default function ExportSection({ tab, items }: Props) {
 
       {/* Action bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <button
+        <Button
           onClick={handleExportCSV}
           disabled={items.length === 0}
-          className="rounded-lg bg-accent hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-foreground transition"
+          variant="outline"
         >
           Esporta CSV
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleExportXLSX}
           disabled={items.length === 0}
-          className="rounded-lg bg-accent hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-foreground transition"
+          variant="outline"
         >
           Esporta XLSX
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => {
             setError(null);
             setShowModal(true);
           }}
           disabled={selected.size === 0}
-          className="rounded-lg bg-green-700 hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
+          className="bg-emerald-700 hover:bg-emerald-600 text-white"
         >
           Segna pagati ({selected.size})
-        </button>
+        </Button>
 
         {selected.size > 0 && (
           <span className="text-xs text-muted-foreground">
@@ -177,20 +178,20 @@ export default function ExportSection({ tab, items }: Props) {
           )}
 
           <div className="flex justify-end gap-3">
-            <button
+            <Button
+              variant="outline"
               onClick={() => { setShowModal(false); setPaymentRef(''); setError(null); }}
               disabled={loading}
-              className="rounded-lg bg-accent hover:bg-gray-600 disabled:opacity-40 px-4 py-2 text-sm font-medium text-foreground transition"
             >
               Annulla
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleMarkPaid}
               disabled={!paymentRef.trim() || loading}
-              className="rounded-lg bg-green-700 hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
+              className="bg-emerald-700 hover:bg-emerald-600 text-white"
             >
               {loading ? 'Salvataggio…' : 'Conferma pagamento'}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

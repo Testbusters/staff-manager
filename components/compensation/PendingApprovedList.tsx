@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import type { Compensation } from '@/lib/types';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type CompensationRow = Compensation & { communities?: { name: string } | null };
 
@@ -36,44 +37,44 @@ export default function PendingApprovedList({
         </span>
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Nome servizio / Ruolo</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Community</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Lordo</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome servizio / Ruolo</TableHead>
+            <TableHead className="hidden sm:table-cell">Community</TableHead>
+            <TableHead className="text-right">Lordo</TableHead>
+            <TableHead className="text-right">
               <span className="inline-flex items-center gap-1">Netto <InfoTooltip tip={TOOLTIP_TEXT} /></span>
-            </th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
+            </TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {approved.map((c) => (
-            <tr
+            <TableRow
               key={c.id}
               onClick={() => router.push(`/compensi/${c.id}`)}
-              className="hover:bg-muted/40 transition cursor-pointer"
+              className="hover:bg-muted/40 cursor-pointer"
             >
-              <td className="px-4 py-3 text-foreground font-medium truncate max-w-[180px]">
+              <TableCell className="text-foreground font-medium truncate max-w-[180px]">
                 {c.nome_servizio_ruolo ?? '—'}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+              </TableCell>
+              <TableCell className="text-muted-foreground hidden sm:table-cell">
                 {c.communities?.name ?? '—'}
-              </td>
-              <td className="px-4 py-3 text-right text-foreground tabular-nums">
+              </TableCell>
+              <TableCell className="text-right text-foreground tabular-nums">
                 {fmt(c.importo_lordo)}
-              </td>
-              <td className="px-4 py-3 text-right text-amber-400 tabular-nums font-medium">
+              </TableCell>
+              <TableCell className="text-right text-amber-400 tabular-nums font-medium">
                 {fmt(c.importo_netto)}
-              </td>
-              <td className="px-4 py-3 text-right text-muted-foreground text-sm">→</td>
-            </tr>
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground text-sm">→</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-        <tfoot>
-          <tr className="border-t border-border bg-muted/30">
-            <td colSpan={6} className="px-4 py-3">
+        </TableBody>
+        <TableFooter>
+          <TableRow className="bg-muted/30">
+            <TableCell colSpan={6}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Totale da ricevere</span>
                 <div className="flex items-center gap-6">
@@ -87,10 +88,10 @@ export default function PendingApprovedList({
                   </div>
                 </div>
               </div>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
     </div>
   );
 }

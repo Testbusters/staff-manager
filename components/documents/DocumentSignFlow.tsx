@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Document } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Props {
   document: Document;
@@ -115,11 +117,10 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
 
           {file && (
             <label className="flex items-start gap-3 cursor-pointer rounded-lg bg-yellow-900/20 border border-yellow-800/40 px-4 py-3">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded accent-blue-600 shrink-0"
+                onCheckedChange={(v) => setConfirmed(!!v)}
+                className="mt-0.5 shrink-0"
               />
               <span className="text-sm text-yellow-200">
                 Confermo di aver firmato il documento e che il file caricato corrisponde alla versione firmata.
@@ -133,13 +134,13 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
             </div>
           )}
 
-          <button
+          <Button
             onClick={handleUploadSigned}
             disabled={!file || !confirmed || loading}
-            className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition"
+            className="bg-blue-600 hover:bg-blue-500 text-white"
           >
             {loading ? 'Caricamento…' : 'Invia documento firmato'}
-          </button>
+          </Button>
         </div>
       )}
 
