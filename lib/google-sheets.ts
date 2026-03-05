@@ -7,26 +7,27 @@
  */
 
 import { google } from 'googleapis';
+import { JWT } from 'google-auth-library';
 
 const STATO_COL = 'F'; // 0-based index 5
 const FIRST_DATA_ROW = 2; // row 1 is header
 
-function buildAuth() {
+function buildAuth(): JWT {
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not set');
   const credentials = JSON.parse(raw);
   // Replit Secrets can apply multiple levels of escaping to \n in private_key.
   // Keep replacing until no literal \n sequences remain.
-  if (credentials.private_key) {
-    let pk = credentials.private_key;
-    while (pk.includes('\\n')) {
-      pk = pk.replace(/\\n/g, '\n');
-    }
-    pk = pk.replace(/\r/g, '');
-    credentials.private_key = pk;
+  let pk: string = credentials.private_key ?? '';
+  while (pk.includes('\\n')) {
+    pk = pk.replace(/\\n/g, '\n');
   }
-  return new google.auth.GoogleAuth({
-    credentials,
+  pk = pk.replace(/\r/g, '');
+  // Use JWT directly instead of GoogleAuth to avoid OpenSSL 3 decoder issues
+  // with the credentials code path (Node.js 18+ on Replit).
+  return new JWT({
+    email: credentials.client_email,
+    key: pk,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 }
