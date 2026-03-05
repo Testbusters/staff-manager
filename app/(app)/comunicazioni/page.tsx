@@ -97,14 +97,14 @@ export default async function ComunicazioniPage({
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
         ? 'bg-blue-600 text-white'
-        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
   return (
     <div className="p-6 max-w-3xl space-y-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-100">Comunicazioni e Risorse</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-semibold text-foreground">Comunicazioni e Risorse</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Aggiornamenti dalla community e guide utili.
         </p>
       </div>
@@ -117,27 +117,27 @@ export default async function ComunicazioniPage({
       {activeTab === 'comunicazioni' && (
         <div className="space-y-3">
           {communications.length === 0 && (
-            <p className="text-sm text-gray-500 py-8 text-center">Nessuna comunicazione.</p>
+            <p className="text-sm text-muted-foreground py-8 text-center">Nessuna comunicazione.</p>
           )}
           {communications.map((c) => (
             <Link
               key={c.id}
               href={`/comunicazioni/${c.id}`}
-              className={`block rounded-xl border p-4 hover:bg-gray-800/50 transition group ${
-                c.pinned ? 'border-blue-700 bg-blue-950/20' : 'border-gray-800 bg-gray-900'
+              className={`block rounded-xl border p-4 hover:bg-muted/50 transition group ${
+                c.pinned ? 'border-blue-700 bg-blue-950/20' : 'border-border bg-card'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   {c.pinned && <span className="text-blue-400 text-sm flex-shrink-0">📌</span>}
-                  <h3 className="text-sm font-semibold text-gray-100 group-hover:text-white truncate transition">
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">
                     {c.titolo}
                   </h3>
                 </div>
-                <span className="flex-shrink-0 text-gray-600 group-hover:text-gray-300 text-sm transition">→</span>
+                <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.contenuto}</p>
-              <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.contenuto}</p>
+              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                 <span>{formatDate(c.published_at)}</span>
                 {c.file_urls && c.file_urls.length > 0 && (
                   <span>📎 {c.file_urls.length} allegat{c.file_urls.length === 1 ? 'o' : 'i'}</span>
@@ -159,7 +159,7 @@ export default async function ComunicazioniPage({
                   className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                     active
                       ? 'bg-gray-200 text-gray-900'
-                      : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
+                      : 'bg-muted text-muted-foreground border border-border hover:bg-accent'
                   }`}
                 >
                   {label}
@@ -168,32 +168,32 @@ export default async function ComunicazioniPage({
             })}
           </div>
           {resources.length === 0 && (
-            <p className="text-sm text-gray-500 py-8 text-center">Nessuna risorsa disponibile.</p>
+            <p className="text-sm text-muted-foreground py-8 text-center">Nessuna risorsa disponibile.</p>
           )}
           {resources.map((r) => (
             <Link
               key={r.id}
               href={`/risorse/${r.id}`}
-              className="block rounded-xl border border-gray-800 bg-gray-900 p-4 hover:bg-gray-800/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <span className="flex-shrink-0 rounded-full bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs text-gray-400">
+                  <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground">
                     {CATEGORIA_LABELS[r.categoria as ResourceCategoria] ?? r.categoria}
                   </span>
-                  <h3 className="text-sm font-semibold text-gray-100 group-hover:text-white truncate transition">
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">
                     {r.titolo}
                   </h3>
                 </div>
-                <span className="flex-shrink-0 text-gray-600 group-hover:text-gray-300 text-sm transition">→</span>
+                <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
               {r.descrizione && (
-                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{r.descrizione}</p>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.descrizione}</p>
               )}
               {r.tag && r.tag.length > 0 && (
                 <div className="flex gap-1 mt-2 flex-wrap">
                   {r.tag.slice(0, 3).map((t) => (
-                    <span key={t} className="rounded-full bg-gray-800/60 px-2 py-0.5 text-xs text-gray-500">{t}</span>
+                    <span key={t} className="rounded-full bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground">{t}</span>
                   ))}
                 </div>
               )}

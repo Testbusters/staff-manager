@@ -120,29 +120,29 @@ export default async function TicketDetailPage({
       {/* Breadcrumb */}
       <div className="mb-6 flex items-center gap-3">
         {isManager && (
-          <Link href="/ticket" className="text-sm text-gray-500 hover:text-gray-300 transition">
+          <Link href="/ticket" className="text-sm text-muted-foreground hover:text-foreground transition">
             ← Ticket
           </Link>
         )}
         {isManager && <span className="text-gray-700">/</span>}
-        <h1 className="text-xl font-semibold text-gray-100 truncate">{ticket.oggetto}</h1>
+        <h1 className="text-xl font-semibold text-foreground truncate">{ticket.oggetto}</h1>
       </div>
 
       {/* Ticket header */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-5 mb-5 space-y-3">
+      <div className="rounded-xl bg-card border border-border p-5 mb-5 space-y-3">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="space-y-1">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{ticket.categoria}</p>
-            <h2 className="text-base font-semibold text-gray-100">{ticket.oggetto}</h2>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">{ticket.categoria}</p>
+            <h2 className="text-base font-semibold text-foreground">{ticket.oggetto}</h2>
           </div>
           {isManager ? (
             <TicketStatusInline ticketId={id} currentStato={ticket.stato as TicketStatus} />
           ) : (
-            <span className="text-xs text-gray-500">{ticket.stato}</span>
+            <span className="text-xs text-muted-foreground">{ticket.stato}</span>
           )}
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} />
             Priorità {TICKET_PRIORITY_LABELS[ticket.priority as keyof typeof TICKET_PRIORITY_LABELS] ?? ticket.priority}
@@ -162,8 +162,8 @@ export default async function TicketDetailPage({
 
       {/* Reply form */}
       {ticket.stato !== 'CHIUSO' && (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
-          <h3 className="text-sm font-medium text-gray-300 mb-4">Rispondi</h3>
+        <div className="rounded-xl bg-card border border-border p-5">
+          <h3 className="text-sm font-medium text-foreground mb-4">Rispondi</h3>
           <TicketMessageForm
             ticketId={id}
             ticketStato={ticket.stato as TicketStatus}

@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<MemberStatus, string> = {
 const STATUS_COLORS: Record<MemberStatus, string> = {
   attivo:                   'text-green-400',
   uscente_con_compenso:     'text-yellow-400',
-  uscente_senza_compenso:   'text-gray-500',
+  uscente_senza_compenso:   'text-muted-foreground',
 };
 
 export default function MemberStatusManager({ members }: { members: Member[] }) {
@@ -67,10 +67,10 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
   }
 
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800">
-      <div className="px-5 py-4 border-b border-gray-800">
-        <h2 className="text-sm font-medium text-gray-200">Stato collaboratori</h2>
-        <p className="text-xs text-gray-500 mt-0.5">
+    <div className="rounded-2xl bg-card border border-border">
+      <div className="px-5 py-4 border-b border-border">
+        <h2 className="text-sm font-medium text-foreground">Stato collaboratori</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
           Gestisci lo stato di uscita e la data di ingresso dei collaboratori.
         </p>
       </div>
@@ -79,15 +79,15 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
         <div className="mx-5 mt-4 rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">{error}</div>
       )}
 
-      <div className="divide-y divide-gray-800">
+      <div className="divide-y divide-border">
         {members.length === 0 && (
-          <p className="px-5 py-4 text-sm text-gray-500">Nessun collaboratore trovato.</p>
+          <p className="px-5 py-4 text-sm text-muted-foreground">Nessun collaboratore trovato.</p>
         )}
         {members.map((m) => (
           <div key={m.id} className="px-5 py-3 space-y-2">
             <div className="flex items-center gap-4">
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 truncate">{m.cognome} {m.nome}</p>
+                <p className="text-sm text-foreground truncate">{m.cognome} {m.nome}</p>
                 <p className={`text-xs ${STATUS_COLORS[m.member_status]}`}>
                   {STATUS_LABELS[m.member_status]}
                 </p>
@@ -100,10 +100,10 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
                   ))}
                 </SelectContent>
               </Select>
-              {loadingStatusId === m.id && <span className="text-xs text-gray-500">…</span>}
+              {loadingStatusId === m.id && <span className="text-xs text-muted-foreground">…</span>}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 whitespace-nowrap">Data ingresso:</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Data ingresso:</span>
               <Input
                 type="date"
                 value={dateValues[m.id] ?? ''}
@@ -112,7 +112,7 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
                 disabled={loadingDateId === m.id}
                 className="h-auto py-1 px-2 text-xs"
               />
-              {loadingDateId === m.id && <span className="text-xs text-gray-500">…</span>}
+              {loadingDateId === m.id && <span className="text-xs text-muted-foreground">…</span>}
             </div>
           </div>
         ))}

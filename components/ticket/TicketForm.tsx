@@ -58,7 +58,7 @@ export default function TicketForm() {
 
       {/* Riferimento */}
       <div className="space-y-1.5">
-        <label htmlFor="categoria" className="block text-sm font-medium text-gray-300">
+        <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
           Riferimento <span className="text-red-400">*</span>
         </label>
         <Select value={categoria || undefined} onValueChange={setCategoria}>
@@ -71,7 +71,7 @@ export default function TicketForm() {
 
       {/* Priorità */}
       <div className="space-y-1.5">
-        <label htmlFor="priority" className="block text-sm font-medium text-gray-300">
+        <label htmlFor="priority" className="block text-sm font-medium text-foreground">
           Priorità
         </label>
         <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
@@ -86,7 +86,7 @@ export default function TicketForm() {
 
       {/* Oggetto */}
       <div className="space-y-1.5">
-        <label htmlFor="oggetto" className="block text-sm font-medium text-gray-300">
+        <label htmlFor="oggetto" className="block text-sm font-medium text-foreground">
           Oggetto <span className="text-red-400">*</span>
         </label>
         <Input
@@ -102,8 +102,8 @@ export default function TicketForm() {
 
       {/* Messaggio iniziale */}
       <div className="space-y-1.5">
-        <label htmlFor="messaggio" className="block text-sm font-medium text-gray-300">
-          Messaggio iniziale <span className="text-gray-500 font-normal">(opzionale)</span>
+        <label htmlFor="messaggio" className="block text-sm font-medium text-foreground">
+          Messaggio iniziale <span className="text-muted-foreground font-normal">(opzionale)</span>
         </label>
         <Textarea
           id="messaggio"

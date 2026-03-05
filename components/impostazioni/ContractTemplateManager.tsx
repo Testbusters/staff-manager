@@ -30,8 +30,8 @@ const PLACEHOLDERS = [
   { key: '{importo_rata}',   desc: 'Importo rata (€)' },
 ];
 
-const sectionCls = 'rounded-2xl bg-gray-900 border border-gray-800';
-const sectionHeader = 'px-5 py-4 border-b border-gray-800';
+const sectionCls = 'rounded-2xl bg-card border border-border';
+const sectionHeader = 'px-5 py-4 border-b border-border';
 
 export default function ContractTemplateManager({ templates: initial }: Props) {
   const [templates, setTemplates] = useState<Template[]>(initial);
@@ -68,8 +68,8 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
       {/* Templates */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-gray-200">Template contratti</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-sm font-medium text-foreground">Template contratti</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Carica un file .docx per ogni tipologia. Il template viene sostituito ad ogni caricamento.
           </p>
         </div>
@@ -79,11 +79,11 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
             const tpl = templateMap[tipo];
             const isUploading = uploading === tipo;
             return (
-              <div className="flex items-center justify-between rounded-xl bg-gray-800 border border-gray-700 px-4 py-3">
+              <div className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200">{CONTRACT_TEMPLATE_LABELS[tipo]}</p>
+                  <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS[tipo]}</p>
                   {tpl ? (
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
                       {tpl.file_name} · {new Date(tpl.uploaded_at).toLocaleDateString('it-IT')}
                     </p>
                   ) : (
@@ -92,9 +92,9 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                 </div>
                 <label className={`ml-4 flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer
                   ${isUploading
-                    ? 'bg-gray-700 text-gray-500 pointer-events-none'
+                    ? 'bg-accent text-muted-foreground pointer-events-none'
                     : tpl
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      ? 'bg-accent hover:bg-gray-600 text-foreground'
                       : 'bg-blue-600 hover:bg-blue-500 text-white'
                   }`}
                 >
@@ -130,32 +130,32 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
           className="w-full flex items-center justify-between px-5 py-4 text-left"
         >
           <div>
-            <h2 className="text-sm font-medium text-gray-200">Segnaposto disponibili</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h2 className="text-sm font-medium text-foreground">Segnaposto disponibili</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Inserisci questi segnaposto nel .docx — verranno sostituiti automaticamente.
             </p>
           </div>
           <svg
-            className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ml-4 ${showPlaceholders ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ml-4 ${showPlaceholders ? 'rotate-180' : ''}`}
             fill="none" viewBox="0 0 24 24" stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         {showPlaceholders && (
-          <div className="border-t border-gray-800 px-5 pb-5">
+          <div className="border-t border-border px-5 pb-5">
             <div className="mt-4 grid grid-cols-1 gap-1.5">
               {PLACEHOLDERS.map(({ key, desc }) => (
                 <div key={key} className="flex items-center gap-3 text-xs">
-                  <code className="rounded bg-gray-800 border border-gray-700 px-2 py-0.5 text-blue-300 font-mono flex-shrink-0">
+                  <code className="rounded bg-muted border border-border px-2 py-0.5 text-blue-300 font-mono flex-shrink-0">
                     {key}
                   </code>
-                  <span className="text-gray-400">{desc}</span>
+                  <span className="text-muted-foreground">{desc}</span>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-600 mt-4">
-              Sintassi: segnaposto tra singole graffe. Es.: <code className="text-gray-400">&#123;nome&#125;</code>
+            <p className="text-xs text-muted-foreground mt-4">
+              Sintassi: segnaposto tra singole graffe. Es.: <code className="text-muted-foreground">&#123;nome&#125;</code>
             </p>
           </div>
         )}

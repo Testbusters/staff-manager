@@ -132,8 +132,8 @@ export default async function CompensiPage() {
     <div className="p-6 max-w-5xl">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Compensi e Rimborsi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-foreground">Compensi e Rimborsi</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Visualizza i tuoi compensi e rimborsi, e gestisci le richieste di supporto.
           </p>
         </div>

@@ -38,7 +38,7 @@ export type TicketRecord = {
 
 export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
   const lastReply = ticket.last_message_at ? (
-    <span className="text-xs text-gray-500 tabular-nums">
+    <span className="text-xs text-muted-foreground tabular-nums">
       {ticket.last_message_author_name ?? 'Risposta'} · {formatAge(ticket.last_message_at)}
     </span>
   ) : (
@@ -48,16 +48,16 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
   return (
     <Link
       href={`/ticket/${ticket.id}`}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition cursor-pointer"
+      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition cursor-pointer"
     >
-      <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORIA_BADGE[ticket.categoria] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+      <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORIA_BADGE[ticket.categoria] ?? 'bg-muted text-muted-foreground border-border'}`}>
         {ticket.categoria}
       </span>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-200 truncate">{ticket.oggetto}</p>
+        <p className="text-sm text-foreground truncate">{ticket.oggetto}</p>
         {ticket.creator_name && (
-          <p className="text-xs text-gray-500 truncate">{ticket.creator_name}</p>
+          <p className="text-xs text-muted-foreground truncate">{ticket.creator_name}</p>
         )}
       </div>
 
@@ -66,7 +66,7 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
       </div>
 
       <span
-        className="hidden sm:inline-flex items-center gap-1 shrink-0 text-xs text-gray-500"
+        className="hidden sm:inline-flex items-center gap-1 shrink-0 text-xs text-muted-foreground"
         title={TICKET_PRIORITY_LABELS[ticket.priority as TicketPriority] ?? ticket.priority}
       >
         <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} />
@@ -77,7 +77,7 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
         {lastReply}
       </div>
 
-      <span className="shrink-0 text-xs text-gray-600">→</span>
+      <span className="shrink-0 text-xs text-muted-foreground">→</span>
     </Link>
   );
 }

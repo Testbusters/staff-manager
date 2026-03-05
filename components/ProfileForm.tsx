@@ -44,16 +44,16 @@ type Props = {
 const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 const readonlyCls =
-  'w-full rounded-lg bg-gray-850 border border-gray-800 px-3 py-2.5 text-sm text-gray-400 select-all';
-const labelCls = 'block text-xs text-gray-500 mb-1.5';
-const sectionCls = 'rounded-2xl bg-gray-900 border border-gray-800';
-const sectionHeader = 'px-5 py-4 border-b border-gray-800';
+  'w-full rounded-lg bg-gray-850 border border-border px-3 py-2.5 text-sm text-muted-foreground select-all';
+const labelCls = 'block text-xs text-muted-foreground mb-1.5';
+const sectionCls = 'rounded-2xl bg-card border border-border';
+const sectionHeader = 'px-5 py-4 border-b border-border';
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
       <p className={labelCls}>{label}</p>
-      <div className={readonlyCls}>{value || <span className="text-gray-600 italic">—</span>}</div>
+      <div className={readonlyCls}>{value || <span className="text-muted-foreground italic">—</span>}</div>
     </div>
   );
 }
@@ -74,7 +74,7 @@ function GuideBox({ guide }: { guide: GuideContent }) {
         </svg>
       </button>
       {open && guide.descrizione && (
-        <div className="px-3 pb-3 text-xs text-gray-400 whitespace-pre-wrap border-t border-blue-800/40 pt-2.5">
+        <div className="px-3 pb-3 text-xs text-muted-foreground whitespace-pre-wrap border-t border-blue-800/40 pt-2.5">
           {guide.descrizione}
         </div>
       )}
@@ -181,8 +181,8 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
 
   if (!collaborator) {
     return (
-      <div className="rounded-2xl bg-gray-900 border border-gray-800 p-6 text-center">
-        <p className="text-sm text-gray-500">
+      <div className="rounded-2xl bg-card border border-border p-6 text-center">
+        <p className="text-sm text-muted-foreground">
           Il tuo profilo collaboratore non è ancora stato configurato.<br />
           Contatta l&apos;amministrazione per completare la configurazione.
         </p>
@@ -195,7 +195,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       {/* Foto profilo */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-gray-200">Foto profilo</h2>
+          <h2 className="text-sm font-medium text-foreground">Foto profilo</h2>
         </div>
         <div className="p-5 flex items-center gap-4">
           <div className="flex-shrink-0">
@@ -203,34 +203,34 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               <img
                 src={avatarUrl}
                 alt="Foto profilo"
-                className="w-16 h-16 rounded-full object-cover border border-gray-700"
+                className="w-16 h-16 rounded-full object-cover border border-border"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center border border-gray-600">
-                <span className="text-lg font-medium text-gray-300">{initials}</span>
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center border border-border">
+                <span className="text-lg font-medium text-foreground">{initials}</span>
               </div>
             )}
           </div>
           <div className="flex-1">
             <div className="mb-3 space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-600">Ruolo:</span>
-                <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+                <span className="text-xs text-muted-foreground">Ruolo:</span>
+                <span className="rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground">
                   {ROLE_LABELS[role as Role] ?? role}
                 </span>
               </div>
               {collaborator.username && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600">Username:</span>
-                  <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300 font-mono">
+                  <span className="text-xs text-muted-foreground">Username:</span>
+                  <span className="rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground font-mono">
                     {collaborator.username}
                   </span>
                 </div>
               )}
               {collaborator.data_ingresso && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600">Data di ingresso:</span>
-                  <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+                  <span className="text-xs text-muted-foreground">Data di ingresso:</span>
+                  <span className="rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground">
                     {new Date(collaborator.data_ingresso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
@@ -247,11 +247,11 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               type="button"
               disabled={avatarLoading}
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-2 text-xs text-gray-300 transition disabled:opacity-50 block"
+              className="rounded-lg bg-muted hover:bg-accent border border-border px-3 py-2 text-xs text-foreground transition disabled:opacity-50 block"
             >
               {avatarLoading ? 'Caricamento…' : avatarUrl ? 'Cambia foto' : 'Carica foto'}
             </button>
-            <p className="text-xs text-gray-600 mt-1.5">JPG, PNG o WebP · max 2 MB</p>
+            <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · max 2 MB</p>
             {avatarError && <p className="text-xs text-red-400 mt-1">{avatarError}</p>}
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       {/* Informazioni personali — editable */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-gray-200">Informazioni personali</h2>
+          <h2 className="text-sm font-medium text-foreground">Informazioni personali</h2>
         </div>
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -344,7 +344,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       {/* Contacts — editable */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-gray-200">Contatti</h2>
+          <h2 className="text-sm font-medium text-foreground">Contatti</h2>
         </div>
         <div className="p-5 space-y-4">
           <div>
@@ -386,8 +386,8 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       {/* Payment — editable */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-gray-200">Dati pagamento</h2>
-          <p className="text-xs text-gray-600 mt-0.5">Visibile solo a te e all&apos;amministrazione.</p>
+          <h2 className="text-sm font-medium text-foreground">Dati pagamento</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Visibile solo a te e all&apos;amministrazione.</p>
         </div>
         <div className="p-5">
           <label className={labelCls}>IBAN</label>
@@ -400,7 +400,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
             className="font-mono"
             maxLength={34}
           />
-          <p className="text-xs text-gray-600 mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
+          <p className="text-xs text-muted-foreground mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
         </div>
       </div>
 
@@ -408,7 +408,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       <div className={sectionCls}>
         <div className={sectionHeader}>
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-200">Dati fiscali</h2>
+            <h2 className="text-sm font-medium text-foreground">Dati fiscali</h2>
             <button
               type="button"
               onClick={() => setShowGuida(true)}
@@ -429,8 +429,8 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 className="accent-blue-600 w-4 h-4 mt-0.5 flex-shrink-0"
               />
               <div>
-                <span className="text-sm text-gray-200">Sono fiscalmente a carico</span>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Seleziona se sei fiscalmente a carico di un familiare (es. genitore).
                 </p>
               </div>
@@ -441,11 +441,11 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
           {role === 'collaboratore' && (
             <div>
               <label className={labelCls}>
-                Massimale lordo annuo <span className="text-gray-600">(max €5.000)</span>
+                Massimale lordo annuo <span className="text-muted-foreground">(max €5.000)</span>
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">€</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
                 <Input
                   type="number"
                   min={1}
@@ -459,7 +459,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                   className="pl-7"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">
+              <p className="text-xs text-muted-foreground mt-1.5">
                 Importo lordo massimo che vuoi ricevere da noi nell&apos;anno solare.
                 Se hai altre collaborazioni, abbassa questo valore per rispettare i tuoi limiti personali.
                 <button type="button" onClick={() => setShowGuida(true)}
@@ -474,65 +474,65 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
 
       {/* Guida fiscale — modal */}
       <Dialog open={showGuida} onOpenChange={(v) => { if (!v) setShowGuida(false); }}>
-        <DialogContent className="max-w-lg bg-gray-900 border-gray-800 max-h-[90vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="px-6 py-4 border-b border-gray-800 flex-shrink-0">
-            <DialogTitle className="text-base font-semibold text-gray-100">Guida fiscale — prestazione occasionale</DialogTitle>
+        <DialogContent className="max-w-lg bg-card border-border max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 py-4 border-b border-border flex-shrink-0">
+            <DialogTitle className="text-base font-semibold text-foreground">Guida fiscale — prestazione occasionale</DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto p-6 space-y-5 text-sm text-gray-300">
+          <div className="overflow-y-auto p-6 space-y-5 text-sm text-foreground">
 
               <section>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cos&apos;è la prestazione occasionale?</h3>
-                <p>Quando lavori con noi vieni pagato come <strong className="text-gray-200">prestatore occasionale</strong>: puoi guadagnare senza aprire la partita IVA, in modo semplice e legale. È lo strumento pensato per chi fa lavori saltuari, come studenti o chi ha pochi committenti.</p>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Cos&apos;è la prestazione occasionale?</h3>
+                <p>Quando lavori con noi vieni pagato come <strong className="text-foreground">prestatore occasionale</strong>: puoi guadagnare senza aprire la partita IVA, in modo semplice e legale. È lo strumento pensato per chi fa lavori saltuari, come studenti o chi ha pochi committenti.</p>
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">La ritenuta d&apos;acconto (−20%)</h3>
-                <p>Sul tuo compenso lordo viene automaticamente trattenuto il <strong className="text-gray-200">20%</strong> come &quot;ritenuta d&apos;acconto&quot;. Lo paga l&apos;azienda al tuo posto all&apos;Agenzia delle Entrate. Nella dichiarazione dei redditi la recuperi o la conguagli.</p>
-                <div className="mt-2 rounded-lg bg-gray-800 px-4 py-3 text-xs font-mono text-gray-300">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">La ritenuta d&apos;acconto (−20%)</h3>
+                <p>Sul tuo compenso lordo viene automaticamente trattenuto il <strong className="text-foreground">20%</strong> come &quot;ritenuta d&apos;acconto&quot;. Lo paga l&apos;azienda al tuo posto all&apos;Agenzia delle Entrate. Nella dichiarazione dei redditi la recuperi o la conguagli.</p>
+                <div className="mt-2 rounded-lg bg-muted px-4 py-3 text-xs font-mono text-foreground">
                   Compenso lordo: 100€ → tu ricevi: 80€ → versati al fisco: 20€
                 </div>
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">La soglia dei 5.000€/anno</h3>
-                <p>Puoi guadagnare fino a <strong className="text-gray-200">5.000€ lordi all&apos;anno</strong> da prestazioni occasionali senza dover versare contributi INPS:</p>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">La soglia dei 5.000€/anno</h3>
+                <p>Puoi guadagnare fino a <strong className="text-foreground">5.000€ lordi all&apos;anno</strong> da prestazioni occasionali senza dover versare contributi INPS:</p>
                 <ul className="mt-2 space-y-1.5 list-none">
                   <li className="flex gap-2"><span className="text-green-400">✓</span> Sotto 5.000€: nessun contributo INPS da versare</li>
                   <li className="flex gap-2"><span className="text-yellow-400">⚠</span> Sopra 5.000€: sulla parte eccedente devi versare ~33% alla Gestione Separata INPS</li>
                 </ul>
-                <p className="mt-2 text-xs text-gray-500">Questa soglia vale sulla <strong className="text-gray-400">somma di tutti i compensi occasionali dell&apos;anno</strong>, non solo quelli con noi.</p>
+                <p className="mt-2 text-xs text-muted-foreground">Questa soglia vale sulla <strong className="text-muted-foreground">somma di tutti i compensi occasionali dell&apos;anno</strong>, non solo quelli con noi.</p>
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Se sei figlio fiscalmente a carico</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Se sei figlio fiscalmente a carico</h3>
                 <p>I tuoi genitori hanno diritto a detrazioni fiscali finché sei loro &quot;figlio a carico&quot;. Perdi questo status se il tuo reddito annuo supera:</p>
                 <div className="mt-2 space-y-2">
                   <div className="rounded-lg bg-blue-950/40 border border-blue-800/30 px-4 py-3">
                     <p className="text-xs font-semibold text-blue-300 mb-1">Hai fino a 24 anni</p>
-                    <p>Limite reddito: <strong className="text-gray-200">4.000€/anno</strong></p>
-                    <p className="text-xs text-gray-500 mt-0.5">Consiglio: imposta il massimale a 4.000€ o meno</p>
+                    <p>Limite reddito: <strong className="text-foreground">4.000€/anno</strong></p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Consiglio: imposta il massimale a 4.000€ o meno</p>
                   </div>
                   <div className="rounded-lg bg-purple-950/40 border border-purple-800/30 px-4 py-3">
                     <p className="text-xs font-semibold text-purple-300 mb-1">Hai più di 24 anni</p>
-                    <p>Limite reddito: <strong className="text-gray-200">2.840,51€/anno</strong></p>
-                    <p className="text-xs text-gray-500 mt-0.5">Consiglio: imposta il massimale a 2.840€ o meno</p>
+                    <p>Limite reddito: <strong className="text-foreground">2.840,51€/anno</strong></p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Consiglio: imposta il massimale a 2.840€ o meno</p>
                   </div>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">Attenzione: il reddito considerato è quello <strong className="text-gray-400">complessivo</strong> — includi anche altri eventuali guadagni.</p>
+                <p className="mt-2 text-xs text-muted-foreground">Attenzione: il reddito considerato è quello <strong className="text-muted-foreground">complessivo</strong> — includi anche altri eventuali guadagni.</p>
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Come scegliere il massimale?</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Come scegliere il massimale?</h3>
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">2.840€</span><span className="text-gray-400">— sei figlio a carico con più di 24 anni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">4.000€</span><span className="text-gray-400">— sei figlio a carico con fino a 24 anni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">5.000€</span><span className="text-gray-400">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-yellow-400 font-semibold">Meno</span><span className="text-gray-400">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
+                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">2.840€</span><span className="text-muted-foreground">— sei figlio a carico con più di 24 anni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">4.000€</span><span className="text-muted-foreground">— sei figlio a carico con fino a 24 anni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">5.000€</span><span className="text-muted-foreground">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-yellow-400 font-semibold">Meno</span><span className="text-muted-foreground">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
                 </div>
               </section>
 
           </div>
-          <div className="px-6 py-4 border-t border-gray-800 flex-shrink-0">
+          <div className="px-6 py-4 border-t border-border flex-shrink-0">
             <Button type="button" variant="outline" onClick={() => setShowGuida(false)} className="w-full">
               Ho capito
             </Button>
@@ -543,7 +543,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
       {/* Preferences — editable */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-gray-200">Preferenze</h2>
+          <h2 className="text-sm font-medium text-foreground">Preferenze</h2>
         </div>
         <div className="p-5">
           <label className={labelCls}>Taglia t-shirt</label>

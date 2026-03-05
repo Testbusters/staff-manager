@@ -81,12 +81,12 @@ export default function ImportSection() {
   }
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-5 space-y-4">
+    <div className="rounded-xl bg-card border border-border p-5 space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-medium text-gray-200">Importa da Google Sheet</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Legge le righe con stato <code className="text-gray-400">TO_PROCESS</code> e le importa come compensi IN_ATTESA.
+          <h3 className="text-sm font-medium text-foreground">Importa da Google Sheet</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Legge le righe con stato <code className="text-muted-foreground">TO_PROCESS</code> e le importa come compensi IN_ATTESA.
           </p>
         </div>
 
@@ -99,12 +99,12 @@ export default function ImportSection() {
           </button>
         )}
         {state.phase === 'loading' && (
-          <span className="shrink-0 text-xs text-gray-500 animate-pulse">Lettura foglio…</span>
+          <span className="shrink-0 text-xs text-muted-foreground animate-pulse">Lettura foglio…</span>
         )}
         {state.phase === 'done' && (
           <button
             onClick={handleReset}
-            className="shrink-0 rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-gray-300 transition"
+            className="shrink-0 rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition"
           >
             Nuova importazione
           </button>
@@ -112,7 +112,7 @@ export default function ImportSection() {
         {state.phase === 'error' && (
           <button
             onClick={handleReset}
-            className="shrink-0 rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-gray-300 transition"
+            className="shrink-0 rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition"
           >
             Riprova
           </button>
@@ -147,7 +147,7 @@ export default function ImportSection() {
       {(state.phase === 'preview' || state.phase === 'confirming') && (
         <div className="space-y-4">
           {/* Summary line */}
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {state.phase === 'preview'
               ? `${state.rows.length} righe valide · ${state.errors.length} con errori · ${state.total} totali in TO_PROCESS`
               : 'Importazione in corso…'}
@@ -160,29 +160,29 @@ export default function ImportSection() {
 
           {/* Valid rows table */}
           {state.phase === 'preview' && state.rows.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-gray-800">
+            <div className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-gray-800 bg-gray-800/50">
-                    <th className="px-3 py-2 text-left font-medium text-gray-500">Riga</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-500">Collaboratore</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-500">Data</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-500">Competenza</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-500">Nome servizio / Ruolo</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-500">Lordo</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-500">Netto</th>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Riga</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Collaboratore</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Competenza</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Nome servizio / Ruolo</th>
+                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">Lordo</th>
+                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">Netto</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-border">
                   {state.rows.map((r) => (
-                    <tr key={r.rowIndex} className="hover:bg-gray-800/30">
-                      <td className="px-3 py-2 text-gray-600">{r.rowIndex}</td>
-                      <td className="px-3 py-2 text-gray-300">{r.collaboratore}</td>
-                      <td className="px-3 py-2 text-gray-400">{formatDate(r.data_competenza)}</td>
-                      <td className="px-3 py-2 text-gray-400">{r.competenza ?? '—'}</td>
-                      <td className="px-3 py-2 text-gray-400 max-w-[180px] truncate">{r.nome_servizio_ruolo ?? '—'}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-300">{formatCurrency(r.importo_lordo)}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-300">{formatCurrency(r.importo_netto)}</td>
+                    <tr key={r.rowIndex} className="hover:bg-muted/30">
+                      <td className="px-3 py-2 text-muted-foreground">{r.rowIndex}</td>
+                      <td className="px-3 py-2 text-foreground">{r.collaboratore}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{formatDate(r.data_competenza)}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{r.competenza ?? '—'}</td>
+                      <td className="px-3 py-2 text-muted-foreground max-w-[180px] truncate">{r.nome_servizio_ruolo ?? '—'}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-foreground">{formatCurrency(r.importo_lordo)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-foreground">{formatCurrency(r.importo_netto)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -192,7 +192,7 @@ export default function ImportSection() {
 
           {/* No valid rows */}
           {state.phase === 'preview' && state.rows.length === 0 && state.errors.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-muted-foreground text-center py-4">
               Nessuna riga con stato TO_PROCESS trovata nel foglio.
             </p>
           )}
@@ -202,7 +202,7 @@ export default function ImportSection() {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={handleReset}
-                className="rounded-lg bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-400 transition"
+                className="rounded-lg bg-muted hover:bg-accent px-4 py-2 text-sm font-medium text-muted-foreground transition"
               >
                 Annulla
               </button>
@@ -219,7 +219,7 @@ export default function ImportSection() {
 
           {state.phase === 'confirming' && (
             <div className="flex justify-end">
-              <span className="text-xs text-gray-500 animate-pulse">Importazione in corso…</span>
+              <span className="text-xs text-muted-foreground animate-pulse">Importazione in corso…</span>
             </div>
           )}
         </div>
@@ -236,8 +236,8 @@ function ErrorList({ errors }: { errors: RowError[] }) {
       </p>
       {errors.map((e) => (
         <p key={e.rowIndex} className="text-xs text-amber-300/80">
-          <span className="text-gray-500">Riga {e.rowIndex}</span>
-          {e.collaboratore && <span className="text-gray-400"> · {e.collaboratore}</span>}
+          <span className="text-muted-foreground">Riga {e.rowIndex}</span>
+          {e.collaboratore && <span className="text-muted-foreground"> · {e.collaboratore}</span>}
           {' — '}
           {e.reason}
         </p>

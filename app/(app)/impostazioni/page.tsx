@@ -138,14 +138,14 @@ export default async function ImpostazioniPage({
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
         ? 'bg-blue-600 text-white'
-        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
   return (
     <div className="p-6 max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-100">Impostazioni</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Gestione utenti, community e stato collaboratori.</p>
+        <h1 className="text-xl font-semibold text-foreground">Impostazioni</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Gestione utenti, community e stato collaboratori.</p>
       </div>
 
       {/* Tab bar */}
@@ -158,10 +158,10 @@ export default async function ImpostazioniPage({
       </div>
 
       {activeTab === 'utenti' && (
-        <div className="rounded-2xl bg-gray-900 border border-gray-800">
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">Crea nuovo utente</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+        <div className="rounded-2xl bg-card border border-border">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-foreground">Crea nuovo utente</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Genera le credenziali di accesso per un nuovo collaboratore o responsabile.
             </p>
           </div>
@@ -189,10 +189,10 @@ export default async function ImpostazioniPage({
       )}
 
       {activeTab === 'notifiche' && (
-        <div className="rounded-2xl bg-gray-900 border border-gray-800">
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">Impostazioni notifiche</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+        <div className="rounded-2xl bg-card border border-border">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-foreground">Impostazioni notifiche</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Configura quali notifiche vengono inviate in-app e via email per ogni evento.
             </p>
           </div>

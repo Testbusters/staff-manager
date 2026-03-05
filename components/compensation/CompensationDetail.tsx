@@ -9,9 +9,9 @@ type CollaboratorInfo = {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex gap-3 py-2 border-b border-gray-800 last:border-0">
-      <span className="w-40 shrink-0 text-xs text-gray-500">{label}</span>
-      <span className="text-sm text-gray-200">{value ?? '—'}</span>
+    <div className="flex gap-3 py-2 border-b border-border last:border-0">
+      <span className="w-40 shrink-0 text-xs text-muted-foreground">{label}</span>
+      <span className="text-sm text-foreground">{value ?? '—'}</span>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export default function CompensationDetail({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-lg font-medium text-gray-100 break-words">{c.nome_servizio_ruolo ?? '—'}</p>
+          <p className="text-lg font-medium text-foreground break-words">{c.nome_servizio_ruolo ?? '—'}</p>
           {competenzaLabel && (
             <span className="mt-1 inline-block text-xs font-medium text-blue-300 bg-blue-900/40 border border-blue-700/40 rounded-full px-2.5 py-0.5">
               {competenzaLabel}
@@ -56,21 +56,21 @@ export default function CompensationDetail({
 
       {/* Collaborator info — visible to responsabile_compensi and amministrazione only */}
       {collaborator && (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-3">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Collaboratore</p>
+        <div className="rounded-xl bg-card border border-border px-4 py-3">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Collaboratore</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span className="text-sm text-gray-200">
+            <span className="text-sm text-foreground">
               {[collaborator.nome, collaborator.cognome].filter(Boolean).join(' ') || '—'}
             </span>
             {collaborator.username && (
-              <span className="text-sm text-gray-500">@{collaborator.username}</span>
+              <span className="text-sm text-muted-foreground">@{collaborator.username}</span>
             )}
           </div>
         </div>
       )}
 
       {/* General fields */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 px-4">
+      <div className="rounded-xl bg-card border border-border px-4">
         <Row label="Data competenza" value={formatDate(c.data_competenza)} />
         {competenzaLabel && <Row label="Competenza" value={competenzaLabel} />}
         <Row label="Nome servizio / Ruolo" value={c.nome_servizio_ruolo} />
@@ -78,7 +78,7 @@ export default function CompensationDetail({
       </div>
 
       {/* Financial fields */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 px-4">
+      <div className="rounded-xl bg-card border border-border px-4">
         <Row label="Importo lordo" value={formatCurrency(c.importo_lordo)} />
         <Row label="Ritenuta acconto (20%)" value={formatCurrency(c.ritenuta_acconto)} />
         <Row label="Importo netto" value={

@@ -100,11 +100,11 @@ export default function DashboardUpdates({
     <Tabs
       value={activeTab}
       onValueChange={handleTabChange}
-      className="rounded-2xl bg-gray-900 border border-gray-800"
+      className="rounded-2xl bg-card border border-border"
     >
       {/* Tab header */}
-      <div className="flex flex-wrap items-center gap-1 px-5 py-4 border-b border-gray-800">
-        <h2 className="text-sm font-medium text-gray-200 mr-3">Ultimi aggiornamenti</h2>
+      <div className="flex flex-wrap items-center gap-1 px-5 py-4 border-b border-border">
+        <h2 className="text-sm font-medium text-foreground mr-3">Ultimi aggiornamenti</h2>
         <TabsList className="h-auto bg-transparent p-0 gap-0.5 flex-wrap justify-start">
           {TABS.map((tab) => {
             const count =
@@ -116,8 +116,8 @@ export default function DashboardUpdates({
                 key={tab.key}
                 value={tab.key}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition
-                           text-gray-400 hover:text-gray-200 hover:bg-gray-800
-                           data-[state=active]:bg-gray-700 data-[state=active]:text-gray-100
+                           text-muted-foreground hover:text-foreground hover:bg-muted
+                           data-[state=active]:bg-accent data-[state=active]:text-foreground
                            data-[state=active]:shadow-none bg-transparent"
               >
                 {tab.label}
@@ -133,9 +133,9 @@ export default function DashboardUpdates({
       </div>
 
       {/* Content */}
-      <div className="divide-y divide-gray-800/50">
+      <div className="divide-y divide-border/50">
         {visible.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-8">
+          <p className="text-sm text-muted-foreground text-center py-8">
             {activeTab === 'documenti' ? 'Nessun documento in attesa di firma.' :
              activeTab === 'eventi'    ? 'Nessun evento in programma.' :
              activeTab === 'comunicazioni' ? 'Nessuna comunicazione recente.' :
@@ -146,20 +146,20 @@ export default function DashboardUpdates({
             <Link
               key={doc.id}
               href={`/documenti/${doc.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-800/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 group-hover:text-white truncate transition">
+                <p className="text-sm text-foreground group-hover:text-white truncate transition">
                   {doc.titolo || DOCUMENT_TYPE_LABELS[doc.tipo]}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(doc.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
               <span className="flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-yellow-900/60 text-yellow-300 border-yellow-800/60">
                 {DOCUMENT_TYPE_LABELS[doc.tipo]}
               </span>
-              <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
+              <span className="text-muted-foreground group-hover:text-foreground text-sm transition flex-shrink-0">→</span>
             </Link>
           ))
         ) : activeTab === 'eventi' ? (
@@ -167,11 +167,11 @@ export default function DashboardUpdates({
             <Link
               key={ev.id}
               href={`/eventi/${ev.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-800/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 group-hover:text-white truncate transition">{ev.titolo}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm text-foreground group-hover:text-white truncate transition">{ev.titolo}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {ev.start_datetime
                     ? new Date(ev.start_datetime).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
                     : '—'}
@@ -182,7 +182,7 @@ export default function DashboardUpdates({
                   {ev.tipo}
                 </span>
               )}
-              <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
+              <span className="text-muted-foreground group-hover:text-foreground text-sm transition flex-shrink-0">→</span>
             </Link>
           ))
         ) : activeTab === 'comunicazioni' ? (
@@ -190,18 +190,18 @@ export default function DashboardUpdates({
             <Link
               key={item.id}
               href={item.kind === 'comm' ? `/comunicazioni/${item.id}` : `/risorse/${item.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-800/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 group-hover:text-white truncate transition">{item.titolo}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm text-foreground group-hover:text-white truncate transition">{item.titolo}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
               <span className={`${BADGE_BASE} ${item.kind === 'comm' ? COMM_BADGE_CLS : RES_BADGE_CLS}`}>
                 {item.kind === 'comm' ? 'Comunicazione' : (item.categoria ?? 'Risorsa')}
               </span>
-              <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
+              <span className="text-muted-foreground group-hover:text-foreground text-sm transition flex-shrink-0">→</span>
             </Link>
           ))
         ) : (
@@ -209,18 +209,18 @@ export default function DashboardUpdates({
             <Link
               key={item.id}
               href={item.kind === 'opp' ? `/opportunita/${item.id}` : `/sconti/${item.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-800/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 group-hover:text-white truncate transition">{item.titolo}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm text-foreground group-hover:text-white truncate transition">{item.titolo}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
               <span className={`${BADGE_BASE} ${item.kind === 'opp' ? OPP_BADGE_CLS : DISC_BADGE_CLS}`}>
                 {item.kind === 'opp' ? (item.tipo ?? 'Opportunità') : 'Sconto'}
               </span>
-              <span className="text-gray-600 group-hover:text-gray-300 text-sm transition flex-shrink-0">→</span>
+              <span className="text-muted-foreground group-hover:text-foreground text-sm transition flex-shrink-0">→</span>
             </Link>
           ))
         )}
@@ -228,25 +228,25 @@ export default function DashboardUpdates({
 
       {/* Pagination */}
       {pageCount > 1 && (
-        <Pagination className="w-full mx-0 px-5 py-3 border-t border-gray-800 justify-between">
+        <Pagination className="w-full mx-0 px-5 py-3 border-t border-border justify-between">
           <PaginationContent className="w-full justify-between gap-0">
             <PaginationItem>
               <PaginationPrevious
                 onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(0, p - 1)); }}
                 className={cn(
-                  "text-xs text-gray-400 hover:text-gray-200",
+                  "text-xs text-muted-foreground hover:text-foreground",
                   page === 0 && "pointer-events-none text-gray-700 opacity-50"
                 )}
               />
             </PaginationItem>
             <PaginationItem>
-              <span className="text-xs text-gray-600">{page + 1} / {pageCount}</span>
+              <span className="text-xs text-muted-foreground">{page + 1} / {pageCount}</span>
             </PaginationItem>
             <PaginationItem>
               <PaginationNext
                 onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(pageCount - 1, p + 1)); }}
                 className={cn(
-                  "text-xs text-gray-400 hover:text-gray-200",
+                  "text-xs text-muted-foreground hover:text-foreground",
                   page === pageCount - 1 && "pointer-events-none text-gray-700 opacity-50"
                 )}
               />

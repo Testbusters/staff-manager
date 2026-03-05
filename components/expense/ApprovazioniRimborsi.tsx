@@ -34,10 +34,10 @@ function formatCurrency(n: number | null | undefined) {
 
 function KpiCard({ label, count, amount, countColor }: { label: string; count: number; amount: number; countColor: string }) {
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <div className="rounded-xl bg-card border border-border px-4 py-4">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
-      <p className="text-sm text-gray-400 tabular-nums mt-0.5">{formatCurrency(amount)}</p>
+      <p className="text-sm text-muted-foreground tabular-nums mt-0.5">{formatCurrency(amount)}</p>
     </div>
   );
 }
@@ -146,7 +146,7 @@ export default function ApprovazioniRimborsi({
 
       {/* List header */}
       <div className="flex items-center gap-4">
-        <h2 className="text-sm font-medium text-gray-400">
+        <h2 className="text-sm font-medium text-muted-foreground">
           Rimborsi{filtered.length !== expenses.length ? ` (${filtered.length} di ${expenses.length})` : ` (${expenses.length})`}
         </h2>
       </div>
@@ -157,7 +157,7 @@ export default function ApprovazioniRimborsi({
         value={search}
         onChange={(e) => handleSearchChange(e.target.value)}
         placeholder="Cerca per nome cognome collaboratore"
-        className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+        className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-500"
       />
 
       {/* Filter chips — stato */}
@@ -169,7 +169,7 @@ export default function ApprovazioniRimborsi({
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {s === 'ALL' ? 'Tutti gli stati' : EXPENSE_STATUS_LABELS[s]}
@@ -184,7 +184,7 @@ export default function ApprovazioniRimborsi({
           className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
             filterCategoria === 'ALL'
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              : 'bg-muted text-muted-foreground hover:bg-accent'
           }`}
         >
           Tutte le categorie
@@ -196,7 +196,7 @@ export default function ApprovazioniRimborsi({
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterCategoria === cat
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {cat}
@@ -228,21 +228,21 @@ export default function ApprovazioniRimborsi({
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
-          <p className="text-sm text-gray-500">Nessun rimborso trovato.</p>
+        <div className="rounded-xl bg-card border border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {/* Select-all row */}
           {approvabiliOnPage.length > 0 && (
-            <div className="flex items-center gap-3 px-4 py-2 bg-gray-800/40 rounded-t-xl">
+            <div className="flex items-center gap-3 px-4 py-2 bg-muted/40 rounded-t-xl">
               <input
                 type="checkbox"
                 checked={allPageSelected}
                 onChange={toggleSelectAll}
-                className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-border bg-muted text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 {allPageSelected ? 'Deseleziona tutti' : `Seleziona tutti in attesa (${approvabiliOnPage.length})`}
               </span>
             </div>
@@ -256,7 +256,7 @@ export default function ApprovazioniRimborsi({
             return (
               <div
                 key={e.id}
-                className={`flex items-center gap-3 px-4 py-4 hover:bg-gray-800/50 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
+                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/50 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
               >
                 {/* Checkbox column */}
                 <div className="w-5 shrink-0 flex items-center justify-center">
@@ -265,7 +265,7 @@ export default function ApprovazioniRimborsi({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleOne(e.id)}
-                      className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-border bg-muted text-blue-600 focus:ring-blue-500"
                     />
                   )}
                 </div>
@@ -276,13 +276,13 @@ export default function ApprovazioniRimborsi({
                   className="flex flex-1 items-start justify-between gap-4 min-w-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-100 truncate">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {e.collaborators
                         ? `${e.collaborators.nome} ${e.collaborators.cognome}`
                         : '—'}
                     </p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{e.descrizione ?? '—'}</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{e.descrizione ?? '—'}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${EXPENSE_CATEGORIA_BADGE[e.categoria]}`}>
                         {e.categoria}
                       </span>
@@ -296,12 +296,12 @@ export default function ApprovazioniRimborsi({
 
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="flex flex-col items-end gap-1.5">
-                      <span className="text-sm font-medium tabular-nums text-gray-200">
+                      <span className="text-sm font-medium tabular-nums text-foreground">
                         {formatCurrency(e.importo)}
                       </span>
                       <StatusBadge stato={e.stato} />
                     </div>
-                    <svg className="h-4 w-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -318,15 +318,15 @@ export default function ApprovazioniRimborsi({
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ‹
           </button>
-          <span className="text-xs text-gray-500">{safePage} / {totalPages}</span>
+          <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ›
           </button>

@@ -17,7 +17,7 @@ const TIPO_COLORS: Record<OpportunityTipo, string> = {
   FORMAZIONE: 'bg-blue-900/30 border-blue-800 text-blue-400',
   STAGE:      'bg-purple-900/30 border-purple-800 text-purple-400',
   PROGETTO:   'bg-amber-900/30 border-amber-800 text-amber-400',
-  ALTRO:      'bg-gray-800 border-gray-700 text-gray-400',
+  ALTRO:      'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -74,7 +74,7 @@ export default async function OpportunityDetailPage({
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <Link href="/opportunita" className="text-sm text-gray-500 hover:text-gray-300 transition">
+      <Link href="/opportunita" className="text-sm text-muted-foreground hover:text-foreground transition">
         ← Torna alle opportunità
       </Link>
 
@@ -82,28 +82,28 @@ export default async function OpportunityDetailPage({
         <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
           {TIPO_LABELS[o.tipo as OpportunityTipo] ?? o.tipo}
         </span>
-        <h1 className="text-2xl font-semibold text-gray-100">{o.titolo}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{o.titolo}</h1>
       </div>
 
-      <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 space-y-3">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-3">
         <div>
-          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Descrizione</h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Descrizione</h2>
           <RichTextDisplay html={o.descrizione} />
         </div>
 
         {o.requisiti && (
-          <div className="border-t border-gray-800 pt-3">
-            <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Requisiti</h2>
+          <div className="border-t border-border pt-3">
+            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Requisiti</h2>
             <RichTextDisplay html={o.requisiti} />
           </div>
         )}
 
         {o.scadenza_candidatura && (
-          <div className="border-t border-gray-800 pt-3 flex items-center gap-2">
-            <span className="text-gray-500">📅</span>
+          <div className="border-t border-border pt-3 flex items-center gap-2">
+            <span className="text-muted-foreground">📅</span>
             <div>
-              <p className="text-xs text-gray-500">Scadenza candidatura</p>
-              <p className="text-sm text-gray-200">{formatDate(o.scadenza_candidatura)}</p>
+              <p className="text-xs text-muted-foreground">Scadenza candidatura</p>
+              <p className="text-sm text-foreground">{formatDate(o.scadenza_candidatura)}</p>
             </div>
           </div>
         )}
@@ -118,7 +118,7 @@ export default async function OpportunityDetailPage({
         )}
         {o.file_url && (
           <a href={o.file_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm text-gray-200 transition">
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition">
             📎 Scarica allegato
           </a>
         )}

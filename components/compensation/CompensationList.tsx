@@ -24,7 +24,7 @@ const PAGE_SIZE = 20;
 function nettoColorClass(stato: string): string {
   if (stato === 'LIQUIDATO') return 'text-green-400';
   if (stato === 'APPROVATO') return 'text-amber-400';
-  return 'text-gray-400';
+  return 'text-muted-foreground';
 }
 
 function formatDate(iso: string) {
@@ -53,10 +53,10 @@ function AmountWithTooltip({
 }) {
   return (
     <span className="inline-flex items-center gap-1">
-      <span className={`tabular-nums font-medium ${colorClass ?? 'text-gray-200'}`}>
+      <span className={`tabular-nums font-medium ${colorClass ?? 'text-foreground'}`}>
         {formatCurrency(amount)}
       </span>
-      <span className={`text-xs ${colorClass ?? 'text-gray-400'}`}>{label}</span>
+      <span className={`text-xs ${colorClass ?? 'text-muted-foreground'}`}>{label}</span>
       {showTooltip && <InfoTooltip tip={TOOLTIP_TEXT} />}
     </span>
   );
@@ -94,7 +94,7 @@ export default function CompensationList({
           className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
             filterStato === 'ALL'
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              : 'bg-muted text-muted-foreground hover:bg-accent'
           }`}
         >
           Tutti
@@ -106,7 +106,7 @@ export default function CompensationList({
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {COMPENSATION_STATUS_LABELS[s]}
@@ -116,23 +116,23 @@ export default function CompensationList({
 
       {/* Card list */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
-          <p className="text-sm text-gray-500">Nessun compenso trovato.</p>
+        <div className="rounded-xl bg-card border border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
           {paginated.map((c) => (
             <Link
               key={c.id}
               href={`/compensi/${c.id}`}
-              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-gray-800/50 transition"
+              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-muted/50 transition"
             >
               {/* Left: description + meta */}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-100 truncate">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {c.nome_servizio_ruolo ?? '—'}
                 </p>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span>Inviato: {formatDate(c.created_at)}</span>
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default function CompensationList({
                   </div>
                   <StatusBadge stato={c.stato} />
                 </div>
-                <svg className="h-4 w-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -169,15 +169,15 @@ export default function CompensationList({
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ‹
           </button>
-          <span className="text-xs text-gray-500">{safePage} / {totalPages}</span>
+          <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ›
           </button>

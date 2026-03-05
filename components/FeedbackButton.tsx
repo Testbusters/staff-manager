@@ -76,23 +76,23 @@ export default function FeedbackButton() {
       </button>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) closeModal(); else setOpen(true); }}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+        <DialogContent className="max-w-md bg-card border-border">
           {success ? (
             <div className="py-8 text-center space-y-3">
               <div className="text-4xl">✅</div>
-              <p className="font-medium text-gray-100">Grazie per il feedback!</p>
-              <p className="text-sm text-gray-500">Il messaggio è stato inviato.</p>
+              <p className="font-medium text-foreground">Grazie per il feedback!</p>
+              <p className="text-sm text-muted-foreground">Il messaggio è stato inviato.</p>
             </div>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle className="text-base font-semibold text-gray-100">Invia feedback</DialogTitle>
+                <DialogTitle className="text-base font-semibold text-foreground">Invia feedback</DialogTitle>
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Categoria */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Categoria</label>
+                  <label className="block text-xs text-muted-foreground mb-1.5">Categoria</label>
                   <Select value={categoria} onValueChange={(v) => setCategoria(v as Categoria)} disabled={loading}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -103,7 +103,7 @@ export default function FeedbackButton() {
 
                 {/* Pagina */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Pagina</label>
+                  <label className="block text-xs text-muted-foreground mb-1.5">Pagina</label>
                   <Input
                     type="text"
                     value={pagina}
@@ -115,7 +115,7 @@ export default function FeedbackButton() {
 
                 {/* Messaggio */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">
+                  <label className="block text-xs text-muted-foreground mb-1.5">
                     Messaggio <span className="text-red-400">*</span>
                   </label>
                   <Textarea
@@ -130,18 +130,18 @@ export default function FeedbackButton() {
 
                 {/* Screenshot */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">
-                    Screenshot <span className="text-gray-600">(opzionale, max 5 MB)</span>
+                  <label className="block text-xs text-muted-foreground mb-1.5">
+                    Screenshot <span className="text-muted-foreground">(opzionale, max 5 MB)</span>
                   </label>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif"
                     disabled={loading}
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    className="w-full text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-700 file:px-3 file:py-1.5 file:text-xs file:text-gray-200 file:cursor-pointer hover:file:bg-gray-600 transition"
+                    className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-xs file:text-foreground file:cursor-pointer hover:file:bg-gray-600 transition"
                   />
                   {file && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {file.name} ({(file.size / 1024).toFixed(0)} KB)
                     </p>
                   )}

@@ -34,10 +34,10 @@ function formatCurrency(n: number | null | undefined) {
 
 function KpiCard({ label, count, amount, countColor }: { label: string; count: number; amount: number; countColor: string }) {
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4">
-      <p className="text-xs text-gray-500 mb-2">{label}</p>
+    <div className="rounded-xl bg-card border border-border px-4 py-4">
+      <p className="text-xs text-muted-foreground mb-2">{label}</p>
       <p className={`text-2xl font-semibold tabular-nums ${countColor}`}>{count}</p>
-      <p className="text-sm tabular-nums text-gray-400 mt-0.5">{formatCurrency(amount)}</p>
+      <p className="text-sm tabular-nums text-muted-foreground mt-0.5">{formatCurrency(amount)}</p>
     </div>
   );
 }
@@ -88,10 +88,10 @@ export default function ApprovazioniCompensazioni({
 
       {/* Creation modes — two stacked peer cards */}
       <div className="space-y-3">
-        <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4 flex items-center justify-between gap-4">
+        <div className="rounded-xl bg-card border border-border px-4 py-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-gray-200">Inserimento manuale</p>
-            <p className="text-xs text-gray-500 mt-0.5">Crea un compenso per un singolo collaboratore.</p>
+            <p className="text-sm font-medium text-foreground">Inserimento manuale</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Crea un compenso per un singolo collaboratore.</p>
           </div>
           <Link
             href="/approvazioni/carica"
@@ -105,7 +105,7 @@ export default function ApprovazioniCompensazioni({
 
       {/* List header */}
       <div className="flex items-center gap-4">
-        <h2 className="text-sm font-medium text-gray-400">
+        <h2 className="text-sm font-medium text-muted-foreground">
           Compensi{filtered.length !== compensations.length ? ` (${filtered.length} di ${compensations.length})` : ` (${compensations.length})`}
         </h2>
       </div>
@@ -116,7 +116,7 @@ export default function ApprovazioniCompensazioni({
         value={search}
         onChange={(e) => handleSearchChange(e.target.value)}
         placeholder="Cerca per nome o cognome..."
-        className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+        className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-500"
       />
 
       {/* Filter chips */}
@@ -128,7 +128,7 @@ export default function ApprovazioniCompensazioni({
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {s === 'ALL' ? 'Tutti' : COMPENSATION_STATUS_LABELS[s]}
@@ -138,43 +138,43 @@ export default function ApprovazioniCompensazioni({
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
-          <p className="text-sm text-gray-500">Nessun compenso trovato.</p>
+        <div className="rounded-xl bg-card border border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {paginated.map((c, idx) => {
             const isFirst = idx === 0;
             const isLast = idx === paginated.length - 1;
             return (
               <div
                 key={c.id}
-                className={`flex items-center gap-3 px-4 py-4 hover:bg-gray-800/50 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
+                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/50 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
               >
                 <Link
                   href={`/compensi/${c.id}`}
                   className="flex flex-1 items-start justify-between gap-4 min-w-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-100 truncate">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {c.collaborators
                         ? `${c.collaborators.nome} ${c.collaborators.cognome}`
                         : '—'}
                     </p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{c.nome_servizio_ruolo ?? '—'}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{c.nome_servizio_ruolo ?? '—'}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       <span>{formatDate(c.created_at)}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="flex flex-col items-end gap-1.5">
-                      <span className="text-sm font-medium tabular-nums text-gray-200">
+                      <span className="text-sm font-medium tabular-nums text-foreground">
                         {formatCurrency(c.importo_lordo)}
                       </span>
                       <StatusBadge stato={c.stato} />
                     </div>
-                    <svg className="h-4 w-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -191,15 +191,15 @@ export default function ApprovazioniCompensazioni({
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ‹
           </button>
-          <span className="text-xs text-gray-500">{safePage} / {totalPages}</span>
+          <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ›
           </button>

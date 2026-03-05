@@ -63,7 +63,7 @@ export default function ChangePasswordPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="text-center mb-8">
@@ -73,16 +73,16 @@ export default function ChangePasswordPage() {
                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-gray-100">Cambia password</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-semibold text-foreground">Cambia password</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Imposta una nuova password per accedere alla piattaforma.
           </p>
         </div>
 
-        <div className="rounded-2xl bg-gray-900 border border-gray-800 p-6">
+        <div className="rounded-2xl bg-card border border-border p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Nuova password</label>
+              <label className="block text-xs text-muted-foreground mb-1.5">Nuova password</label>
               <Input
                 type="password"
                 placeholder="Minimo 8 caratteri"
@@ -94,7 +94,7 @@ export default function ChangePasswordPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Conferma password</label>
+              <label className="block text-xs text-muted-foreground mb-1.5">Conferma password</label>
               <Input
                 type="password"
                 placeholder="Ripeti la nuova password"
@@ -122,7 +122,7 @@ export default function ChangePasswordPage() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-xs text-gray-600">
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           Per problemi di accesso contatta l&apos;amministrazione.
         </p>
       </div>

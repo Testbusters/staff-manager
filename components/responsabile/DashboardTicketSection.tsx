@@ -15,12 +15,12 @@ export type DashboardTicket = {
   last_message_author_name: string | null;
 };
 
-const CARD_CLS = 'rounded-2xl bg-gray-900 border border-gray-800';
+const CARD_CLS = 'rounded-2xl bg-card border border-border';
 
 const STATO_BADGE: Record<string, string> = {
   APERTO:         'bg-rose-900/40 text-rose-300 border-rose-700/50',
   IN_LAVORAZIONE: 'bg-amber-900/40 text-amber-300 border-amber-700/50',
-  CHIUSO:         'bg-gray-800 text-gray-500 border-gray-700',
+  CHIUSO:         'bg-muted text-muted-foreground border-border',
 };
 
 const CATEGORIA_BADGE: Record<string, string> = {
@@ -59,7 +59,7 @@ function formatAgeShort(iso: string): string {
 
 function TicketRow({ ticket }: { ticket: DashboardTicket }) {
   const lastReply = ticket.last_message_at ? (
-    <span className="text-xs text-gray-500 tabular-nums hidden sm:inline">
+    <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">
       {ticket.last_message_author_name ?? 'Risposta'} · {formatAgeShort(ticket.last_message_at)}
     </span>
   ) : (
@@ -69,22 +69,22 @@ function TicketRow({ ticket }: { ticket: DashboardTicket }) {
   return (
     <Link
       href={`/ticket/${ticket.id}`}
-      className="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition cursor-pointer"
+      className="flex items-center gap-3 px-5 py-3 hover:bg-muted transition cursor-pointer"
     >
-      <Badge variant="outline" className={`shrink-0 ${CATEGORIA_BADGE[ticket.categoria] ?? 'border-gray-700 text-gray-400'}`}>
+      <Badge variant="outline" className={`shrink-0 ${CATEGORIA_BADGE[ticket.categoria] ?? 'border-border text-muted-foreground'}`}>
         {ticket.categoria}
       </Badge>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-200 truncate">{ticket.oggetto}</p>
-        <p className="text-xs text-gray-500 truncate">{ticket.collabName}</p>
+        <p className="text-sm text-foreground truncate">{ticket.oggetto}</p>
+        <p className="text-xs text-muted-foreground truncate">{ticket.collabName}</p>
       </div>
-      <Badge variant="outline" className={`shrink-0 ${STATO_BADGE[ticket.stato] ?? 'border-gray-700 text-gray-400'}`}>
+      <Badge variant="outline" className={`shrink-0 ${STATO_BADGE[ticket.stato] ?? 'border-border text-muted-foreground'}`}>
         {STATO_LABELS[ticket.stato] ?? ticket.stato}
       </Badge>
       <span className={`h-2 w-2 rounded-full shrink-0 hidden sm:inline-block ${PRIORITY_DOT[ticket.priority] ?? 'bg-gray-500'}`} title={ticket.priority} />
       {lastReply}
-      <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAge(ticket.created_at)}</span>
-      <span className="shrink-0 text-xs text-gray-600">→</span>
+      <span className="text-xs text-muted-foreground tabular-nums shrink-0">{formatAge(ticket.created_at)}</span>
+      <span className="shrink-0 text-xs text-muted-foreground">→</span>
     </Link>
   );
 }
@@ -100,16 +100,16 @@ export default function DashboardTicketSection({
     <div className="space-y-4">
       {/* Ticket ricevuti */}
       <div className={CARD_CLS}>
-        <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-200">Ticket ricevuti</h2>
-          <Link href="/ticket" className="text-xs text-gray-500 hover:text-gray-300 transition">
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="text-sm font-medium text-foreground">Ticket ricevuti</h2>
+          <Link href="/ticket" className="text-xs text-muted-foreground hover:text-foreground transition">
             Vedi tutti →
           </Link>
         </div>
         {ricevuti.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun ticket aperto.</p>
+          <p className="px-5 py-6 text-sm text-muted-foreground text-center">Nessun ticket aperto.</p>
         ) : (
-          <div className="divide-y divide-gray-800">
+          <div className="divide-y divide-border">
             {ricevuti.map((t) => <TicketRow key={t.id} ticket={t} />)}
           </div>
         )}
@@ -118,13 +118,13 @@ export default function DashboardTicketSection({
       {/* Ticket recenti */}
       {recenti.length > 0 && (
         <div className={CARD_CLS}>
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-200">Ticket recenti <span className="text-gray-600 font-normal text-xs">(ultimi 3 giorni)</span></h2>
-            <Link href="/ticket" className="text-xs text-gray-500 hover:text-gray-300 transition">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="text-sm font-medium text-foreground">Ticket recenti <span className="text-muted-foreground font-normal text-xs">(ultimi 3 giorni)</span></h2>
+            <Link href="/ticket" className="text-xs text-muted-foreground hover:text-foreground transition">
               Vedi tutti →
             </Link>
           </div>
-          <div className="divide-y divide-gray-800">
+          <div className="divide-y divide-border">
             {recenti.map((t) => <TicketRow key={t.id} ticket={t} />)}
           </div>
         </div>

@@ -32,11 +32,11 @@ export default async function OnboardingPage() {
   const tipoContratto = (collab?.tipo_contratto ?? null) as ContractTemplateType | null;
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-xl">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-100 mb-2">Benvenuto</h1>
-          <p className="text-sm text-gray-400">Completa il tuo profilo per accedere alla piattaforma</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Benvenuto</h1>
+          <p className="text-sm text-muted-foreground">Completa il tuo profilo per accedere alla piattaforma</p>
         </div>
         <OnboardingWizard
           prefill={collab ?? null}

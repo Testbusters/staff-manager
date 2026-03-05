@@ -49,13 +49,13 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
   };
 
   return (
-    <aside className="flex h-screen w-56 flex-col bg-gray-900 border-r border-gray-800 flex-shrink-0">
+    <aside className="flex h-screen w-56 flex-col bg-sidebar border-r border-sidebar-border flex-shrink-0">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-5 border-b border-gray-800">
+      <div className="flex items-center gap-2.5 px-4 py-5 border-b border-sidebar-border">
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 flex-shrink-0">
           <span className="text-sm">👥</span>
         </div>
-        <span className="text-sm font-semibold text-gray-100 flex-1">Staff Manager</span>
+        <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
         <NotificationBell />
       </div>
 
@@ -66,11 +66,11 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
             return (
               <span
                 key={item.label}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 cursor-not-allowed select-none"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed select-none"
               >
                 <span className="text-base leading-none">{item.icon}</span>
                 <span className="flex-1">{item.label}</span>
-                <span className="text-[10px] font-medium rounded-full bg-gray-800 px-1.5 py-0.5 text-gray-600">
+                <span className="text-[10px] font-medium rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">
                   Presto
                 </span>
               </span>
@@ -84,8 +84,8 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
               href={item.href}
               className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 isActive
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800/60 hover:text-gray-200'
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
               }`}
             >
               <span className="text-base leading-none">{item.icon}</span>
@@ -96,24 +96,24 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
       </nav>
 
       {/* User footer */}
-      <div className="px-3 py-4 border-t border-gray-800">
+      <div className="px-3 py-4 border-t border-sidebar-border">
         <div className="flex items-center gap-2.5 mb-2">
           <Avatar className="w-7 h-7 shrink-0">
             <AvatarImage src={avatarUrl ?? undefined} alt="" />
-            <AvatarFallback className="bg-gray-700 text-xs text-gray-300">
+            <AvatarFallback className="bg-sidebar-accent text-xs text-sidebar-accent-foreground">
               {userName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-gray-200 truncate">{userName}</p>
-            <p className="text-[10px] text-gray-500 truncate">{userEmail}</p>
+            <p className="text-xs font-medium text-sidebar-accent-foreground truncate">{userName}</p>
+            <p className="text-[10px] text-sidebar-foreground truncate">{userEmail}</p>
           </div>
         </div>
         <button
           onClick={handleToggleTheme}
           suppressHydrationWarning
           className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
-                     text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition mb-1"
+                     text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition mb-1"
         >
           {resolvedTheme === 'dark'
             ? <Sun className="h-3.5 w-3.5 shrink-0" />
@@ -126,23 +126,23 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
-              className="w-full text-left px-2 py-1.5 rounded-md text-xs text-gray-500
-                         hover:text-gray-300 hover:bg-gray-800 transition"
+              className="w-full text-left px-2 py-1.5 rounded-md text-xs text-sidebar-foreground
+                         hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition"
             >
               Esci
             </button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="bg-gray-900 border-gray-700 max-w-sm">
+          <AlertDialogContent className="bg-card border-border max-w-sm">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-sm font-semibold text-gray-100">
+              <AlertDialogTitle className="text-sm font-semibold text-foreground">
                 Esci dall&apos;account?
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-xs text-gray-400">
+              <AlertDialogDescription className="text-xs text-muted-foreground">
                 Verrai reindirizzato alla pagina di login.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-200 bg-transparent hover:bg-gray-800 border-gray-700">
+              <AlertDialogCancel className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground bg-transparent hover:bg-muted border-border">
                 Annulla
               </AlertDialogCancel>
               <AlertDialogAction

@@ -22,48 +22,48 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
   const total = approved.reduce((s, e) => s + (e.importo ?? 0), 0);
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-amber-700/30 mb-6">
-      <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-2">
+    <div className="rounded-xl bg-card border border-amber-700/30 mb-6">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <p className="text-sm font-semibold text-amber-300">Da liquidare</p>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           — {approved.length} {approved.length === 1 ? 'rimborso approvato' : 'rimborsi approvati'}, in attesa di pagamento
         </span>
       </div>
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-800">
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">Categoria</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Data spesa</th>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Descrizione</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">Importo</th>
+          <tr className="border-b border-border">
+            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Categoria</th>
+            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Data spesa</th>
+            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Descrizione</th>
+            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Importo</th>
             <th className="px-4 py-2.5" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-800">
+        <tbody className="divide-y divide-border">
           {approved.map((e) => (
             <tr
               key={e.id}
               onClick={() => router.push(`/rimborsi/${e.id}`)}
-              className="hover:bg-gray-800/40 transition cursor-pointer"
+              className="hover:bg-muted/40 transition cursor-pointer"
             >
-              <td className="px-4 py-3 text-gray-200 font-medium">{e.categoria}</td>
-              <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{formatDate(e.data_spesa)}</td>
-              <td className="px-4 py-3 text-gray-400 hidden md:table-cell truncate max-w-[200px]">
+              <td className="px-4 py-3 text-foreground font-medium">{e.categoria}</td>
+              <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{formatDate(e.data_spesa)}</td>
+              <td className="px-4 py-3 text-muted-foreground hidden md:table-cell truncate max-w-[200px]">
                 {e.descrizione || '—'}
               </td>
               <td className="px-4 py-3 text-right text-amber-400 tabular-nums font-medium">
                 {fmt(e.importo)}
               </td>
-              <td className="px-4 py-3 text-right text-gray-600 text-sm">→</td>
+              <td className="px-4 py-3 text-right text-muted-foreground text-sm">→</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t border-gray-700 bg-gray-800/30">
+          <tr className="border-t border-border bg-muted/30">
             <td colSpan={5} className="px-4 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500">Totale da liquidare</span>
+                <span className="text-xs font-medium text-muted-foreground">Totale da liquidare</span>
                 <span className="text-sm font-semibold text-amber-300 tabular-nums">{fmt(total)}</span>
               </div>
             </td>

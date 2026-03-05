@@ -41,40 +41,40 @@ function CompensazioniCard({
   const isEmpty = paidByYear.length === 0 && approvedNetto === 0 && inAttesaNetto === 0;
 
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800 flex-1 min-w-[260px]">
-      <div className="px-5 py-4 border-b border-gray-800">
-        <h2 className="text-sm font-medium text-gray-200">Compensi liquidati</h2>
+    <div className="rounded-2xl bg-card border border-border flex-1 min-w-[260px]">
+      <div className="px-5 py-4 border-b border-border">
+        <h2 className="text-sm font-medium text-foreground">Compensi liquidati</h2>
       </div>
       <div className="p-5 space-y-3">
         {isEmpty ? (
-          <p className="text-xs text-gray-600 italic">Nessun dato disponibile.</p>
+          <p className="text-xs text-muted-foreground italic">Nessun dato disponibile.</p>
         ) : (
           <>
             {paidByYear.map(({ year, netto, lordo }) => (
               <div key={year} className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">Netto ricevuto nel {year}</span>
+                  <span className="text-xs text-muted-foreground">Netto ricevuto nel {year}</span>
                   <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(netto)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-xs text-gray-600">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     Ritenuta trattenuta (20%)
                     <InfoTooltip tip={TIP_RITENUTA} />
                   </span>
-                  <span className="text-xs text-gray-600 tabular-nums">− {fmt(lordo - netto)}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">− {fmt(lordo - netto)}</span>
                 </div>
               </div>
             ))}
 
             {approvedNetto > 0 && (
-              <div className={`space-y-1.5 ${paidByYear.length > 0 ? 'pt-3 border-t border-gray-800' : ''}`}>
-                <p className="text-xs font-medium text-gray-500">Approvato — in attesa di liquidazione</p>
+              <div className={`space-y-1.5 ${paidByYear.length > 0 ? 'pt-3 border-t border-border' : ''}`}>
+                <p className="text-xs font-medium text-muted-foreground">Approvato — in attesa di liquidazione</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Lordo approvato</span>
-                  <span className="text-xs text-gray-400 tabular-nums">{fmt(approvedLordo)}</span>
+                  <span className="text-xs text-muted-foreground">Lordo approvato</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{fmt(approvedLordo)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     Netto che riceverai
                     <InfoTooltip tip={TIP_NETTO_APPROVATO} />
                   </span>
@@ -84,9 +84,9 @@ function CompensazioniCard({
             )}
 
             {inAttesaNetto > 0 && (
-              <div className={`flex items-center justify-between ${(paidByYear.length > 0 || approvedNetto > 0) ? 'pt-2 border-t border-gray-800' : ''}`}>
-                <span className="text-xs text-gray-600">In valutazione (netto stimato)</span>
-                <span className="text-xs text-gray-600 tabular-nums">{fmt(inAttesaNetto)}</span>
+              <div className={`flex items-center justify-between ${(paidByYear.length > 0 || approvedNetto > 0) ? 'pt-2 border-t border-border' : ''}`}>
+                <span className="text-xs text-muted-foreground">In valutazione (netto stimato)</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{fmt(inAttesaNetto)}</span>
               </div>
             )}
           </>
@@ -109,37 +109,37 @@ function RimborsiCard({
   const isEmpty = paidByYear.length === 0 && approved === 0 && inAttesa === 0;
 
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800 flex-1 min-w-[260px]">
-      <div className="px-5 py-4 border-b border-gray-800">
-        <h2 className="text-sm font-medium text-gray-200">Rimborsi liquidati</h2>
+    <div className="rounded-2xl bg-card border border-border flex-1 min-w-[260px]">
+      <div className="px-5 py-4 border-b border-border">
+        <h2 className="text-sm font-medium text-foreground">Rimborsi liquidati</h2>
       </div>
       <div className="p-5 space-y-3">
         {isEmpty ? (
-          <p className="text-xs text-gray-600 italic">Nessun dato disponibile.</p>
+          <p className="text-xs text-muted-foreground italic">Nessun dato disponibile.</p>
         ) : (
           <>
             {paidByYear.map(({ year, total }) => (
               <div key={year} className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">Ricevuto nel {year}</span>
+                <span className="text-xs text-muted-foreground">Ricevuto nel {year}</span>
                 <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(total)}</span>
               </div>
             ))}
             {paidByYear.length > 1 && (
-              <div className="flex items-center justify-between pt-2 border-t border-gray-800">
-                <span className="text-xs text-gray-400">Totale rimborsi ricevuti</span>
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <span className="text-xs text-muted-foreground">Totale rimborsi ricevuti</span>
                 <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(totalPaid)}</span>
               </div>
             )}
             {approved > 0 && (
-              <div className={`flex items-center justify-between ${paidByYear.length > 0 ? 'pt-2 border-t border-gray-800' : ''}`}>
-                <span className="text-xs text-gray-500">Approvato — da liquidare</span>
+              <div className={`flex items-center justify-between ${paidByYear.length > 0 ? 'pt-2 border-t border-border' : ''}`}>
+                <span className="text-xs text-muted-foreground">Approvato — da liquidare</span>
                 <span className="text-sm font-medium text-amber-400 tabular-nums">{fmt(approved)}</span>
               </div>
             )}
             {inAttesa > 0 && (
-              <div className={`flex items-center justify-between ${(paidByYear.length > 0 || approved > 0) ? 'pt-2 border-t border-gray-800' : ''}`}>
-                <span className="text-xs text-gray-600">In valutazione</span>
-                <span className="text-xs text-gray-600 tabular-nums">{fmt(inAttesa)}</span>
+              <div className={`flex items-center justify-between ${(paidByYear.length > 0 || approved > 0) ? 'pt-2 border-t border-border' : ''}`}>
+                <span className="text-xs text-muted-foreground">In valutazione</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{fmt(inAttesa)}</span>
               </div>
             )}
           </>
@@ -168,16 +168,16 @@ export default function PaymentOverview({
   return (
     <div className="mb-8 space-y-5">
       {showMassimale && (
-        <div className="rounded-2xl bg-gray-900 border border-gray-800 p-5">
+        <div className="rounded-2xl bg-card border border-border p-5">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-medium text-gray-200">
+            <h2 className="text-sm font-medium text-foreground">
               Massimale annuo {currentYear} lordo
             </h2>
-            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-400' : isNearLimit ? 'text-yellow-400' : 'text-gray-400'}`}>
+            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-400' : isNearLimit ? 'text-yellow-400' : 'text-muted-foreground'}`}>
               {fmt(paidCurrentYear)} / {fmt(massimale)}
             </span>
           </div>
-          <div className="w-full h-2 rounded-full bg-gray-700 overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-accent overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${barColor}`}
               style={{ width: `${pct}%` }}
@@ -194,7 +194,7 @@ export default function PaymentOverview({
           <div className="mt-3 flex justify-end">
             <Link
               href="/profilo?tab=impostazioni"
-              className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+              className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
             >
               Modifica massimale →
             </Link>
@@ -204,7 +204,7 @@ export default function PaymentOverview({
 
       {hasData && (
         <>
-          <h2 className="text-sm font-medium text-gray-400">I miei pagamenti</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">I miei pagamenti</h2>
           <div className="flex gap-4 flex-wrap">
             <CompensazioniCard
               paidByYear={compensPaidByYear}

@@ -60,12 +60,12 @@ export default function CUBatchUpload() {
   };
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 space-y-5">
+    <div className="rounded-xl bg-card border border-border p-6 space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-gray-100">Importazione CU batch</h2>
-        <p className="text-xs text-gray-500 mt-1">
+        <h2 className="text-base font-semibold text-foreground">Importazione CU batch</h2>
+        <p className="text-xs text-muted-foreground mt-1">
           Carica lo ZIP con i PDF e il CSV di mapping (formato:{' '}
-          <code className="text-gray-400">nome_file,nome,cognome</code>).
+          <code className="text-muted-foreground">nome_file,nome,cognome</code>).
           Tutti i PDF devono essere CU dello stesso anno fiscale.
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function CUBatchUpload() {
 
       {/* Anno */}
       <div>
-        <label className="block text-xs text-gray-400 mb-1.5">
+        <label className="block text-xs text-muted-foreground mb-1.5">
           Anno fiscale <span className="text-red-500">*</span>
         </label>
         <Input
@@ -94,31 +94,31 @@ export default function CUBatchUpload() {
 
       {/* ZIP */}
       <div>
-        <label className="block text-xs text-gray-400 mb-1.5">
+        <label className="block text-xs text-muted-foreground mb-1.5">
           File ZIP (PDF CU) <span className="text-red-500">*</span>
         </label>
         <input
           type="file"
           accept=".zip"
           onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600"
+          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
         />
-        {zipFile && <p className="mt-1 text-xs text-gray-500">{zipFile.name} ({(zipFile.size / 1024).toFixed(0)} KB)</p>}
+        {zipFile && <p className="mt-1 text-xs text-muted-foreground">{zipFile.name} ({(zipFile.size / 1024).toFixed(0)} KB)</p>}
       </div>
 
       {/* CSV */}
       <div>
-        <label className="block text-xs text-gray-400 mb-1.5">
+        <label className="block text-xs text-muted-foreground mb-1.5">
           File CSV mapping <span className="text-red-500">*</span>
         </label>
         <input
           type="file"
           accept=".csv,.txt"
           onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600"
+          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
         />
-        {csvFile && <p className="mt-1 text-xs text-gray-500">{csvFile.name}</p>}
-        <p className="mt-1.5 text-xs text-gray-600">
+        {csvFile && <p className="mt-1 text-xs text-muted-foreground">{csvFile.name}</p>}
+        <p className="mt-1.5 text-xs text-muted-foreground">
           Prima riga: intestazione. Colonne: <code>nome_file,nome,cognome</code>
         </p>
       </div>
@@ -133,9 +133,9 @@ export default function CUBatchUpload() {
 
       {/* Results */}
       {result && (
-        <div className="space-y-4 border-t border-gray-800 pt-5">
+        <div className="space-y-4 border-t border-border pt-5">
           <div className="flex gap-6 text-sm">
-            <span className="text-gray-400">Elaborati: <strong className="text-gray-200">{result.processed}</strong></span>
+            <span className="text-muted-foreground">Elaborati: <strong className="text-foreground">{result.processed}</strong></span>
             <span className="text-green-400">Caricati: <strong>{result.success}</strong></span>
             <span className="text-yellow-400">Duplicati: <strong>{result.duplicates}</strong></span>
             {result.errors > 0 && (
@@ -146,7 +146,7 @@ export default function CUBatchUpload() {
           {result.detail.success.length > 0 && (
             <details className="text-xs">
               <summary className="text-green-400 cursor-pointer">Caricati ({result.detail.success.length})</summary>
-              <ul className="mt-2 space-y-0.5 text-gray-400">
+              <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.success.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
             </details>
@@ -155,7 +155,7 @@ export default function CUBatchUpload() {
           {result.detail.duplicates.length > 0 && (
             <details className="text-xs">
               <summary className="text-yellow-400 cursor-pointer">Duplicati saltati ({result.detail.duplicates.length})</summary>
-              <ul className="mt-2 space-y-0.5 text-gray-400">
+              <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.duplicates.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
             </details>
@@ -164,7 +164,7 @@ export default function CUBatchUpload() {
           {result.detail.errors.length > 0 && (
             <details className="text-xs" open>
               <summary className="text-red-400 cursor-pointer">Errori ({result.detail.errors.length})</summary>
-              <ul className="mt-2 space-y-0.5 text-gray-400">
+              <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.errors.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
             </details>

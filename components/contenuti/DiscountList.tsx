@@ -18,7 +18,7 @@ function expiryBadge(valid_to: string | null) {
   today.setHours(0, 0, 0, 0);
   const exp = new Date(valid_to);
   const diffDays = Math.ceil((exp.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays < 0) return <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-500">Scaduto</span>;
+  if (diffDays < 0) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Scaduto</span>;
   if (diffDays <= 7) return <span className="rounded-full bg-yellow-900/40 border border-yellow-700 px-2 py-0.5 text-xs text-yellow-300">In scadenza</span>;
   return <span className="rounded-full bg-green-900/30 border border-green-800 px-2 py-0.5 text-xs text-green-400">Attivo</span>;
 }
@@ -88,19 +88,19 @@ function DiscountForm({
         <Input value={form.logo_url} onChange={set('logo_url')} placeholder="URL logo fornitore" />
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Valido dal</label>
+          <label className="text-xs text-muted-foreground">Valido dal</label>
           <Input type="date" value={form.valid_from} onChange={set('valid_from')} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Valido fino al</label>
+          <label className="text-xs text-muted-foreground">Valido fino al</label>
           <Input type="date" value={form.valid_to} onChange={set('valid_to')} />
         </div>
       </div>
       <div className="space-y-1">
-        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
         <div className="flex flex-wrap gap-3">
           {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
               <input type="checkbox"
                 checked={form.community_ids.includes(c.id)}
                 onChange={(e) => setForm((f) => ({
@@ -109,7 +109,7 @@ function DiscountForm({
                     ? [...f.community_ids, c.id]
                     : f.community_ids.filter((id) => id !== c.id),
                 }))}
-                className="rounded border-gray-600 bg-gray-800" />
+                className="rounded border-border bg-muted" />
               {c.name}
             </label>
           ))}
@@ -172,7 +172,7 @@ export default function DiscountList({
     <div className="space-y-4">
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-gray-700 hover:border-blue-600 px-4 py-2 text-sm text-gray-400 hover:text-blue-400 transition">
+          className="rounded-lg border border-dashed border-border hover:border-blue-600 px-4 py-2 text-sm text-muted-foreground hover:text-blue-400 transition">
           + Nuovo sconto
         </button>
       )}
@@ -180,10 +180,10 @@ export default function DiscountList({
         <DiscountForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {discounts.length === 0 && !showForm && (
-        <p className="text-sm text-gray-500 py-6 text-center">Nessuno sconto disponibile.</p>
+        <p className="text-sm text-muted-foreground py-6 text-center">Nessuno sconto disponibile.</p>
       )}
       {discounts.map((d) => (
-        <div key={d.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
+        <div key={d.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
           {editingId === d.id ? (
             <DiscountForm
               initial={{
@@ -200,13 +200,13 @@ export default function DiscountList({
             <>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-semibold text-gray-100">{d.titolo}</h3>
-                  {d.fornitore && <span className="text-xs text-gray-500">· {d.fornitore}</span>}
+                  <h3 className="text-sm font-semibold text-foreground">{d.titolo}</h3>
+                  {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
                   {expiryBadge(d.valid_to)}
                 </div>
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(d.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
+                    <button onClick={() => setEditingId(d.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
                     <button onClick={() => handleDelete(d.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
                   </div>
                 )}
@@ -214,7 +214,7 @@ export default function DiscountList({
               {d.descrizione && <RichTextDisplay html={d.descrizione} />}
               <div className="flex items-center gap-3 flex-wrap">
                 {d.codice_sconto && (
-                  <span className="rounded-md bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs font-mono text-yellow-300">
+                  <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-300">
                     {d.codice_sconto}
                   </span>
                 )}
@@ -226,12 +226,12 @@ export default function DiscountList({
                 )}
                 {d.file_url && (
                   <a href={d.file_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-2 py-0.5 text-xs text-gray-300 transition">
+                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
                     📎 Allegato
                   </a>
                 )}
                 {(d.valid_from || d.valid_to) && (
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-muted-foreground">
                     {d.valid_from && `Dal ${formatDate(d.valid_from)}`}
                     {d.valid_from && d.valid_to && ' · '}
                     {d.valid_to && `Al ${formatDate(d.valid_to)}`}

@@ -25,9 +25,9 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 const ROLES_WITH_CONTRACT: Role[] = ['collaboratore', 'responsabile_compensi'];
 
 
-const labelCls = 'block text-xs text-gray-500 mb-1.5';
+const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 
-const sectionTitle = 'text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 mt-1';
+const sectionTitle = 'text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 mt-1';
 
 export default function CreateUserForm() {
   // Auth fields
@@ -162,32 +162,32 @@ export default function CreateUserForm() {
           <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
-          <p className="text-xs text-gray-300">
-            Invito inviato a <span className="font-medium text-gray-100">{credentials.email}</span>.
+          <p className="text-xs text-foreground">
+            Invito inviato a <span className="font-medium text-foreground">{credentials.email}</span>.
           </p>
         </div>
 
         {/* Credentials backup */}
-        <div className="rounded-xl bg-gray-800/60 border border-gray-700 p-4 space-y-3">
-          <p className="text-xs text-gray-500">
+        <div className="rounded-xl bg-muted/60 border border-border p-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
             Credenziali di accesso — da condividere manualmente in caso di mancato recapito dell&apos;email.
           </p>
           <div>
-            <p className="text-xs text-gray-500 mb-1">Email</p>
+            <p className="text-xs text-muted-foreground mb-1">Email</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-lg bg-gray-900 px-3 py-2 text-sm text-gray-100 font-mono">{credentials.email}</code>
+              <code className="flex-1 rounded-lg bg-card px-3 py-2 text-sm text-foreground font-mono">{credentials.email}</code>
               <button onClick={() => copyToClipboard(credentials.email, 'email')}
-                className="rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-2 text-xs text-gray-300 transition whitespace-nowrap">
+                className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-2 text-xs text-foreground transition whitespace-nowrap">
                 {copied === 'email' ? 'Copiato!' : 'Copia'}
               </button>
             </div>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">Password temporanea</p>
+            <p className="text-xs text-muted-foreground mb-1">Password temporanea</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-lg bg-gray-900 px-3 py-2 text-sm text-gray-100 font-mono tracking-wider">{credentials.password}</code>
+              <code className="flex-1 rounded-lg bg-card px-3 py-2 text-sm text-foreground font-mono tracking-wider">{credentials.password}</code>
               <button onClick={() => copyToClipboard(credentials.password, 'password')}
-                className="rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-2 text-xs text-gray-300 transition whitespace-nowrap">
+                className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-2 text-xs text-foreground transition whitespace-nowrap">
                 {copied === 'password' ? 'Copiata!' : 'Copia'}
               </button>
             </div>
@@ -211,7 +211,7 @@ export default function CreateUserForm() {
           className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
             mode === 'quick'
               ? 'bg-blue-600 border-blue-600 text-white'
-              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+              : 'bg-muted border-border text-muted-foreground hover:border-border'
           }`}>
           Invito rapido
         </button>
@@ -220,7 +220,7 @@ export default function CreateUserForm() {
           className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
             mode === 'full'
               ? 'bg-blue-600 border-blue-600 text-white'
-              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+              : 'bg-muted border-border text-muted-foreground hover:border-border'
           }`}>
           Invito completo
         </button>
@@ -255,11 +255,11 @@ export default function CreateUserForm() {
           <div className="space-y-2">
             {communities.map((c) => (
               <label key={c.id}
-                className="flex items-center gap-3 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 cursor-pointer hover:border-gray-600 transition">
+                className="flex items-center gap-3 rounded-lg bg-muted border border-border px-3 py-2.5 cursor-pointer hover:border-border transition">
                 <input type="checkbox" checked={selectedCommunities.includes(c.id)}
                   onChange={() => toggleCommunity(c.id)} disabled={loading}
                   className="accent-blue-600 w-4 h-4" />
-                <span className="text-sm text-gray-200">{c.name}</span>
+                <span className="text-sm text-foreground">{c.name}</span>
               </label>
             ))}
           </div>
@@ -270,14 +270,14 @@ export default function CreateUserForm() {
       {needsContract && (
         <div>
           <p className={sectionTitle}>Tipo rapporto</p>
-          <div className="flex items-center justify-between rounded-xl bg-gray-800 border border-gray-700 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
             <div>
-              <p className="text-sm font-medium text-gray-200">{CONTRACT_TEMPLATE_LABELS['OCCASIONALE']}</p>
+              <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS['OCCASIONALE']}</p>
               {!hasTemplate('OCCASIONALE') && (
                 <p className="text-xs text-yellow-600 mt-0.5">Nessun template caricato — il contratto non sarà generato automaticamente.</p>
               )}
             </div>
-            <span className="text-xs text-gray-500 ml-4">Tipo fisso</span>
+            <span className="text-xs text-muted-foreground ml-4">Tipo fisso</span>
           </div>
         </div>
       )}
@@ -315,7 +315,7 @@ export default function CreateUserForm() {
                 maxLength={50}
                 className="font-mono"
               />
-              <p className="text-[10px] text-gray-600 mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
           </div>
         </div>
@@ -324,7 +324,7 @@ export default function CreateUserForm() {
       {/* Invito completo: anagrafica opzionale (pre-fill per l'onboarding) */}
       {needsContract && mode === 'full' && (
         <div>
-          <p className={sectionTitle}>Dati personali <span className="font-normal text-gray-600 normal-case">(opzionale — pre-compilazione onboarding)</span></p>
+          <p className={sectionTitle}>Dati personali <span className="font-normal text-muted-foreground normal-case">(opzionale — pre-compilazione onboarding)</span></p>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -354,7 +354,7 @@ export default function CreateUserForm() {
                 maxLength={50}
                 className="font-mono"
               />
-              <p className="text-[10px] text-gray-600 mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
               <label className={labelCls}>Codice fiscale</label>

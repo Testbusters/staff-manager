@@ -72,7 +72,7 @@ function ResourceForm({
       <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
       <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)" />
       <div className="flex items-center gap-3">
-        <label className="text-sm text-gray-400 shrink-0">Categoria:</label>
+        <label className="text-sm text-muted-foreground shrink-0">Categoria:</label>
         <Select value={form.categoria} onValueChange={(v) => setForm((f) => ({ ...f, categoria: v }))}>
           <SelectTrigger className="w-auto"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -82,10 +82,10 @@ function ResourceForm({
       </div>
       <Input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)" />
       <div className="space-y-1">
-        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
         <div className="flex flex-wrap gap-3">
           {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
               <input type="checkbox"
                 checked={form.community_ids.includes(c.id)}
                 onChange={(e) => setForm((f) => ({
@@ -94,7 +94,7 @@ function ResourceForm({
                     ? [...f.community_ids, c.id]
                     : f.community_ids.filter((id) => id !== c.id),
                 }))}
-                className="rounded border-gray-600 bg-gray-800" />
+                className="rounded border-border bg-muted" />
               {c.name}
             </label>
           ))}
@@ -177,7 +177,7 @@ export default function ResourceList({
     <div className="space-y-4">
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-gray-700 hover:border-blue-600 px-4 py-2 text-sm text-gray-400 hover:text-blue-400 transition">
+          className="rounded-lg border border-dashed border-border hover:border-blue-600 px-4 py-2 text-sm text-muted-foreground hover:text-blue-400 transition">
           + Nuova risorsa
         </button>
       )}
@@ -185,10 +185,10 @@ export default function ResourceList({
         <ResourceForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {resources.length === 0 && !showForm && (
-        <p className="text-sm text-gray-500 py-6 text-center">Nessuna risorsa disponibile.</p>
+        <p className="text-sm text-muted-foreground py-6 text-center">Nessuna risorsa disponibile.</p>
       )}
       {resources.map((r) => (
-        <div key={r.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
+        <div key={r.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
           {editingId === r.id ? (
             <ResourceForm
               initial={{ titolo: r.titolo, descrizione: r.descrizione ?? '', link: r.link ?? '', file_url: r.file_url ?? '', tag: (r.tag ?? []).join(', '), community_ids: r.community_ids ?? [], categoria: r.categoria ?? 'ALTRO' }}
@@ -199,10 +199,10 @@ export default function ResourceList({
           ) : (
             <>
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold text-gray-100">{r.titolo}</h3>
+                <h3 className="text-sm font-semibold text-foreground">{r.titolo}</h3>
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(r.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
+                    <button onClick={() => setEditingId(r.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
                     <button onClick={() => handleDelete(r.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
                   </div>
                 )}
@@ -211,13 +211,13 @@ export default function ResourceList({
               <div className="flex items-center gap-2 flex-wrap">
                 {r.link && (
                   <a href={r.link} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1 text-xs text-gray-300 transition">
+                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1 text-xs text-foreground transition">
                     🔗 Apri link
                   </a>
                 )}
                 {r.file_url && (
                   <a href={r.file_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1 text-xs text-gray-300 transition">
+                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1 text-xs text-foreground transition">
                     📎 File
                   </a>
                 )}
@@ -225,7 +225,7 @@ export default function ResourceList({
               {r.tag && r.tag.length > 0 && (
                 <div className="flex gap-1.5 flex-wrap">
                   {r.tag.map((t) => (
-                    <span key={t} className="rounded-full bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs text-gray-400">
+                    <span key={t} className="rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground">
                       {t}
                     </span>
                   ))}

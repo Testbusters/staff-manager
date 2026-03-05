@@ -22,7 +22,7 @@ const TIPO_COLORS: Record<OpportunityTipo, string> = {
   FORMAZIONE: 'bg-blue-900/30 border-blue-800 text-blue-400',
   STAGE:      'bg-purple-900/30 border-purple-800 text-purple-400',
   PROGETTO:   'bg-amber-900/30 border-amber-800 text-amber-400',
-  ALTRO:      'bg-gray-800 border-gray-700 text-gray-400',
+  ALTRO:      'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -85,7 +85,7 @@ function OpportunityForm({
       <div className="grid grid-cols-2 gap-3">
         <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required className="col-span-2" />
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Tipo</label>
+          <label className="text-xs text-muted-foreground">Tipo</label>
           <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -94,7 +94,7 @@ function OpportunityForm({
           </Select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Scadenza candidatura</label>
+          <label className="text-xs text-muted-foreground">Scadenza candidatura</label>
           <Input type="date" value={form.scadenza_candidatura} onChange={set('scadenza_candidatura')} />
         </div>
       </div>
@@ -105,10 +105,10 @@ function OpportunityForm({
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
       </div>
       <div className="space-y-1">
-        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
         <div className="flex flex-wrap gap-3">
           {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
               <input type="checkbox"
                 checked={form.community_ids.includes(c.id)}
                 onChange={(e) => setForm((f) => ({
@@ -117,7 +117,7 @@ function OpportunityForm({
                     ? [...f.community_ids, c.id]
                     : f.community_ids.filter((id) => id !== c.id),
                 }))}
-                className="rounded border-gray-600 bg-gray-800" />
+                className="rounded border-border bg-muted" />
               {c.name}
             </label>
           ))}
@@ -180,7 +180,7 @@ export default function OpportunityList({
     <div className="space-y-4">
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-gray-700 hover:border-blue-600 px-4 py-2 text-sm text-gray-400 hover:text-blue-400 transition">
+          className="rounded-lg border border-dashed border-border hover:border-blue-600 px-4 py-2 text-sm text-muted-foreground hover:text-blue-400 transition">
           + Nuova opportunità
         </button>
       )}
@@ -188,10 +188,10 @@ export default function OpportunityList({
         <OpportunityForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {opportunities.length === 0 && !showForm && (
-        <p className="text-sm text-gray-500 py-6 text-center">Nessuna opportunità disponibile.</p>
+        <p className="text-sm text-muted-foreground py-6 text-center">Nessuna opportunità disponibile.</p>
       )}
       {opportunities.map((o) => (
-        <div key={o.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-2">
+        <div key={o.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
           {editingId === o.id ? (
             <OpportunityForm
               initial={{
@@ -211,11 +211,11 @@ export default function OpportunityList({
                   <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
                     {TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo}
                   </span>
-                  <h3 className="text-sm font-semibold text-gray-100">{o.titolo}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{o.titolo}</h3>
                 </div>
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(o.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
+                    <button onClick={() => setEditingId(o.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
                     <button onClick={() => handleDelete(o.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
                   </div>
                 )}
@@ -224,7 +224,7 @@ export default function OpportunityList({
               {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
               <div className="flex items-center gap-3 flex-wrap">
                 {o.scadenza_candidatura && (
-                  <span className="text-xs text-gray-500">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</span>
+                  <span className="text-xs text-muted-foreground">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</span>
                 )}
                 {o.link_candidatura && (
                   <a href={o.link_candidatura} target="_blank" rel="noopener noreferrer"
@@ -234,7 +234,7 @@ export default function OpportunityList({
                 )}
                 {o.file_url && (
                   <a href={o.file_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-2 py-0.5 text-xs text-gray-300 transition">
+                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
                     📎 Allegato
                   </a>
                 )}

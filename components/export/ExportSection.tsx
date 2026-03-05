@@ -94,7 +94,7 @@ export default function ExportSection({ tab, items }: Props) {
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       tab === t
         ? 'bg-blue-600 text-white'
-        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
   return (
@@ -110,14 +110,14 @@ export default function ExportSection({ tab, items }: Props) {
         <button
           onClick={handleExportCSV}
           disabled={items.length === 0}
-          className="rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-gray-100 transition"
+          className="rounded-lg bg-accent hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-foreground transition"
         >
           Esporta CSV
         </button>
         <button
           onClick={handleExportXLSX}
           disabled={items.length === 0}
-          className="rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-gray-100 transition"
+          className="rounded-lg bg-accent hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-foreground transition"
         >
           Esporta XLSX
         </button>
@@ -133,7 +133,7 @@ export default function ExportSection({ tab, items }: Props) {
         </button>
 
         {selected.size > 0 && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {selected.size} su {items.length} selezionati
           </span>
         )}
@@ -150,17 +150,17 @@ export default function ExportSection({ tab, items }: Props) {
 
       {/* Mark-paid modal */}
       <Dialog open={showModal} onOpenChange={(v) => { if (!v) { setShowModal(false); setPaymentRef(''); setError(null); } }}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-700">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-gray-100">Segna come pagati</DialogTitle>
+            <DialogTitle className="text-base font-semibold text-foreground">Segna come pagati</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-400">
-            Stai per segnare <span className="font-medium text-gray-200">{selected.size}</span> record come pagati.
+          <p className="text-sm text-muted-foreground">
+            Stai per segnare <span className="font-medium text-foreground">{selected.size}</span> record come pagati.
             Inserisci un riferimento di pagamento (es. numero bonifico, batch ID).
           </p>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Riferimento pagamento <span className="text-red-400">*</span>
             </label>
             <input
@@ -168,7 +168,7 @@ export default function ExportSection({ tab, items }: Props) {
               placeholder="es. BON-2026-001"
               value={paymentRef}
               onChange={(e) => setPaymentRef(e.target.value)}
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -180,7 +180,7 @@ export default function ExportSection({ tab, items }: Props) {
             <button
               onClick={() => { setShowModal(false); setPaymentRef(''); setError(null); }}
               disabled={loading}
-              className="rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-40 px-4 py-2 text-sm font-medium text-gray-200 transition"
+              className="rounded-lg bg-accent hover:bg-gray-600 disabled:opacity-40 px-4 py-2 text-sm font-medium text-foreground transition"
             >
               Annulla
             </button>

@@ -26,26 +26,26 @@ export default function CollabOpenTicketsSection({ tickets }: { tickets: OpenTic
 
   return (
     <>
-      <div className="rounded-2xl bg-gray-900 border border-gray-800">
-        <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-medium text-gray-200">I tuoi ticket aperti</h2>
+      <div className="rounded-2xl bg-card border border-border">
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-medium text-foreground">I tuoi ticket aperti</h2>
         </div>
-        <div className="divide-y divide-gray-800">
+        <div className="divide-y divide-border">
           {tickets.slice(0, 3).map((t) => (
             <button
               key={t.id}
               onClick={() => setSelectedId(t.id)}
-              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted transition text-left cursor-pointer"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 truncate">{t.oggetto}</p>
+                <p className="text-sm text-foreground truncate">{t.oggetto}</p>
               </div>
               <span
                 className={`shrink-0 h-2 w-2 rounded-full ${PRIORITY_DOT[t.priority] ?? 'bg-gray-500'}`}
                 title={t.priority}
               />
               <TicketStatusBadge stato={t.stato as TicketStatus} />
-              <span className="shrink-0 text-xs text-gray-500">→</span>
+              <span className="shrink-0 text-xs text-muted-foreground">→</span>
             </button>
           ))}
         </div>

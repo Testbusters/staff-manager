@@ -337,7 +337,7 @@ export const EXPENSE_CATEGORIA_BADGE: Record<ExpenseCategory, string> = {
   Alloggio:    'bg-violet-900/40 text-violet-300 border-violet-700/50',
   Materiali:   'bg-emerald-900/40 text-emerald-300 border-emerald-700/50',
   Cancelleria: 'bg-cyan-900/40 text-cyan-300 border-cyan-700/50',
-  Altro:       'bg-gray-800 text-gray-400 border-gray-700',
+  Altro:       'bg-muted text-muted-foreground border-border',
 };
 
 // ── Notification ─────────────────────────────────────────

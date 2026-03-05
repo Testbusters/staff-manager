@@ -139,16 +139,16 @@ export default function NotificationSettingsManager({
 
         return (
           <div key={section.title}>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               {section.title}
             </h3>
-            <div className="rounded-xl border border-gray-700/50 overflow-hidden">
+            <div className="rounded-xl border border-border/50 overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-4 py-2.5 bg-gray-800/40 border-b border-gray-700/50">
-                <span className="text-xs text-gray-500">Evento</span>
-                <span className="text-xs text-gray-500 w-24 text-center">Destinatario</span>
-                <span className="text-xs text-gray-500 w-16 text-center">In-app</span>
-                <span className="text-xs text-gray-500 w-16 text-center">Email</span>
+              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-4 py-2.5 bg-muted/40 border-b border-border/50">
+                <span className="text-xs text-muted-foreground">Evento</span>
+                <span className="text-xs text-muted-foreground w-24 text-center">Destinatario</span>
+                <span className="text-xs text-muted-foreground w-16 text-center">In-app</span>
+                <span className="text-xs text-muted-foreground w-16 text-center">Email</span>
               </div>
 
               {sectionSettings.map((s, i) => {
@@ -158,12 +158,12 @@ export default function NotificationSettingsManager({
                     key={`${s.event_key}:${s.recipient_role}`}
                     className={
                       'grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center px-4 py-3 ' +
-                      (!isLast ? 'border-b border-gray-700/30' : '')
+                      (!isLast ? 'border-b border-border/30' : '')
                     }
                   >
-                    <span className="text-sm text-gray-200">{s.label}</span>
+                    <span className="text-sm text-foreground">{s.label}</span>
                     <span className="w-24 text-center">
-                      <span className="inline-block rounded-full bg-gray-700 px-2 py-0.5 text-[10px] text-gray-300">
+                      <span className="inline-block rounded-full bg-accent px-2 py-0.5 text-[10px] text-foreground">
                         {ROLE_LABELS[s.recipient_role] ?? s.recipient_role}
                       </span>
                     </span>
@@ -189,7 +189,7 @@ export default function NotificationSettingsManager({
         );
       })}
 
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-muted-foreground">
         Le modifiche vengono salvate automaticamente. In-app = notifica nel campanello; Email = invio email transazionale.
       </p>
     </div>

@@ -21,14 +21,14 @@ export default async function NuovoTicketPage() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6 flex items-center gap-3">
-        <Link href="/ticket" className="text-sm text-gray-500 hover:text-gray-300 transition">
+        <Link href="/ticket" className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Ticket
         </Link>
         <span className="text-gray-700">/</span>
-        <h1 className="text-xl font-semibold text-gray-100">Nuovo ticket</h1>
+        <h1 className="text-xl font-semibold text-foreground">Nuovo ticket</h1>
       </div>
 
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
+      <div className="rounded-xl bg-card border border-border p-6">
         <TicketForm />
       </div>
     </div>

@@ -86,13 +86,13 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
   const btnClass = (v: 'primary' | 'danger' | 'secondary') => {
     if (v === 'primary') return 'rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50';
     if (v === 'danger') return 'rounded-lg bg-red-700 hover:bg-red-600 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50';
-    return 'rounded-lg border border-gray-700 hover:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 transition disabled:opacity-50';
+    return 'rounded-lg border border-border hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition disabled:opacity-50';
   };
 
   return (
     <>
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 space-y-3">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Azioni</p>
+      <div className="rounded-xl bg-card border border-border p-4 space-y-3">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Azioni</p>
 
         {error && (
           <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">
@@ -125,13 +125,13 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
 
       {/* Reject modal */}
       <Dialog open={showRejectModal} onOpenChange={(v) => { if (!v) { setShowRejectModal(false); setRejectNote(''); setError(null); } }}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-gray-100">Rifiuta compenso</DialogTitle>
+            <DialogTitle className="text-base font-semibold text-foreground">Rifiuta compenso</DialogTitle>
           </DialogHeader>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Motivazione del rifiuto
               <span className="text-red-500 ml-1">*</span>
             </label>
@@ -152,7 +152,7 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => { setShowRejectModal(false); setRejectNote(''); setError(null); }}
-              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition"
+              className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition"
             >
               Annulla
             </button>
@@ -181,15 +181,15 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
 
       {/* Mark liquidated modal */}
       <Dialog open={showLiquidatedModal} onOpenChange={(v) => { if (!v) { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); } }}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-gray-100">Segna come liquidato</DialogTitle>
+            <DialogTitle className="text-base font-semibold text-foreground">Segna come liquidato</DialogTitle>
           </DialogHeader>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Riferimento pagamento
-              <span className="text-gray-600 ml-1">(opzionale)</span>
+              <span className="text-muted-foreground ml-1">(opzionale)</span>
             </label>
             <Input
               type="text"
@@ -208,7 +208,7 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); }}
-              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition"
+              className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition"
             >
               Annulla
             </button>

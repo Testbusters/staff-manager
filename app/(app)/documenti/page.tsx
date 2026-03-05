@@ -63,14 +63,14 @@ export default async function DocumentiPage({
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       tab === t
         ? 'bg-blue-600 text-white'
-        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
   return (
     <div className="p-6 max-w-5xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-100">Documenti</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-semibold text-foreground">Documenti</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           {isAdmin
             ? 'Gestione documenti collaboratori, upload CU batch e contratti.'
             : 'I tuoi documenti per tipologia. Carica, scarica e firma.'}

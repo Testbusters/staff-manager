@@ -75,13 +75,13 @@ export default async function ProfiloPage({
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
         ? 'bg-blue-600 text-white'
-        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
   if (!isCollaboratore) {
     return (
       <div className="p-6 max-w-2xl">
-        <h1 className="text-xl font-semibold text-gray-100 mb-6">Il mio profilo</h1>
+        <h1 className="text-xl font-semibold text-foreground mb-6">Il mio profilo</h1>
         <ProfileForm
           collaborator={collaborator ?? null}
           role={role}
@@ -96,8 +96,8 @@ export default async function ProfiloPage({
   return (
     <div className="p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-100">Profilo e Documenti</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-semibold text-foreground">Profilo e Documenti</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Gestisci i tuoi dati personali e consulta i tuoi documenti.
         </p>
       </div>

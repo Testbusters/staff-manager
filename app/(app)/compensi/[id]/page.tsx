@@ -71,11 +71,11 @@ export default async function CompensationDetailPage({
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6 flex items-center gap-3">
-        <Link href={backHref} className="text-sm text-gray-500 hover:text-gray-300 transition">
+        <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Indietro
         </Link>
         <span className="text-gray-700">/</span>
-        <h1 className="text-xl font-semibold text-gray-100">Dettaglio compenso</h1>
+        <h1 className="text-xl font-semibold text-foreground">Dettaglio compenso</h1>
       </div>
 
       <div className="space-y-6">
@@ -93,8 +93,8 @@ export default async function CompensationDetailPage({
         />
 
         {(history ?? []).length > 0 && (
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">
+          <div className="rounded-xl bg-card border border-border p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
               Cronologia
             </p>
             <Timeline events={history ?? []} />

@@ -29,17 +29,17 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
 
   if (items.length === 0) {
     return (
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
-        <p className="text-sm text-gray-500">Nessun record in attesa di liquidazione.</p>
+      <div className="rounded-xl bg-card border border-border p-8 text-center">
+        <p className="text-sm text-muted-foreground">Nessun record in attesa di liquidazione.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+    <div className="rounded-xl bg-card border border-border overflow-hidden">
       <Table className="text-sm">
         <TableHeader>
-          <TableRow className="border-gray-800">
+          <TableRow className="border-border">
             <TableHead className="px-4 py-3 w-10">
               <Checkbox
                 aria-label="Seleziona tutti"
@@ -47,19 +47,19 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
                 onCheckedChange={() => onSelectAll()}
               />
             </TableHead>
-            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium">Nome</TableHead>
-            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden sm:table-cell">Cod. Fiscale</TableHead>
-            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden md:table-cell">IBAN</TableHead>
+            <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium">Nome</TableHead>
+            <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium hidden sm:table-cell">Cod. Fiscale</TableHead>
+            <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium hidden md:table-cell">IBAN</TableHead>
             {tab === 'occasionali' && (
-              <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden lg:table-cell">Community</TableHead>
+              <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium hidden lg:table-cell">Community</TableHead>
             )}
             {tab === 'rimborsi' && (
               <>
-                <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden lg:table-cell">Categoria</TableHead>
-                <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden lg:table-cell">Data spesa</TableHead>
+                <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium hidden lg:table-cell">Categoria</TableHead>
+                <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium hidden lg:table-cell">Data spesa</TableHead>
               </>
             )}
-            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium text-right">Importo</TableHead>
+            <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium text-right">Importo</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -67,7 +67,7 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
             <TableRow
               key={item.id}
               className={cn(
-                "cursor-pointer hover:bg-gray-800/50 border-gray-800",
+                "cursor-pointer hover:bg-muted/50 border-border",
                 selected.has(item.id) && "bg-blue-900/20"
               )}
               onClick={() => onToggle(item.id)}
@@ -79,33 +79,33 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
                   onCheckedChange={() => onToggle(item.id)}
                 />
               </TableCell>
-              <TableCell className="px-4 py-3 text-gray-200 font-medium">
+              <TableCell className="px-4 py-3 text-foreground font-medium">
                 {item.nome} {item.cognome}
               </TableCell>
-              <TableCell className="px-4 py-3 text-gray-400 hidden sm:table-cell font-mono text-xs">
+              <TableCell className="px-4 py-3 text-muted-foreground hidden sm:table-cell font-mono text-xs">
                 {item.codice_fiscale ?? '—'}
               </TableCell>
-              <TableCell className="px-4 py-3 text-gray-400 hidden md:table-cell font-mono text-xs">
+              <TableCell className="px-4 py-3 text-muted-foreground hidden md:table-cell font-mono text-xs">
                 {item.iban ?? '—'}
               </TableCell>
               {tab === 'occasionali' && (
-                <TableCell className="px-4 py-3 text-gray-400 hidden lg:table-cell">
+                <TableCell className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                   {item.community_name ?? '—'}
                 </TableCell>
               )}
               {tab === 'rimborsi' && (
                 <>
-                  <TableCell className="px-4 py-3 text-gray-400 hidden lg:table-cell">
+                  <TableCell className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                     {item.categoria ?? '—'}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-400 hidden lg:table-cell tabular-nums">
+                  <TableCell className="px-4 py-3 text-muted-foreground hidden lg:table-cell tabular-nums">
                     {item.data_spesa
                       ? new Date(item.data_spesa).toLocaleDateString('it-IT')
                       : '—'}
                   </TableCell>
                 </>
               )}
-              <TableCell className="px-4 py-3 text-right text-gray-200 font-medium tabular-nums">
+              <TableCell className="px-4 py-3 text-right text-foreground font-medium tabular-nums">
                 {formatImporto(item.importo)}
               </TableCell>
             </TableRow>

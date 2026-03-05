@@ -36,7 +36,7 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
         <div
           key={s}
           className={`h-1 flex-1 rounded-full transition-colors ${
-            s < step ? 'bg-blue-600' : s === step ? 'bg-blue-500' : 'bg-gray-700'
+            s < step ? 'bg-blue-600' : s === step ? 'bg-blue-500' : 'bg-accent'
           }`}
         />
       ))}
@@ -143,20 +143,20 @@ export default function ExpenseForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800 p-6">
+    <div className="rounded-2xl bg-card border border-border p-6">
       {/* Step indicator */}
       <div className="mb-5">
-        <p className="text-xs text-gray-500 mb-2">Step {step} di 3</p>
+        <p className="text-xs text-muted-foreground mb-2">Step {step} di 3</p>
         <ProgressBar step={step} />
       </div>
 
       {/* ── Step 1 — Dati rimborso ─────────────────────────────── */}
       {step === 1 && (
         <div className="space-y-5">
-          <h2 className="text-base font-semibold text-gray-100">Dati rimborso</h2>
+          <h2 className="text-base font-semibold text-foreground">Dati rimborso</h2>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Categoria <span className="text-red-500">*</span>
             </label>
             <Select value={form.categoria || undefined} onValueChange={(v) => set('categoria', v)}>
@@ -169,7 +169,7 @@ export default function ExpenseForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label className="block text-xs text-muted-foreground mb-1.5">
                 Data spesa <span className="text-red-500">*</span>
               </label>
               <Input
@@ -179,7 +179,7 @@ export default function ExpenseForm() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label className="block text-xs text-muted-foreground mb-1.5">
                 Importo (€) <span className="text-red-500">*</span>
               </label>
               <Input
@@ -197,9 +197,9 @@ export default function ExpenseForm() {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Descrizione{' '}
-              <span className="text-gray-600">(opzionale)</span>
+              <span className="text-muted-foreground">(opzionale)</span>
             </label>
             <Textarea
               value={form.descrizione}
@@ -223,18 +223,18 @@ export default function ExpenseForm() {
       {/* ── Step 2 — Allegati ─────────────────────────────────── */}
       {step === 2 && (
         <div className="space-y-5">
-          <h2 className="text-base font-semibold text-gray-100">Allegati</h2>
+          <h2 className="text-base font-semibold text-foreground">Allegati</h2>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-2">
+            <label className="block text-xs text-muted-foreground mb-2">
               Documenti giustificativi{' '}
-              <span className="text-gray-600">(PDF, JPG, PNG — max 10 MB ciascuno — obbligatori, almeno uno)</span>
+              <span className="text-muted-foreground">(PDF, JPG, PNG — max 10 MB ciascuno — obbligatori, almeno uno)</span>
             </label>
-            <label className="flex items-center gap-3 rounded-lg border border-dashed border-gray-600 px-4 py-6 cursor-pointer hover:border-gray-500 transition">
-              <svg className="w-5 h-5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <label className="flex items-center gap-3 rounded-lg border border-dashed border-border px-4 py-6 cursor-pointer hover:border-gray-500 transition">
+              <svg className="w-5 h-5 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
-              <span className="text-sm text-gray-400">Clicca per selezionare file</span>
+              <span className="text-sm text-muted-foreground">Clicca per selezionare file</span>
               <input
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
@@ -247,15 +247,15 @@ export default function ExpenseForm() {
             {files.length > 0 && (
               <ul className="mt-3 space-y-2">
                 {files.map((f) => (
-                  <li key={f.name} className="flex items-center gap-3 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2">
-                    <svg className="w-4 h-4 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <li key={f.name} className="flex items-center gap-3 rounded-lg bg-muted border border-border px-3 py-2">
+                    <svg className="w-4 h-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span className="flex-1 text-sm text-gray-300 truncate">{f.name}</span>
-                    <span className="text-xs text-gray-500 shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                    <span className="flex-1 text-sm text-foreground truncate">{f.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
                     <button
                       onClick={() => removeFile(f.name)}
-                      className="shrink-0 text-gray-600 hover:text-red-400 transition"
+                      className="shrink-0 text-muted-foreground hover:text-red-400 transition"
                       aria-label="Rimuovi"
                     >
                       ✕
@@ -280,34 +280,34 @@ export default function ExpenseForm() {
       {/* ── Step 3 — Riepilogo ────────────────────────────────── */}
       {step === 3 && (
         <div className="space-y-5">
-          <h2 className="text-base font-semibold text-gray-100">Riepilogo</h2>
+          <h2 className="text-base font-semibold text-foreground">Riepilogo</h2>
 
-          <dl className="divide-y divide-gray-800">
+          <dl className="divide-y divide-border">
             <div className="flex justify-between py-2.5">
-              <dt className="text-xs text-gray-500">Categoria</dt>
-              <dd className="text-sm text-gray-200">{form.categoria}</dd>
+              <dt className="text-xs text-muted-foreground">Categoria</dt>
+              <dd className="text-sm text-foreground">{form.categoria}</dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-xs text-gray-500">Data spesa</dt>
-              <dd className="text-sm text-gray-200">
+              <dt className="text-xs text-muted-foreground">Data spesa</dt>
+              <dd className="text-sm text-foreground">
                 {new Date(form.data_spesa + 'T00:00:00').toLocaleDateString('it-IT')}
               </dd>
             </div>
             <div className="flex justify-between py-2.5">
-              <dt className="text-xs text-gray-500">Importo</dt>
+              <dt className="text-xs text-muted-foreground">Importo</dt>
               <dd className="text-sm font-semibold text-green-400">{formatCurrency(importoNum)}</dd>
             </div>
             {form.descrizione.trim() && (
               <div className="flex justify-between py-2.5 gap-4">
-                <dt className="text-xs text-gray-500 shrink-0">Descrizione</dt>
-                <dd className="text-sm text-gray-200 text-right">{form.descrizione.trim()}</dd>
+                <dt className="text-xs text-muted-foreground shrink-0">Descrizione</dt>
+                <dd className="text-sm text-foreground text-right">{form.descrizione.trim()}</dd>
               </div>
             )}
             <div className="flex justify-between py-2.5">
-              <dt className="text-xs text-gray-500">Allegati</dt>
-              <dd className="text-sm text-gray-200">
+              <dt className="text-xs text-muted-foreground">Allegati</dt>
+              <dd className="text-sm text-foreground">
                 {files.length === 0 ? (
-                  <span className="text-gray-500">Nessuno</span>
+                  <span className="text-muted-foreground">Nessuno</span>
                 ) : (
                   <span>{files.length} {files.length === 1 ? 'file' : 'file'}</span>
                 )}
@@ -317,7 +317,7 @@ export default function ExpenseForm() {
               <div className="py-2">
                 <ul className="space-y-1 text-right">
                   {files.map((f) => (
-                    <li key={f.name} className="text-xs text-gray-500">{f.name}</li>
+                    <li key={f.name} className="text-xs text-muted-foreground">{f.name}</li>
                   ))}
                 </ul>
               </div>

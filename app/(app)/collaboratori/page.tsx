@@ -124,8 +124,8 @@ export default async function CollaboratoriPage({
   return (
     <div className="p-6 max-w-5xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-100">Collaboratori</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
+        <h1 className="text-xl font-semibold text-foreground">Collaboratori</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
       </div>
 
       {/* Filter chips */}
@@ -137,7 +137,7 @@ export default async function CollaboratoriPage({
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
               filter === f
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-accent'
             }`}
           >
             {FILTER_LABELS[f]}
@@ -146,20 +146,20 @@ export default async function CollaboratoriPage({
       </div>
 
       {allCollaboratorIds.length === 0 ? (
-        <p className="text-sm text-gray-500 py-8 text-center">
+        <p className="text-sm text-muted-foreground py-8 text-center">
           Nessun collaboratore presente.
         </p>
       ) : collaborators.length === 0 ? (
-        <p className="text-sm text-gray-500 py-8 text-center">Nessun collaboratore trovato per il filtro selezionato.</p>
+        <p className="text-sm text-muted-foreground py-8 text-center">Nessun collaboratore trovato per il filtro selezionato.</p>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-4">
+        <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800">
+              <tr className="border-b border-border">
                 {['Nome', 'Cognome', 'Codice fiscale', 'Telefono', 'Community', ''].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wide"
+                    className="text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide"
                   >
                     {h}
                   </th>
@@ -168,12 +168,12 @@ export default async function CollaboratoriPage({
             </thead>
             <tbody>
               {collaborators.map((c) => (
-                <tr key={c.id} className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition">
-                  <td className="px-4 py-3 text-gray-200">{c.nome ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-200 font-medium">{c.cognome ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-400 font-mono text-xs">{c.codice_fiscale ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-400">{c.telefono ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-400">{(communityByCollab[c.id] ?? []).join(', ') || '—'}</td>
+                <tr key={c.id} className="border-b border-border last:border-0 hover:bg-muted/40 transition">
+                  <td className="px-4 py-3 text-foreground">{c.nome ?? '—'}</td>
+                  <td className="px-4 py-3 text-foreground font-medium">{c.cognome ?? '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{c.codice_fiscale ?? '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{c.telefono ?? '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{(communityByCollab[c.id] ?? []).join(', ') || '—'}</td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/collaboratori/${c.id}`}
@@ -192,14 +192,14 @@ export default async function CollaboratoriPage({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {total} collaborator{total !== 1 ? 'i' : 'e'} · pagina {safePage} di {totalPages}
           </span>
           <div className="flex gap-2">
             {safePage > 1 && (
               <Link
                 href={`/collaboratori?filter=${filter}&page=${safePage - 1}`}
-                className="px-3 py-1.5 rounded-md text-xs bg-gray-800 text-gray-300 hover:bg-gray-700 transition"
+                className="px-3 py-1.5 rounded-md text-xs bg-muted text-foreground hover:bg-accent transition"
               >
                 ← Precedente
               </Link>
@@ -207,7 +207,7 @@ export default async function CollaboratoriPage({
             {safePage < totalPages && (
               <Link
                 href={`/collaboratori?filter=${filter}&page=${safePage + 1}`}
-                className="px-3 py-1.5 rounded-md text-xs bg-gray-800 text-gray-300 hover:bg-gray-700 transition"
+                className="px-3 py-1.5 rounded-md text-xs bg-muted text-foreground hover:bg-accent transition"
               >
                 Successiva →
               </Link>

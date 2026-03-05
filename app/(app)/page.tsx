@@ -34,7 +34,7 @@ type CompRow = {
 type ExpRow = { id: string; stato: string; importo: number | null; liquidated_at: string | null };
 
 // ── Helpers ────────────────────────────────────────────────
-const sectionCls = 'rounded-2xl bg-gray-900 border border-gray-800';
+const sectionCls = 'rounded-2xl bg-card border border-border';
 
 function eur(n: number) {
   return n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
@@ -57,14 +57,14 @@ function StatCard({
   return (
     <div className={sectionCls + ' p-5 flex flex-col gap-3'}>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-200">{label}</h2>
-        <span className="rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-400">
+        <h2 className="text-sm font-medium text-foreground">{label}</h2>
+        <span className="rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
           {count} attiv{count === 1 ? 'o' : 'i'}
         </span>
       </div>
       <div>
-        <p className="text-2xl font-semibold text-gray-100 tabular-nums">{eur(total)}</p>
-        <p className="text-xs text-gray-500 mt-0.5">importo totale in corso</p>
+        <p className="text-2xl font-semibold text-foreground tabular-nums">{eur(total)}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">importo totale in corso</p>
       </div>
       {pendingCount > 0 && (
         <div className="rounded-lg bg-emerald-950/40 border border-emerald-800/30 px-3 py-2 flex items-center justify-between">
@@ -80,11 +80,11 @@ function DocCard({ count }: { count: number }) {
   return (
     <div className={sectionCls + ' p-5 flex flex-col gap-3'}>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-200">Da firmare</h2>
+        <h2 className="text-sm font-medium text-foreground">Da firmare</h2>
         <span className={
           count > 0
             ? 'rounded-full bg-amber-900/60 border border-amber-700/50 px-2.5 py-0.5 text-xs text-amber-300'
-            : 'rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-400'
+            : 'rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-muted-foreground'
         }>
           {count}
         </span>
@@ -99,7 +99,7 @@ function DocCard({ count }: { count: number }) {
           </Link>
         </>
       ) : (
-        <p className="text-xs text-gray-500">Nessun documento in attesa di firma.</p>
+        <p className="text-xs text-muted-foreground">Nessun documento in attesa di firma.</p>
       )}
     </div>
   );
@@ -116,10 +116,10 @@ function RKpiCard({ label, count, sub, color, href }: {
   label: string; count: number; sub: string | null; color: string; href: string;
 }) {
   return (
-    <Link href={href} className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-4 hover:bg-gray-800/80 transition">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <Link href={href} className="rounded-xl bg-card border border-border px-4 py-4 hover:bg-muted/80 transition">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-semibold tabular-nums ${color}`}>{count}</p>
-      {sub && <p className="text-sm text-gray-400 tabular-nums mt-0.5">{sub}</p>}
+      {sub && <p className="text-sm text-muted-foreground tabular-nums mt-0.5">{sub}</p>}
     </Link>
   );
 }
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
     if (communityIds.length === 0) {
       return (
         <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-sm text-gray-500">Nessuna community assegnata.</p>
+          <p className="text-sm text-muted-foreground">Nessuna community assegnata.</p>
         </div>
       );
     }
@@ -362,23 +362,23 @@ export default async function DashboardPage() {
         {/* Hero */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-accent flex-shrink-0 overflow-hidden flex items-center justify-center">
               {ownCollab?.foto_profilo_url ? (
                 <img src={ownCollab.foto_profilo_url} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lg font-medium text-gray-300 select-none">{rInitials}</span>
+                <span className="text-lg font-medium text-foreground select-none">{rInitials}</span>
               )}
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-100">
+              <h1 className="text-xl font-semibold text-foreground">
                 Ciao{rFullName ? `, ${rFullName}` : ''}!
               </h1>
-              <span className="mt-1.5 inline-flex items-center rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+              <span className="mt-1.5 inline-flex items-center rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground">
                 {rRoleLabel}
               </span>
             </div>
           </div>
-          <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{rTodayStr}</p>
+          <p className="shrink-0 pt-1 text-right text-sm text-muted-foreground">{rTodayStr}</p>
         </div>
 
         {/* KPI row */}
@@ -387,28 +387,28 @@ export default async function DashboardPage() {
             label="Compensi in attesa"
             count={pendingComps.length}
             sub={pendingComps.length > 0 ? formatCurrencyR(pendingComps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0)) : null}
-            color={pendingComps.length > 0 ? 'text-amber-300' : 'text-gray-600'}
+            color={pendingComps.length > 0 ? 'text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=compensi"
           />
           <RKpiCard
             label="Rimborsi in attesa"
             count={pendingExps.length}
             sub={pendingExps.length > 0 ? formatCurrencyR(pendingExps.reduce((s, e) => s + (e.importo ?? 0), 0)) : null}
-            color={pendingExps.length > 0 ? 'text-amber-300' : 'text-gray-600'}
+            color={pendingExps.length > 0 ? 'text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=rimborsi"
           />
           <RKpiCard
             label="Da liquidare"
             count={liquidabile}
             sub={null}
-            color={liquidabile > 0 ? 'text-emerald-300' : 'text-gray-600'}
+            color={liquidabile > 0 ? 'text-emerald-300' : 'text-muted-foreground'}
             href="/approvazioni"
           />
           <RKpiCard
             label="Ticket aperti"
             count={ticketsRicevuti.length}
             sub={null}
-            color={ticketsRicevuti.length > 0 ? 'text-rose-300' : 'text-gray-600'}
+            color={ticketsRicevuti.length > 0 ? 'text-rose-300' : 'text-muted-foreground'}
             href="/ticket"
           />
         </div>
@@ -1114,72 +1114,72 @@ export default async function DashboardPage() {
       {/* Hero — avatar + saluto + data */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+          <div className="w-14 h-14 rounded-full bg-accent flex-shrink-0 overflow-hidden flex items-center justify-center">
             {collaborator?.foto_profilo_url ? (
               <img src={collaborator.foto_profilo_url} alt="" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-lg font-medium text-gray-300 select-none">{initials}</span>
+              <span className="text-lg font-medium text-foreground select-none">{initials}</span>
             )}
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-100">
+            <h1 className="text-xl font-semibold text-foreground">
               Ciao{fullName ? `, ${fullName}` : ''}!
             </h1>
             {role && (
-              <span className="mt-1.5 inline-flex items-center rounded-full bg-gray-800 border border-gray-700 px-2.5 py-0.5 text-xs text-gray-300">
+              <span className="mt-1.5 inline-flex items-center rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground">
                 {roleLabel}
               </span>
             )}
             {joinDate && (
-              <p className="text-xs text-gray-500 mt-1.5">Data di ingresso: {joinDate}</p>
+              <p className="text-xs text-muted-foreground mt-1.5">Data di ingresso: {joinDate}</p>
             )}
           </div>
         </div>
-        <p className="shrink-0 pt-1 text-right text-sm text-gray-500">{todayStr}</p>
+        <p className="shrink-0 pt-1 text-right text-sm text-muted-foreground">{todayStr}</p>
       </div>
 
       {/* 4 KPI card */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Compensi in corso */}
-        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
+        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
           <div className="flex items-center justify-between gap-1">
-            <span className="text-xs text-gray-400 truncate">Compensi</span>
-            <span className="flex-shrink-0 rounded-full bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs text-gray-400 tabular-nums">
+            <span className="text-xs text-muted-foreground truncate">Compensi</span>
+            <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground tabular-nums">
               {activeComps.length}
             </span>
           </div>
-          <p className="text-lg font-semibold text-gray-100 tabular-nums leading-tight">{eur(compTotal)}</p>
-          <p className="text-xs text-gray-600">in corso</p>
+          <p className="text-lg font-semibold text-foreground tabular-nums leading-tight">{eur(compTotal)}</p>
+          <p className="text-xs text-muted-foreground">in corso</p>
         </Link>
 
         {/* Rimborsi in corso */}
-        <Link href="/rimborsi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
+        <Link href="/rimborsi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
           <div className="flex items-center justify-between gap-1">
-            <span className="text-xs text-gray-400 truncate">Rimborsi</span>
-            <span className="flex-shrink-0 rounded-full bg-gray-800 border border-gray-700 px-2 py-0.5 text-xs text-gray-400 tabular-nums">
+            <span className="text-xs text-muted-foreground truncate">Rimborsi</span>
+            <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground tabular-nums">
               {activeExps.length}
             </span>
           </div>
-          <p className="text-lg font-semibold text-gray-100 tabular-nums leading-tight">{eur(expTotal)}</p>
-          <p className="text-xs text-gray-600">in corso</p>
+          <p className="text-lg font-semibold text-foreground tabular-nums leading-tight">{eur(expTotal)}</p>
+          <p className="text-xs text-muted-foreground">in corso</p>
         </Link>
 
         {/* Da ricevere */}
-        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
-          <span className="text-xs text-gray-400">Da ricevere</span>
-          <p className={`text-lg font-semibold tabular-nums leading-tight ${daRicevere > 0 ? 'text-amber-300' : 'text-gray-600'}`}>
+        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
+          <span className="text-xs text-muted-foreground">Da ricevere</span>
+          <p className={`text-lg font-semibold tabular-nums leading-tight ${daRicevere > 0 ? 'text-amber-300' : 'text-muted-foreground'}`}>
             {eur(daRicevere)}
           </p>
-          <p className="text-xs text-gray-600">approvato</p>
+          <p className="text-xs text-muted-foreground">approvato</p>
         </Link>
 
         {/* Da firmare */}
-        <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-gray-800/50 transition'}>
-          <span className="text-xs text-gray-400">Da firmare</span>
-          <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-300' : 'text-gray-600'}`}>
+        <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
+          <span className="text-xs text-muted-foreground">Da firmare</span>
+          <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-300' : 'text-muted-foreground'}`}>
             {daFirmareCount}
           </p>
-          <p className="text-xs text-gray-600">document{daFirmareCount === 1 ? 'o' : 'i'}</p>
+          <p className="text-xs text-muted-foreground">document{daFirmareCount === 1 ? 'o' : 'i'}</p>
         </Link>
       </div>
 
@@ -1195,8 +1195,8 @@ export default async function DashboardPage() {
       {/* Da fare — ticket senza risposta + profilo incompleto */}
       {daFare.length > 0 && (
         <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-gray-800">
-            <h2 className="text-sm font-medium text-gray-200">Da fare</h2>
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-foreground">Da fare</h2>
           </div>
           <div className="p-4 space-y-2">
             {daFare.map((item) => (
@@ -1219,8 +1219,8 @@ export default async function DashboardPage() {
 
       {/* Azioni rapide */}
       <div className={sectionCls}>
-        <div className="px-5 py-4 border-b border-gray-800">
-          <h2 className="text-sm font-medium text-gray-200">Azioni rapide</h2>
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-medium text-foreground">Azioni rapide</h2>
         </div>
         <div className="p-5 flex flex-wrap gap-3">
           <Link
@@ -1231,13 +1231,13 @@ export default async function DashboardPage() {
           </Link>
           <Link
             href="/compensi"
-            className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition"
+            className="rounded-lg bg-muted hover:bg-accent border border-border px-4 py-2 text-sm font-medium text-foreground transition"
           >
             Compensi e rimborsi
           </Link>
           <Link
             href="/profilo?tab=documenti"
-            className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition"
+            className="rounded-lg bg-muted hover:bg-accent border border-border px-4 py-2 text-sm font-medium text-foreground transition"
           >
             Carica documento
           </Link>
@@ -1261,8 +1261,8 @@ export default async function DashboardPage() {
       {/* Bar chart — ultimi 6 mesi */}
       {barHasData && (
         <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-3">
-            <h2 className="text-sm font-medium text-gray-200">Ultimi 6 mesi</h2>
+          <div className="px-5 py-4 border-b border-border flex items-center gap-3">
+            <h2 className="text-sm font-medium text-foreground">Ultimi 6 mesi</h2>
             <div className="flex items-center gap-4 ml-auto">
               <span className="flex items-center gap-1.5 text-xs text-blue-400">
                 <span className="inline-block w-3 h-3 rounded bg-blue-500 flex-shrink-0" />

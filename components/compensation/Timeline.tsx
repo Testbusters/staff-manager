@@ -25,28 +25,28 @@ export default function Timeline({ events }: { events: HistoryEvent[] }) {
           {/* Line + dot */}
           <div className="flex flex-col items-center">
             <div className="w-2 h-2 rounded-full bg-gray-500 mt-1.5 shrink-0" />
-            {i < events.length - 1 && <div className="w-px flex-1 bg-gray-700 my-1" />}
+            {i < events.length - 1 && <div className="w-px flex-1 bg-accent my-1" />}
           </div>
 
           {/* Content */}
           <div className="pb-4 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium text-gray-300">
+              <span className="text-xs font-medium text-foreground">
                 {ev.changed_by_name ? `${ev.changed_by_name} (${ev.role_label})` : ev.role_label}
               </span>
               {ev.stato_precedente && (
                 <>
-                  <span className="text-xs text-gray-600">→</span>
-                  <span className="text-xs text-gray-400">{labelStato(ev.stato_nuovo)}</span>
+                  <span className="text-xs text-muted-foreground">→</span>
+                  <span className="text-xs text-muted-foreground">{labelStato(ev.stato_nuovo)}</span>
                 </>
               )}
               {!ev.stato_precedente && (
-                <span className="text-xs text-gray-500">Creato come {labelStato(ev.stato_nuovo)}</span>
+                <span className="text-xs text-muted-foreground">Creato come {labelStato(ev.stato_nuovo)}</span>
               )}
-              <span className="text-xs text-gray-600">{formatDate(ev.created_at)}</span>
+              <span className="text-xs text-muted-foreground">{formatDate(ev.created_at)}</span>
             </div>
             {ev.note && (
-              <p className="mt-1 text-xs text-gray-400 bg-gray-800 rounded-lg px-3 py-2 border border-gray-700">
+              <p className="mt-1 text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2 border border-border">
                 {ev.note}
               </p>
             )}

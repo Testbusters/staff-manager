@@ -66,9 +66,9 @@ export default function TicketQuickModal() {
       </Button>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-gray-100">Apri un ticket</DialogTitle>
+            <DialogTitle className="text-base font-semibold text-foreground">Apri un ticket</DialogTitle>
           </DialogHeader>
 
           {error && (
@@ -79,7 +79,7 @@ export default function TicketQuickModal() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-300">
+              <label className="block text-sm font-medium text-foreground">
                 Riferimento <span className="text-red-400">*</span>
               </label>
               <Select value={categoria || undefined} onValueChange={setCategoria}>
@@ -91,7 +91,7 @@ export default function TicketQuickModal() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-300">
+              <label className="block text-sm font-medium text-foreground">
                 Oggetto <span className="text-red-400">*</span>
               </label>
               <Input
@@ -105,8 +105,8 @@ export default function TicketQuickModal() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-300">
-                Messaggio <span className="text-gray-500 font-normal">(opzionale)</span>
+              <label className="block text-sm font-medium text-foreground">
+                Messaggio <span className="text-muted-foreground font-normal">(opzionale)</span>
               </label>
               <Textarea
                 value={messaggio}
@@ -118,7 +118,7 @@ export default function TicketQuickModal() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="quick-priority" className="block text-sm font-medium text-gray-300">
+              <label htmlFor="quick-priority" className="block text-sm font-medium text-foreground">
                 Priorità
               </label>
               <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>

@@ -60,7 +60,7 @@ export default function ExpenseList({
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === 'ALL'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             Tutti
@@ -72,7 +72,7 @@ export default function ExpenseList({
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
                 filterStato === s
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               {EXPENSE_STATUS_LABELS[s]}
@@ -92,8 +92,8 @@ export default function ExpenseList({
 
       {/* Card list */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
-          <p className="text-sm text-gray-500">Nessun rimborso trovato.</p>
+        <div className="rounded-xl bg-card border border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
           {role === 'collaboratore' && (
             <Link
               href="/rimborsi/nuova"
@@ -104,17 +104,17 @@ export default function ExpenseList({
           )}
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800 [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border [&>a:first-child]:rounded-t-xl [&>a:last-child]:rounded-b-xl">
           {paginated.map((e) => (
             <Link
               key={e.id}
               href={`/rimborsi/${e.id}`}
-              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-gray-800/50 transition"
+              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-muted/50 transition"
             >
               {/* Left: category + meta */}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-100">{e.categoria}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                <p className="text-sm font-semibold text-foreground">{e.categoria}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span>Spesa: {formatDate(e.data_spesa)}</span>
                   <span className="text-gray-700">·</span>
                   <span>Inviato: {formatDate(e.created_at)}</span>
@@ -124,12 +124,12 @@ export default function ExpenseList({
               {/* Right: amount + badge + chevron */}
               <div className="flex items-center gap-3 shrink-0">
                 <div className="flex flex-col items-end gap-2">
-                  <span className="tabular-nums font-medium text-gray-200 text-sm">
+                  <span className="tabular-nums font-medium text-foreground text-sm">
                     {formatCurrency(e.importo)}
                   </span>
                   <StatusBadge stato={e.stato} />
                 </div>
-                <svg className="h-4 w-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -144,15 +144,15 @@ export default function ExpenseList({
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ‹
           </button>
-          <span className="text-xs text-gray-500">{safePage} / {totalPages}</span>
+          <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-700 disabled:opacity-40 transition"
+            className="rounded-lg bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40 transition"
           >
             ›
           </button>

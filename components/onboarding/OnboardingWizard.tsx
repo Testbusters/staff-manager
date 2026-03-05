@@ -35,9 +35,9 @@ interface Props {
 const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 
-const labelCls = 'block text-xs text-gray-500 mb-1.5';
+const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 
-const sectionTitle = 'text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 mt-1';
+const sectionTitle = 'text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 mt-1';
 
 export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: Props) {
   const router = useRouter();
@@ -136,7 +136,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   // ── Step 2 — contratto ───────────────────────────────────────
   if (step === 2) {
     return (
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 space-y-6">
+      <div className="rounded-xl bg-card border border-border p-6 space-y-6">
         {/* Progress */}
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center gap-1.5">
@@ -145,20 +145,20 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="text-xs text-gray-500">Dati personali</span>
+            <span className="text-xs text-muted-foreground">Dati personali</span>
           </div>
-          <div className="flex-1 h-px bg-gray-700" />
+          <div className="flex-1 h-px bg-accent" />
           <div className="flex items-center gap-1.5">
             <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">2</div>
-            <span className="text-xs text-gray-300 font-medium">Contratto</span>
+            <span className="text-xs text-foreground font-medium">Contratto</span>
           </div>
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-gray-100 mb-1">Il tuo contratto</h2>
-          <p className="text-sm text-gray-400">
+          <h2 className="text-base font-semibold text-foreground mb-1">Il tuo contratto</h2>
+          <p className="text-sm text-muted-foreground">
             Tipologia:{' '}
-            <span className="text-gray-200 font-medium">{tipoLabel ?? tipoContratto}</span>
+            <span className="text-foreground font-medium">{tipoLabel ?? tipoContratto}</span>
           </p>
         </div>
 
@@ -171,14 +171,14 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 </svg>
                 <span className="text-sm font-medium text-green-400">Contratto generato</span>
               </div>
-              <p className="text-xs text-gray-400">
-                Il contratto è stato generato con i tuoi dati. Scaricalo, firmalo e caricalo nella sezione <strong className="text-gray-300">Documenti</strong> quando sei pronto.
+              <p className="text-xs text-muted-foreground">
+                Il contratto è stato generato con i tuoi dati. Scaricalo, firmalo e caricalo nella sezione <strong className="text-foreground">Documenti</strong> quando sei pronto.
               </p>
             </div>
 
             <button
               onClick={handleDownload}
-              className="w-full rounded-lg bg-gray-700 hover:bg-gray-600 py-2.5 text-sm font-medium text-gray-100 transition flex items-center justify-center gap-2">
+              className="w-full rounded-lg bg-accent hover:bg-gray-600 py-2.5 text-sm font-medium text-foreground transition flex items-center justify-center gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
@@ -192,7 +192,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         ) : (
           <div className="space-y-4">
             {tipoContratto ? (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Clicca il pulsante per generare il tuo contratto precompilato con i dati inseriti.
               </p>
             ) : (
@@ -236,17 +236,17 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
 
   // ── Step 1 — dati anagrafici ─────────────────────────────────
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
+    <div className="rounded-xl bg-card border border-border p-6">
       {/* Progress */}
       <div className="flex items-center gap-3 mb-6">
         <div className="flex items-center gap-1.5">
           <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">1</div>
-          <span className="text-xs text-gray-300 font-medium">Dati personali</span>
+          <span className="text-xs text-foreground font-medium">Dati personali</span>
         </div>
-        <div className="flex-1 h-px bg-gray-700" />
+        <div className="flex-1 h-px bg-accent" />
         <div className="flex items-center gap-1.5">
-          <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500">2</div>
-          <span className="text-xs text-gray-500">Contratto</span>
+          <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-muted-foreground">2</div>
+          <span className="text-xs text-muted-foreground">Contratto</span>
         </div>
       </div>
 
@@ -254,7 +254,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         onSubmit={(e) => { e.preventDefault(); setStep(2); }}
         className="space-y-5">
 
-        <p className="text-sm text-gray-400 -mt-2 mb-4">
+        <p className="text-sm text-muted-foreground -mt-2 mb-4">
           Completa tutti i campi per procedere alla generazione del contratto.
         </p>
 
@@ -279,10 +279,10 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             {previewUsername && (
               <div>
                 <label className={labelCls}>Username</label>
-                <div className="w-full rounded-lg bg-gray-850 border border-gray-800 px-3 py-2.5 text-sm text-gray-400 font-mono select-all">
+                <div className="w-full rounded-lg bg-gray-850 border border-border px-3 py-2.5 text-sm text-muted-foreground font-mono select-all">
                   @{previewUsername}
                 </div>
-                <p className="text-[10px] text-gray-600 mt-1">Il tuo username sarà assegnato automaticamente e non è modificabile.</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Il tuo username sarà assegnato automaticamente e non è modificabile.</p>
               </div>
             )}
             <div>
@@ -379,7 +379,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input type="checkbox" checked={sonoFiglio} onChange={(e) => setSonoFiglio(e.target.checked)}
                     className="accent-blue-600 w-4 h-4 rounded" />
-                  <span className="text-sm text-gray-300">Sono fiscalmente a carico</span>
+                  <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
                 </label>
               </div>
             </div>

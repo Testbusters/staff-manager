@@ -93,11 +93,11 @@ function EventForm({
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Data/ora inizio</label>
+          <label className="text-xs text-muted-foreground">Data/ora inizio</label>
           <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Data/ora fine</label>
+          <label className="text-xs text-muted-foreground">Data/ora fine</label>
           <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
         </div>
       </div>
@@ -106,7 +106,7 @@ function EventForm({
       <Input value={form.luma_embed_url} onChange={set('luma_embed_url')} placeholder="URL embed Luma (per iframe)" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Tipo evento</label>
+          <label className="text-xs text-muted-foreground">Tipo evento</label>
           <Select value={form.tipo || undefined} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
             <SelectTrigger><SelectValue placeholder="— Nessun tipo —" /></SelectTrigger>
             <SelectContent>
@@ -117,10 +117,10 @@ function EventForm({
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" className="self-end" />
       </div>
       <div className="space-y-1">
-        <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
         <div className="flex flex-wrap gap-3">
           {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
               <input type="checkbox"
                 checked={form.community_ids.includes(c.id)}
                 onChange={(e) => setForm((f) => ({
@@ -129,7 +129,7 @@ function EventForm({
                     ? [...f.community_ids, c.id]
                     : f.community_ids.filter((id) => id !== c.id),
                 }))}
-                className="rounded border-gray-600 bg-gray-800" />
+                className="rounded border-border bg-muted" />
               {c.name}
             </label>
           ))}
@@ -214,7 +214,7 @@ export default function EventList({
     <div className="space-y-4">
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-gray-700 hover:border-blue-600 px-4 py-2 text-sm text-gray-400 hover:text-blue-400 transition">
+          className="rounded-lg border border-dashed border-border hover:border-blue-600 px-4 py-2 text-sm text-muted-foreground hover:text-blue-400 transition">
           + Nuovo evento
         </button>
       )}
@@ -222,10 +222,10 @@ export default function EventList({
         <EventForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {events.length === 0 && !showForm && (
-        <p className="text-sm text-gray-500 py-6 text-center">Nessun evento in programma.</p>
+        <p className="text-sm text-muted-foreground py-6 text-center">Nessun evento in programma.</p>
       )}
       {events.map((ev) => (
-        <div key={ev.id} className="rounded-xl border border-gray-800 bg-gray-900 p-4 space-y-3">
+        <div key={ev.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
           {editingId === ev.id ? (
             <EventForm
               initial={{
@@ -247,16 +247,16 @@ export default function EventList({
           ) : (
             <>
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold text-gray-100">{ev.titolo}</h3>
+                <h3 className="text-sm font-semibold text-foreground">{ev.titolo}</h3>
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(ev.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
+                    <button onClick={() => setEditingId(ev.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
                     <button onClick={() => handleDelete(ev.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
                   </div>
                 )}
               </div>
               {ev.descrizione && <RichTextDisplay html={ev.descrizione} />}
-              <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 {(ev.start_datetime || ev.end_datetime) && (
                   <span>📅 {formatDateRange(ev.start_datetime, ev.end_datetime)}</span>
                 )}
@@ -269,7 +269,7 @@ export default function EventList({
                 )}
               </div>
               {ev.luma_embed_url && (
-                <div className="rounded-xl overflow-hidden border border-gray-700 mt-1">
+                <div className="rounded-xl overflow-hidden border border-border mt-1">
                   <iframe
                     src={ev.luma_embed_url}
                     className="w-full h-64 border-0"

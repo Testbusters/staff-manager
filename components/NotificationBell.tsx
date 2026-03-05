@@ -127,7 +127,7 @@ export default function NotificationBell() {
       <DropdownMenuTrigger asChild>
         <button
           className="relative flex items-center justify-center w-8 h-8 rounded-lg
-                     text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition"
+                     text-muted-foreground hover:text-foreground hover:bg-muted transition"
           aria-label="Notifiche"
         >
           <span
@@ -153,11 +153,11 @@ export default function NotificationBell() {
 
       <DropdownMenuContent
         align="start"
-        className="w-80 p-0 bg-gray-900 border-gray-700 rounded-xl shadow-xl overflow-hidden"
+        className="w-80 p-0 bg-card border-border rounded-xl shadow-xl overflow-hidden"
       >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-200">Notifiche</span>
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <span className="text-sm font-semibold text-foreground">Notifiche</span>
           {unread > 0 && (
             <button
               onClick={handleMarkAllRead}
@@ -173,24 +173,24 @@ export default function NotificationBell() {
           {fetchError ? (
             <p className="text-sm text-red-400 text-center py-8">Errore nel caricamento</p>
           ) : loading ? (
-            <p className="text-sm text-gray-500 text-center py-8">Caricamento…</p>
+            <p className="text-sm text-muted-foreground text-center py-8">Caricamento…</p>
           ) : notifications.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">Nessuna notifica</p>
+            <p className="text-sm text-muted-foreground text-center py-8">Nessuna notifica</p>
           ) : (
             notifications.map((n) => {
               const href = entityHref(n);
               const badge = n.entity_type ? TYPE_BADGE[n.entity_type] : undefined;
               const inner = (
                 <div
-                  className={`group px-4 py-3 border-b border-gray-800 last:border-0
-                              hover:bg-gray-800/50 transition cursor-pointer relative
-                              ${!n.read ? 'bg-gray-800/30' : ''}`}
+                  className={`group px-4 py-3 border-b border-border last:border-0
+                              hover:bg-muted/50 transition cursor-pointer relative
+                              ${!n.read ? 'bg-muted/30' : ''}`}
                 >
                   {/* Dismiss button */}
                   <button
                     onClick={(e) => handleDismiss(n.id, e)}
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100
-                               text-gray-600 hover:text-gray-300 transition text-base leading-none"
+                               text-muted-foreground hover:text-foreground transition text-base leading-none"
                     aria-label="Rimuovi notifica"
                   >
                     ×
@@ -206,13 +206,13 @@ export default function NotificationBell() {
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-medium text-gray-200 leading-snug pr-4 mt-0.5 block">
+                  <span className="text-xs font-medium text-foreground leading-snug pr-4 mt-0.5 block">
                     {n.titolo}
                   </span>
                   {n.messaggio && (
-                    <p className="text-xs text-gray-400 mt-0.5 leading-snug line-clamp-1">{n.messaggio}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-1">{n.messaggio}</p>
                   )}
-                  <p className="text-[10px] text-gray-600 mt-1">{formatRelativeTime(n.created_at)}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
                 </div>
               );
 
@@ -235,9 +235,9 @@ export default function NotificationBell() {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2.5 border-t border-gray-800 flex items-center gap-2">
+        <div className="px-4 py-2.5 border-t border-border flex items-center gap-2">
           {notifications.length >= 50 && (
-            <span className="text-[10px] text-gray-600 flex-1">
+            <span className="text-[10px] text-muted-foreground flex-1">
               Potrebbero esserci notifiche più vecchie
             </span>
           )}

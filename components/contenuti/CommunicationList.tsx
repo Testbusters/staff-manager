@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import type { Communication, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -62,23 +64,20 @@ function CommunicationForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-800 bg-blue-950/30 p-4">
       {error && <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-300">{error}</p>}
-      <input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none" />
+      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Contenuto *" />
-      <textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
-        rows={2}
-        className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none resize-none" />
+      <Textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
+        rows={2} className="resize-none" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Scade il (opzionale)</label>
-          <input type="date" value={form.expires_at} onChange={set('expires_at')}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none" />
+          <label className="text-xs text-muted-foreground">Scade il (opzionale)</label>
+          <Input type="date" value={form.expires_at} onChange={set('expires_at')} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-gray-500">Community (vuoto = tutte)</label>
+          <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
           <div className="flex flex-wrap gap-3">
             {communities.map((c) => (
-              <label key={c.id} className="flex items-center gap-1.5 text-sm text-gray-300 cursor-pointer">
+              <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
                 <input type="checkbox"
                   checked={form.community_ids.includes(c.id)}
                   onChange={(e) => setForm((f) => ({
@@ -87,17 +86,17 @@ function CommunicationForm({
                       ? [...f.community_ids, c.id]
                       : f.community_ids.filter((id) => id !== c.id),
                   }))}
-                  className="rounded border-gray-600 bg-gray-800" />
+                  className="rounded border-border bg-muted" />
                 {c.name}
               </label>
             ))}
           </div>
         </div>
       </div>
-      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+      <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
         <input type="checkbox" checked={form.pinned}
           onChange={(e) => setForm((f) => ({ ...f, pinned: e.target.checked }))}
-          className="rounded border-gray-600 bg-gray-800" />
+          className="rounded border-border bg-muted" />
         Fissa in cima
       </label>
       <div className="flex gap-2 pt-1">
@@ -106,7 +105,7 @@ function CommunicationForm({
           {loading ? 'Salvataggio…' : 'Salva'}
         </button>
         <button type="button" onClick={onCancel}
-          className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-4 py-1.5 text-sm text-gray-300 transition">
+          className="rounded-lg border border-border bg-muted hover:bg-accent px-4 py-1.5 text-sm text-foreground transition">
           Annulla
         </button>
       </div>
@@ -177,7 +176,7 @@ export default function CommunicationList({
     <div className="space-y-4">
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-gray-700 hover:border-blue-600 px-4 py-2 text-sm text-gray-400 hover:text-blue-400 transition">
+          className="rounded-lg border border-dashed border-border hover:border-blue-600 px-4 py-2 text-sm text-muted-foreground hover:text-blue-400 transition">
           + Nuova comunicazione
         </button>
       )}
@@ -185,11 +184,11 @@ export default function CommunicationList({
         <CommunicationForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {communications.length === 0 && !showForm && (
-        <p className="text-sm text-gray-500 py-6 text-center">Nessuna comunicazione pubblicata.</p>
+        <p className="text-sm text-muted-foreground py-6 text-center">Nessuna comunicazione pubblicata.</p>
       )}
       {communications.map((c) => (
         <div key={c.id} className={`rounded-xl border p-4 space-y-2 ${
-          c.pinned ? 'border-blue-700 bg-blue-950/20' : 'border-gray-800 bg-gray-900'
+          c.pinned ? 'border-blue-700 bg-blue-950/20' : 'border-border bg-card'
         }`}>
           {editingId === c.id ? (
             <CommunicationForm
@@ -207,11 +206,11 @@ export default function CommunicationList({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   {c.pinned && <span className="text-blue-400 text-sm">📌</span>}
-                  <h3 className="text-sm font-semibold text-gray-100">{c.titolo}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{c.titolo}</h3>
                 </div>
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(c.id)} className="text-xs text-gray-500 hover:text-gray-300 transition">Modifica</button>
+                    <button onClick={() => setEditingId(c.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
                     <button onClick={() => handleDelete(c.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
                   </div>
                 )}
@@ -221,13 +220,13 @@ export default function CommunicationList({
                 <div className="flex gap-2 flex-wrap">
                   {c.file_urls.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-2 py-0.5 text-xs text-gray-300 transition">
+                      className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
                       📎 Allegato {i + 1}
                     </a>
                   ))}
                 </div>
               )}
-              <div className="flex items-center gap-3 text-xs text-gray-600">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span>{formatDate(c.published_at)}</span>
                 {c.expires_at && <span>· Scade: {formatDate(c.expires_at)}</span>}
               </div>

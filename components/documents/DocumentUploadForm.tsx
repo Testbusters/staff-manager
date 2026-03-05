@@ -78,8 +78,8 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   };
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 space-y-5">
-      <h2 className="text-base font-semibold text-gray-100">Carica documento</h2>
+    <div className="rounded-xl bg-card border border-border p-6 space-y-5">
+      <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
 
       {success && (
         <div className="rounded-lg bg-green-900/30 border border-green-800/40 px-3 py-2 text-sm text-green-400">
@@ -96,7 +96,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       {/* Collaboratore — admin only */}
       {isAdmin && (
         <div>
-          <label className="block text-xs text-gray-400 mb-1.5">
+          <label className="block text-xs text-muted-foreground mb-1.5">
             Collaboratore <span className="text-red-500">*</span>
           </label>
           <Select value={collaboratorId || undefined} onValueChange={setCollaboratorId}>
@@ -113,7 +113,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       {/* Tipo + Anno */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs text-gray-400 mb-1.5">
+          <label className="block text-xs text-muted-foreground mb-1.5">
             Tipo <span className="text-red-500">*</span>
           </label>
           <Select value={tipo || undefined} onValueChange={(v) => { setTipo(v as DocumentType); setStatoFirma('NON_RICHIESTO'); }}>
@@ -125,7 +125,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
           </Select>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1.5">Anno</label>
+          <label className="block text-xs text-muted-foreground mb-1.5">Anno</label>
           <Input
             type="number"
             value={anno}
@@ -139,7 +139,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
 
       {/* Titolo */}
       <div>
-        <label className="block text-xs text-gray-400 mb-1.5">
+        <label className="block text-xs text-muted-foreground mb-1.5">
           Titolo <span className="text-red-500">*</span>
         </label>
         <Input
@@ -153,7 +153,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       {/* Stato firma — admin only, only for CONTRATTO */}
       {isAdmin && isContratto && (
         <div>
-          <label className="block text-xs text-gray-400 mb-1.5">Firma richiesta</label>
+          <label className="block text-xs text-muted-foreground mb-1.5">Firma richiesta</label>
           <div className="flex gap-4">
             {(['DA_FIRMARE', 'NON_RICHIESTO'] as DocumentSignStatus[]).map((s) => (
               <label key={s} className="flex items-center gap-2 cursor-pointer">
@@ -165,7 +165,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
                   onChange={() => setStatoFirma(s)}
                   className="accent-blue-600"
                 />
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-foreground">
                   {s === 'DA_FIRMARE' ? 'Sì — richiedi firma' : 'No — solo informativo'}
                 </span>
               </label>
@@ -176,16 +176,16 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
 
       {/* File */}
       <div>
-        <label className="block text-xs text-gray-400 mb-1.5">
+        <label className="block text-xs text-muted-foreground mb-1.5">
           File PDF <span className="text-red-500">*</span>
         </label>
         <input
           type="file"
           accept=".pdf"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600"
+          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
         />
-        {file && <p className="mt-1 text-xs text-gray-500">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>}
+        {file && <p className="mt-1 text-xs text-muted-foreground">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>}
       </div>
 
       <button

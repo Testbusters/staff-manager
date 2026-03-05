@@ -105,9 +105,9 @@ export default function CompensationEditModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-lg bg-gray-900 border-gray-800">
+      <DialogContent className="max-w-lg bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-gray-100 pr-10">
+          <DialogTitle className="text-base font-semibold text-foreground pr-10">
             Modifica compenso
           </DialogTitle>
         </DialogHeader>
@@ -115,7 +115,7 @@ export default function CompensationEditModal({
         <div className="space-y-4">
           {/* Nome servizio/ruolo */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Nome servizio / ruolo <span className="text-red-500">*</span>
             </label>
             <Input
@@ -127,7 +127,7 @@ export default function CompensationEditModal({
 
           {/* Data competenza */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Data competenza <span className="text-red-500">*</span>
             </label>
             <Input
@@ -139,7 +139,7 @@ export default function CompensationEditModal({
 
           {/* Competenza */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Competenza <span className="text-red-500">*</span>
             </label>
             <Select value={competenza} onValueChange={setCompetenza}>
@@ -157,7 +157,7 @@ export default function CompensationEditModal({
           {/* Importo lordo + ritenuta */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label className="block text-xs text-muted-foreground mb-1.5">
                 Importo lordo (€) <span className="text-red-500">*</span>
               </label>
               <Input
@@ -170,7 +170,7 @@ export default function CompensationEditModal({
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label className="block text-xs text-muted-foreground mb-1.5">
                 Ritenuta acconto (€) <span className="text-red-500">*</span>
               </label>
               <Input
@@ -186,9 +186,9 @@ export default function CompensationEditModal({
 
           {/* Importo netto (computed) */}
           {lordo > 0 && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Importo netto:{' '}
-              <span className="text-gray-300 font-medium">
+              <span className="text-foreground font-medium">
                 {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(netto)}
               </span>
             </p>
@@ -196,7 +196,7 @@ export default function CompensationEditModal({
 
           {/* Info specifiche */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Info specifiche
             </label>
             <Textarea
@@ -217,7 +217,7 @@ export default function CompensationEditModal({
             <button
               onClick={handleClose}
               disabled={loading}
-              className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition disabled:opacity-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition disabled:opacity-50"
             >
               Annulla
             </button>

@@ -46,8 +46,8 @@ export default function TicketThread({
   return (
     <div className="space-y-2">
       {messages.length === 0 ? (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="rounded-xl bg-card border border-border p-6 text-center">
+          <p className="text-sm text-muted-foreground">
             Nessun messaggio ancora. Aggiungi il primo messaggio qui sotto.
           </p>
         </div>
@@ -67,15 +67,15 @@ export default function TicketThread({
                 className={`max-w-[78%] rounded-2xl px-4 py-3 ${
                   m.is_own
                     ? 'bg-blue-600/20 border border-blue-500/30 rounded-tr-sm'
-                    : 'bg-gray-900 border border-gray-800 rounded-tl-sm'
+                    : 'bg-card border border-border rounded-tl-sm'
                 }`}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between gap-4 mb-1.5">
-                  <span className={`text-xs font-semibold ${m.is_own ? 'text-blue-300' : 'text-gray-400'}`}>
+                  <span className={`text-xs font-semibold ${m.is_own ? 'text-blue-300' : 'text-muted-foreground'}`}>
                     {m.author_label}
                   </span>
-                  <span className="text-xs text-gray-600 tabular-nums">{formatDateTime(m.created_at)}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{formatDateTime(m.created_at)}</span>
                 </div>
 
                 {/* "Nuovo" badge */}
@@ -86,7 +86,7 @@ export default function TicketThread({
                 )}
 
                 {/* Message body */}
-                <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">{m.message}</p>
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words">{m.message}</p>
 
                 {/* Attachment */}
                 {m.attachment_name && (
@@ -96,12 +96,12 @@ export default function TicketThread({
                         href={m.signed_attachment_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-blue-400 hover:text-blue-300 transition"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-1.5 text-xs text-blue-400 hover:text-blue-300 transition"
                       >
                         📎 {m.attachment_name}
                       </a>
                     ) : (
-                      <span className="text-xs text-gray-500">📎 {m.attachment_name}</span>
+                      <span className="text-xs text-muted-foreground">📎 {m.attachment_name}</span>
                     )}
                   </div>
                 )}
@@ -112,9 +112,9 @@ export default function TicketThread({
       )}
 
       {ticketStato === 'CHIUSO' && (
-        <div className="rounded-xl bg-gray-800/50 border border-gray-700 p-4 text-center mt-4">
-          <p className="text-sm text-gray-500">
-            Questo ticket è <span className="font-medium text-gray-400">{TICKET_STATUS_LABELS.CHIUSO}</span>. Non è possibile aggiungere nuovi messaggi.
+        <div className="rounded-xl bg-muted/50 border border-border p-4 text-center mt-4">
+          <p className="text-sm text-muted-foreground">
+            Questo ticket è <span className="font-medium text-muted-foreground">{TICKET_STATUS_LABELS.CHIUSO}</span>. Non è possibile aggiungere nuovi messaggi.
           </p>
         </div>
       )}

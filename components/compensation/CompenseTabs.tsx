@@ -22,8 +22,8 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
         <TabsTrigger
           value="compensi"
           className="group flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
-                     text-gray-500 hover:text-gray-300 hover:bg-gray-800/50
-                     data-[state=active]:bg-gray-800 data-[state=active]:text-gray-100
+                     text-muted-foreground hover:text-foreground hover:bg-muted/50
+                     data-[state=active]:bg-muted data-[state=active]:text-foreground
                      data-[state=active]:shadow-none bg-transparent"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -31,8 +31,8 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
           </svg>
           Compensi
           <span className="rounded-full px-1.5 py-0.5 text-xs font-semibold
-                           bg-gray-700 text-gray-400
-                           group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-white">
+                           bg-accent text-muted-foreground
+                           group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-foreground">
             {compensations.length}
           </span>
         </TabsTrigger>
@@ -40,8 +40,8 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
         <TabsTrigger
           value="rimborsi"
           className="group flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
-                     text-gray-500 hover:text-gray-300 hover:bg-gray-800/50
-                     data-[state=active]:bg-gray-800 data-[state=active]:text-gray-100
+                     text-muted-foreground hover:text-foreground hover:bg-muted/50
+                     data-[state=active]:bg-muted data-[state=active]:text-foreground
                      data-[state=active]:shadow-none bg-transparent"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -49,8 +49,8 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
           </svg>
           Rimborsi
           <span className="rounded-full px-1.5 py-0.5 text-xs font-semibold
-                           bg-gray-700 text-gray-400
-                           group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-white">
+                           bg-accent text-muted-foreground
+                           group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-foreground">
             {expenses.length}
           </span>
         </TabsTrigger>

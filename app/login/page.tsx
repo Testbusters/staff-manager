@@ -61,13 +61,13 @@ export default function LoginPage() {
             <span className="text-xl">👥</span>
           </div>
           <h1 className="text-xl font-semibold text-gray-900">Staff Manager</h1>
-          <p className="text-sm text-gray-500 mt-1">Accedi alla tua area personale</p>
+          <p className="text-sm text-muted-foreground mt-1">Accedi alla tua area personale</p>
         </div>
 
         <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-600 mb-1.5">Email</label>
+              <label className="block text-xs text-muted-foreground mb-1.5">Email</label>
               <Input
                 type="email"
                 placeholder="nome@email.com"
@@ -79,7 +79,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1.5">Password</label>
+              <label className="block text-xs text-muted-foreground mb-1.5">Password</label>
               <Input
                 ref={passwordRef}
                 type="password"
@@ -108,13 +108,13 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-xs text-gray-400">
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           Per problemi di accesso contatta l&apos;amministrazione.
         </p>
 
         {/* Test credentials */}
         <div className="mt-6 space-y-2">
-          <p className="text-center text-xs text-gray-400">Utenze di test</p>
+          <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
           <div className="grid grid-cols-3 gap-2">
             {TEST_USERS.map((u) => (
               <button
@@ -127,8 +127,8 @@ export default function LoginPage() {
                 }}
                 className="rounded-lg bg-white border border-gray-200 px-2 py-2.5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
               >
-                <p className="text-xs font-medium text-gray-600">{u.role}</p>
-                <p className="text-xs text-gray-400 truncate mt-0.5">{u.email}</p>
+                <p className="text-xs font-medium text-muted-foreground">{u.role}</p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{u.email}</p>
               </button>
             ))}
           </div>

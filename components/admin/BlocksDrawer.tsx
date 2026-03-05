@@ -63,11 +63,11 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent side="right" className="w-full max-w-lg bg-gray-900 border-l border-gray-800 p-0 flex flex-col sm:max-w-lg">
+      <SheetContent side="right" className="w-full max-w-lg bg-card border-l border-border p-0 flex flex-col sm:max-w-lg">
         {/* Header */}
-        <SheetHeader className="px-6 py-5 border-b border-gray-800 flex-shrink-0 space-y-0">
-          <SheetTitle className="text-base font-semibold text-gray-100">Situazioni di blocco</SheetTitle>
-          <p className="text-xs text-gray-500">{visibleItems.length} element{visibleItems.length === 1 ? 'o' : 'i'} da risolvere</p>
+        <SheetHeader className="px-6 py-5 border-b border-border flex-shrink-0 space-y-0">
+          <SheetTitle className="text-base font-semibold text-foreground">Situazioni di blocco</SheetTitle>
+          <p className="text-xs text-muted-foreground">{visibleItems.length} element{visibleItems.length === 1 ? 'o' : 'i'} da risolvere</p>
         </SheetHeader>
 
         {/* Body */}
@@ -75,14 +75,14 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
           {visibleItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
               <span className="text-2xl mb-2">✅</span>
-              <p className="text-sm text-gray-400">Nessuna situazione di blocco attiva.</p>
+              <p className="text-sm text-muted-foreground">Nessuna situazione di blocco attiva.</p>
             </div>
           ) : (
             grouped.map(group => (
               <div key={group.type}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-base">{BLOCK_ICONS[group.type]}</span>
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     {BLOCK_LABELS[group.type]} ({group.items.length})
                   </h3>
                 </div>
@@ -90,13 +90,13 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                   {group.items.map(item => (
                     <div
                       key={item.key}
-                      className="rounded-xl bg-gray-800/60 border border-gray-700/50 px-4 py-3"
+                      className="rounded-xl bg-muted/60 border border-border/50 px-4 py-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-200 truncate">{item.collabName}</p>
-                          <p className="text-xs text-gray-500 truncate">{item.collabEmail}</p>
-                          <p className="text-xs text-gray-600 mt-1">{BLOCK_DESCRIPTIONS[item.blockType]}</p>
+                          <p className="text-sm font-medium text-foreground truncate">{item.collabName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{item.collabEmail}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{BLOCK_DESCRIPTIONS[item.blockType]}</p>
                           {item.daysWaiting !== undefined && (
                             <p className="text-xs text-amber-400 mt-0.5">
                               In attesa da {item.daysWaiting} giorni
@@ -117,7 +117,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                             <Link
                               href={item.href}
                               onClick={onClose}
-                              className="rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-gray-200 transition inline-block"
+                              className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition inline-block"
                             >
                               Vai al profilo
                             </Link>
@@ -126,7 +126,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                             <Link
                               href={item.href}
                               onClick={onClose}
-                              className="rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-gray-200 transition inline-block"
+                              className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition inline-block"
                             >
                               Vai alla coda
                             </Link>

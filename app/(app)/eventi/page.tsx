@@ -16,7 +16,7 @@ const TIPO_COLORS: Record<EventTipo, string> = {
   INCONTRO: 'bg-green-900/30 border-green-800 text-green-400',
   WORKSHOP: 'bg-purple-900/30 border-purple-800 text-purple-400',
   SOCIAL:   'bg-pink-900/30 border-pink-800 text-pink-400',
-  ALTRO:    'bg-gray-800 border-gray-700 text-gray-400',
+  ALTRO:    'bg-muted border-border text-muted-foreground',
 };
 
 function formatDatetime(iso: string) {
@@ -77,22 +77,22 @@ export default async function EventiPage() {
     return (
       <Link
         href={`/eventi/${ev.id}`}
-        className={`flex items-start gap-4 rounded-xl border p-4 hover:bg-gray-800/50 transition group ${
-          isPast ? 'border-gray-800 bg-gray-900/50' : 'border-gray-800 bg-gray-900'
+        className={`flex items-start gap-4 rounded-xl border p-4 hover:bg-muted/50 transition group ${
+          isPast ? 'border-border bg-card/50' : 'border-border bg-card'
         }`}
       >
-        <div className={`flex-shrink-0 w-12 text-center rounded-lg p-1.5 ${isPast ? 'bg-gray-800' : 'bg-blue-950/50 border border-blue-800/40'}`}>
+        <div className={`flex-shrink-0 w-12 text-center rounded-lg p-1.5 ${isPast ? 'bg-muted' : 'bg-blue-950/50 border border-blue-800/40'}`}>
           {ev.start_datetime ? (
             <>
-              <p className={`text-lg font-bold leading-none ${isPast ? 'text-gray-500' : 'text-blue-300'}`}>
+              <p className={`text-lg font-bold leading-none ${isPast ? 'text-muted-foreground' : 'text-blue-300'}`}>
                 {new Date(ev.start_datetime).getDate()}
               </p>
-              <p className={`text-xs uppercase ${isPast ? 'text-gray-600' : 'text-blue-400'}`}>
+              <p className={`text-xs uppercase ${isPast ? 'text-muted-foreground' : 'text-blue-400'}`}>
                 {new Date(ev.start_datetime).toLocaleString('it-IT', { month: 'short' })}
               </p>
             </>
           ) : (
-            <p className="text-xs text-gray-600">—</p>
+            <p className="text-xs text-muted-foreground">—</p>
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -102,19 +102,19 @@ export default async function EventiPage() {
                 {TIPO_LABELS[ev.tipo as EventTipo] ?? ev.tipo}
               </span>
             )}
-            <h3 className={`text-sm font-semibold group-hover:text-white transition ${isPast ? 'text-gray-400' : 'text-gray-100'}`}>
+            <h3 className={`text-sm font-semibold group-hover:text-white transition ${isPast ? 'text-muted-foreground' : 'text-foreground'}`}>
               {ev.titolo}
             </h3>
           </div>
-          <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             {ev.start_datetime && <span>📅 {formatDatetime(ev.start_datetime)}</span>}
             {ev.location && <span>📍 {ev.location}</span>}
           </div>
           {ev.descrizione && (
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{ev.descrizione}</p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ev.descrizione}</p>
           )}
         </div>
-        <span className="flex-shrink-0 text-gray-600 group-hover:text-gray-300 transition text-sm">→</span>
+        <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition text-sm">→</span>
       </Link>
     );
   }
@@ -122,24 +122,24 @@ export default async function EventiPage() {
   return (
     <div className="p-6 max-w-3xl space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-100">Eventi</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Tutti gli eventi della community.</p>
+        <h1 className="text-xl font-semibold text-foreground">Eventi</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Tutti gli eventi della community.</p>
       </div>
 
       {events.length === 0 && (
-        <p className="text-sm text-gray-500 py-8 text-center">Nessun evento in programma.</p>
+        <p className="text-sm text-muted-foreground py-8 text-center">Nessun evento in programma.</p>
       )}
 
       {upcoming.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide">In programma</h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">In programma</h2>
           {upcoming.map((ev) => <EventRow key={ev.id} ev={ev} isPast={false} />)}
         </div>
       )}
 
       {past.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Passati</h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Passati</h2>
           {past.map((ev) => <EventRow key={ev.id} ev={ev} isPast={true} />)}
         </div>
       )}

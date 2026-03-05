@@ -20,7 +20,7 @@ const CATEGORIA_COLORS: Record<string, string> = {
   Bug:          'text-red-400 bg-red-900/20 border-red-800/30',
   Suggerimento: 'text-blue-400 bg-blue-900/20 border-blue-800/30',
   Domanda:      'text-yellow-400 bg-yellow-900/20 border-yellow-800/30',
-  Altro:        'text-gray-400 bg-gray-800/40 border-gray-700/30',
+  Altro:        'text-muted-foreground bg-muted/40 border-border/30',
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,7 +31,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 function FeedbackCard({ item }: { item: FeedbackRow }) {
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800 p-5 space-y-3">
+    <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <span
@@ -41,15 +41,15 @@ function FeedbackCard({ item }: { item: FeedbackRow }) {
           >
             {item.categoria}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {ROLE_LABELS[item.role] ?? item.role}
           </span>
           {item.pagina && (
-            <span className="text-xs text-gray-600 font-mono">{item.pagina}</span>
+            <span className="text-xs text-muted-foreground font-mono">{item.pagina}</span>
           )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-gray-600">
+          <span className="text-xs text-muted-foreground">
             {new Date(item.created_at).toLocaleString('it-IT', {
               dateStyle: 'short',
               timeStyle: 'short',
@@ -59,7 +59,7 @@ function FeedbackCard({ item }: { item: FeedbackRow }) {
         </div>
       </div>
 
-      <p className="text-sm text-gray-300 whitespace-pre-wrap">{item.messaggio}</p>
+      <p className="text-sm text-foreground whitespace-pre-wrap">{item.messaggio}</p>
 
       {item.screenshot_url && (
         <a
@@ -114,21 +114,21 @@ export default async function FeedbackPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-10">
       <div>
-        <h1 className="text-xl font-semibold text-gray-100">Feedback ricevuti</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{feedback.length} segnalazioni totali</p>
+        <h1 className="text-xl font-semibold text-foreground">Feedback ricevuti</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{feedback.length} segnalazioni totali</p>
       </div>
 
       {/* Nuovi */}
       <section className="space-y-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Nuovi</h2>
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Nuovi</h2>
           <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/30 border border-yellow-800/40 text-yellow-400 font-medium">
             {nuovi.length}
           </span>
         </div>
 
         {nuovi.length === 0 ? (
-          <div className="rounded-2xl bg-gray-900 border border-gray-800 p-8 text-center text-gray-500 text-sm">
+          <div className="rounded-2xl bg-card border border-border p-8 text-center text-muted-foreground text-sm">
             Nessun feedback in attesa.
           </div>
         ) : (
@@ -139,19 +139,19 @@ export default async function FeedbackPage() {
       </section>
 
       {/* Divider */}
-      <div className="border-t border-gray-800" />
+      <div className="border-t border-border" />
 
       {/* Completati */}
       <section className="space-y-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Completati</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-800 border border-gray-700 text-gray-500 font-medium">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Completati</h2>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground font-medium">
             {completati.length}
           </span>
         </div>
 
         {completati.length === 0 ? (
-          <div className="rounded-2xl bg-gray-900/50 border border-gray-800/50 p-8 text-center text-gray-600 text-sm">
+          <div className="rounded-2xl bg-card/50 border border-border/50 p-8 text-center text-muted-foreground text-sm">
             Nessun feedback completato.
           </div>
         ) : (

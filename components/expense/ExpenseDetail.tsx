@@ -4,9 +4,9 @@ import StatusBadge from '@/components/compensation/StatusBadge';
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex gap-3 py-2 border-b border-gray-800 last:border-0">
-      <span className="w-40 shrink-0 text-xs text-gray-500">{label}</span>
-      <span className="text-sm text-gray-200">{value ?? '—'}</span>
+    <div className="flex gap-3 py-2 border-b border-border last:border-0">
+      <span className="w-40 shrink-0 text-xs text-muted-foreground">{label}</span>
+      <span className="text-sm text-foreground">{value ?? '—'}</span>
     </div>
   );
 }
@@ -49,15 +49,15 @@ export default function ExpenseDetail({
       <div className="flex items-start justify-between gap-4">
         <div>
           {collaboratorName && (
-            <p className="text-xs text-gray-500 mb-0.5">{collaboratorName}</p>
+            <p className="text-xs text-muted-foreground mb-0.5">{collaboratorName}</p>
           )}
-          <p className="text-lg font-medium text-gray-100">{e.descrizione}</p>
+          <p className="text-lg font-medium text-foreground">{e.descrizione}</p>
           <div className="flex items-center gap-2 mt-1">
             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${EXPENSE_CATEGORIA_BADGE[e.categoria]}`}>
               {e.categoria}
             </span>
             {e.data_spesa && (
-              <span className="text-sm text-gray-500">{formatDate(e.data_spesa)}</span>
+              <span className="text-sm text-muted-foreground">{formatDate(e.data_spesa)}</span>
             )}
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function ExpenseDetail({
       </div>
 
       {/* Info block */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 px-4">
+      <div className="rounded-xl bg-card border border-border px-4">
         <Row label="Data spesa" value={formatDate(e.data_spesa)} />
         <Row label="Importo" value={
           <span className="font-medium text-green-400">{formatCurrency(e.importo)}</span>
@@ -93,8 +93,8 @@ export default function ExpenseDetail({
 
       {/* Attachments */}
       {attachments.length > 0 && (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 px-4 py-3">
-          <p className="text-xs font-medium text-gray-400 mb-2">Allegati</p>
+        <div className="rounded-xl bg-card border border-border px-4 py-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Allegati</p>
           <ul className="space-y-2">
             {attachments.map((att) => (
               <li key={att.id} className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function ExpenseDetail({
                   </svg>
                   <span className="truncate">{att.file_name}</span>
                 </a>
-                <span className="text-xs text-gray-600 shrink-0 ml-auto">{formatDateTime(att.created_at)}</span>
+                <span className="text-xs text-muted-foreground shrink-0 ml-auto">{formatDateTime(att.created_at)}</span>
               </li>
             ))}
           </ul>

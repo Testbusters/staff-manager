@@ -48,15 +48,15 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
                 ? 'bg-blue-600 text-white'
                 : step < current
                 ? 'bg-green-700 text-white'
-                : 'bg-gray-700 text-gray-400'
+                : 'bg-accent text-muted-foreground'
             }`}
           >
             {step}
           </div>
-          {step < 3 && <div className="w-8 h-px bg-gray-700" />}
+          {step < 3 && <div className="w-8 h-px bg-accent" />}
         </div>
       ))}
-      <span className="ml-2 text-xs text-gray-500">{current} di 3</span>
+      <span className="ml-2 text-xs text-muted-foreground">{current} di 3</span>
     </div>
   );
 }
@@ -184,8 +184,8 @@ export default function CompensationCreateWizard({
     return (
       <div className="p-6 max-w-3xl">
         <div className="mb-2">
-          <h1 className="text-xl font-semibold text-gray-100">Carica compensi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Seleziona il collaboratore</p>
+          <h1 className="text-xl font-semibold text-foreground">Carica compensi</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Seleziona il collaboratore</p>
         </div>
         <StepIndicator current={1} />
 
@@ -206,7 +206,7 @@ export default function CompensationCreateWizard({
               ))}
             </SelectContent>
           </Select>
-          <label className="flex items-center gap-2 text-sm text-gray-400 whitespace-nowrap">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
             <input
               type="checkbox"
               checked={activeOnly}
@@ -217,33 +217,33 @@ export default function CompensationCreateWizard({
           </label>
         </div>
 
-        <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+        <div className="rounded-xl bg-card border border-border overflow-hidden">
           {loadingSearch ? (
-            <p className="p-6 text-sm text-gray-500 text-center">Ricerca in corso...</p>
+            <p className="p-6 text-sm text-muted-foreground text-center">Ricerca in corso...</p>
           ) : collaborators.length === 0 ? (
-            <p className="p-6 text-sm text-gray-500 text-center">
+            <p className="p-6 text-sm text-muted-foreground text-center">
               {searchQ || communityFilter ? 'Nessun collaboratore trovato.' : 'Inserisci un termine di ricerca o seleziona una community.'}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Nome</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Username</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Community</th>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Nome</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Username</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Community</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {collaborators.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-800/50 transition">
-                    <td className="px-4 py-3 text-gray-100">
+                  <tr key={c.id} className="hover:bg-muted/50 transition">
+                    <td className="px-4 py-3 text-foreground">
                       {c.cognome} {c.nome}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                       {c.username ?? '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                       {c.communities.map((cc) => cc.name).join(', ') || '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -264,7 +264,7 @@ export default function CompensationCreateWizard({
         <div className="mt-4">
           <button
             onClick={() => router.back()}
-            className="text-sm text-gray-500 hover:text-gray-300 transition"
+            className="text-sm text-muted-foreground hover:text-foreground transition"
           >
             ← Indietro
           </button>
@@ -282,8 +282,8 @@ export default function CompensationCreateWizard({
     return (
       <div className="p-6 max-w-xl">
         <div className="mb-2">
-          <h1 className="text-xl font-semibold text-gray-100">Carica compensi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-foreground">Carica compensi</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Dati del compenso per {selectedCollab.cognome} {selectedCollab.nome}
           </p>
         </div>
@@ -291,7 +291,7 @@ export default function CompensationCreateWizard({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Nome servizio / Ruolo
             </label>
             <Input
@@ -304,7 +304,7 @@ export default function CompensationCreateWizard({
 
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Data di competenza
             </label>
             <Input
@@ -316,7 +316,7 @@ export default function CompensationCreateWizard({
 
           {competenze.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
                 Competenza
               </label>
               <Select value={formData.competenza || undefined} onValueChange={(v) => setFormData((prev) => ({ ...prev, competenza: v }))}>
@@ -331,8 +331,8 @@ export default function CompensationCreateWizard({
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Info specifiche <span className="text-gray-600">(opzionale)</span>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              Info specifiche <span className="text-muted-foreground">(opzionale)</span>
             </label>
             <Textarea
               value={formData.info_specifiche}
@@ -344,7 +344,7 @@ export default function CompensationCreateWizard({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Importo lordo (€)
             </label>
             <Input
@@ -358,13 +358,13 @@ export default function CompensationCreateWizard({
           </div>
 
           {lordo > 0 && (
-            <div className="rounded-lg bg-gray-800/60 border border-gray-700 p-3 space-y-1">
+            <div className="rounded-lg bg-muted/60 border border-border p-3 space-y-1">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Ritenuta d&apos;acconto (20%)</span>
+                <span className="text-muted-foreground">Ritenuta d&apos;acconto (20%)</span>
                 <span className="text-red-400 tabular-nums">-{formatCurrency(ritenuta)}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold">
-                <span className="text-gray-300">Importo netto</span>
+                <span className="text-foreground">Importo netto</span>
                 <span className="text-green-400 tabular-nums">{formatCurrency(netto)}</span>
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function CompensationCreateWizard({
           <div className="flex items-center justify-between pt-2">
             <button
               onClick={() => setStep('step1')}
-              className="text-sm text-gray-500 hover:text-gray-300 transition"
+              className="text-sm text-muted-foreground hover:text-foreground transition"
             >
               ← Indietro
             </button>
@@ -417,16 +417,16 @@ export default function CompensationCreateWizard({
     return (
       <div className="p-6 max-w-xl">
         <div className="mb-2">
-          <h1 className="text-xl font-semibold text-gray-100">Carica compensi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Riepilogo</p>
+          <h1 className="text-xl font-semibold text-foreground">Carica compensi</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Riepilogo</p>
         </div>
         <StepIndicator current={3} />
 
-        <div className="rounded-xl bg-gray-900 border border-gray-800 divide-y divide-gray-800">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {rows.map((row) => (
             <div key={row.label} className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-gray-500">{row.label}</span>
-              <span className="text-sm text-gray-200">{row.value}</span>
+              <span className="text-xs text-muted-foreground">{row.label}</span>
+              <span className="text-sm text-foreground">{row.value}</span>
             </div>
           ))}
         </div>
@@ -438,7 +438,7 @@ export default function CompensationCreateWizard({
         <div className="flex items-center justify-between mt-4">
           <button
             onClick={() => setStep('step2')}
-            className="text-sm text-gray-500 hover:text-gray-300 transition"
+            className="text-sm text-muted-foreground hover:text-foreground transition"
             disabled={submitting}
           >
             ← Indietro

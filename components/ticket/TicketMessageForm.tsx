@@ -76,7 +76,7 @@ export default function TicketMessageForm({
           <div className="flex items-center gap-2">
             <label
               htmlFor="ticket-file"
-              className="cursor-pointer rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 text-xs text-gray-400 transition"
+              className="cursor-pointer rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-muted-foreground transition"
             >
               📎 Allega file
             </label>
@@ -89,7 +89,7 @@ export default function TicketMessageForm({
               onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
             />
             {fileName && (
-              <span className="text-xs text-gray-400 max-w-[160px] truncate">{fileName}</span>
+              <span className="text-xs text-muted-foreground max-w-[160px] truncate">{fileName}</span>
             )}
           </div>
 

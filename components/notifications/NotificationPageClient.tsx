@@ -131,16 +131,16 @@ export default function NotificationPageClient() {
 
   const chipBase = 'whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium border transition cursor-pointer select-none';
   const chipActive = 'bg-gray-100 text-gray-900 border-gray-100';
-  const chipInactive = 'bg-transparent text-gray-400 border-gray-700 hover:border-gray-500 hover:text-gray-300';
+  const chipInactive = 'bg-transparent text-muted-foreground border-border hover:border-gray-500 hover:text-foreground';
 
   return (
     <div className="max-w-2xl space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Notifiche</h1>
+          <h1 className="text-xl font-semibold text-foreground">Notifiche</h1>
           {unread > 0 && (
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {unread} non {unread === 1 ? 'letta' : 'lette'}
             </p>
           )}
@@ -151,7 +151,7 @@ export default function NotificationPageClient() {
             className={`text-xs px-3 py-1.5 rounded-full border transition ${
               unreadOnly
                 ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-transparent text-gray-400 border-gray-700 hover:border-gray-500'
+                : 'bg-transparent text-muted-foreground border-border hover:border-gray-500'
             }`}
           >
             Solo non lette
@@ -187,27 +187,27 @@ export default function NotificationPageClient() {
       </div>
 
       {/* List */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+      <div className="rounded-xl bg-card border border-border overflow-hidden">
         {fetchError ? (
           <p className="text-sm text-red-400 text-center py-12">
             Errore nel caricamento delle notifiche
           </p>
         ) : loading ? (
-          <p className="text-sm text-gray-500 text-center py-12">Caricamento…</p>
+          <p className="text-sm text-muted-foreground text-center py-12">Caricamento…</p>
         ) : notifications.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-12">
+          <p className="text-sm text-muted-foreground text-center py-12">
             {unreadOnly ? 'Nessuna notifica non letta' : entityType ? `Nessuna notifica per questa categoria` : 'Nessuna notifica'}
           </p>
         ) : (
-          <ul className="divide-y divide-gray-800">
+          <ul className="divide-y divide-border">
             {notifications.map((n) => {
               const href = entityHref(n);
               const badge = n.entity_type ? TYPE_BADGE[n.entity_type] : undefined;
               const inner = (
                 <li
                   className={`group flex items-start gap-3 px-4 py-3.5
-                              hover:bg-gray-800/50 transition
-                              ${!n.read ? 'bg-gray-800/30' : ''}`}
+                              hover:bg-muted/50 transition
+                              ${!n.read ? 'bg-muted/30' : ''}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -219,14 +219,14 @@ export default function NotificationPageClient() {
                           {badge.label}
                         </span>
                       )}
-                      <span className="text-sm font-medium text-gray-200 truncate">
+                      <span className="text-sm font-medium text-foreground truncate">
                         {n.titolo}
                       </span>
                     </div>
                     {n.messaggio && (
-                      <p className="text-xs text-gray-400 mt-0.5 leading-snug">{n.messaggio}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.messaggio}</p>
                     )}
-                    <p className="text-[10px] text-gray-600 mt-1">{formatRelativeTime(n.created_at)}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
                   </div>
 
                   {/* Actions (visible on hover) */}
@@ -241,7 +241,7 @@ export default function NotificationPageClient() {
                     )}
                     <button
                       onClick={(e) => handleDismiss(n.id, e)}
-                      className="text-gray-600 hover:text-gray-300 text-base leading-none"
+                      className="text-muted-foreground hover:text-foreground text-base leading-none"
                       aria-label="Rimuovi notifica"
                     >
                       ×
@@ -272,21 +272,21 @@ export default function NotificationPageClient() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-600">{total} notifiche totali</span>
+          <span className="text-xs text-muted-foreground">{total} notifiche totali</span>
           <div className="flex items-center gap-2">
             <button
               disabled={page <= 1}
               onClick={() => pushParams({ page: String(page - 1) })}
-              className="px-3 py-1.5 rounded text-xs text-gray-400 border border-gray-700
+              className="px-3 py-1.5 rounded text-xs text-muted-foreground border border-border
                          hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               ← Precedente
             </button>
-            <span className="text-xs text-gray-500">{page} / {totalPages}</span>
+            <span className="text-xs text-muted-foreground">{page} / {totalPages}</span>
             <button
               disabled={page >= totalPages}
               onClick={() => pushParams({ page: String(page + 1) })}
-              className="px-3 py-1.5 rounded text-xs text-gray-400 border border-gray-700
+              className="px-3 py-1.5 rounded text-xs text-muted-foreground border border-border
                          hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               Successiva →

@@ -11,8 +11,8 @@ interface Props {
 }
 
 const BTN =
-  'px-2 py-1 text-xs rounded text-gray-400 hover:text-gray-200 hover:bg-gray-700 active:bg-gray-600 transition';
-const BTN_ACTIVE = 'bg-gray-600 text-gray-100';
+  'px-2 py-1 text-xs rounded text-muted-foreground hover:text-foreground hover:bg-accent active:bg-muted transition';
+const BTN_ACTIVE = 'bg-muted text-foreground';
 
 export default function RichTextEditor({ value, onChange, placeholder }: Props) {
   const editor = useEditor({
@@ -25,7 +25,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
     editorProps: {
       attributes: {
         class:
-          'min-h-[120px] px-3 py-2 text-sm text-gray-200 focus:outline-none',
+          'min-h-[120px] px-3 py-2 text-sm text-foreground focus:outline-none',
       },
     },
   });
@@ -41,9 +41,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
   if (!editor) return null;
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 overflow-hidden">
+    <div className="rounded-lg border border-border bg-muted overflow-hidden">
       {/* Toolbar */}
-      <div className="flex gap-1 flex-wrap border-b border-gray-700 px-2 py-1.5">
+      <div className="flex gap-1 flex-wrap border-b border-border px-2 py-1.5">
         <button
           type="button"
           onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run(); }}

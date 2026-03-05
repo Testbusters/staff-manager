@@ -288,31 +288,31 @@ export default function CollaboratoreDetail({
   // ── Sections ──────────────────────────────────────────────────────────────
   const sectionTitle = (title: string, count: number) => (
     <div className="flex items-center gap-2 mb-3">
-      <h2 className="text-sm font-semibold text-gray-200">{title}</h2>
-      <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">{count}</span>
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{count}</span>
     </div>
   );
 
   const emptyRow = (msg: string) => (
-    <p className="text-xs text-gray-500 py-4 text-center">{msg}</p>
+    <p className="text-xs text-muted-foreground py-4 text-center">{msg}</p>
   );
 
   return (
     <div className="p-6 max-w-4xl space-y-8">
       {/* Back */}
-      <Link href="/collaboratori" className="text-xs text-gray-500 hover:text-gray-300 transition">
+      <Link href="/collaboratori" className="text-xs text-muted-foreground hover:text-foreground transition">
         ← Torna alla lista
       </Link>
 
       {/* ── Anagrafica ──────────────────────────────────────────────────── */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div className="bg-card border border-border rounded-xl p-5">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-lg font-semibold text-gray-100">
+            <h1 className="text-lg font-semibold text-foreground">
               {[collab.nome, collab.cognome].filter(Boolean).join(' ') || 'Collaboratore'}
             </h1>
             {memberStatus && (
-              <span className="text-xs text-gray-400 mt-0.5 block">
+              <span className="text-xs text-muted-foreground mt-0.5 block">
                 {MEMBER_STATUS_LABELS[memberStatus] ?? memberStatus}
               </span>
             )}
@@ -325,12 +325,12 @@ export default function CollaboratoreDetail({
                       @{collab.username}
                     </span>
                   ) : (
-                    <span className="text-xs text-gray-600 italic">Username non impostato</span>
+                    <span className="text-xs text-muted-foreground italic">Username non impostato</span>
                   )}
                   <button
                     type="button"
                     onClick={() => { setUsernameEdit(collab.username ?? ''); setEditingUsername(true); setUsernameError(null); }}
-                    className="text-xs text-gray-500 hover:text-gray-300 transition"
+                    className="text-xs text-muted-foreground hover:text-foreground transition"
                   >
                     Modifica
                   </button>
@@ -354,7 +354,7 @@ export default function CollaboratoreDetail({
                   </button>
                   <button
                     onClick={() => { setEditingUsername(false); setUsernameError(null); }}
-                    className="px-2 py-1 rounded text-xs text-gray-400 hover:text-gray-200 transition"
+                    className="px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition"
                   >
                     Annulla
                   </button>
@@ -366,7 +366,7 @@ export default function CollaboratoreDetail({
           {communityNames.length > 0 && (
             <div className="flex gap-1.5 flex-wrap justify-end">
               {communityNames.map((n) => (
-                <span key={n} className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded-full">{n}</span>
+                <span key={n} className="text-xs bg-muted text-foreground px-2 py-0.5 rounded-full">{n}</span>
               ))}
             </div>
           )}
@@ -374,7 +374,7 @@ export default function CollaboratoreDetail({
 
         {/* Profile edit toggle */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Anagrafica</span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Anagrafica</span>
           {!editingProfile && (
             <button
               type="button"
@@ -391,16 +391,16 @@ export default function CollaboratoreDetail({
           <form onSubmit={handleSaveProfile} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Nome</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">Nome</label>
                 <Input type="text" value={fNome} onChange={(e) => setFNome(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Cognome</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">Cognome</label>
                 <Input type="text" value={fCognome} onChange={(e) => setFCognome(e.target.value)} />
               </div>
             </div>
             <div>
-              <label className="block text-[11px] text-gray-500 mb-1">Username</label>
+              <label className="block text-[11px] text-muted-foreground mb-1">Username</label>
               <Input type="text" value={fUsername}
                 onChange={(e) => setFUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 maxLength={50} placeholder="username" className="font-mono" />
@@ -408,23 +408,23 @@ export default function CollaboratoreDetail({
             {!isResponsabileProfile && (
               <>
                 <div>
-                  <label className="block text-[11px] text-gray-500 mb-1">Codice fiscale</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">Codice fiscale</label>
                   <Input type="text" value={fCF}
                     onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                     maxLength={16} className="font-mono" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] text-gray-500 mb-1">Data di nascita</label>
+                    <label className="block text-[11px] text-muted-foreground mb-1">Data di nascita</label>
                     <Input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)} />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-gray-500 mb-1">Città di nascita</label>
+                    <label className="block text-[11px] text-muted-foreground mb-1">Città di nascita</label>
                     <Input type="text" value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)} />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] text-gray-500 mb-1">Provincia di nascita</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">Provincia di nascita</label>
                   <Input type="text" value={fProvinciaNascita}
                     onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
                     maxLength={2} className="font-mono uppercase" />
@@ -433,11 +433,11 @@ export default function CollaboratoreDetail({
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Comune di residenza</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">Comune di residenza</label>
                 <Input type="text" value={fComune} onChange={(e) => setFComune(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Provincia residenza</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">Provincia residenza</label>
                 <Input type="text" value={fProvinciaRes}
                   onChange={(e) => setFProvinciaRes(e.target.value.toUpperCase())}
                   maxLength={2} className="font-mono uppercase" />
@@ -445,22 +445,22 @@ export default function CollaboratoreDetail({
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className="block text-[11px] text-gray-500 mb-1">Indirizzo</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">Indirizzo</label>
                 <Input type="text" value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Civico</label>
+                <label className="block text-[11px] text-muted-foreground mb-1">Civico</label>
                 <Input type="text" value={fCivico} onChange={(e) => setFCivico(e.target.value)} maxLength={10} />
               </div>
             </div>
             <div>
-              <label className="block text-[11px] text-gray-500 mb-1">Telefono</label>
+              <label className="block text-[11px] text-muted-foreground mb-1">Telefono</label>
               <Input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)} />
             </div>
             {!isResponsabileProfile && (
               <>
                 <div>
-                  <label className="block text-[11px] text-gray-500 mb-1">Taglia t-shirt</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">Taglia t-shirt</label>
                   <Select value={fTshirt || undefined} onValueChange={setFTshirt}>
                     <SelectTrigger><SelectValue placeholder="— Non specificata —" /></SelectTrigger>
                     <SelectContent>
@@ -475,13 +475,13 @@ export default function CollaboratoreDetail({
                     <input type="checkbox" checked={fSonoFiglio}
                       onChange={(e) => setFSonoFiglio(e.target.checked)}
                       className="accent-blue-600 w-4 h-4" />
-                    <span className="text-sm text-gray-300">Fiscalmente a carico</span>
+                    <span className="text-sm text-foreground">Fiscalmente a carico</span>
                   </label>
                 </div>
                 <div>
-                  <label className="block text-[11px] text-gray-500 mb-1">Massimale lordo annuo (max €5.000)</label>
+                  <label className="block text-[11px] text-muted-foreground mb-1">Massimale lordo annuo (max €5.000)</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
                     <Input type="number" min={1} max={5000} step={1} value={fMassimale}
                       onChange={(e) => setFMassimale(e.target.value)}
                       className="pl-7" />
@@ -528,8 +528,8 @@ export default function CollaboratoreDetail({
             ].map(([label, value]) =>
               value ? (
                 <div key={label as string}>
-                  <dt className="text-[11px] text-gray-500 uppercase tracking-wide mb-0.5">{label}</dt>
-                  <dd className="text-gray-200 font-mono text-xs">{value}</dd>
+                  <dt className="text-[11px] text-muted-foreground uppercase tracking-wide mb-0.5">{label}</dt>
+                  <dd className="text-foreground font-mono text-xs">{value}</dd>
                 </div>
               ) : null
             )}
@@ -543,12 +543,12 @@ export default function CollaboratoreDetail({
         {compensations.length === 0 ? (
           emptyRow('Nessun compenso.')
         ) : (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800">
+                <tr className="border-b border-border">
                   {['Stato', 'Importo', 'Community', 'Data', ''].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-gray-500 uppercase tracking-wide">{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -557,13 +557,13 @@ export default function CollaboratoreDetail({
                   const canApprove = canAct && canTransition(role, comp.stato, 'approve').ok;
                   const canReject = canAct && canTransition(role, comp.stato, 'reject').ok;
                   return (
-                    <tr key={comp.id} className="border-b border-gray-800 last:border-0 hover:bg-gray-800/30 transition">
+                    <tr key={comp.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition">
                       <td className="px-4 py-3">
                         <StatusBadge stato={comp.stato} />
                       </td>
-                      <td className="px-4 py-3 text-gray-200 font-medium text-xs">{displayAmount(comp)}</td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{comp.community_name ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(comp.created_at)}</td>
+                      <td className="px-4 py-3 text-foreground font-medium text-xs">{displayAmount(comp)}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{comp.community_name ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(comp.created_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2 justify-end">
                           {canApprove && (
@@ -606,12 +606,12 @@ export default function CollaboratoreDetail({
         {expenses.length === 0 ? (
           emptyRow('Nessun rimborso.')
         ) : (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800">
+                <tr className="border-b border-border">
                   {['Stato', 'Categoria', 'Data spesa', 'Importo', ''].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-gray-500 uppercase tracking-wide">{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -620,13 +620,13 @@ export default function CollaboratoreDetail({
                   const canApprove = canAct && canExpenseTransition(role, exp.stato, 'approve').ok;
                   const canReject = canAct && canExpenseTransition(role, exp.stato, 'reject').ok;
                   return (
-                    <tr key={exp.id} className="border-b border-gray-800 last:border-0 hover:bg-gray-800/30 transition">
+                    <tr key={exp.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition">
                       <td className="px-4 py-3">
                         <StatusBadge stato={exp.stato} />
                       </td>
-                      <td className="px-4 py-3 text-gray-300 text-xs">{exp.categoria}</td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(exp.data_spesa)}</td>
-                      <td className="px-4 py-3 text-gray-200 font-medium text-xs">
+                      <td className="px-4 py-3 text-foreground text-xs">{exp.categoria}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(exp.data_spesa)}</td>
+                      <td className="px-4 py-3 text-foreground font-medium text-xs">
                         {exp.importo.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
                       </td>
                       <td className="px-4 py-3">
@@ -671,20 +671,20 @@ export default function CollaboratoreDetail({
         {documents.length === 0 ? (
           emptyRow('Nessun documento.')
         ) : (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800">
+                <tr className="border-b border-border">
                   {['Titolo', 'Tipo', 'Firma', 'Data', ''].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-gray-500 uppercase tracking-wide">{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="border-b border-gray-800 last:border-0 hover:bg-gray-800/30 transition">
-                    <td className="px-4 py-3 text-gray-200 text-xs">{doc.titolo}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">{DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}</td>
+                  <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition">
+                    <td className="px-4 py-3 text-foreground text-xs">{doc.titolo}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}</td>
                     <td className="px-4 py-3">
                       <Badge
                         variant={doc.stato_firma === 'FIRMATO' ? 'outline' : doc.stato_firma === 'DA_FIRMARE' ? 'outline' : 'secondary'}
@@ -693,7 +693,7 @@ export default function CollaboratoreDetail({
                         {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma] ?? doc.stato_firma}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(doc.created_at)}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(doc.created_at)}</td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/documenti/${doc.id}`} className="text-xs text-blue-400 hover:text-blue-300">
                         Vedi →
@@ -714,15 +714,15 @@ export default function CollaboratoreDetail({
 
       {/* ── Reject modal ─────────────────────────────────────────────────── */}
       <Dialog open={!!rejectModal} onOpenChange={(v) => { if (!v) { setRejectModal(null); setError(null); } }}>
-        <DialogContent className="max-w-[420px] bg-gray-900 border-gray-700">
+        <DialogContent className="max-w-[420px] bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold text-gray-100">
+            <DialogTitle className="text-sm font-semibold text-foreground">
               Rifiuta {rejectModal?.type === 'comp' ? 'compenso' : 'rimborso'}
             </DialogTitle>
           </DialogHeader>
 
           <div>
-            <label className="text-xs text-gray-500 block mb-1">
+            <label className="text-xs text-muted-foreground block mb-1">
               Motivazione del rifiuto <span className="text-red-500">*</span>
             </label>
             <Textarea

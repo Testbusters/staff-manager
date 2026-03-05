@@ -18,7 +18,7 @@ const OPP_TIPO_COLORS: Record<OpportunityTipo, string> = {
   FORMAZIONE: 'bg-blue-900/30 border-blue-800 text-blue-400',
   STAGE:      'bg-purple-900/30 border-purple-800 text-purple-400',
   PROGETTO:   'bg-amber-900/30 border-amber-800 text-amber-400',
-  ALTRO:      'bg-gray-800 border-gray-700 text-gray-400',
+  ALTRO:      'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -31,7 +31,7 @@ function expiryBadge(valid_to: string | null) {
   today.setHours(0, 0, 0, 0);
   const exp = new Date(valid_to);
   const diffDays = Math.ceil((exp.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays < 0) return <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-500">Scaduto</span>;
+  if (diffDays < 0) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Scaduto</span>;
   if (diffDays <= 7) return <span className="rounded-full bg-yellow-900/40 border border-yellow-700 px-2 py-0.5 text-xs text-yellow-300">In scadenza</span>;
   return <span className="rounded-full bg-green-900/30 border border-green-800 px-2 py-0.5 text-xs text-green-400">Attivo</span>;
 }
@@ -105,14 +105,14 @@ export default async function OpportunitaPage({
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
         ? 'bg-blue-600 text-white'
-        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
   return (
     <div className="p-6 max-w-3xl space-y-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-100">Opportunità e Sconti</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-semibold text-foreground">Opportunità e Sconti</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Opportunità aperte e agevolazioni per i collaboratori.
         </p>
       </div>
@@ -125,26 +125,26 @@ export default async function OpportunitaPage({
       {activeTab === 'opportunita' && (
         <div className="space-y-3">
           {opportunities.length === 0 && (
-            <p className="text-sm text-gray-500 py-8 text-center">Nessuna opportunità disponibile.</p>
+            <p className="text-sm text-muted-foreground py-8 text-center">Nessuna opportunità disponibile.</p>
           )}
           {opportunities.map((o) => (
             <Link
               key={o.id}
               href={`/opportunita/${o.id}`}
-              className="block rounded-xl border border-gray-800 bg-gray-900 p-4 hover:bg-gray-800/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${OPP_TIPO_COLORS[o.tipo as OpportunityTipo] ?? OPP_TIPO_COLORS.ALTRO}`}>
                     {OPP_TIPO_LABELS[o.tipo as OpportunityTipo] ?? o.tipo}
                   </span>
-                  <h3 className="text-sm font-semibold text-gray-100 group-hover:text-white truncate transition">{o.titolo}</h3>
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">{o.titolo}</h3>
                 </div>
-                <span className="flex-shrink-0 text-gray-600 group-hover:text-gray-300 text-sm transition">→</span>
+                <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{o.descrizione}</p>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{o.descrizione}</p>
               {o.scadenza_candidatura && (
-                <p className="text-xs text-gray-600 mt-2">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</p>
+                <p className="text-xs text-muted-foreground mt-2">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</p>
               )}
             </Link>
           ))}
@@ -154,24 +154,24 @@ export default async function OpportunitaPage({
       {activeTab === 'sconti' && (
         <div className="space-y-3">
           {discounts.length === 0 && (
-            <p className="text-sm text-gray-500 py-8 text-center">Nessuno sconto disponibile.</p>
+            <p className="text-sm text-muted-foreground py-8 text-center">Nessuno sconto disponibile.</p>
           )}
           {discounts.map((d) => (
             <Link
               key={d.id}
               href={`/sconti/${d.id}`}
-              className="block rounded-xl border border-gray-800 bg-gray-900 p-4 hover:bg-gray-800/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   {expiryBadge(d.valid_to)}
-                  <h3 className="text-sm font-semibold text-gray-100 group-hover:text-white truncate transition">{d.titolo}</h3>
-                  {d.fornitore && <span className="text-xs text-gray-500">· {d.fornitore}</span>}
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">{d.titolo}</h3>
+                  {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
                 </div>
-                <span className="flex-shrink-0 text-gray-600 group-hover:text-gray-300 text-sm transition">→</span>
+                <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
               {d.descrizione && (
-                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{d.descrizione}</p>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.descrizione}</p>
               )}
             </Link>
           ))}

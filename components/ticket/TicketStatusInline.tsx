@@ -49,7 +49,7 @@ export default function TicketStatusInline({
           key={s}
           onClick={() => handleChange(s)}
           disabled={loading}
-          className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 px-3 py-1 text-xs font-medium text-gray-400 transition"
+          className="rounded-lg border border-border bg-muted hover:bg-accent disabled:opacity-50 px-3 py-1 text-xs font-medium text-muted-foreground transition"
         >
           {loading ? '…' : `→ ${TICKET_STATUS_LABELS[s]}`}
         </button>

@@ -59,7 +59,7 @@ export default function TicketList({
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === 'ALL'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             Tutti
@@ -71,7 +71,7 @@ export default function TicketList({
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
                 filterStato === s
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               {TICKET_STATUS_LABELS[s]}
@@ -89,57 +89,57 @@ export default function TicketList({
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
-          <p className="text-sm text-gray-500">Nessun ticket trovato.</p>
+        <div className="rounded-xl bg-card border border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nessun ticket trovato.</p>
           <Link href="/ticket/nuova" className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300">
             Apri il primo ticket →
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+        <div className="rounded-xl bg-card border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Stato</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Priorità</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Oggetto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden md:table-cell">Riferimento</th>
+              <tr className="border-b border-border">
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stato</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">Priorità</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Oggetto</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">Riferimento</th>
                 {isManager && (
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground hidden lg:table-cell">
                     Collaboratore
                   </th>
                 )}
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell">Aperto il</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground hidden lg:table-cell">Aperto il</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-border">
               {filtered.map((t) => (
                 <tr
                   key={t.id}
                   onClick={() => router.push(`/ticket/${t.id}`)}
-                  className="hover:bg-gray-800/50 transition cursor-pointer"
+                  className="hover:bg-muted/50 transition cursor-pointer"
                 >
                   <td className="px-4 py-3">
                     <TicketStatusBadge stato={t.stato} />
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <span className={`h-2 w-2 rounded-full ${PRIORITY_DOT[t.priority] ?? 'bg-gray-500'}`} />
                       {TICKET_PRIORITY_LABELS[t.priority as keyof typeof TICKET_PRIORITY_LABELS] ?? t.priority}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-200 max-w-xs truncate">{t.oggetto}</td>
-                  <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{t.categoria}</td>
+                  <td className="px-4 py-3 text-foreground max-w-xs truncate">{t.oggetto}</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{t.categoria}</td>
                   {isManager && (
-                    <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                       {t.creator_name ?? '—'}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-right text-gray-500 hidden lg:table-cell tabular-nums">
+                  <td className="px-4 py-3 text-right text-muted-foreground hidden lg:table-cell tabular-nums">
                     {formatDate(t.created_at)}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-600 text-sm">→</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground text-sm">→</td>
                 </tr>
               ))}
             </tbody>

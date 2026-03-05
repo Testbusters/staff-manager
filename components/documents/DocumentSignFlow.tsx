@@ -48,26 +48,26 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
   };
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 space-y-5">
-      <h2 className="text-base font-semibold text-gray-100">Documento</h2>
+    <div className="rounded-xl bg-card border border-border p-6 space-y-5">
+      <h2 className="text-base font-semibold text-foreground">Documento</h2>
 
       {/* Original download */}
-      <div className="flex items-center justify-between gap-4 rounded-lg bg-gray-800/60 border border-gray-700 px-4 py-3">
+      <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/60 border border-border px-4 py-3">
         <div className="min-w-0">
-          <p className="text-sm text-gray-200 font-medium truncate">{doc.file_original_name}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Documento originale</p>
+          <p className="text-sm text-foreground font-medium truncate">{doc.file_original_name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Documento originale</p>
         </div>
         {originalUrl ? (
           <a
             href={originalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-lg bg-gray-700 hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-gray-200 transition"
+            className="shrink-0 rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition"
           >
             Scarica
           </a>
         ) : (
-          <span className="text-xs text-gray-500">URL non disponibile</span>
+          <span className="text-xs text-muted-foreground">URL non disponibile</span>
         )}
       </div>
 
@@ -78,7 +78,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
             <p className="text-sm text-green-300 font-medium truncate">
               {doc.file_firmato_name ?? 'Documento firmato'}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Firmato il {doc.signed_at ? new Date(doc.signed_at).toLocaleDateString('it-IT') : '—'}
             </p>
           </div>
@@ -95,22 +95,22 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
 
       {/* Upload signed — only if DA_FIRMARE and user can sign */}
       {doc.stato_firma === 'DA_FIRMARE' && !done && canSign && (
-        <div className="space-y-3 border-t border-gray-800 pt-5">
-          <p className="text-sm text-gray-300">
+        <div className="space-y-3 border-t border-border pt-5">
+          <p className="text-sm text-foreground">
             Scarica il documento, firmalo e ricarica il PDF firmato.
           </p>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Carica PDF firmato <span className="text-red-500">*</span>
             </label>
             <input
               type="file"
               accept=".pdf"
               onChange={(e) => { setFile(e.target.files?.[0] ?? null); setConfirmed(false); }}
-              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600"
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
             />
-            {file && <p className="mt-1 text-xs text-gray-500">{file.name}</p>}
+            {file && <p className="mt-1 text-xs text-muted-foreground">{file.name}</p>}
           </div>
 
           {file && (

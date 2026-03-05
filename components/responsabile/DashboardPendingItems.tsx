@@ -73,51 +73,51 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
 
   return (
     <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-sm bg-gray-900 border-gray-800">
+      <DialogContent className="max-w-sm bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold text-gray-100">Dettaglio compenso</DialogTitle>
+          <DialogTitle className="text-sm font-semibold text-foreground">Dettaglio compenso</DialogTitle>
         </DialogHeader>
 
         {loading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Caricamento…</p>
+          <p className="text-sm text-muted-foreground text-center py-4">Caricamento…</p>
         ) : !data ? (
           <p className="text-sm text-red-400 text-center py-4">Errore caricamento.</p>
         ) : (
           <div className="space-y-3 text-sm">
             {data.nome_servizio_ruolo && (
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Servizio / Ruolo</p>
-                <p className="text-gray-200">{data.nome_servizio_ruolo}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Servizio / Ruolo</p>
+                <p className="text-foreground">{data.nome_servizio_ruolo}</p>
               </div>
             )}
             {data.competenza && (
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Competenza</p>
-                <Badge variant="outline" className={COMP_COMPETENZA_BADGE[data.competenza] ?? 'border-gray-700 text-gray-400'}>
+                <p className="text-xs text-muted-foreground mb-0.5">Competenza</p>
+                <Badge variant="outline" className={COMP_COMPETENZA_BADGE[data.competenza] ?? 'border-border text-muted-foreground'}>
                   {data.competenza}
                 </Badge>
               </div>
             )}
             {data.data_competenza && (
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Data competenza</p>
-                <p className="text-gray-300">{new Date(data.data_competenza).toLocaleDateString('it-IT')}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Data competenza</p>
+                <p className="text-foreground">{new Date(data.data_competenza).toLocaleDateString('it-IT')}</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Lordo</p>
-                <p className="text-gray-300 tabular-nums font-medium">{formatCurrency(data.importo_lordo)}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Lordo</p>
+                <p className="text-foreground tabular-nums font-medium">{formatCurrency(data.importo_lordo)}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Netto</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Netto</p>
                 <p className="text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo_netto)}</p>
               </div>
             </div>
             {data.info_specifiche && (
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Note</p>
-                <p className="text-gray-400 text-xs">{data.info_specifiche}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Note</p>
+                <p className="text-muted-foreground text-xs">{data.info_specifiche}</p>
               </div>
             )}
             <div className="pt-2">
@@ -160,35 +160,35 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
 
   return (
     <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-sm bg-gray-900 border-gray-800">
+      <DialogContent className="max-w-sm bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold text-gray-100">Dettaglio rimborso</DialogTitle>
+          <DialogTitle className="text-sm font-semibold text-foreground">Dettaglio rimborso</DialogTitle>
         </DialogHeader>
 
         {loading ? (
-          <p className="text-sm text-gray-500 text-center py-4">Caricamento…</p>
+          <p className="text-sm text-muted-foreground text-center py-4">Caricamento…</p>
         ) : !data ? (
           <p className="text-sm text-red-400 text-center py-4">Errore caricamento.</p>
         ) : (
           <div className="space-y-3 text-sm">
             <div>
-              <p className="text-xs text-gray-500 mb-0.5">Categoria</p>
-              <Badge variant="outline" className={EXPENSE_CATEGORIA_BADGE[data.categoria as ExpenseCategory] ?? 'border-gray-700 text-gray-400'}>
+              <p className="text-xs text-muted-foreground mb-0.5">Categoria</p>
+              <Badge variant="outline" className={EXPENSE_CATEGORIA_BADGE[data.categoria as ExpenseCategory] ?? 'border-border text-muted-foreground'}>
                 {data.categoria}
               </Badge>
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-0.5">Data spesa</p>
-              <p className="text-gray-300">{new Date(data.data_spesa).toLocaleDateString('it-IT')}</p>
+              <p className="text-xs text-muted-foreground mb-0.5">Data spesa</p>
+              <p className="text-foreground">{new Date(data.data_spesa).toLocaleDateString('it-IT')}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-0.5">Importo</p>
+              <p className="text-xs text-muted-foreground mb-0.5">Importo</p>
               <p className="text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo)}</p>
             </div>
             {data.descrizione && (
               <div>
-                <p className="text-xs text-gray-500 mb-0.5">Descrizione</p>
-                <p className="text-gray-400 text-xs">{data.descrizione}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Descrizione</p>
+                <p className="text-muted-foreground text-xs">{data.descrizione}</p>
               </div>
             )}
             <div className="pt-2">
@@ -229,34 +229,34 @@ export default function DashboardPendingItems({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {/* Compensi da approvare */}
-        <div className="rounded-2xl bg-gray-900 border border-gray-800">
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-200">Compensi in attesa</h2>
-            <Link href="/approvazioni?tab=compensi" className="text-xs text-gray-500 hover:text-gray-300 transition">
+        <div className="rounded-2xl bg-card border border-border">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="text-sm font-medium text-foreground">Compensi in attesa</h2>
+            <Link href="/approvazioni?tab=compensi" className="text-xs text-muted-foreground hover:text-foreground transition">
               Vedi tutti →
             </Link>
           </div>
           {pendingComps.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun compenso in attesa.</p>
+            <p className="px-5 py-6 text-sm text-muted-foreground text-center">Nessun compenso in attesa.</p>
           ) : (
-            <div className="divide-y divide-gray-800">
+            <div className="divide-y divide-border">
               {pendingComps.slice(0, 8).map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setSelectedComp(c.id)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted transition text-left cursor-pointer"
                 >
                   {c.competenza && (
-                    <Badge variant="outline" className={`shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'border-gray-700 text-gray-400'}`}>
+                    <Badge variant="outline" className={`shrink-0 ${COMP_COMPETENZA_BADGE[c.competenza] ?? 'border-border text-muted-foreground'}`}>
                       {c.competenza}
                     </Badge>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-200 truncate">{collabNameMap[c.collaborator_id] ?? 'Collaboratore'}</p>
-                    <p className="text-xs text-gray-500">{formatCurrency(c.importo_lordo)}</p>
+                    <p className="text-sm text-foreground truncate">{collabNameMap[c.collaborator_id] ?? 'Collaboratore'}</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(c.importo_lordo)}</p>
                   </div>
-                  <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAge(c.created_at)}</span>
-                  <span className="text-xs text-gray-600 shrink-0">→</span>
+                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">{formatAge(c.created_at)}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">→</span>
                 </button>
               ))}
             </div>
@@ -264,32 +264,32 @@ export default function DashboardPendingItems({
         </div>
 
         {/* Rimborsi da approvare */}
-        <div className="rounded-2xl bg-gray-900 border border-gray-800">
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-200">Rimborsi in attesa</h2>
-            <Link href="/approvazioni?tab=rimborsi" className="text-xs text-gray-500 hover:text-gray-300 transition">
+        <div className="rounded-2xl bg-card border border-border">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="text-sm font-medium text-foreground">Rimborsi in attesa</h2>
+            <Link href="/approvazioni?tab=rimborsi" className="text-xs text-muted-foreground hover:text-foreground transition">
               Vedi tutti →
             </Link>
           </div>
           {pendingExps.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500 text-center">Nessun rimborso in attesa.</p>
+            <p className="px-5 py-6 text-sm text-muted-foreground text-center">Nessun rimborso in attesa.</p>
           ) : (
-            <div className="divide-y divide-gray-800">
+            <div className="divide-y divide-border">
               {pendingExps.slice(0, 8).map((e) => (
                 <button
                   key={e.id}
                   onClick={() => setSelectedExp(e.id)}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-800 transition text-left cursor-pointer"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted transition text-left cursor-pointer"
                 >
-                  <Badge variant="outline" className={`shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'border-gray-700 text-gray-400'}`}>
+                  <Badge variant="outline" className={`shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'border-border text-muted-foreground'}`}>
                     {e.categoria}
                   </Badge>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-200 truncate">{collabNameMap[e.collaborator_id] ?? 'Collaboratore'}</p>
-                    <p className="text-xs text-gray-500">{formatCurrency(e.importo)}</p>
+                    <p className="text-sm text-foreground truncate">{collabNameMap[e.collaborator_id] ?? 'Collaboratore'}</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(e.importo)}</p>
                   </div>
-                  <span className="text-xs text-gray-600 tabular-nums shrink-0">{formatAge(e.created_at)}</span>
-                  <span className="text-xs text-gray-600 shrink-0">→</span>
+                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">{formatAge(e.created_at)}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">→</span>
                 </button>
               ))}
             </div>
