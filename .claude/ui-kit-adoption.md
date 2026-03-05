@@ -60,23 +60,53 @@ If the kit's `globals.css` uses `@plugin "tailwindcss-animate"`, substitute with
 
 ---
 
-## Phase B — CSS Plugin (deferred)
+## Phase B — CSS Plugin ✅ COMPLETE (2026-03-05)
 
 **Goal**: replace vendored `tw-animate-css` with `@plugin "tailwindcss-animate"`.
 
-**Blocked by**: Turbopack bug on `"style"` export condition in `package.json`.
-**Action**: monitor Next.js/Turbopack changelog. Re-evaluate when bug is resolved upstream.
-**Current workaround** (documented in CLAUDE.md): vendor-copy `tw-animate-css` dist to
-`app/tw-animate.css` + `app/shadcn-tailwind.css` and import with relative paths.
+**Resolved**: `tailwindcss-animate` installed as npm package. Turbopack bug was not blocking —
+the original workaround was added preemptively before actual testing. Both production build
+and Turbopack dev server work correctly with `@plugin "tailwindcss-animate"`.
 
-**Completion criteria** (when re-activated):
-- [ ] Remove `app/tw-animate.css` and `app/shadcn-tailwind.css`
-- [ ] Add `@plugin "tailwindcss-animate"` to `globals.css`
-- [ ] Verify all animations still work
+**Completion criteria**:
+- [x] Remove `app/tw-animate.css` and `app/shadcn-tailwind.css`
+- [x] Add `@plugin "tailwindcss-animate"` to `globals.css`
+- [x] Verify all animations still work — build ✅, Turbopack ✅
 
 ---
 
-## Phase C — Component Adoption (on demand)
+## Phase C — Component Adoption (on demand) ✅ ALL WAVES COMPLETE (2026-03-05)
+
+### Wave 1 — Bootstrap (approved 2026-03-05)
+
+**New components to add** (zero new deps — all radix-ui already in monorepo):
+- `components/ui/skeleton.tsx`
+- `components/ui/tabs.tsx` → `radix-ui/react-tabs`
+- `components/ui/dropdown-menu.tsx` → `radix-ui/react-dropdown-menu`
+- `components/ui/avatar.tsx` → `radix-ui/react-avatar`
+- `components/ui/checkbox.tsx` → `radix-ui/react-checkbox`
+- `components/ui/table.tsx` → pure HTML
+- `components/ui/card.tsx` → pure HTML
+- `components/ui/separator.tsx` → `radix-ui/react-separator`
+- `components/ui/pagination.tsx` → lucide-react (already installed)
+
+**Existing alignment** (replace native patterns with shadcn):
+- `components/compensation/CompenseTabs.tsx` → button tabs → shadcn Tabs
+- `components/compensation/DashboardUpdates.tsx` → manual tabs + prev/next → Tabs + Pagination
+- `components/NotificationBell.tsx` → absolute div dropdown → DropdownMenu
+- `components/export/ExportTable.tsx` → native `<table>` → Table; native checkbox → Checkbox
+- `components/Sidebar.tsx` → rounded-full div → Avatar
+
+**NOT migrated (intentional):** KPI cards in PaymentOverview.tsx (custom design).
+**Deferred:** TanStack DataTable (Wave 2, requires @tanstack/react-table).
+
+**Docs:** `docs/ui-components.md` Component Map updated with 9 new components.
+
+### Wave 1 import pattern
+Project uses `radix-ui/react-*` (monorepo), NOT `@radix-ui/react-*` (individual packages).
+Adapt all kit component imports when copying.
+
+
 
 **Goal**: adopt components from the kit as new blocks require them. No bulk import.
 
@@ -134,3 +164,7 @@ new components.
 | 2026-03-05 | — | Plan created. Phases A–D defined. |
 | 2026-03-05 | A ✅ | Token alignment complete. themes.css (--base-* scale), globals.css migrated, next-themes installed, ThemeProvider+ThemeSync, migration 035, Sidebar toggle, login forced-light, PATCH /api/profile/theme. Build ✅, vitest 252/252 ✅. |
 | 2026-03-05 | D ✅ | CLAUDE.md updated: theme system pattern added, shadcn Component Map mandatory rule strengthened with UI kit reference. |
+| 2026-03-05 | C Wave 1 ✅ | 9 new components added (skeleton, tabs, dropdown-menu, avatar, checkbox, table, card, separator, pagination). 5 existing aligned: CompenseTabs→Tabs, DashboardUpdates→Tabs+Pagination, NotificationBell→DropdownMenu, ExportTable→Table+Checkbox, Sidebar avatar→Avatar. Build ✅, vitest 252/252 ✅. |
+| 2026-03-05 | C Wave 2 ✅ | DataTable (@tanstack/react-table v8) + Form (react-hook-form v7 + @hookform/resolvers v5 + zod v4). Additive only — no existing form/table migrations. Build ✅, vitest 252/252 ✅. |
+| 2026-03-05 | B ✅ | CSS plugin: installed tailwindcss-animate npm package, replaced vendored tw-animate.css/shadcn-tailwind.css with @plugin directive. Build ✅, Turbopack ✅, vitest 252/252 ✅. |
+| 2026-03-05 | C Wave 3 ✅ | Calendar (react-day-picker v9) + Chart (recharts v3 wrapper). docs/ui-components.md updated. Build ✅, vitest 252/252 ✅. |
