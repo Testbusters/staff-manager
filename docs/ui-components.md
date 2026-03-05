@@ -32,6 +32,8 @@ verificare se esiste un componente mappato qui.
 | Skeleton loading | `Skeleton` | `components/ui/skeleton.tsx` | ✅ Disponibile |
 | Tabella dati con filtri/sort | `DataTable` | `components/ui/data-table.tsx` | ✅ Disponibile |
 | Form con validazione | `Form` + `FormField` | `components/ui/form.tsx` | ✅ Disponibile |
+| Selettore data | `Calendar` | `components/ui/calendar.tsx` | ✅ Disponibile |
+| Grafici | `ChartContainer` + primitives | `components/ui/chart.tsx` | ✅ Disponibile |
 
 ---
 
@@ -363,9 +365,51 @@ export function MyForm() {
 
 ---
 
+## Calendar — Pattern
+
+```tsx
+import { Calendar } from '@/components/ui/calendar';
+
+const [date, setDate] = React.useState<Date | undefined>();
+
+<Calendar
+  mode="single"
+  selected={date}
+  onSelect={setDate}
+  className="rounded-md border"
+/>
+```
+
+**Note:** react-day-picker v9. Supports `mode="single"`, `mode="range"`, `mode="multiple"`.
+
+---
+
+## Chart — Pattern
+
+```tsx
+import {
+  ChartContainer, ChartTooltip, ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import { Bar, BarChart, XAxis } from 'recharts';
+
+const config: ChartConfig = {
+  importo: { label: 'Importo', color: 'hsl(var(--chart-1))' },
+};
+
+<ChartContainer config={config} className="h-[200px]">
+  <BarChart data={data}>
+    <XAxis dataKey="mese" />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="importo" fill="var(--color-importo)" />
+  </BarChart>
+</ChartContainer>
+```
+
+**Note:** recharts v3. `ChartContainer` injects CSS variables `--color-{key}` from config. Use `var(--color-key)` as fill/stroke values. Existing `DashboardBarChart` and `AdminDashboard` use recharts directly — no migration required.
+
+---
+
 ## Roadmap componenti futuri
 
-| Componente | Priorità |
-|---|---|
-| `Calendar` | On demand — richiede `react-day-picker` |
-| `Chart` | On demand — richiede `recharts` |
+Tutti i componenti principali sono ora disponibili. Aggiungere qui nuovi componenti on demand.
