@@ -131,7 +131,7 @@ export default function NotificationPageClient() {
 
   const chipBase = 'whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium border transition cursor-pointer select-none';
   const chipActive = 'bg-gray-100 text-gray-900 border-gray-100';
-  const chipInactive = 'bg-transparent text-muted-foreground border-border hover:border-gray-500 hover:text-foreground';
+  const chipInactive = 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground hover:text-foreground';
 
   return (
     <div className="max-w-2xl space-y-4">
@@ -151,7 +151,7 @@ export default function NotificationPageClient() {
             className={`text-xs px-3 py-1.5 rounded-full border transition ${
               unreadOnly
                 ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-transparent text-muted-foreground border-border hover:border-gray-500'
+                : 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground'
             }`}
           >
             Solo non lette
@@ -278,7 +278,7 @@ export default function NotificationPageClient() {
               disabled={page <= 1}
               onClick={() => pushParams({ page: String(page - 1) })}
               className="px-3 py-1.5 rounded text-xs text-muted-foreground border border-border
-                         hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                         hover:border-muted-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               ← Precedente
             </button>
@@ -287,7 +287,7 @@ export default function NotificationPageClient() {
               disabled={page >= totalPages}
               onClick={() => pushParams({ page: String(page + 1) })}
               className="px-3 py-1.5 rounded text-xs text-muted-foreground border border-border
-                         hover:border-gray-500 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                         hover:border-muted-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               Successiva →
             </button>

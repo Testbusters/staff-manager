@@ -24,7 +24,7 @@ export default function Timeline({ events }: { events: HistoryEvent[] }) {
         <div key={ev.id} className="flex gap-3">
           {/* Line + dot */}
           <div className="flex flex-col items-center">
-            <div className="w-2 h-2 rounded-full bg-gray-500 mt-1.5 shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-muted-foreground mt-1.5 shrink-0" />
             {i < events.length - 1 && <div className="w-px flex-1 bg-accent my-1" />}
           </div>
 

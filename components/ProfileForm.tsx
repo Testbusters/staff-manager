@@ -44,7 +44,7 @@ type Props = {
 const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 const readonlyCls =
-  'w-full rounded-lg bg-gray-850 border border-border px-3 py-2.5 text-sm text-muted-foreground select-all';
+  'w-full rounded-lg bg-card border border-border px-3 py-2.5 text-sm text-muted-foreground select-all';
 const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 const sectionCls = 'rounded-2xl bg-card border border-border';
 const sectionHeader = 'px-5 py-4 border-b border-border';

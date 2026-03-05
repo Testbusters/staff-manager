@@ -104,7 +104,7 @@ export default function ImportSection() {
         {state.phase === 'done' && (
           <button
             onClick={handleReset}
-            className="shrink-0 rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition"
+            className="shrink-0 rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition"
           >
             Nuova importazione
           </button>
@@ -112,7 +112,7 @@ export default function ImportSection() {
         {state.phase === 'error' && (
           <button
             onClick={handleReset}
-            className="shrink-0 rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition"
+            className="shrink-0 rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition"
           >
             Riprova
           </button>

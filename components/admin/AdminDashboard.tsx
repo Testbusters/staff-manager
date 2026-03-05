@@ -306,19 +306,19 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
           </Link>
           <Link
             href="/export"
-            className="rounded-xl bg-accent hover:bg-gray-600 px-4 py-2 text-sm font-medium text-foreground transition"
+            className="rounded-xl bg-accent hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition"
           >
             Export pagamenti
           </Link>
           <Link
             href="/documenti"
-            className="rounded-xl bg-accent hover:bg-gray-600 px-4 py-2 text-sm font-medium text-foreground transition"
+            className="rounded-xl bg-accent hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition"
           >
             Carica documento
           </Link>
           <Link
             href="/impostazioni"
-            className="rounded-xl bg-accent hover:bg-gray-600 px-4 py-2 text-sm font-medium text-foreground transition"
+            className="rounded-xl bg-accent hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition"
           >
             Crea utente
           </Link>
@@ -464,7 +464,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
               placeholder="Cerca cognome…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="rounded-lg bg-muted border border-border px-3 py-1.5 text-xs text-foreground placeholder-gray-600 focus:outline-none focus:border-gray-500 w-36"
+              className="rounded-lg bg-muted border border-border px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring w-36"
             />
             <Select value={communityFilter || 'all'} onValueChange={(v) => setCommunityFilter(v === 'all' ? '' : v)}>
               <SelectTrigger className="h-8 text-xs w-auto"><SelectValue /></SelectTrigger>

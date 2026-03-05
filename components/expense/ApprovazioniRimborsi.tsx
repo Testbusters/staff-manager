@@ -157,7 +157,7 @@ export default function ApprovazioniRimborsi({
         value={search}
         onChange={(e) => handleSearchChange(e.target.value)}
         placeholder="Cerca per nome cognome collaboratore"
-        className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-500"
+        className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
       />
 
       {/* Filter chips — stato */}
