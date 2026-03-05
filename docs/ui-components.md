@@ -30,7 +30,8 @@ verificare se esiste un componente mappato qui.
 | Avatar utente | `Avatar` | `components/ui/avatar.tsx` | ✅ Disponibile |
 | Separatore visivo | `Separator` | `components/ui/separator.tsx` | ✅ Disponibile |
 | Skeleton loading | `Skeleton` | `components/ui/skeleton.tsx` | ✅ Disponibile |
-| Tabella dati con filtri | `DataTable` (TanStack + `Table`) | — | On demand (Wave 2) |
+| Tabella dati con filtri/sort | `DataTable` | `components/ui/data-table.tsx` | ✅ Disponibile |
+| Form con validazione | `Form` + `FormField` | `components/ui/form.tsx` | ✅ Disponibile |
 
 ---
 
@@ -274,10 +275,97 @@ Il progetto supporta light/dark mode via `next-themes` (ThemeProvider in `app/la
 
 ---
 
+## DataTable — Pattern
+
+```tsx
+import { DataTable, DataTableColumnHeader, type ColumnDef } from '@/components/ui/data-table';
+
+// 1. Define columns
+const columns: ColumnDef<MyRow>[] = [
+  {
+    accessorKey: "nome",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Nome" />,
+    cell: ({ row }) => <span>{row.getValue("nome")}</span>,
+  },
+  {
+    accessorKey: "importo",
+    header: "Importo",
+    cell: ({ row }) => formatImporto(row.getValue("importo")),
+  },
+];
+
+// 2. Use DataTable
+<div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+  <DataTable
+    columns={columns}
+    data={rows}
+    pagination          // optional: enables prev/next controls
+    pageSize={20}       // default: 20
+    emptyMessage="Nessun risultato."
+  />
+</div>
+```
+
+**Note:** `DataTableColumnHeader` adds sort toggle (chevron icons). Wraps existing `Table` primitives — outer styled div still needed for rounded/border.
+
+---
+
+## Form — Pattern
+
+```tsx
+import {
+  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+  useForm, zodResolver,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { z } from 'zod';
+
+const schema = z.object({
+  nome: z.string().min(1, 'Campo obbligatorio'),
+  importo: z.coerce.number().positive(),
+});
+
+export function MyForm() {
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { nome: '', importo: 0 },
+  });
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    // data is typed and validated
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="nome"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />  {/* shows validation error */}
+            </FormItem>
+          )}
+        />
+        <Button type="submit">Salva</Button>
+      </form>
+    </Form>
+  );
+}
+```
+
+**Note:** `useForm` and `zodResolver` are re-exported from `form.tsx` for convenience. Use for NEW forms — existing forms use manual useState pattern (migration not required).
+
+---
+
 ## Roadmap componenti futuri
 
 | Componente | Priorità |
 |---|---|
-| `DataTable` (TanStack) | Wave 2 — richiede `@tanstack/react-table` |
-| `Form` (react-hook-form) | Wave 2 — richiede `react-hook-form` |
 | `Calendar` | On demand — richiede `react-day-picker` |
+| `Chart` | On demand — richiede `recharts` |
