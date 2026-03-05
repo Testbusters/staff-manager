@@ -109,23 +109,25 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
             <p className="text-[10px] text-sidebar-foreground truncate">{userEmail}</p>
           </div>
         </div>
-        <button
+        <div
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
+                     text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition mb-1 cursor-pointer"
           onClick={handleToggleTheme}
           suppressHydrationWarning
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
-                     text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition mb-1"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleToggleTheme()}
         >
           <Switch
             checked={resolvedTheme === 'dark'}
             onCheckedChange={handleToggleTheme}
             suppressHydrationWarning
             aria-label="Toggle dark mode"
-            className="pointer-events-none"
           />
-          <span suppressHydrationWarning>
+          <span suppressHydrationWarning className="select-none">
             {resolvedTheme === 'dark' ? 'Dark mode' : 'Light mode'}
           </span>
-        </button>
+        </div>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
