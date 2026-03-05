@@ -156,7 +156,7 @@ export default async function OpportunitaPage({
                   <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${OPP_TIPO_COLORS[o.tipo as OpportunityTipo] ?? OPP_TIPO_COLORS.ALTRO}`}>
                     {OPP_TIPO_LABELS[o.tipo as OpportunityTipo] ?? o.tipo}
                   </span>
-                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">{o.titolo}</h3>
+                  <h3 className="text-sm font-semibold text-foreground truncate">{o.titolo}</h3>
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
@@ -183,7 +183,7 @@ export default async function OpportunitaPage({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   {expiryBadge(d.valid_to)}
-                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">{d.titolo}</h3>
+                  <h3 className="text-sm font-semibold text-foreground truncate">{d.titolo}</h3>
                   {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
@@ -210,7 +210,7 @@ export default async function OpportunitaPage({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   {expiryBadge(d.valid_to)}
-                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">{d.titolo}</h3>
+                  <h3 className="text-sm font-semibold text-foreground truncate">{d.titolo}</h3>
                   {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>

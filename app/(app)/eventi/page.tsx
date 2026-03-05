@@ -102,7 +102,7 @@ export default async function EventiPage() {
                 {TIPO_LABELS[ev.tipo as EventTipo] ?? ev.tipo}
               </span>
             )}
-            <h3 className={`text-sm font-semibold group-hover:text-white transition ${isPast ? 'text-muted-foreground' : 'text-foreground'}`}>
+            <h3 className={`text-sm font-semibold ${isPast ? 'text-muted-foreground' : 'text-foreground'}`}>
               {ev.titolo}
             </h3>
           </div>

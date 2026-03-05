@@ -130,7 +130,7 @@ export default async function ComunicazioniPage({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   {c.pinned && <span className="text-blue-400 text-sm flex-shrink-0">📌</span>}
-                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">
+                  <h3 className="text-sm font-semibold text-foreground truncate">
                     {c.titolo}
                   </h3>
                 </div>
@@ -181,7 +181,7 @@ export default async function ComunicazioniPage({
                   <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground">
                     {CATEGORIA_LABELS[r.categoria as ResourceCategoria] ?? r.categoria}
                   </span>
-                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">
+                  <h3 className="text-sm font-semibold text-foreground truncate">
                     {r.titolo}
                   </h3>
                 </div>
