@@ -1,9 +1,7 @@
 # UI Components — Reference
 
-> File permanente. Non eliminare al termine della migrazione shadcn.
+> File permanente. Non eliminare.
 > Aggiornare ogni volta che viene introdotto o adottato un nuovo pattern UI.
->
-> Piano di migrazione (fasi e stato): `docs/shadcn-migration.md`
 
 ---
 
@@ -15,19 +13,19 @@ verificare se esiste un componente mappato qui.
 | Esigenza UI | Componente | File | Stato |
 |---|---|---|---|
 | Modal centrato / conferma | `Dialog` | `components/ui/dialog.tsx` | ✅ Disponibile |
-| Conferma distruttiva | `AlertDialog` | — | Fase 6 |
+| Conferma distruttiva | `AlertDialog` | `components/ui/alert-dialog.tsx` | ✅ Disponibile |
 | Pannello laterale / form lungo | `Sheet` (`side="right"`) | `components/ui/sheet.tsx` | ✅ Disponibile |
 | Tooltip informativo | `Tooltip` + `TooltipProvider` | `components/ui/tooltip.tsx` | ✅ Disponibile |
 | Status label / badge | `Badge` + varianti custom | `components/ui/badge.tsx` | ✅ Disponibile |
-| Bottone azione | `Button` | `components/ui/button.tsx` | ✅ Disponibile (Fase 8: audit uso) |
-| Input testo | `Input` | — | Fase 6 |
-| Area di testo | `Textarea` | — | Fase 6 |
-| Select / dropdown | `Select` | — | Fase 7 |
-| Menu azioni contestuale | `DropdownMenu` | — | Fase 6 |
-| Tab navigation | `Tabs` | — | Fase 6 |
-| Paginazione | `Pagination` | — | Fase 6 |
-| Tabella dati (nuove pagine) | `DataTable` (TanStack + `Table`) | — | Fase 5 (on demand) |
-| Loading state | `Skeleton` | — | Fase futura |
+| Bottone azione | `Button` | `components/ui/button.tsx` | ✅ Disponibile |
+| Input testo | `Input` | `components/ui/input.tsx` | ✅ Disponibile |
+| Area di testo | `Textarea` | `components/ui/textarea.tsx` | ✅ Disponibile |
+| Select / dropdown | `Select` | `components/ui/select.tsx` | ✅ Disponibile |
+| Menu azioni contestuale | `DropdownMenu` | — | Futura |
+| Tab navigation | `Tabs` | — | Futura |
+| Paginazione | `Pagination` | — | Futura |
+| Tabella dati (nuove pagine) | `DataTable` (TanStack + `Table`) | — | On demand |
+| Loading state | `Skeleton` | — | Futura |
 
 ---
 
@@ -128,7 +126,7 @@ Le classi colore cambiano con le fasi di migrazione — i `data-*` sono stabili.
 
 | Target | Selettore | Note |
 |---|---|---|
-| Badge compensation/expense | `[data-stato="APPROVATO"]` | Aggiungere `data-stato={stato}` a `StatusBadge` in Fase 9 |
+| Badge compensation/expense | `[data-stato="APPROVATO"]` | `data-stato={stato}` presente in `StatusBadge.tsx` |
 | Badge ticket | `[data-ticket-stato="CHIUSO"]` | Già presente in `TicketStatusBadge` |
 | Dialog overlay | `[data-slot="dialog-overlay"]` | Radix data-slot attribute |
 | Dialog content | `[data-slot="dialog-content"]` | Per scoping selettori dentro modal |
@@ -153,14 +151,10 @@ Il progetto è dark-only hardcoded (`<html className="dark">`). Non installare `
 
 ---
 
-## Roadmap componenti rimanenti
+## Roadmap componenti futuri
 
-Vedere `docs/shadcn-migration.md` per stato aggiornato delle fasi.
-
-| Fase | Componenti | Priorità |
-|---|---|---|
-| Fase 5 | `Table` + TanStack (nuove pagine) | On demand |
-| Fase 6 | `Input`, `Textarea`, `Tabs`, `Pagination`, `DropdownMenu`, `AlertDialog` | Media |
-| Fase 7 | `Select` | Media |
-| Fase 8 | `Button` audit (CTA primari) | Bassa |
-| Fase 9 | Cleanup, `data-stato` su StatusBadge, re-enable e2e | — |
+| Componente | Priorità |
+|---|---|
+| `Table` + TanStack `DataTable` | On demand (prima pagina con tabella dati) |
+| `DropdownMenu`, `Tabs`, `Pagination` | Futura |
+| `Skeleton` | Futura |
