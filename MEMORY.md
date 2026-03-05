@@ -19,7 +19,7 @@ implementation of each approved block. Working on `main`.
 | C | Guided review of `docs/requirements.md`: section-by-section comparison, user approval per change | 🔄 in progress — Blocks 1–14 + community targeting + feedback management + revisione Compensi e Rimborsi + revisione sezione Rimborsi + dashboard responsabile_compensi + fix responsabile nav/form ✅, next blocks to define |
 | D | Rebuild `docs/implementation-checklist.md` based on updated `requirements.md` | 🔄 in progress — Blocks 1–14 + community targeting + feedback management + revisione Compensi e Rimborsi + revisione sezione Rimborsi + dashboard responsabile_compensi + fix responsabile nav/form ✅, next blocks to plan |
 | E | shadcn/ui migration — Fasi 1–9 ✅ COMPLETE | ✅ — Fase 9 (Cleanup) complete 2026-03-05. Migration fully done. |
-| F | UI Kit adoption — Phase A (token alignment) + Phase C Wave 1 (9 components) | ✅ — Phase A (themes.css, next-themes, toggle, DB persistence) + Wave 1 (skeleton/tabs/dropdown-menu/avatar/checkbox/table/card/separator/pagination + 5 alignments) complete 2026-03-05. Phase C on demand for new components. |
+| F | UI Kit adoption — Phase A + Wave 1 + Wave 2 | ✅ — Phase A (themes.css, next-themes, toggle, DB persistence) + Wave 1 (9 zero-dep components + 5 alignments) + Wave 2 (DataTable + Form, @tanstack/react-table + react-hook-form + @hookform/resolvers) complete 2026-03-05. Phase C on demand for Calendar/Chart. |
 
 > **Rule**: do not advance to the next step without explicit confirmation. C and D depend on
 > order — the checklist cannot be rebuilt before `requirements.md` is updated.
