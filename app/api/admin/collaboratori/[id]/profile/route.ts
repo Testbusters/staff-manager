@@ -5,9 +5,9 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 // All profile fields that admin/responsabile can update on a collaborator's record.
-// IBAN is excluded — it is sensitive and only the collaborator or admin can set it.
-// (Admin note: admin CAN set IBAN via direct DB; this endpoint intentionally omits it
-//  to enforce the same restriction for responsabile_compensi.)
+// IBAN and intestatario_pagamento are excluded from the shared schema — they are
+// sensitive payment fields, accessible only to the collaborator or admin.
+// Admin sends them explicitly; they are stripped for responsabile_compensi callers.
 const patchSchema = z.object({
   username:            z.string().min(3).max(50).regex(/^[a-z0-9_]+$/, 'Solo lettere minuscole, numeri e _').optional(),
   nome:                z.string().min(1).max(100).optional(),
@@ -24,6 +24,8 @@ const patchSchema = z.object({
   tshirt_size:         z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']).nullable().optional(),
   sono_un_figlio_a_carico: z.boolean().optional(),
   importo_lordo_massimale: z.number().min(1).max(5000).nullable().optional(),
+  // Admin-only payment field — stripped for responsabile_compensi below
+  intestatario_pagamento: z.string().max(100).nullable().optional(),
 });
 
 export async function PATCH(
@@ -82,7 +84,12 @@ export async function PATCH(
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const { username, ...profileFields } = parsed.data;
+  const { username, intestatario_pagamento, ...profileFields } = parsed.data;
+  // intestatario_pagamento is admin-only — same restriction as IBAN
+  const adminOnly: Record<string, unknown> = {};
+  if (caller.role === 'amministrazione' && intestatario_pagamento !== undefined) {
+    adminOnly.intestatario_pagamento = intestatario_pagamento;
+  }
 
   // Username uniqueness check (if provided)
   if (username !== undefined) {
@@ -98,7 +105,7 @@ export async function PATCH(
     }
   }
 
-  const update: Record<string, unknown> = { ...profileFields };
+  const update: Record<string, unknown> = { ...profileFields, ...adminOnly };
   if (username !== undefined) update.username = username;
 
   if (Object.keys(update).length === 0) {

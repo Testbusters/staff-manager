@@ -73,7 +73,9 @@ export default async function OpportunitaPage({
   }
 
   const { tab } = await searchParams;
-  const activeTab: Tab = tab === 'sconti' ? 'sconti' : 'opportunita';
+  const activeTab: Tab = tab === 'sconti' ? 'sconti'
+    : tab === 'sconti_peer4med' ? 'sconti_peer4med'
+    : 'opportunita';
 
   const allOpportunities: Opportunity[] = activeTab === 'opportunita'
     ? ((await supabase
@@ -91,7 +93,8 @@ export default async function OpportunitaPage({
   const allDiscounts: Discount[] = activeTab === 'sconti'
     ? ((await supabase
         .from('discounts')
-        .select('id, titolo, fornitore, descrizione, valid_to, community_ids, created_at')
+        .select('id, titolo, fornitore, descrizione, valid_to, community_ids, brand, created_at')
+        .eq('brand', 'testbusters')
         .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])) as Discount[])
     : [];
@@ -100,6 +103,20 @@ export default async function OpportunitaPage({
     ? allDiscounts.filter((d) =>
         d.community_ids.length === 0 || d.community_ids.some((id) => userCommunityIds.includes(id)))
     : allDiscounts;
+
+  const allDiscountsPeer4med: Discount[] = activeTab === 'sconti_peer4med'
+    ? ((await supabase
+        .from('discounts')
+        .select('id, titolo, fornitore, descrizione, valid_to, community_ids, brand, created_at')
+        .eq('brand', 'peer4med')
+        .order('created_at', { ascending: false })
+        .then((r) => r.data ?? [])) as Discount[])
+    : [];
+
+  const discountsPeer4med = profile.role === 'collaboratore'
+    ? allDiscountsPeer4med.filter((d) =>
+        d.community_ids.length === 0 || d.community_ids.some((id) => userCommunityIds.includes(id)))
+    : allDiscountsPeer4med;
 
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
@@ -117,9 +134,10 @@ export default async function OpportunitaPage({
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Link href="?tab=opportunita" className={tabCls('opportunita')}>💼 Opportunità</Link>
         <Link href="?tab=sconti" className={tabCls('sconti')}>🎁 Sconti</Link>
+        <Link href="?tab=sconti_peer4med" className={tabCls('sconti_peer4med')}>🏥 Sconti Peer4Med</Link>
       </div>
 
       {activeTab === 'opportunita' && (
@@ -157,6 +175,33 @@ export default async function OpportunitaPage({
             <p className="text-sm text-muted-foreground py-8 text-center">Nessuno sconto disponibile.</p>
           )}
           {discounts.map((d) => (
+            <Link
+              key={d.id}
+              href={`/sconti/${d.id}`}
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  {expiryBadge(d.valid_to)}
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-white truncate transition">{d.titolo}</h3>
+                  {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
+                </div>
+                <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
+              </div>
+              {d.descrizione && (
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.descrizione}</p>
+              )}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'sconti_peer4med' && (
+        <div className="space-y-3">
+          {discountsPeer4med.length === 0 && (
+            <p className="text-sm text-muted-foreground py-8 text-center">Nessuno sconto Peer4Med disponibile.</p>
+          )}
+          {discountsPeer4med.map((d) => (
             <Link
               key={d.id}
               href={`/sconti/${d.id}`}

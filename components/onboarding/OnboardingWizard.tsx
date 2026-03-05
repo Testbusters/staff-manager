@@ -24,6 +24,7 @@ type PrefillData = {
   civico_residenza: string | null;
   telefono: string | null;
   iban: string | null;
+  intestatario_pagamento: string | null;
   tshirt_size: string | null;
   sono_un_figlio_a_carico: boolean;
 } | null;
@@ -57,6 +58,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   const [civico, setCivico]                   = useState(prefill?.civico_residenza ?? '');
   const [telefono, setTelefono]               = useState(prefill?.telefono ?? '');
   const [iban, setIban]                       = useState(prefill?.iban ?? '');
+  const [intestatarioPagamento, setIntestatarioPagamento] = useState(prefill?.intestatario_pagamento ?? '');
   const [tshirt, setTshirt]                   = useState(prefill?.tshirt_size ?? '');
   const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
 
@@ -75,7 +77,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
     nome.trim() && cognome.trim() && codiceFiscale.trim() &&
     dataNascita && luogoNascita.trim() && provinciaNascita.trim() &&
     comune.trim() && provinciaRes.trim() && indirizzo.trim() && civico.trim() &&
-    telefono.trim() && iban.trim() && tshirt;
+    telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt;
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
@@ -97,6 +99,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         civico_residenza:    civico.trim(),
         telefono:            telefono.trim(),
         iban:                iban.trim().toUpperCase().replace(/\s/g, ''),
+        intestatario_pagamento: intestatarioPagamento.trim(),
         tshirt_size:         tshirt,
         sono_un_figlio_a_carico: sonoFiglio,
       }),
@@ -364,6 +367,15 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         <div>
           <p className={sectionTitle}>Pagamento e preferenze</p>
           <div className="space-y-3">
+            <div>
+              <label className={labelCls}>Intestatario del conto bancario <span className="text-red-500">*</span></label>
+              <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
+                onChange={(e) => setIntestatarioPagamento(e.target.value)}
+                required maxLength={100} />
+              <p className="text-xs text-muted-foreground mt-1">
+                Nome e cognome dell&apos;intestatario del conto su cui riceverai il pagamento. Può essere diverso dal tuo se non hai un conto a tuo nome.
+              </p>
+            </div>
             <div>
               <label className={labelCls}>IBAN <span className="text-red-500">*</span></label>
               <Input type="text" placeholder="IT60 X054 2811 1010 0000 0123 456" value={iban}

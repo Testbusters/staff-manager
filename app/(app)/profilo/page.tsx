@@ -32,7 +32,7 @@ export default async function ProfiloPage({
         nome, cognome, email, username, codice_fiscale,
         data_nascita, luogo_nascita, provincia_nascita,
         comune, provincia_residenza, data_ingresso,
-        telefono, indirizzo, civico_residenza, iban, tshirt_size,
+        telefono, indirizzo, civico_residenza, iban, intestatario_pagamento, tshirt_size,
         foto_profilo_url, sono_un_figlio_a_carico, importo_lordo_massimale,
         collaborator_communities ( communities ( name ) )
       `)

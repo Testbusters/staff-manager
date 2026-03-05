@@ -8,7 +8,7 @@ import EventList from '@/components/contenuti/EventList';
 import OpportunityList from '@/components/contenuti/OpportunityList';
 import type { Role, Communication, Discount, Resource, ContentEvent, Opportunity, Community } from '@/lib/types';
 
-type Tab = 'comunicazioni' | 'sconti' | 'risorse' | 'eventi' | 'opportunita';
+type Tab = 'comunicazioni' | 'sconti' | 'sconti_peer4med' | 'risorse' | 'eventi' | 'opportunita';
 
 export default async function ContenutiPage({
   searchParams,
@@ -36,6 +36,7 @@ export default async function ContenutiPage({
 
   const { tab } = await searchParams;
   const activeTab: Tab = tab === 'sconti' ? 'sconti'
+    : tab === 'sconti_peer4med' ? 'sconti_peer4med'
     : tab === 'risorse' ? 'risorse'
     : tab === 'eventi' ? 'eventi'
     : tab === 'opportunita' ? 'opportunita'
@@ -62,6 +63,16 @@ export default async function ContenutiPage({
     ? ((await supabase
         .from('discounts')
         .select('*')
+        .eq('brand', 'testbusters')
+        .order('created_at', { ascending: false })
+        .then((r) => r.data ?? [])) as Discount[])
+    : [];
+
+  const discountsPeer4med: Discount[] = activeTab === 'sconti_peer4med'
+    ? ((await supabase
+        .from('discounts')
+        .select('*')
+        .eq('brand', 'peer4med')
         .order('created_at', { ascending: false })
         .then((r) => r.data ?? [])) as Discount[])
     : [];
@@ -110,6 +121,7 @@ export default async function ContenutiPage({
       <div className="flex gap-2 mb-6 overflow-x-auto">
         <Link href="?tab=comunicazioni" className={tabCls('comunicazioni')}>📌 Comunicazioni</Link>
         <Link href="?tab=sconti" className={tabCls('sconti')}>🎁 Sconti</Link>
+        <Link href="?tab=sconti_peer4med" className={tabCls('sconti_peer4med')}>🏥 Sconti Peer4Med</Link>
         <Link href="?tab=risorse" className={tabCls('risorse')}>📚 Risorse</Link>
         <Link href="?tab=eventi" className={tabCls('eventi')}>🗓 Eventi</Link>
         <Link href="?tab=opportunita" className={tabCls('opportunita')}>💼 Opportunità</Link>
@@ -127,6 +139,15 @@ export default async function ContenutiPage({
           discounts={discounts}
           canWrite={true}
           communities={comms}
+          brand="testbusters"
+        />
+      )}
+      {activeTab === 'sconti_peer4med' && (
+        <DiscountList
+          discounts={discountsPeer4med}
+          canWrite={true}
+          communities={comms}
+          brand="peer4med"
         />
       )}
       {activeTab === 'risorse' && (

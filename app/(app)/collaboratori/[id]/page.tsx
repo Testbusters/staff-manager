@@ -33,7 +33,7 @@ export default async function CollaboratoreDetailPage({
   // ── Fetch collaborator ───────────────────────────────────────────────────
   const { data: collab, error: collabErr } = await svc
     .from('collaborators')
-    .select('id, user_id, nome, cognome, codice_fiscale, telefono, email, tipo_contratto, data_ingresso, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, data_nascita, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, username')
+    .select('id, user_id, nome, cognome, codice_fiscale, telefono, email, tipo_contratto, data_ingresso, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, data_nascita, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, intestatario_pagamento, username')
     .eq('id', id)
     .maybeSingle();
 
@@ -147,6 +147,7 @@ export default async function CollaboratoreDetailPage({
         tshirt_size: collab.tshirt_size ?? null,
         sono_un_figlio_a_carico: collab.sono_un_figlio_a_carico ?? false,
         importo_lordo_massimale: collab.importo_lordo_massimale ?? null,
+        intestatario_pagamento: collab.intestatario_pagamento ?? null,
         username: collab.username ?? null,
       }}
       memberStatus={memberStatus}

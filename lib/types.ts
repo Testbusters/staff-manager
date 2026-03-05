@@ -172,6 +172,7 @@ export interface Discount {
   fornitore: string;
   logo_url: string | null;
   file_url: string | null;
+  brand: string;
   created_at: string;
 }
 

@@ -26,6 +26,7 @@ const schema = z.object({
   indirizzo:           z.string().max(200).nullable().optional(),
   civico_residenza:    z.string().max(20).nullable().optional(),
   telefono:            z.string().max(20).nullable().optional(),
+  intestatario_pagamento: z.string().max(100).nullable().optional(),
   data_ingresso:       z.string().nullable().optional(),
 });
 
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     nome, cognome, codice_fiscale, data_nascita,
     luogo_nascita, provincia_nascita,
     comune, provincia_residenza,
-    indirizzo, civico_residenza, telefono, data_ingresso,
+    indirizzo, civico_residenza, telefono, intestatario_pagamento, data_ingresso,
   } = parsed.data;
 
   // tipo_contratto is required for collaboratore and responsabile_compensi
@@ -180,6 +181,7 @@ export async function POST(request: Request) {
       indirizzo:           indirizzo ?? null,
       civico_residenza:    civico_residenza ?? null,
       telefono:            telefono ?? null,
+      intestatario_pagamento: intestatario_pagamento ?? null,
       data_ingresso:       data_ingresso ?? null,
     });
   }

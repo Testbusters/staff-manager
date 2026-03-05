@@ -26,6 +26,7 @@ type Collaborator = {
   indirizzo: string | null;
   civico_residenza: string | null;
   iban: string | null;
+  intestatario_pagamento: string | null;
   tshirt_size: string | null;
   foto_profilo_url: string | null;
   sono_un_figlio_a_carico: boolean;
@@ -101,6 +102,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
   const [civico, setCivico]       = useState(collaborator?.civico_residenza ?? '');
   // Payment
   const [iban, setIban] = useState(collaborator?.iban ?? '');
+  const [intestatarioPagamento, setIntestatarioPagamento] = useState(collaborator?.intestatario_pagamento ?? '');
   // Fiscal
   const [sonoFiglio, setSonoFiglio]   = useState(collaborator?.sono_un_figlio_a_carico ?? false);
   const [massimale, setMassimale]     = useState<string>(
@@ -143,6 +145,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
         indirizzo:           indirizzo || null,
         civico_residenza:    civico.trim() || null,
         iban:                iban.toUpperCase().replace(/\s/g, '') || null,
+        intestatario_pagamento: intestatarioPagamento.trim() || null,
         tshirt_size:               tshirt || null,
         sono_un_figlio_a_carico:   sonoFiglio,
         importo_lordo_massimale:   massimale !== '' ? parseFloat(massimale) : null,
@@ -392,18 +395,34 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
           <h2 className="text-sm font-medium text-foreground">Dati pagamento</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Visibile solo a te e all&apos;amministrazione.</p>
         </div>
-        <div className="p-5">
-          <label className={labelCls}>IBAN</label>
-          <Input
-            type="text"
-            placeholder="IT60 X054 2811 1010 0000 0123 456"
-            value={iban}
-            onChange={(e) => setIban(e.target.value)}
-            disabled={loading}
-            className="font-mono"
-            maxLength={34}
-          />
-          <p className="text-xs text-muted-foreground mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className={labelCls}>Intestatario del conto bancario</label>
+            <Input
+              type="text"
+              placeholder="Mario Rossi"
+              value={intestatarioPagamento}
+              onChange={(e) => setIntestatarioPagamento(e.target.value)}
+              disabled={loading}
+              maxLength={100}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Indica il nome e cognome dell&apos;intestatario del conto bancario su cui sarà accreditato il pagamento. Può essere diverso dal tuo se non hai un conto a tuo nome.
+            </p>
+          </div>
+          <div>
+            <label className={labelCls}>IBAN</label>
+            <Input
+              type="text"
+              placeholder="IT60 X054 2811 1010 0000 0123 456"
+              value={iban}
+              onChange={(e) => setIban(e.target.value)}
+              disabled={loading}
+              className="font-mono"
+              maxLength={34}
+            />
+            <p className="text-xs text-muted-foreground mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
+          </div>
         </div>
       </div>
 

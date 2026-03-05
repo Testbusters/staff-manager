@@ -9,7 +9,7 @@ import { z } from 'zod';
 const SELF_EDIT_FIELDS = [
   'nome', 'cognome', 'codice_fiscale', 'data_nascita', 'luogo_nascita', 'provincia_nascita',
   'comune', 'provincia_residenza', 'telefono', 'indirizzo', 'civico_residenza',
-  'iban', 'tshirt_size', 'sono_un_figlio_a_carico', 'importo_lordo_massimale',
+  'iban', 'intestatario_pagamento', 'tshirt_size', 'sono_un_figlio_a_carico', 'importo_lordo_massimale',
 ] as const;
 
 const patchSchema = z.object({
@@ -26,6 +26,7 @@ const patchSchema = z.object({
   indirizzo:           z.string().max(200).nullable().optional(),
   civico_residenza:    z.string().max(20).nullable().optional(),
   iban:                z.string().max(34).regex(/^[A-Z]{2}\d{2}[A-Z0-9]+$/, 'IBAN non valido').or(z.literal('')).optional(),
+  intestatario_pagamento: z.string().max(100).nullable().optional(),
   tshirt_size:         z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']).nullable().optional(),
   // sono_un_figlio_a_carico: il collaboratore dichiara se È fiscalmente a carico di un familiare
   sono_un_figlio_a_carico:   z.boolean().optional(),

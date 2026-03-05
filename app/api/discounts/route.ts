@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const {
     titolo, descrizione, codice_sconto, link,
-    valid_from, valid_to, community_ids, fornitore, logo_url, file_url,
+    valid_from, valid_to, community_ids, fornitore, logo_url, file_url, brand,
   } = body as {
     titolo: string;
     descrizione?: string;
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     fornitore?: string;
     logo_url?: string;
     file_url?: string;
+    brand?: string;
   };
 
   if (!titolo?.trim()) {
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
       fornitore: fornitore?.trim() ?? '',
       logo_url: logo_url?.trim() || null,
       file_url: file_url?.trim() || null,
+      brand: brand ?? 'testbusters',
     })
     .select()
     .single();

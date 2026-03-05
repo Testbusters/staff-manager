@@ -53,6 +53,7 @@ export default function CreateUserForm() {
   const [indirizzo, setIndirizzo]     = useState('');
   const [civico, setCivico]           = useState('');
   const [telefono, setTelefono]       = useState('');
+  const [intestatarioPagamento, setIntestatarioPagamento] = useState('');
   const [dataIngresso, setDataIngresso] = useState('');
 
   // Tipo rapporto: always OCCASIONALE
@@ -130,6 +131,7 @@ export default function CreateUserForm() {
         indirizzo:           indirizzo.trim() || null,
         civico_residenza:    civico.trim() || null,
         telefono:            telefono.trim() || null,
+        intestatario_pagamento: intestatarioPagamento.trim() || null,
         data_ingresso:       dataIngresso || null,
       });
     }
@@ -152,7 +154,7 @@ export default function CreateUserForm() {
     setNome(''); setCognome(''); setUsername(''); setUsernameManuallySet(false);
     setCodiceFiscale(''); setDataNascita('');
     setLuogoNascita(''); setProvinciaNascita(''); setComuneRes(''); setPrvinciaRes('');
-    setIndirizzo(''); setCivico(''); setTelefono(''); setDataIngresso('');
+    setIndirizzo(''); setCivico(''); setTelefono(''); setIntestatarioPagamento(''); setDataIngresso('');
   };
 
   if (credentials) {
@@ -418,6 +420,13 @@ export default function CreateUserForm() {
               <Input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 disabled={loading} />
+            </div>
+            <div>
+              <label className={labelCls}>Intestatario del conto bancario</label>
+              <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
+                onChange={(e) => setIntestatarioPagamento(e.target.value)}
+                disabled={loading} maxLength={100} />
+              <p className="text-[10px] text-muted-foreground mt-1">Nome e cognome dell&apos;intestatario del conto. Pre-compilato per l&apos;onboarding.</p>
             </div>
             <div>
               <label className={labelCls}>Data di ingresso</label>

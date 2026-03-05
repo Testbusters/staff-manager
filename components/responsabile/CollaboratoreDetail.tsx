@@ -71,6 +71,7 @@ interface CollabData {
   tshirt_size: string | null;
   sono_un_figlio_a_carico: boolean;
   importo_lordo_massimale: number | null;
+  intestatario_pagamento: string | null;
   username: string | null;
 }
 
@@ -147,6 +148,7 @@ export default function CollaboratoreDetail({
   const [fMassimale, setFMassimale]             = useState<string>(
     collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '',
   );
+  const [fIntestatario, setFIntestatario]       = useState(collab.intestatario_pagamento ?? '');
   const [fUsername, setFUsername]               = useState(collab.username ?? '');
 
   const openProfileEdit = () => {
@@ -164,6 +166,7 @@ export default function CollaboratoreDetail({
     setFTshirt(collab.tshirt_size ?? '');
     setFSonoFiglio(collab.sono_un_figlio_a_carico);
     setFMassimale(collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '');
+    setFIntestatario(collab.intestatario_pagamento ?? '');
     setFUsername(collab.username ?? '');
     setProfileError(null);
     setProfileSaved(false);
@@ -191,6 +194,10 @@ export default function CollaboratoreDetail({
       body.tshirt_size         = fTshirt || null;
       body.sono_un_figlio_a_carico = fSonoFiglio;
       body.importo_lordo_massimale = fMassimale !== '' ? parseFloat(fMassimale) : null;
+    }
+    // Admin-only payment field
+    if (role === 'amministrazione') {
+      body.intestatario_pagamento = fIntestatario.trim() || null;
     }
     if (fUsername.trim().length >= 3) body.username = fUsername.trim();
 
@@ -493,6 +500,16 @@ export default function CollaboratoreDetail({
               </>
             )}
 
+            {/* Intestatario pagamento — admin only */}
+            {role === 'amministrazione' && (
+              <div>
+                <label className="block text-[11px] text-muted-foreground mb-1">Intestatario del conto bancario</label>
+                <Input type="text" placeholder="Mario Rossi" value={fIntestatario}
+                  onChange={(e) => setFIntestatario(e.target.value)}
+                  maxLength={100} />
+              </div>
+            )}
+
             {profileError && (
               <p className="text-xs text-red-400 bg-red-900/20 px-3 py-2 rounded-lg">{profileError}</p>
             )}
@@ -528,6 +545,7 @@ export default function CollaboratoreDetail({
               ['Luogo nascita', collab.luogo_nascita],
               ['Comune residenza', collab.comune],
               ['Indirizzo', collab.indirizzo],
+              ...(role === 'amministrazione' ? [['Intestatario conto', collab.intestatario_pagamento]] : []),
             ].map(([label, value]) =>
               value ? (
                 <div key={label as string}>

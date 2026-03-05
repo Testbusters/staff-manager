@@ -30,7 +30,7 @@ export async function PATCH(
   const body = await request.json();
   const {
     titolo, descrizione, codice_sconto, link,
-    valid_from, valid_to, community_ids, fornitore, logo_url, file_url,
+    valid_from, valid_to, community_ids, fornitore, logo_url, file_url, brand,
   } = body as {
     titolo?: string;
     descrizione?: string | null;
@@ -42,6 +42,7 @@ export async function PATCH(
     fornitore?: string;
     logo_url?: string | null;
     file_url?: string | null;
+    brand?: string;
   };
 
   const update: Record<string, unknown> = {};
@@ -55,6 +56,7 @@ export async function PATCH(
   if (fornitore !== undefined) update.fornitore = fornitore.trim();
   if (logo_url !== undefined) update.logo_url = logo_url;
   if (file_url !== undefined) update.file_url = file_url;
+  if (brand !== undefined) update.brand = brand;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -18,6 +18,7 @@ const schema = z.object({
   civico_residenza:    z.string().min(1).max(20),
   telefono:            z.string().min(1).max(20),
   iban:                z.string().regex(/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/, 'IBAN non valido'),
+  intestatario_pagamento: z.string().min(1).max(100),
   tshirt_size:         z.string().min(1),
   sono_un_figlio_a_carico:   z.boolean(),
 });
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
     civico_residenza:    d.civico_residenza,
     telefono:            d.telefono,
     iban:                d.iban,
+    intestatario_pagamento: d.intestatario_pagamento,
     tshirt_size:               d.tshirt_size,
     sono_un_figlio_a_carico:   d.sono_un_figlio_a_carico,
   };
