@@ -7,6 +7,7 @@ import { Sun, Moon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
 import NotificationBell from '@/components/NotificationBell';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,15 +98,12 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
       {/* User footer */}
       <div className="px-3 py-4 border-t border-gray-800">
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-xs text-gray-300 font-medium">
-                {userName.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
+          <Avatar className="w-7 h-7 shrink-0">
+            <AvatarImage src={avatarUrl ?? undefined} alt="" />
+            <AvatarFallback className="bg-gray-700 text-xs text-gray-300">
+              {userName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0">
             <p className="text-xs font-medium text-gray-200 truncate">{userName}</p>
             <p className="text-[10px] text-gray-500 truncate">{userEmail}</p>

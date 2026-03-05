@@ -1,6 +1,16 @@
 'use client';
 
 import type { ExportItem, ExportTab } from '@/lib/export-utils';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 function formatImporto(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -27,86 +37,81 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
 
   return (
     <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-800">
-            <th className="px-4 py-3 text-left">
-              <input
-                type="checkbox"
+      <Table className="text-sm">
+        <TableHeader>
+          <TableRow className="border-gray-800">
+            <TableHead className="px-4 py-3 w-10">
+              <Checkbox
                 aria-label="Seleziona tutti"
                 checked={allSelected}
-                onChange={onSelectAll}
-                className="rounded border-gray-600 bg-gray-800 accent-blue-500"
+                onCheckedChange={() => onSelectAll()}
               />
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Nome</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden sm:table-cell">Cod. Fiscale</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden md:table-cell">IBAN</th>
+            </TableHead>
+            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium">Nome</TableHead>
+            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden sm:table-cell">Cod. Fiscale</TableHead>
+            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden md:table-cell">IBAN</TableHead>
             {tab === 'occasionali' && (
-              <>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">Community</th>
-              </>
+              <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden lg:table-cell">Community</TableHead>
             )}
             {tab === 'rimborsi' && (
               <>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">Categoria</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 hidden lg:table-cell">Data spesa</th>
+                <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden lg:table-cell">Categoria</TableHead>
+                <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium hidden lg:table-cell">Data spesa</TableHead>
               </>
             )}
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Importo</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-800">
+            <TableHead className="px-4 py-3 text-xs text-gray-500 font-medium text-right">Importo</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {items.map((item) => (
-            <tr
+            <TableRow
               key={item.id}
-              className={`transition hover:bg-gray-800/50 cursor-pointer ${selected.has(item.id) ? 'bg-blue-900/20' : ''}`}
+              className={cn(
+                "cursor-pointer hover:bg-gray-800/50 border-gray-800",
+                selected.has(item.id) && "bg-blue-900/20"
+              )}
               onClick={() => onToggle(item.id)}
             >
-              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="checkbox"
+              <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                <Checkbox
                   aria-label={`Seleziona ${item.nome} ${item.cognome}`}
                   checked={selected.has(item.id)}
-                  onChange={() => onToggle(item.id)}
-                  className="rounded border-gray-600 bg-gray-800 accent-blue-500"
+                  onCheckedChange={() => onToggle(item.id)}
                 />
-              </td>
-              <td className="px-4 py-3 text-gray-200 font-medium">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-gray-200 font-medium">
                 {item.nome} {item.cognome}
-              </td>
-              <td className="px-4 py-3 text-gray-400 hidden sm:table-cell font-mono text-xs">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-gray-400 hidden sm:table-cell font-mono text-xs">
                 {item.codice_fiscale ?? '—'}
-              </td>
-              <td className="px-4 py-3 text-gray-400 hidden md:table-cell font-mono text-xs">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-gray-400 hidden md:table-cell font-mono text-xs">
                 {item.iban ?? '—'}
-              </td>
+              </TableCell>
               {tab === 'occasionali' && (
-                <>
-                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
-                    {item.community_name ?? '—'}
-                  </td>
-                </>
+                <TableCell className="px-4 py-3 text-gray-400 hidden lg:table-cell">
+                  {item.community_name ?? '—'}
+                </TableCell>
               )}
               {tab === 'rimborsi' && (
                 <>
-                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
+                  <TableCell className="px-4 py-3 text-gray-400 hidden lg:table-cell">
                     {item.categoria ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell tabular-nums">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-400 hidden lg:table-cell tabular-nums">
                     {item.data_spesa
                       ? new Date(item.data_spesa).toLocaleDateString('it-IT')
                       : '—'}
-                  </td>
+                  </TableCell>
                 </>
               )}
-              <td className="px-4 py-3 text-right text-gray-200 font-medium tabular-nums">
+              <TableCell className="px-4 py-3 text-right text-gray-200 font-medium tabular-nums">
                 {formatImporto(item.importo)}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

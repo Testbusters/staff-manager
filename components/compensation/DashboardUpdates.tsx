@@ -4,6 +4,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, ResourceCategoria, EventTipo, OpportunityTipo } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+} from '@/components/ui/pagination';
 
 export type DashboardDocItem = {
   id: string;
@@ -88,25 +97,28 @@ export default function DashboardUpdates({
   }
 
   return (
-    <div className="rounded-2xl bg-gray-900 border border-gray-800">
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="rounded-2xl bg-gray-900 border border-gray-800"
+    >
       {/* Tab header */}
       <div className="flex flex-wrap items-center gap-1 px-5 py-4 border-b border-gray-800">
         <h2 className="text-sm font-medium text-gray-200 mr-3">Ultimi aggiornamenti</h2>
-        <div className="flex items-center gap-0.5 flex-wrap">
+        <TabsList className="h-auto bg-transparent p-0 gap-0.5 flex-wrap justify-start">
           {TABS.map((tab) => {
             const count =
               tab.key === 'eventi'        ? (unreadCounts?.events ?? 0) :
               tab.key === 'comunicazioni' ? (unreadCounts?.communicationsResources ?? 0) :
               tab.key === 'opportunita'   ? (unreadCounts?.opportunitiesDiscounts ?? 0) : 0;
             return (
-              <button
+              <TabsTrigger
                 key={tab.key}
-                onClick={() => handleTabChange(tab.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                  activeTab === tab.key
-                    ? 'bg-gray-700 text-gray-100'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-                }`}
+                value={tab.key}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                           text-gray-400 hover:text-gray-200 hover:bg-gray-800
+                           data-[state=active]:bg-gray-700 data-[state=active]:text-gray-100
+                           data-[state=active]:shadow-none bg-transparent"
               >
                 {tab.label}
                 {count > 0 && (
@@ -114,10 +126,10 @@ export default function DashboardUpdates({
                     {count}
                   </span>
                 )}
-              </button>
+              </TabsTrigger>
             );
           })}
-        </div>
+        </TabsList>
       </div>
 
       {/* Content */}
@@ -216,24 +228,32 @@ export default function DashboardUpdates({
 
       {/* Pagination */}
       {pageCount > 1 && (
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-800">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="text-xs text-gray-400 hover:text-gray-200 disabled:text-gray-700 disabled:cursor-not-allowed transition"
-          >
-            ← Precedente
-          </button>
-          <span className="text-xs text-gray-600">{page + 1} / {pageCount}</span>
-          <button
-            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-            disabled={page === pageCount - 1}
-            className="text-xs text-gray-400 hover:text-gray-200 disabled:text-gray-700 disabled:cursor-not-allowed transition"
-          >
-            Successivo →
-          </button>
-        </div>
+        <Pagination className="w-full mx-0 px-5 py-3 border-t border-gray-800 justify-between">
+          <PaginationContent className="w-full justify-between gap-0">
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(0, p - 1)); }}
+                className={cn(
+                  "text-xs text-gray-400 hover:text-gray-200",
+                  page === 0 && "pointer-events-none text-gray-700 opacity-50"
+                )}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="text-xs text-gray-600">{page + 1} / {pageCount}</span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(pageCount - 1, p + 1)); }}
+                className={cn(
+                  "text-xs text-gray-400 hover:text-gray-200",
+                  page === pageCount - 1 && "pointer-events-none text-gray-700 opacity-50"
+                )}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
-    </div>
+    </Tabs>
   );
 }
