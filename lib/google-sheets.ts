@@ -8,6 +8,7 @@
 
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
+import crypto from 'crypto';
 
 const STATO_COL = 'F'; // 0-based index 5
 const FIRST_DATA_ROW = 2; // row 1 is header
@@ -16,6 +17,7 @@ function buildAuth(): JWT {
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not set');
   const credentials = JSON.parse(raw);
+
   // Replit Secrets can apply multiple levels of escaping to \n in private_key.
   // Keep replacing until no literal \n sequences remain.
   let pk: string = credentials.private_key ?? '';
@@ -23,6 +25,30 @@ function buildAuth(): JWT {
     pk = pk.replace(/\\n/g, '\n');
   }
   pk = pk.replace(/\r/g, '');
+
+  // ── DIAGNOSTIC LOGGING ──────────────────────────────────────────────────
+  console.log('[gsheets:buildAuth] Node.js:', process.version);
+  console.log('[gsheets:buildAuth] OpenSSL:', process.versions.openssl);
+  console.log('[gsheets:buildAuth] pkLength:', pk.length);
+  console.log('[gsheets:buildAuth] pkFirst80:', JSON.stringify(pk.slice(0, 80)));
+  console.log('[gsheets:buildAuth] pkLast40:', JSON.stringify(pk.slice(-40)));
+  console.log('[gsheets:buildAuth] hasLiteralBackslashN:', pk.includes('\\n'));
+  console.log('[gsheets:buildAuth] hasRealNewline:', pk.includes('\n'));
+  console.log('[gsheets:buildAuth] clientEmail:', credentials.client_email);
+
+  // Test if Node's crypto can parse the key at all — fail fast with a clear message.
+  try {
+    crypto.createPrivateKey({ key: pk, format: 'pem' });
+    console.log('[gsheets:buildAuth] crypto.createPrivateKey: OK');
+  } catch (cryptoErr) {
+    const msg = cryptoErr instanceof Error ? cryptoErr.message : String(cryptoErr);
+    const stack = cryptoErr instanceof Error ? cryptoErr.stack : '';
+    console.error('[gsheets:buildAuth] crypto.createPrivateKey FAILED:', msg);
+    console.error('[gsheets:buildAuth] stack:', stack);
+    throw new Error(`Private key rejected by Node.js crypto (${process.version}, OpenSSL ${process.versions.openssl}): ${msg}`);
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   // Use JWT directly instead of GoogleAuth to avoid OpenSSL 3 decoder issues
   // with the credentials code path (Node.js 18+ on Replit).
   return new JWT({
