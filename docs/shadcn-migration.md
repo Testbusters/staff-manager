@@ -234,7 +234,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 | B2 — Button | ✅ | 2026-03-05 | Native <button> → Button variant in ~23 file |
 | B3 — Checkbox | ✅ | 2026-03-05 | <input type="checkbox"> → Checkbox in 13 file |
 | B4 — Table | ✅ | 2026-03-05 | Native table → Table components in 8 file |
-| B5 — Skeleton | 🔲 | — | Deferred — additive, not blocking |
+| B5 — Skeleton | ✅ | 2026-03-05 | DashboardPendingItems (2 modali) + CompensationCreateWizard (search) |
 
 ---
 
