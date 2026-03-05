@@ -38,6 +38,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  typescript: {
+    // Type checking runs locally via `npx tsc --noEmit` (pipeline Phase 3).
+    // Skipped here to avoid OOM on Replit's build workers.
+    ignoreBuildErrors: true,
+  },
   async headers() {
     return [
       {
