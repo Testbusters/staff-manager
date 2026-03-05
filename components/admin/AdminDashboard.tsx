@@ -32,7 +32,7 @@ function KpiCard({
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={
         'text-2xl font-semibold tabular-nums ' +
-        (highlight ? 'text-amber-300' : 'text-foreground')
+        (highlight ? 'text-amber-600 dark:text-amber-300' : 'text-foreground')
       }>
         {value}
       </p>
@@ -63,7 +63,7 @@ function CommunityCard({
         <div className="rounded-lg bg-muted/60 border border-border/40 px-3 py-2 text-center">
           <p className={
             'text-lg font-semibold tabular-nums ' +
-            (pendingComps > 0 ? 'text-amber-300' : 'text-muted-foreground')
+            (pendingComps > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground')
           }>
             {pendingComps}
           </p>
@@ -72,7 +72,7 @@ function CommunityCard({
         <div className="rounded-lg bg-muted/60 border border-border/40 px-3 py-2 text-center">
           <p className={
             'text-lg font-semibold tabular-nums ' +
-            (pendingExps > 0 ? 'text-amber-300' : 'text-muted-foreground')
+            (pendingExps > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground')
           }>
             {pendingExps}
           </p>
@@ -81,7 +81,7 @@ function CommunityCard({
         <div className="rounded-lg bg-muted/60 border border-border/40 px-3 py-2 text-center">
           <p className={
             'text-lg font-semibold tabular-nums ' +
-            (docsToSign > 0 ? 'text-blue-300' : 'text-muted-foreground')
+            (docsToSign > 0 ? 'text-blue-600 dark:text-blue-300' : 'text-muted-foreground')
           }>
             {docsToSign}
           </p>
@@ -116,7 +116,7 @@ function UrgentRow({
       </div>
       <div className="shrink-0 text-right">
         <p className="text-sm font-semibold tabular-nums text-foreground">{eur(amount)}</p>
-        <p className="text-xs text-red-400">{daysWaiting}gg in attesa</p>
+        <p className="text-xs text-red-600 dark:text-red-400">{daysWaiting}gg in attesa</p>
       </div>
     </Link>
   );
@@ -271,7 +271,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
           className={
             'relative rounded-xl px-4 py-2 text-sm font-medium ' +
             (blockItems.length > 0
-              ? 'bg-red-900/40 border border-red-700/50 text-red-300 hover:bg-red-900/60'
+              ? 'bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-700/50 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/60'
               : 'bg-muted border border-border text-muted-foreground hover:text-foreground')
           }
         >
@@ -440,15 +440,15 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className={sectionCls + ' px-4 py-3 text-center'}>
             <p className="text-xs text-muted-foreground">YTD pagato</p>
-            <p className="text-lg font-semibold tabular-nums text-blue-300 mt-0.5">{eur(periodMetrics.ytd.paidAmount)}</p>
+            <p className="text-lg font-semibold tabular-nums text-blue-600 dark:text-blue-300 mt-0.5">{eur(periodMetrics.ytd.paidAmount)}</p>
           </div>
           <div className={sectionCls + ' px-4 py-3 text-center'}>
             <p className="text-xs text-muted-foreground">YTD compensi approvati</p>
-            <p className="text-lg font-semibold tabular-nums text-emerald-300 mt-0.5">{periodMetrics.ytd.approvedCount}</p>
+            <p className="text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300 mt-0.5">{periodMetrics.ytd.approvedCount}</p>
           </div>
           <div className={sectionCls + ' px-4 py-3 text-center'}>
             <p className="text-xs text-muted-foreground">YTD nuovi collab.</p>
-            <p className="text-lg font-semibold tabular-nums text-violet-300 mt-0.5">{periodMetrics.ytd.newCollabs}</p>
+            <p className="text-lg font-semibold tabular-nums text-violet-600 dark:text-violet-300 mt-0.5">{periodMetrics.ytd.newCollabs}</p>
           </div>
         </div>
       </section>

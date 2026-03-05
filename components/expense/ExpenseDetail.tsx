@@ -70,7 +70,7 @@ export default function ExpenseDetail({
         <CardContent className="px-4">
           <Row label="Data spesa" value={formatDate(e.data_spesa)} />
           <Row label="Importo" value={
-            <span className="font-medium text-green-400">{formatCurrency(e.importo)}</span>
+            <span className="font-medium text-green-700 dark:text-green-400">{formatCurrency(e.importo)}</span>
           } />
           <Row label="Descrizione" value={e.descrizione} />
           <Row label="Richiesta il" value={formatDateTime(e.created_at)} />
@@ -79,16 +79,16 @@ export default function ExpenseDetail({
 
       {/* Rejection note */}
       {e.rejection_note && (
-        <div className="rounded-xl bg-red-900/20 border border-red-700/40 px-4 py-3">
-          <p className="text-xs font-medium text-red-400 mb-1">Motivo rifiuto</p>
-          <p className="text-sm text-red-200">{e.rejection_note}</p>
+        <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 px-4 py-3">
+          <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1">Motivo rifiuto</p>
+          <p className="text-sm text-red-700 dark:text-red-200">{e.rejection_note}</p>
         </div>
       )}
 
       {/* Payment info */}
       {e.liquidated_at && (
-        <div className="rounded-xl bg-emerald-900/20 border border-emerald-700/40 px-4 py-3">
-          <p className="text-xs font-medium text-emerald-400 mb-1">Pagamento</p>
+        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 px-4 py-3">
+          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Pagamento</p>
           <Row label="Data liquidazione" value={formatDate(e.liquidated_at)} />
           {e.payment_reference && <Row label="Riferimento" value={e.payment_reference} />}
         </div>

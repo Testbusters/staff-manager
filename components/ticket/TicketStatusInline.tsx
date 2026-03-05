@@ -57,7 +57,7 @@ export default function TicketStatusInline({
           {loading ? '…' : `→ ${TICKET_STATUS_LABELS[s]}`}
         </Button>
       ))}
-      {error && <span className="text-xs text-red-400">{error}</span>}
+      {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
     </div>
   );
 }

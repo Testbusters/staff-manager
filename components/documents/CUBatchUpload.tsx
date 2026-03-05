@@ -74,7 +74,7 @@ export default function CUBatchUpload() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-sm text-red-400">
+        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-sm text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -139,16 +139,16 @@ export default function CUBatchUpload() {
         <div className="space-y-4 border-t border-border pt-5">
           <div className="flex gap-6 text-sm">
             <span className="text-muted-foreground">Elaborati: <strong className="text-foreground">{result.processed}</strong></span>
-            <span className="text-green-400">Caricati: <strong>{result.success}</strong></span>
-            <span className="text-yellow-400">Duplicati: <strong>{result.duplicates}</strong></span>
+            <span className="text-green-700 dark:text-green-400">Caricati: <strong>{result.success}</strong></span>
+            <span className="text-yellow-600 dark:text-yellow-400">Duplicati: <strong>{result.duplicates}</strong></span>
             {result.errors > 0 && (
-              <span className="text-red-400">Errori: <strong>{result.errors}</strong></span>
+              <span className="text-red-600 dark:text-red-400">Errori: <strong>{result.errors}</strong></span>
             )}
           </div>
 
           {result.detail.success.length > 0 && (
             <details className="text-xs">
-              <summary className="text-green-400 cursor-pointer">Caricati ({result.detail.success.length})</summary>
+              <summary className="text-green-700 dark:text-green-400 cursor-pointer">Caricati ({result.detail.success.length})</summary>
               <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.success.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
@@ -157,7 +157,7 @@ export default function CUBatchUpload() {
 
           {result.detail.duplicates.length > 0 && (
             <details className="text-xs">
-              <summary className="text-yellow-400 cursor-pointer">Duplicati saltati ({result.detail.duplicates.length})</summary>
+              <summary className="text-yellow-600 dark:text-yellow-400 cursor-pointer">Duplicati saltati ({result.detail.duplicates.length})</summary>
               <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.duplicates.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
@@ -166,7 +166,7 @@ export default function CUBatchUpload() {
 
           {result.detail.errors.length > 0 && (
             <details className="text-xs" open>
-              <summary className="text-red-400 cursor-pointer">Errori ({result.detail.errors.length})</summary>
+              <summary className="text-red-600 dark:text-red-400 cursor-pointer">Errori ({result.detail.errors.length})</summary>
               <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.errors.map((s, i) => <li key={i}>{s}</li>)}
               </ul>

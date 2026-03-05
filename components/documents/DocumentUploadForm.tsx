@@ -85,13 +85,13 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
 
       {success && (
-        <div className="rounded-lg bg-green-900/30 border border-green-800/40 px-3 py-2 text-sm text-green-400">
+        <div className="rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/40 px-3 py-2 text-sm text-green-700 dark:text-green-400">
           Documento caricato con successo.
         </div>
       )}
 
       {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-sm text-red-400">
+        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-sm text-red-700 dark:text-red-400">
           {error}
         </div>
       )}

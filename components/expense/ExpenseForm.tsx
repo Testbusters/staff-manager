@@ -191,7 +191,7 @@ export default function ExpenseForm() {
                 placeholder="0.00"
               />
               {!isNaN(importoNum) && importoNum > 0 && (
-                <p className="text-xs text-green-400 mt-1">{formatCurrency(importoNum)}</p>
+                <p className="text-xs text-green-700 dark:text-green-400 mt-1">{formatCurrency(importoNum)}</p>
               )}
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function ExpenseForm() {
             </div>
             <div className="flex justify-between py-2.5">
               <dt className="text-xs text-muted-foreground">Importo</dt>
-              <dd className="text-sm font-semibold text-green-400">{formatCurrency(importoNum)}</dd>
+              <dd className="text-sm font-semibold text-green-700 dark:text-green-400">{formatCurrency(importoNum)}</dd>
             </div>
             {form.descrizione.trim() && (
               <div className="flex justify-between py-2.5 gap-4">
@@ -325,7 +325,7 @@ export default function ExpenseForm() {
           </dl>
 
           {error && (
-            <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400 whitespace-pre-line">
+            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400 whitespace-pre-line">
               {error}
             </div>
           )}

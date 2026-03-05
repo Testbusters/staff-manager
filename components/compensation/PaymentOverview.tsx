@@ -54,7 +54,7 @@ function CompensazioniCard({
               <div key={year} className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Netto ricevuto nel {year}</span>
-                  <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(netto)}</span>
+                  <span className="text-sm font-semibold text-green-700 dark:text-green-400 tabular-nums">{fmt(netto)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -78,7 +78,7 @@ function CompensazioniCard({
                     Netto che riceverai
                     <InfoTooltip tip={TIP_NETTO_APPROVATO} />
                   </span>
-                  <span className="text-sm font-medium text-amber-400 tabular-nums">{fmt(approvedNetto)}</span>
+                  <span className="text-sm font-medium text-amber-600 dark:text-amber-400 tabular-nums">{fmt(approvedNetto)}</span>
                 </div>
               </div>
             )}
@@ -121,19 +121,19 @@ function RimborsiCard({
             {paidByYear.map(({ year, total }) => (
               <div key={year} className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Ricevuto nel {year}</span>
-                <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(total)}</span>
+                <span className="text-sm font-semibold text-green-700 dark:text-green-400 tabular-nums">{fmt(total)}</span>
               </div>
             ))}
             {paidByYear.length > 1 && (
               <div className="flex items-center justify-between pt-2 border-t border-border">
                 <span className="text-xs text-muted-foreground">Totale rimborsi ricevuti</span>
-                <span className="text-sm font-semibold text-green-400 tabular-nums">{fmt(totalPaid)}</span>
+                <span className="text-sm font-semibold text-green-700 dark:text-green-400 tabular-nums">{fmt(totalPaid)}</span>
               </div>
             )}
             {approved > 0 && (
               <div className={`flex items-center justify-between ${paidByYear.length > 0 ? 'pt-2 border-t border-border' : ''}`}>
                 <span className="text-xs text-muted-foreground">Approvato — da liquidare</span>
-                <span className="text-sm font-medium text-amber-400 tabular-nums">{fmt(approved)}</span>
+                <span className="text-sm font-medium text-amber-600 dark:text-amber-400 tabular-nums">{fmt(approved)}</span>
               </div>
             )}
             {inAttesa > 0 && (
@@ -173,7 +173,7 @@ export default function PaymentOverview({
             <h2 className="text-sm font-medium text-foreground">
               Massimale annuo {currentYear} lordo
             </h2>
-            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-400' : isNearLimit ? 'text-yellow-400' : 'text-muted-foreground'}`}>
+            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-600 dark:text-red-400' : isNearLimit ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`}>
               {fmt(paidCurrentYear)} / {fmt(massimale)}
             </span>
           </div>
@@ -184,10 +184,10 @@ export default function PaymentOverview({
             />
           </div>
           {pct >= 100 && (
-            <p className="text-xs text-red-400 mt-2">Hai raggiunto il massimale impostato.</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-2">Hai raggiunto il massimale impostato.</p>
           )}
           {isNearLimit && pct < 100 && (
-            <p className="text-xs text-yellow-400 mt-2">
+            <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
               Stai avvicinandoti al massimale ({pct.toFixed(0)}%).
             </p>
           )}

@@ -376,17 +376,17 @@ export default function CompensationCreateWizard({
             <div className="rounded-lg bg-muted/60 border border-border p-3 space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Ritenuta d&apos;acconto (20%)</span>
-                <span className="text-red-400 tabular-nums">-{formatCurrency(ritenuta)}</span>
+                <span className="text-red-600 dark:text-red-400 tabular-nums">-{formatCurrency(ritenuta)}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold">
                 <span className="text-foreground">Importo netto</span>
-                <span className="text-green-400 tabular-nums">{formatCurrency(netto)}</span>
+                <span className="text-green-700 dark:text-green-400 tabular-nums">{formatCurrency(netto)}</span>
               </div>
             </div>
           )}
 
           {step2Error && (
-            <p className="text-xs text-red-400">{step2Error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400">{step2Error}</p>
           )}
 
           <div className="flex items-center justify-between pt-2">
@@ -449,7 +449,7 @@ export default function CompensationCreateWizard({
         </Card>
 
         {submitError && (
-          <p className="mt-3 text-xs text-red-400">{submitError}</p>
+          <p className="mt-3 text-xs text-red-600 dark:text-red-400">{submitError}</p>
         )}
 
         <div className="flex items-center justify-between mt-4">

@@ -144,9 +144,9 @@ export default function ApprovazioniRimborsi({
     <div className="space-y-6">
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-3">
-        <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleInAttesa} countColor="text-blue-400" />
-        <KpiCard label="Approvati" count={kpi.approvati} amount={kpi.totaleApprovati} countColor="text-amber-400" />
-        <KpiCard label="Liquidati" count={kpi.liquidato} amount={kpi.totaleLiquidato} countColor="text-emerald-400" />
+        <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleInAttesa} countColor="text-blue-600 dark:text-blue-400" />
+        <KpiCard label="Approvati" count={kpi.approvati} amount={kpi.totaleApprovati} countColor="text-amber-600 dark:text-amber-400" />
+        <KpiCard label="Liquidati" count={kpi.liquidato} amount={kpi.totaleLiquidato} countColor="text-emerald-600 dark:text-emerald-400" />
       </div>
 
       {/* List header */}
@@ -211,15 +211,15 @@ export default function ApprovazioniRimborsi({
 
       {/* Bulk approve bar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-blue-900/40 border border-blue-700/50 px-4 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 px-4 py-3">
           <div className="flex items-center gap-3">
-            <span className="text-sm text-blue-200">
+            <span className="text-sm text-blue-800 dark:text-blue-200">
               {selectedIds.size} {selectedIds.size === 1 ? 'selezionato' : 'selezionati'}
             </span>
-            <span className="text-xs text-blue-300 tabular-nums">{formatCurrency(totaleSelezionati)}</span>
+            <span className="text-xs text-blue-700 dark:text-blue-300 tabular-nums">{formatCurrency(totaleSelezionati)}</span>
           </div>
           <div className="flex items-center gap-3">
-            {bulkError && <span className="text-xs text-red-400">{bulkError}</span>}
+            {bulkError && <span className="text-xs text-red-600 dark:text-red-400">{bulkError}</span>}
             <Button
               onClick={handleBulkApprove}
               disabled={bulkLoading || isPending}

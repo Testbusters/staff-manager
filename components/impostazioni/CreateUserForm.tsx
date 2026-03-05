@@ -161,8 +161,8 @@ export default function CreateUserForm() {
     return (
       <div className="space-y-4">
         {/* Invite sent confirmation */}
-        <div className="rounded-xl bg-green-900/20 border border-green-700/40 px-4 py-3 flex items-center gap-2">
-          <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 px-4 py-3 flex items-center gap-2">
+          <svg className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <p className="text-xs text-foreground">
@@ -439,7 +439,7 @@ export default function CreateUserForm() {
       )}
 
       {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">{error}</div>
+        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
       )}
 
       <Button

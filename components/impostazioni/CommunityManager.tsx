@@ -125,7 +125,7 @@ export default function CommunityManager({
               {createLoading ? 'Creazione…' : 'Crea'}
             </Button>
           </form>
-          {createError && <p className="mt-2 text-xs text-red-400">{createError}</p>}
+          {createError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{createError}</p>}
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export default function CommunityManager({
                   </button>
                   <button onClick={() => handleToggle(c.id, c.is_active)}
                     disabled={togglingId === c.id}
-                    className={`text-xs transition ${c.is_active ? 'text-yellow-600 hover:text-yellow-400' : 'text-green-700 hover:text-green-500'}`}>
+                    className={`text-xs transition ${c.is_active ? 'text-yellow-600 hover:text-yellow-700 dark:hover:text-yellow-400' : 'text-green-700 hover:text-green-500'}`}>
                     {togglingId === c.id ? '…' : c.is_active ? 'Disattiva' : 'Riattiva'}
                   </button>
                 </>

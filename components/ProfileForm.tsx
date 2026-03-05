@@ -64,12 +64,12 @@ function GuideBox({ guide }: { guide: GuideContent }) {
   const [open, setOpen] = useState(false);
   if (!guide) return null;
   return (
-    <div className="mt-3 rounded-lg bg-blue-950/40 border border-blue-800/40">
+    <div className="mt-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/40">
       <Button
         type="button"
         variant="ghost"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-xs text-blue-300 hover:text-blue-200 h-auto rounded-none"
+        className="w-full flex items-center justify-between px-3 py-2.5 text-xs text-blue-700 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-200 h-auto rounded-none"
       >
         <span className="font-medium">{guide.titolo}</span>
         <svg className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,7 +258,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               {avatarLoading ? 'Caricamento…' : avatarUrl ? 'Cambia foto' : 'Carica foto'}
             </Button>
             <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · max 2 MB</p>
-            {avatarError && <p className="text-xs text-red-400 mt-1">{avatarError}</p>}
+            {avatarError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{avatarError}</p>}
           </div>
         </div>
       </div>
@@ -337,7 +337,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               <p className={labelCls}>Community</p>
               <div className="flex gap-2 flex-wrap">
                 {communities.map((c) => (
-                  <span key={c.name} className="rounded-full bg-blue-900/30 border border-blue-700/40 px-3 py-1 text-xs text-blue-300">
+                  <span key={c.name} className="rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/40 px-3 py-1 text-xs text-blue-700 dark:text-blue-300">
                     {c.name}
                   </span>
                 ))}
@@ -520,8 +520,8 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">La soglia dei 5.000€/anno</h3>
                 <p>Puoi guadagnare fino a <strong className="text-foreground">5.000€ lordi all&apos;anno</strong> da prestazioni occasionali senza dover versare contributi INPS:</p>
                 <ul className="mt-2 space-y-1.5 list-none">
-                  <li className="flex gap-2"><span className="text-green-400">✓</span> Sotto 5.000€: nessun contributo INPS da versare</li>
-                  <li className="flex gap-2"><span className="text-yellow-400">⚠</span> Sopra 5.000€: sulla parte eccedente devi versare ~33% alla Gestione Separata INPS</li>
+                  <li className="flex gap-2"><span className="text-green-700 dark:text-green-400">✓</span> Sotto 5.000€: nessun contributo INPS da versare</li>
+                  <li className="flex gap-2"><span className="text-yellow-600 dark:text-yellow-400">⚠</span> Sopra 5.000€: sulla parte eccedente devi versare ~33% alla Gestione Separata INPS</li>
                 </ul>
                 <p className="mt-2 text-xs text-muted-foreground">Questa soglia vale sulla <strong className="text-muted-foreground">somma di tutti i compensi occasionali dell&apos;anno</strong>, non solo quelli con noi.</p>
               </section>
@@ -530,13 +530,13 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Se sei figlio fiscalmente a carico</h3>
                 <p>I tuoi genitori hanno diritto a detrazioni fiscali finché sei loro &quot;figlio a carico&quot;. Perdi questo status se il tuo reddito annuo supera:</p>
                 <div className="mt-2 space-y-2">
-                  <div className="rounded-lg bg-blue-950/40 border border-blue-800/30 px-4 py-3">
-                    <p className="text-xs font-semibold text-blue-300 mb-1">Hai fino a 24 anni</p>
+                  <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/30 px-4 py-3">
+                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Hai fino a 24 anni</p>
                     <p>Limite reddito: <strong className="text-foreground">4.000€/anno</strong></p>
                     <p className="text-xs text-muted-foreground mt-0.5">Consiglio: imposta il massimale a 4.000€ o meno</p>
                   </div>
-                  <div className="rounded-lg bg-purple-950/40 border border-purple-800/30 px-4 py-3">
-                    <p className="text-xs font-semibold text-purple-300 mb-1">Hai più di 24 anni</p>
+                  <div className="rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/30 px-4 py-3">
+                    <p className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1">Hai più di 24 anni</p>
                     <p>Limite reddito: <strong className="text-foreground">2.840,51€/anno</strong></p>
                     <p className="text-xs text-muted-foreground mt-0.5">Consiglio: imposta il massimale a 2.840€ o meno</p>
                   </div>
@@ -547,10 +547,10 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               <section>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Come scegliere il massimale?</h3>
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">2.840€</span><span className="text-muted-foreground">— sei figlio a carico con più di 24 anni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">4.000€</span><span className="text-muted-foreground">— sei figlio a carico con fino a 24 anni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-blue-400 font-semibold">5.000€</span><span className="text-muted-foreground">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-yellow-400 font-semibold">Meno</span><span className="text-muted-foreground">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
+                  <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">2.840€</span><span className="text-muted-foreground">— sei figlio a carico con più di 24 anni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">4.000€</span><span className="text-muted-foreground">— sei figlio a carico con fino a 24 anni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">5.000€</span><span className="text-muted-foreground">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-yellow-600 dark:text-yellow-400 font-semibold">Meno</span><span className="text-muted-foreground">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
                 </div>
               </section>
 
@@ -581,7 +581,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
 
 
       {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">
+        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">
           {error}
         </div>
       )}

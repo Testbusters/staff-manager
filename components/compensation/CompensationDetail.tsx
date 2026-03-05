@@ -45,7 +45,7 @@ export default function CompensationDetail({
         <div className="min-w-0">
           <p className="text-lg font-medium text-foreground break-words">{c.nome_servizio_ruolo ?? '—'}</p>
           {competenzaLabel && (
-            <span className="mt-1 inline-block text-xs font-medium text-blue-300 bg-blue-900/40 border border-blue-700/40 rounded-full px-2.5 py-0.5">
+            <span className="mt-1 inline-block text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/40 rounded-full px-2.5 py-0.5">
               {competenzaLabel}
             </span>
           )}
@@ -88,23 +88,23 @@ export default function CompensationDetail({
           <Row label="Importo lordo" value={formatCurrency(c.importo_lordo)} />
           <Row label="Ritenuta acconto (20%)" value={formatCurrency(c.ritenuta_acconto)} />
           <Row label="Importo netto" value={
-            <span className="font-medium text-green-400">{formatCurrency(c.importo_netto)}</span>
+            <span className="font-medium text-green-700 dark:text-green-400">{formatCurrency(c.importo_netto)}</span>
           } />
         </CardContent>
       </Card>
 
       {/* Rejection note */}
       {c.rejection_note && (
-        <div className="rounded-xl bg-red-900/20 border border-red-700/40 px-4 py-3">
-          <p className="text-xs font-medium text-red-400 mb-1">Motivo rifiuto</p>
-          <p className="text-sm text-red-200">{c.rejection_note}</p>
+        <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 px-4 py-3">
+          <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1">Motivo rifiuto</p>
+          <p className="text-sm text-red-700 dark:text-red-200">{c.rejection_note}</p>
         </div>
       )}
 
       {/* Payment info */}
       {c.liquidated_at && (
-        <div className="rounded-xl bg-emerald-900/20 border border-emerald-700/40 px-4 py-3">
-          <p className="text-xs font-medium text-emerald-400 mb-1">Pagamento</p>
+        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 px-4 py-3">
+          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Pagamento</p>
           <Row label="Data liquidazione" value={formatDate(c.liquidated_at)} />
           {c.payment_reference && <Row label="Riferimento" value={c.payment_reference} />}
         </div>

@@ -133,7 +133,7 @@ export default function NotificationBell() {
           <span
             className={[
               'text-base leading-none',
-              fetchError ? 'text-red-400' : loading ? 'opacity-50' : '',
+              fetchError ? 'text-red-600 dark:text-red-400' : loading ? 'opacity-50' : '',
               bellPulse ? 'bell-pulse' : '',
             ].join(' ')}
             onAnimationEnd={() => setBellPulse(false)}
@@ -161,7 +161,7 @@ export default function NotificationBell() {
           {unread > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="text-xs text-blue-400 hover:text-blue-300 transition"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition"
             >
               Segna tutte come lette
             </button>
@@ -171,7 +171,7 @@ export default function NotificationBell() {
         {/* Body */}
         <div className="max-h-80 overflow-y-auto">
           {fetchError ? (
-            <p className="text-sm text-red-400 text-center py-8">Errore nel caricamento</p>
+            <p className="text-sm text-red-600 dark:text-red-400 text-center py-8">Errore nel caricamento</p>
           ) : loading ? (
             <p className="text-sm text-muted-foreground text-center py-8">Caricamento…</p>
           ) : notifications.length === 0 ? (

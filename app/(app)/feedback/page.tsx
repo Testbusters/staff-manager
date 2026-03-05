@@ -17,9 +17,9 @@ interface FeedbackRow {
 }
 
 const CATEGORIA_COLORS: Record<string, string> = {
-  Bug:          'text-red-400 bg-red-900/20 border-red-800/30',
-  Suggerimento: 'text-blue-400 bg-blue-900/20 border-blue-800/30',
-  Domanda:      'text-yellow-400 bg-yellow-900/20 border-yellow-800/30',
+  Bug:          'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30',
+  Suggerimento: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30',
+  Domanda:      'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/30',
   Altro:        'text-muted-foreground bg-muted/40 border-border/30',
 };
 
@@ -122,7 +122,7 @@ export default async function FeedbackPage() {
       <section className="space-y-4">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Nuovi</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/30 border border-yellow-800/40 text-yellow-400 font-medium">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800/40 text-yellow-700 dark:text-yellow-400 font-medium">
             {nuovi.length}
           </span>
         </div>

@@ -33,7 +33,7 @@ export default function FeedbackActions({ id, stato }: Props) {
         <button
           onClick={handleComplete}
           disabled={loading !== null}
-          className="text-xs px-2.5 py-1 rounded-lg bg-green-900/30 border border-green-800/40 text-green-400 hover:bg-green-900/50 transition disabled:opacity-50"
+          className="text-xs px-2.5 py-1 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition disabled:opacity-50"
         >
           {loading === 'complete' ? '…' : 'Completa'}
         </button>
@@ -41,7 +41,7 @@ export default function FeedbackActions({ id, stato }: Props) {
       <button
         onClick={handleDelete}
         disabled={loading !== null}
-        className="text-xs px-2.5 py-1 rounded-lg bg-red-900/20 border border-red-800/30 text-red-400 hover:bg-red-900/40 transition disabled:opacity-50"
+        className="text-xs px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition disabled:opacity-50"
       >
         {loading === 'delete' ? '…' : 'Rimuovi'}
       </button>

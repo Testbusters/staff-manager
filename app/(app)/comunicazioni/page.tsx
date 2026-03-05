@@ -124,7 +124,7 @@ export default async function ComunicazioniPage({
               key={c.id}
               href={`/comunicazioni/${c.id}`}
               className={`block rounded-xl border p-4 hover:bg-muted/50 transition group ${
-                c.pinned ? 'border-blue-700 bg-blue-950/20' : 'border-border bg-card'
+                c.pinned ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20' : 'border-border bg-card'
               }`}
             >
               <div className="flex items-start justify-between gap-3">

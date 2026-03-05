@@ -17,7 +17,7 @@ export default async function PendingPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-yellow-900/30 border border-yellow-800/40 mb-5">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800/40 mb-5">
           <span className="text-2xl">⏳</span>
         </div>
         <h1 className="text-lg font-semibold text-foreground mb-2">Account in attesa di attivazione</h1>

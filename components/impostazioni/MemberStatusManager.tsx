@@ -24,8 +24,8 @@ const STATUS_LABELS: Record<MemberStatus, string> = {
 };
 
 const STATUS_COLORS: Record<MemberStatus, string> = {
-  attivo:                   'text-green-400',
-  uscente_con_compenso:     'text-yellow-400',
+  attivo:                   'text-green-700 dark:text-green-400',
+  uscente_con_compenso:     'text-yellow-600 dark:text-yellow-400',
   uscente_senza_compenso:   'text-muted-foreground',
 };
 
@@ -76,7 +76,7 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
       </div>
 
       {error && (
-        <div className="mx-5 mt-4 rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2 text-xs text-red-400">{error}</div>
+        <div className="mx-5 mt-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">{error}</div>
       )}
 
       <div className="divide-y divide-border">

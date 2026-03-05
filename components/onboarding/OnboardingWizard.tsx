@@ -170,12 +170,12 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
 
         {contractGenerated && downloadUrl ? (
           <div className="space-y-4">
-            <div className="rounded-lg bg-green-900/20 border border-green-700/40 p-4">
+            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 p-4">
               <div className="flex items-center gap-2 mb-2">
-                <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-sm font-medium text-green-400">Contratto generato</span>
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">Contratto generato</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Il contratto è stato generato con i tuoi dati. Scaricalo, firmalo e caricalo nella sezione <strong className="text-foreground">Documenti</strong> quando sei pronto.
@@ -202,15 +202,15 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 Clicca il pulsante per generare il tuo contratto precompilato con i dati inseriti.
               </p>
             ) : (
-              <div className="rounded-lg bg-yellow-900/20 border border-yellow-700/40 p-3">
-                <p className="text-xs text-yellow-400">
+              <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/40 p-3">
+                <p className="text-xs text-yellow-700 dark:text-yellow-400">
                   Nessun tipo di rapporto associato al tuo account. Contatta l&apos;amministrazione.
                 </p>
               </div>
             )}
 
             {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">{error}</div>
+              <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
             )}
 
             {tipoContratto ? (
@@ -406,7 +406,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">{error}</div>
+          <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
         )}
 
         <Button type="submit" disabled={!step1Valid} className="w-full bg-blue-600 hover:bg-blue-500 text-white">

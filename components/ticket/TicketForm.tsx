@@ -51,7 +51,7 @@ export default function TicketForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-800 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -59,7 +59,7 @@ export default function TicketForm() {
       {/* Riferimento */}
       <div className="space-y-1.5">
         <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
-          Riferimento <span className="text-red-400">*</span>
+          Riferimento <span className="text-red-500">*</span>
         </label>
         <Select value={categoria || undefined} onValueChange={setCategoria}>
           <SelectTrigger id="categoria"><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
@@ -87,7 +87,7 @@ export default function TicketForm() {
       {/* Oggetto */}
       <div className="space-y-1.5">
         <label htmlFor="oggetto" className="block text-sm font-medium text-foreground">
-          Oggetto <span className="text-red-400">*</span>
+          Oggetto <span className="text-red-500">*</span>
         </label>
         <Input
           id="oggetto"

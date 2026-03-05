@@ -24,8 +24,8 @@ const TOOLTIP_TEXT =
 const PAGE_SIZE = 20;
 
 function nettoColorClass(stato: string): string {
-  if (stato === 'LIQUIDATO') return 'text-green-400';
-  if (stato === 'APPROVATO') return 'text-amber-400';
+  if (stato === 'LIQUIDATO') return 'text-green-700 dark:text-green-400';
+  if (stato === 'APPROVATO') return 'text-amber-600 dark:text-amber-400';
   return 'text-muted-foreground';
 }
 

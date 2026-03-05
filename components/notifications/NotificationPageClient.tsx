@@ -194,7 +194,7 @@ export default function NotificationPageClient() {
       <Card>
         <CardContent className="overflow-hidden p-0">
         {fetchError ? (
-          <p className="text-sm text-red-400 text-center py-12">
+          <p className="text-sm text-red-600 dark:text-red-400 text-center py-12">
             Errore nel caricamento delle notifiche
           </p>
         ) : loading ? (

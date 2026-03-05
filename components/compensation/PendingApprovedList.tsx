@@ -29,9 +29,9 @@ export default function PendingApprovedList({
   const totalNetto = approved.reduce((s, c) => s + (c.importo_netto ?? 0), 0);
 
   return (
-    <div className="rounded-xl bg-card border border-amber-700/30 mb-6">
+    <div className="rounded-xl bg-card border border-amber-300 dark:border-amber-700/30 mb-6">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <p className="text-sm font-semibold text-amber-300">Da ricevere</p>
+        <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Da ricevere</p>
         <span className="text-xs text-muted-foreground">
           — {approved.length} {approved.length === 1 ? 'compenso approvato' : 'compensi approvati'}, in attesa di liquidazione
         </span>
@@ -65,7 +65,7 @@ export default function PendingApprovedList({
               <TableCell className="text-right text-foreground tabular-nums">
                 {fmt(c.importo_lordo)}
               </TableCell>
-              <TableCell className="text-right text-amber-400 tabular-nums font-medium">
+              <TableCell className="text-right text-amber-600 dark:text-amber-400 tabular-nums font-medium">
                 {fmt(c.importo_netto)}
               </TableCell>
               <TableCell className="text-right text-muted-foreground text-sm">→</TableCell>
@@ -84,7 +84,7 @@ export default function PendingApprovedList({
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground mb-0.5">Netto</p>
-                    <span className="text-sm font-semibold text-amber-300 tabular-nums">{fmt(totalNetto)}</span>
+                    <span className="text-sm font-semibold text-amber-700 dark:text-amber-300 tabular-nums">{fmt(totalNetto)}</span>
                   </div>
                 </div>
               </div>

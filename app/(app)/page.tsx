@@ -67,9 +67,9 @@ function StatCard({
         <p className="text-xs text-muted-foreground mt-0.5">importo totale in corso</p>
       </div>
       {pendingCount > 0 && (
-        <div className="rounded-lg bg-emerald-950/40 border border-emerald-800/30 px-3 py-2 flex items-center justify-between">
-          <span className="text-xs text-emerald-400">In attesa liquidazione ({pendingCount})</span>
-          <span className="text-xs font-medium text-emerald-300 tabular-nums">{eur(pendingTotal)}</span>
+        <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/30 px-3 py-2 flex items-center justify-between">
+          <span className="text-xs text-emerald-700 dark:text-emerald-400">In attesa liquidazione ({pendingCount})</span>
+          <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300 tabular-nums">{eur(pendingTotal)}</span>
         </div>
       )}
     </div>
@@ -91,7 +91,7 @@ function DocCard({ count }: { count: number }) {
       </div>
       {count > 0 ? (
         <>
-          <p className="text-sm text-amber-300/80">
+          <p className="text-sm text-amber-700 dark:text-amber-300/80">
             {count === 1 ? 'Hai 1 documento' : `Hai ${count} documenti`} in attesa di firma.
           </p>
           <Link href="/profilo?tab=documenti" className="text-xs text-blue-400 hover:text-blue-300 transition">
@@ -387,28 +387,28 @@ export default async function DashboardPage() {
             label="Compensi in attesa"
             count={pendingComps.length}
             sub={pendingComps.length > 0 ? formatCurrencyR(pendingComps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0)) : null}
-            color={pendingComps.length > 0 ? 'text-amber-300' : 'text-muted-foreground'}
+            color={pendingComps.length > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=compensi"
           />
           <RKpiCard
             label="Rimborsi in attesa"
             count={pendingExps.length}
             sub={pendingExps.length > 0 ? formatCurrencyR(pendingExps.reduce((s, e) => s + (e.importo ?? 0), 0)) : null}
-            color={pendingExps.length > 0 ? 'text-amber-300' : 'text-muted-foreground'}
+            color={pendingExps.length > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=rimborsi"
           />
           <RKpiCard
             label="Da liquidare"
             count={liquidabile}
             sub={null}
-            color={liquidabile > 0 ? 'text-emerald-300' : 'text-muted-foreground'}
+            color={liquidabile > 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground'}
             href="/approvazioni"
           />
           <RKpiCard
             label="Ticket aperti"
             count={ticketsRicevuti.length}
             sub={null}
-            color={ticketsRicevuti.length > 0 ? 'text-rose-300' : 'text-muted-foreground'}
+            color={ticketsRicevuti.length > 0 ? 'text-rose-600 dark:text-rose-300' : 'text-muted-foreground'}
             href="/ticket"
           />
         </div>
@@ -1167,7 +1167,7 @@ export default async function DashboardPage() {
         {/* Da ricevere */}
         <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
           <span className="text-xs text-muted-foreground">Da ricevere</span>
-          <p className={`text-lg font-semibold tabular-nums leading-tight ${daRicevere > 0 ? 'text-amber-300' : 'text-muted-foreground'}`}>
+          <p className={`text-lg font-semibold tabular-nums leading-tight ${daRicevere > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}`}>
             {eur(daRicevere)}
           </p>
           <p className="text-xs text-muted-foreground">approvato</p>
@@ -1176,7 +1176,7 @@ export default async function DashboardPage() {
         {/* Da firmare */}
         <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
           <span className="text-xs text-muted-foreground">Da firmare</span>
-          <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-300' : 'text-muted-foreground'}`}>
+          <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}`}>
             {daFirmareCount}
           </p>
           <p className="text-xs text-muted-foreground">document{daFirmareCount === 1 ? 'o' : 'i'}</p>

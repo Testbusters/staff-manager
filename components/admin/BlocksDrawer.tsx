@@ -98,7 +98,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                           <p className="text-xs text-muted-foreground truncate">{item.collabEmail}</p>
                           <p className="text-xs text-muted-foreground mt-1">{BLOCK_DESCRIPTIONS[item.blockType]}</p>
                           {item.daysWaiting !== undefined && (
-                            <p className="text-xs text-amber-400 mt-0.5">
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                               In attesa da {item.daysWaiting} giorni
                             </p>
                           )}

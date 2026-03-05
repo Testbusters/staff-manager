@@ -90,7 +90,7 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
             <Skeleton className="h-5 w-1/2" />
           </div>
         ) : !data ? (
-          <p className="text-sm text-red-400 text-center py-4">Errore caricamento.</p>
+          <p className="text-sm text-red-600 dark:text-red-400 text-center py-4">Errore caricamento.</p>
         ) : (
           <div className="space-y-3 text-sm">
             {data.nome_servizio_ruolo && (
@@ -120,7 +120,7 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-0.5">Netto</p>
-                <p className="text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo_netto)}</p>
+                <p className="text-amber-600 dark:text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo_netto)}</p>
               </div>
             </div>
             {data.info_specifiche && (
@@ -184,7 +184,7 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
             <Skeleton className="h-5 w-1/2" />
           </div>
         ) : !data ? (
-          <p className="text-sm text-red-400 text-center py-4">Errore caricamento.</p>
+          <p className="text-sm text-red-600 dark:text-red-400 text-center py-4">Errore caricamento.</p>
         ) : (
           <div className="space-y-3 text-sm">
             <div>
@@ -199,7 +199,7 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Importo</p>
-              <p className="text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo)}</p>
+              <p className="text-amber-600 dark:text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo)}</p>
             </div>
             {data.descrizione && (
               <div>

@@ -73,9 +73,9 @@ export default async function DocumentDetailPage({
             </div>
             <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
               doc.stato_firma === 'DA_FIRMARE'
-                ? 'bg-yellow-900/40 text-yellow-300 border-yellow-700/40'
+                ? 'bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700/40'
                 : doc.stato_firma === 'FIRMATO'
-                ? 'bg-green-900/40 text-green-300 border-green-700/40'
+                ? 'bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700/40'
                 : 'bg-muted text-muted-foreground border-border'
             }`}>
               {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma as keyof typeof DOCUMENT_SIGN_STATUS_LABELS]}

@@ -147,7 +147,7 @@ export default function TicketDetailModal({
         {!loading && !isClosed && (
           <form onSubmit={handleReply} className="border-t border-border px-4 py-3 flex-shrink-0">
             {sendError && (
-              <p className="text-xs text-red-400 mb-2">{sendError}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-2">{sendError}</p>
             )}
             <div className="flex gap-2">
               <Textarea

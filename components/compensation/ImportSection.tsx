@@ -129,7 +129,7 @@ export default function ImportSection() {
 
       {/* Error state */}
       {state.phase === 'error' && (
-        <p className="text-sm text-red-400 bg-red-950/40 border border-red-800/50 rounded-lg px-4 py-3">
+        <p className="text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 rounded-lg px-4 py-3">
           {state.message}
         </p>
       )}
@@ -137,12 +137,12 @@ export default function ImportSection() {
       {/* Done state */}
       {state.phase === 'done' && (
         <div className="space-y-3">
-          <div className="flex items-center gap-3 rounded-lg bg-green-950/40 border border-green-800/50 px-4 py-3">
-            <span className="text-sm text-green-300 font-medium">
+          <div className="flex items-center gap-3 rounded-lg bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 px-4 py-3">
+            <span className="text-sm text-green-700 dark:text-green-300 font-medium">
               {state.imported} {state.imported === 1 ? 'compenso importato' : 'compensi importati'}
             </span>
             {state.skipped > 0 && (
-              <span className="text-sm text-amber-400">
+              <span className="text-sm text-amber-600 dark:text-amber-400">
                 · {state.skipped} {state.skipped === 1 ? 'riga saltata' : 'righe saltate'}
               </span>
             )}
@@ -239,12 +239,12 @@ export default function ImportSection() {
 
 function ErrorList({ errors }: { errors: RowError[] }) {
   return (
-    <div className="rounded-lg border border-amber-800/50 bg-amber-950/30 px-4 py-3 space-y-1">
-      <p className="text-xs font-medium text-amber-400 mb-1.5">
+    <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 space-y-1">
+      <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1.5">
         {errors.length} {errors.length === 1 ? 'riga con errore' : 'righe con errori'} (saltate):
       </p>
       {errors.map((e) => (
-        <p key={e.rowIndex} className="text-xs text-amber-300/80">
+        <p key={e.rowIndex} className="text-xs text-amber-600 dark:text-amber-300/80">
           <span className="text-muted-foreground">Riga {e.rowIndex}</span>
           {e.collaboratore && <span className="text-muted-foreground"> · {e.collaboratore}</span>}
           {' — '}

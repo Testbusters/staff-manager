@@ -162,7 +162,7 @@ export default function ExportSection({ tab, items }: Props) {
 
           <div>
             <label className="block text-xs text-muted-foreground mb-1">
-              Riferimento pagamento <span className="text-red-400">*</span>
+              Riferimento pagamento <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -174,7 +174,7 @@ export default function ExportSection({ tab, items }: Props) {
           </div>
 
           {error && (
-            <p className="text-xs text-red-400">{error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
           )}
 
           <div className="flex justify-end gap-3">
