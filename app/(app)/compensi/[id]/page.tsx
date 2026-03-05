@@ -89,6 +89,7 @@ export default async function CompensationDetailPage({
           compensationId={id}
           stato={compensation.stato as CompensationStatus}
           role={role}
+          compensation={compensation}
         />
 
         {(history ?? []).length > 0 && (

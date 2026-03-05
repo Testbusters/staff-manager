@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Role, CompensationStatus } from '@/lib/types';
+import type { Role, CompensationStatus, Compensation } from '@/lib/types';
 import type { CompensationAction } from '@/lib/compensation-transitions';
 import { canTransition } from '@/lib/compensation-transitions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import CompensationEditModal from './CompensationEditModal';
 
 interface ActionPanelProps {
   compensationId: string;
   stato: CompensationStatus;
   role: Role;
+  compensation: Compensation;
 }
 
-const inputCls =
-  'w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-gray-100 ' +
-  'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50';
-
-export default function ActionPanel({ compensationId, stato, role }: ActionPanelProps) {
+export default function ActionPanel({ compensationId, stato, role, compensation }: ActionPanelProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +29,13 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
   // Mark liquidated modal
   const [showLiquidatedModal, setShowLiquidatedModal] = useState(false);
   const [paymentReference, setPaymentReference] = useState('');
+
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const canEdit =
+    (role === 'amministrazione' || role === 'responsabile_compensi') &&
+    stato === 'IN_ATTESA';
 
   const perform = async (action: CompensationAction, extra?: Record<string, unknown>) => {
     setLoading(action);
@@ -74,7 +81,7 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
     actions.push({ action: 'reopen', label: 'Riapri', variant: 'secondary', onClick: () => perform('reopen') });
   }
 
-  if (actions.length === 0) return null;
+  if (actions.length === 0 && !canEdit) return null;
 
   const btnClass = (v: 'primary' | 'danger' | 'secondary') => {
     if (v === 'primary') return 'rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition disabled:opacity-50';
@@ -94,6 +101,15 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
         )}
 
         <div className="flex flex-wrap gap-2">
+          {canEdit && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              disabled={loading !== null}
+              className={btnClass('secondary')}
+            >
+              Modifica
+            </button>
+          )}
           {actions.map((a) => (
             <button
               key={a.action}
@@ -119,12 +135,11 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
               Motivazione del rifiuto
               <span className="text-red-500 ml-1">*</span>
             </label>
-            <textarea
+            <Textarea
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               rows={4}
               placeholder="Descrivi il motivo del rifiuto…"
-              className={inputCls}
             />
           </div>
 
@@ -156,6 +171,14 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
         </DialogContent>
       </Dialog>
 
+      {/* Edit modal */}
+      <CompensationEditModal
+        open={showEditModal}
+        compensation={compensation}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={() => { setShowEditModal(false); router.refresh(); }}
+      />
+
       {/* Mark liquidated modal */}
       <Dialog open={showLiquidatedModal} onOpenChange={(v) => { if (!v) { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); } }}>
         <DialogContent className="max-w-md bg-gray-900 border-gray-800">
@@ -168,12 +191,11 @@ export default function ActionPanel({ compensationId, stato, role }: ActionPanel
               Riferimento pagamento
               <span className="text-gray-600 ml-1">(opzionale)</span>
             </label>
-            <input
+            <Input
               type="text"
               value={paymentReference}
               onChange={(e) => setPaymentReference(e.target.value)}
               placeholder="Es. CRO, numero bonifico…"
-              className={inputCls}
             />
           </div>
 
