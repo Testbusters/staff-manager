@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/Sidebar';
 import FeedbackButton from '@/components/FeedbackButton';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeSync } from '@/components/ThemeSync';
 import { NAV_BY_ROLE } from '@/lib/nav';
 import type { Role } from '@/lib/types';
 
@@ -14,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, is_active, member_status')
+    .select('role, is_active, member_status, theme_preference')
     .eq('user_id', user.id)
     .single();
 
@@ -32,20 +33,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ? `${collaborator.nome} ${collaborator.cognome}`
     : user.email ?? 'Utente';
 
+  const dbTheme = profile.theme_preference ?? 'light';
+
   return (
-    <div className="flex h-screen bg-gray-950 overflow-hidden">
-      <Sidebar
-        navItems={navItems}
-        userEmail={user.email ?? ''}
-        userName={userName}
-        avatarUrl={collaborator?.foto_profilo_url ?? null}
-      />
-      <TooltipProvider delayDuration={300}>
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-      </TooltipProvider>
-      <FeedbackButton />
-    </div>
+    <>
+      <ThemeSync dbTheme={dbTheme} />
+      <div className="flex h-screen bg-background overflow-hidden">
+        <Sidebar
+          navItems={navItems}
+          userEmail={user.email ?? ''}
+          userName={userName}
+          avatarUrl={collaborator?.foto_profilo_url ?? null}
+        />
+        <TooltipProvider delayDuration={300}>
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </TooltipProvider>
+        <FeedbackButton />
+      </div>
+    </>
   );
 }

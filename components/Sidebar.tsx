@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
 import NotificationBell from '@/components/NotificationBell';
@@ -27,6 +29,17 @@ interface SidebarProps {
 export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const handleToggleTheme = async () => {
+    const next = resolvedTheme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    await fetch('/api/profile/theme', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: next }),
+    }).catch(() => {});
+  };
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -98,6 +111,20 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
             <p className="text-[10px] text-gray-500 truncate">{userEmail}</p>
           </div>
         </div>
+        <button
+          onClick={handleToggleTheme}
+          suppressHydrationWarning
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
+                     text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition mb-1"
+        >
+          {resolvedTheme === 'dark'
+            ? <Sun className="h-3.5 w-3.5 shrink-0" />
+            : <Moon className="h-3.5 w-3.5 shrink-0" />}
+          <span suppressHydrationWarning>
+            {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </span>
+        </button>
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button

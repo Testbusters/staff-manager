@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,12 @@ export default function LoginPage() {
 
   const router = useRouter();
   const supabase = createClient();
+  const { setTheme } = useTheme();
+
+  // Login page is always light — override any stored preference
+  useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,21 +53,21 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-sm">
         {/* Logo / Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 mb-4">
             <span className="text-xl">👥</span>
           </div>
-          <h1 className="text-xl font-semibold text-gray-100">Staff Manager</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Staff Manager</h1>
           <p className="text-sm text-gray-500 mt-1">Accedi alla tua area personale</p>
         </div>
 
-        <div className="rounded-2xl bg-gray-900 border border-gray-800 p-6">
+        <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Email</label>
+              <label className="block text-xs text-gray-600 mb-1.5">Email</label>
               <Input
                 type="email"
                 placeholder="nome@email.com"
@@ -72,7 +79,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Password</label>
+              <label className="block text-xs text-gray-600 mb-1.5">Password</label>
               <Input
                 ref={passwordRef}
                 type="password"
@@ -86,7 +93,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-800/40 px-3 py-2.5 text-xs text-red-400">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-xs text-red-600">
                 {error}
               </div>
             )}
@@ -101,13 +108,13 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-xs text-gray-600">
+        <p className="mt-4 text-center text-xs text-gray-400">
           Per problemi di accesso contatta l&apos;amministrazione.
         </p>
 
         {/* Test credentials */}
         <div className="mt-6 space-y-2">
-          <p className="text-center text-xs text-gray-600">Utenze di test</p>
+          <p className="text-center text-xs text-gray-400">Utenze di test</p>
           <div className="grid grid-cols-3 gap-2">
             {TEST_USERS.map((u) => (
               <button
@@ -118,10 +125,10 @@ export default function LoginPage() {
                   setPassword('Testbusters123');
                   passwordRef.current?.focus();
                 }}
-                className="rounded-lg bg-gray-900 border border-gray-800 px-2 py-2.5 text-left hover:border-gray-700 hover:bg-gray-800/60 transition"
+                className="rounded-lg bg-white border border-gray-200 px-2 py-2.5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
               >
-                <p className="text-xs font-medium text-gray-400">{u.role}</p>
-                <p className="text-xs text-gray-600 truncate mt-0.5">{u.email}</p>
+                <p className="text-xs font-medium text-gray-600">{u.role}</p>
+                <p className="text-xs text-gray-400 truncate mt-0.5">{u.email}</p>
               </button>
             ))}
           </div>
