@@ -149,7 +149,7 @@ export default function DashboardUpdates({
               className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground group-hover:text-white truncate transition">
+                <p className="text-sm text-foreground truncate">
                   {doc.titolo || DOCUMENT_TYPE_LABELS[doc.tipo]}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -170,7 +170,7 @@ export default function DashboardUpdates({
               className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground group-hover:text-white truncate transition">{ev.titolo}</p>
+                <p className="text-sm text-foreground truncate">{ev.titolo}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {ev.start_datetime
                     ? new Date(ev.start_datetime).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -193,7 +193,7 @@ export default function DashboardUpdates({
               className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground group-hover:text-white truncate transition">{item.titolo}</p>
+                <p className="text-sm text-foreground truncate">{item.titolo}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
@@ -212,7 +212,7 @@ export default function DashboardUpdates({
               className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground group-hover:text-white truncate transition">{item.titolo}</p>
+                <p className="text-sm text-foreground truncate">{item.titolo}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(item.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
