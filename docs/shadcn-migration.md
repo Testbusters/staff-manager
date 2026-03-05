@@ -230,11 +230,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 | Passaggio | Stato | Data | Note |
 |---|---|---|---|
 | A — Token semantici | ✅ | 2026-03-05 | 7 file aggiornati, resto già migrato in sessioni precedenti |
-| B1 — Card | 🔲 | — | Dipende da Passaggio A |
-| B2 — Button | 🔲 | — | Dipende da Passaggio A |
-| B3 — Checkbox | 🔲 | — | Dipende da Passaggio A |
-| B4 — Table | 🔲 | — | Dipende da Passaggio A |
-| B5 — Skeleton | 🔲 | — | Dipende da Passaggio A |
+| B1 — Card | ✅ | 2026-03-05 | 38 div→Card/CardContent in 25 file |
+| B2 — Button | ✅ | 2026-03-05 | Native <button> → Button variant in ~23 file |
+| B3 — Checkbox | ✅ | 2026-03-05 | <input type="checkbox"> → Checkbox in 13 file |
+| B4 — Table | ✅ | 2026-03-05 | Native table → Table components in 8 file |
+| B5 — Skeleton | 🔲 | — | Deferred — additive, not blocking |
 
 ---
 
