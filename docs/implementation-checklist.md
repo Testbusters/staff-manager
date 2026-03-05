@@ -2,7 +2,7 @@
 
 > Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
 > È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-04. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + Blocco 15c ✅ + shadcn QW1+QW2 ✅ + shadcn Fase 6 ✅ + shadcn Fase 7 ✅ + shadcn Fase 8 ✅ + shadcn Fase 9 ✅. Migrazione shadcn completa. Prossimo: blocco da definire.
+> Aggiornato 2026-03-05. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + Blocco 15c ✅ + shadcn completo ✅ + UI Kit Phase A ✅. Prossimo: UI Kit Phase C (componenti on demand).
 
 ---
 
@@ -11,6 +11,7 @@
 | Data | Blocco | Stato | Test | Note |
 |---|---|---|---|---|
 | 2026-03-04 | Blocco 15c — UI integrations (T0–G2) | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ (spec block15c.spec.ts creata, sospesa) | T0: priority select in TicketQuickModal. T1: CollabOpenTicketsSection + TicketDetailModal (collab dashboard). T2: TicketStatusBadge colori + data-ticket-stato. R1: guard responsabile_compensi in ActionPanel + ExpenseActionPanel. R2: DashboardPendingItems (comp/rimborso modali). R3: rimossi CTA hero responsabile. G1: tab DashboardUpdates riordinati. G2: row click in PendingApprovedList, PendingApprovedExpenseList, TicketList. Fix: hover:bg-gray-800 su tutte le righe interattive. Fix: DashboardTicketSection → full-row Link, inline reply rimosso. Fix: ExpModal d.expense → d.reimbursement. |
+| 2026-03-05 | UI Kit Phase A — Token alignment + Light/Dark toggle | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Migration 035: theme_preference in user_profiles. themes.css: --base-* scale from UI kit. globals.css: semantic tokens → var(--base-*). next-themes ThemeProvider (root, default light). ThemeSync syncs DB preference on mount. Sidebar toggle (sun/moon, bottom near avatar). PATCH /api/profile/theme. Login always light via setTheme('light') on mount. |
 | 2026-03-05 | shadcn Fase 9 — Cleanup finale | ✅ | tsc ✅, build ✅, vitest 252/252 ✅ | Delete docs/shadcn-migration.md. Update docs/ui-components.md (all components ✅). Update CLAUDE.md (remove migration ref, mark complete). Fase 5 Table + DropdownMenu/Tabs/Pagination/Skeleton remain as future work. e2e Phase 4/4b re-enabled for future blocks. |
 | 2026-03-04 | shadcn Fase 8 — Button audit | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Primary CTAs migrated to shadcn Button in 17 files. Blue override pattern: className="bg-blue-600 hover:bg-blue-500 text-white" on variant="default". variant="outline"/"ghost" for cancel/secondary, variant="destructive" for reject modals, size="sm" for compact inline forms (CommunityManager, CollaboratoreDetail, contenuti). Skipped: floating FeedbackButton trigger, utility/toggle buttons, pagination, table row status buttons. |
 | 2026-03-04 | shadcn Fase 7 — Select migration | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | 20 native `<select>` replaced with shadcn Select across 15 files. Pattern A (required), Pattern B (optional — value\|\|undefined + placeholder), sentinel 'all' for community filters. Removed selectCls/inputCls consts from 5 files. |
