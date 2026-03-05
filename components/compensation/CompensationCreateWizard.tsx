@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Community = { id: string; name: string };
 
@@ -222,7 +223,16 @@ export default function CompensationCreateWizard({
         <Card>
           <CardContent className="overflow-hidden p-0">
           {loadingSearch ? (
-            <p className="p-6 text-sm text-muted-foreground text-center">Ricerca in corso...</p>
+            <div className="p-4 space-y-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3 py-1">
+                  <Skeleton className="h-4 flex-1" />
+                  <Skeleton className="h-4 w-24 hidden sm:block" />
+                  <Skeleton className="h-4 w-28 hidden md:block" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
           ) : collaborators.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground text-center">
               {searchQ || communityFilter ? 'Nessun collaboratore trovato.' : 'Inserisci un termine di ricerca o seleziona una community.'}

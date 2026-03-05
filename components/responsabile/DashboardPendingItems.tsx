@@ -7,6 +7,7 @@ import type { ExpenseCategory } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -80,7 +81,14 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
         </DialogHeader>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Caricamento…</p>
+          <div className="space-y-3 py-1">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-1/2" />
+          </div>
         ) : !data ? (
           <p className="text-sm text-red-400 text-center py-4">Errore caricamento.</p>
         ) : (
@@ -167,7 +175,14 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
         </DialogHeader>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Caricamento…</p>
+          <div className="space-y-3 py-1">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-5 w-1/2" />
+          </div>
         ) : !data ? (
           <p className="text-sm text-red-400 text-center py-4">Errore caricamento.</p>
         ) : (
