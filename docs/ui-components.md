@@ -21,11 +21,16 @@ verificare se esiste un componente mappato qui.
 | Input testo | `Input` | `components/ui/input.tsx` | ✅ Disponibile |
 | Area di testo | `Textarea` | `components/ui/textarea.tsx` | ✅ Disponibile |
 | Select / dropdown | `Select` | `components/ui/select.tsx` | ✅ Disponibile |
-| Menu azioni contestuale | `DropdownMenu` | — | Futura |
-| Tab navigation | `Tabs` | — | Futura |
-| Paginazione | `Pagination` | — | Futura |
-| Tabella dati (nuove pagine) | `DataTable` (TanStack + `Table`) | — | On demand |
-| Loading state | `Skeleton` | — | Futura |
+| Menu azioni contestuale | `DropdownMenu` | `components/ui/dropdown-menu.tsx` | ✅ Disponibile |
+| Tab navigation | `Tabs` | `components/ui/tabs.tsx` | ✅ Disponibile |
+| Paginazione prev/next | `Pagination` | `components/ui/pagination.tsx` | ✅ Disponibile |
+| Tabella strutturata | `Table` | `components/ui/table.tsx` | ✅ Disponibile |
+| Card container | `Card` | `components/ui/card.tsx` | ✅ Disponibile |
+| Checkbox selezione | `Checkbox` | `components/ui/checkbox.tsx` | ✅ Disponibile |
+| Avatar utente | `Avatar` | `components/ui/avatar.tsx` | ✅ Disponibile |
+| Separatore visivo | `Separator` | `components/ui/separator.tsx` | ✅ Disponibile |
+| Skeleton loading | `Skeleton` | `components/ui/skeleton.tsx` | ✅ Disponibile |
+| Tabella dati con filtri | `DataTable` (TanStack + `Table`) | — | On demand (Wave 2) |
 
 ---
 
@@ -136,9 +141,127 @@ Le classi colore cambiano con le fasi di migrazione — i `data-*` sono stabili.
 
 ---
 
-## Dark-only — Note tecniche
+## Tabs — Pattern
 
-Il progetto è dark-only hardcoded (`<html className="dark">`). Non installare `next-themes`.
+```tsx
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+
+// Default variant (pill buttons)
+<Tabs defaultValue="tab1">
+  <TabsList>
+    <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+    <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+  </TabsList>
+  <TabsContent value="tab1">...</TabsContent>
+  <TabsContent value="tab2">...</TabsContent>
+</Tabs>
+
+// Line variant (underline)
+<TabsList variant="line">
+  <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+</TabsList>
+
+// Custom styling (dark app, override muted bg)
+<TabsList className="h-auto bg-transparent p-0 gap-1">
+  <TabsTrigger
+    value="tab1"
+    className="group ... data-[state=active]:bg-gray-800 data-[state=active]:text-gray-100 ..."
+  >
+    Label
+    {/* Badge that reacts to active state via group variant */}
+    <span className="bg-gray-700 text-gray-400 group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-white ...">
+      {count}
+    </span>
+  </TabsTrigger>
+</TabsList>
+```
+
+**Note:** For count badges inside TabsTrigger, add `group` to TabsTrigger className and use `group-data-[state=active]:*` on child spans.
+
+---
+
+## DropdownMenu — Pattern
+
+```tsx
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost">Actions</Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem onClick={handleEdit}>Modifica</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem variant="destructive" onClick={handleDelete}>Elimina</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+**Note:** Content renders via Radix portal — not clipped by `overflow-hidden` ancestors. For rich custom panels (NotificationBell), use `DropdownMenuContent` with custom HTML inside (no `DropdownMenuItem`). Pass `className="p-0 ..."` to remove default padding.
+
+---
+
+## Avatar — Pattern
+
+```tsx
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+
+<Avatar className="w-7 h-7">  {/* override default size-8 */}
+  <AvatarImage src={avatarUrl ?? undefined} alt="" />
+  <AvatarFallback className="bg-gray-700 text-xs text-gray-300">
+    {name.charAt(0).toUpperCase()}
+  </AvatarFallback>
+</Avatar>
+```
+
+---
+
+## Table — Pattern
+
+```tsx
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+
+<div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+  <Table>
+    <TableHeader>
+      <TableRow className="border-gray-800">
+        <TableHead className="px-4 py-3 text-xs text-gray-500">Column</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow className="cursor-pointer hover:bg-gray-800/50 border-gray-800">
+        <TableCell className="px-4 py-3">value</TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</div>
+```
+
+**Note:** `Table` renders as `<div><table>` — wrap in outer `div.rounded-xl` for styled container. Pass `className="px-4 py-3"` to cells to override default `p-4`.
+
+---
+
+## Theme system — Note tecniche
+
+Il progetto supporta light/dark mode via `next-themes` (ThemeProvider in `app/layout.tsx`).
+- Default: `light`. Toggle in Sidebar per ogni ruolo.
+- Login page: sempre light (via `useEffect(() => setTheme('light'), [setTheme])`).
+- Persistenza: `user_profiles.theme_preference` (migration 035). Sync via `ThemeSync.tsx` al mount.
+- Toggle API: `PATCH /api/profile/theme` (fire-and-forget, `{ theme: 'light' | 'dark' }`).
+- `suppressHydrationWarning` necessario su `<html>` e su elementi che leggono `resolvedTheme`.
+
+---
+
+## Note tecniche: shadcn components
+
+**Componenti `components/ui/` da NON sovrascrivere con `npx shadcn add`:**
+- `CopyButton.tsx`
+- `RichTextDisplay.tsx`
+- `RichTextEditor.tsx`
+- `InfoTooltip.tsx` — wrapper su shadcn Tooltip, da mantenere per backward compat
 - shadcn usa `dark:` variants — funzionano perché la classe `dark` è sempre presente
 - I CSS custom properties in `:root` valgono solo se non sovrascritti da `.dark`
 - Verificare dopo ogni `npx shadcn add` che le variabili in `.dark` siano corrette
@@ -155,6 +278,6 @@ Il progetto è dark-only hardcoded (`<html className="dark">`). Non installare `
 
 | Componente | Priorità |
 |---|---|
-| `Table` + TanStack `DataTable` | On demand (prima pagina con tabella dati) |
-| `DropdownMenu`, `Tabs`, `Pagination` | Futura |
-| `Skeleton` | Futura |
+| `DataTable` (TanStack) | Wave 2 — richiede `@tanstack/react-table` |
+| `Form` (react-hook-form) | Wave 2 — richiede `react-hook-form` |
+| `Calendar` | On demand — richiede `react-day-picker` |
