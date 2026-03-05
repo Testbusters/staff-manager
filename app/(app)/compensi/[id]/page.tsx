@@ -75,7 +75,7 @@ export default async function CompensationDetailPage({
         <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Indietro
         </Link>
-        <span className="text-gray-700">/</span>
+        <span className="text-muted-foreground">/</span>
         <h1 className="text-xl font-semibold text-foreground">Dettaglio compenso</h1>
       </div>
 
