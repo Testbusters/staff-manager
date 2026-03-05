@@ -12,10 +12,10 @@ const TIPO_LABELS: Record<EventTipo, string> = {
 };
 
 const TIPO_COLORS: Record<EventTipo, string> = {
-  WEBINAR:  'bg-blue-900/30 border-blue-800 text-blue-400',
-  INCONTRO: 'bg-green-900/30 border-green-800 text-green-400',
-  WORKSHOP: 'bg-purple-900/30 border-purple-800 text-purple-400',
-  SOCIAL:   'bg-pink-900/30 border-pink-800 text-pink-400',
+  WEBINAR:  'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  INCONTRO: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  WORKSHOP: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  SOCIAL:   'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:border-pink-800 dark:text-pink-400',
   ALTRO:    'bg-muted border-border text-muted-foreground',
 };
 
@@ -81,13 +81,13 @@ export default async function EventiPage() {
           isPast ? 'border-border bg-card/50' : 'border-border bg-card'
         }`}
       >
-        <div className={`flex-shrink-0 w-12 text-center rounded-lg p-1.5 ${isPast ? 'bg-muted' : 'bg-blue-950/50 border border-blue-800/40'}`}>
+        <div className={`flex-shrink-0 w-12 text-center rounded-lg p-1.5 ${isPast ? 'bg-muted' : 'bg-blue-50 border border-blue-200 dark:bg-blue-950/50 dark:border-blue-800/40'}`}>
           {ev.start_datetime ? (
             <>
-              <p className={`text-lg font-bold leading-none ${isPast ? 'text-muted-foreground' : 'text-blue-300'}`}>
+              <p className={`text-lg font-bold leading-none ${isPast ? 'text-muted-foreground' : 'text-blue-600 dark:text-blue-300'}`}>
                 {new Date(ev.start_datetime).getDate()}
               </p>
-              <p className={`text-xs uppercase ${isPast ? 'text-muted-foreground' : 'text-blue-400'}`}>
+              <p className={`text-xs uppercase ${isPast ? 'text-muted-foreground' : 'text-blue-500 dark:text-blue-400'}`}>
                 {new Date(ev.start_datetime).toLocaleString('it-IT', { month: 'short' })}
               </p>
             </>

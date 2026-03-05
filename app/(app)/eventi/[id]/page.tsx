@@ -30,10 +30,10 @@ const TIPO_LABELS: Record<EventTipo, string> = {
 };
 
 const TIPO_COLORS: Record<EventTipo, string> = {
-  WEBINAR:  'bg-blue-900/30 border-blue-800 text-blue-400',
-  INCONTRO: 'bg-green-900/30 border-green-800 text-green-400',
-  WORKSHOP: 'bg-purple-900/30 border-purple-800 text-purple-400',
-  SOCIAL:   'bg-pink-900/30 border-pink-800 text-pink-400',
+  WEBINAR:  'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  INCONTRO: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  WORKSHOP: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  SOCIAL:   'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:border-pink-800 dark:text-pink-400',
   ALTRO:    'bg-muted border-border text-muted-foreground',
 };
 
