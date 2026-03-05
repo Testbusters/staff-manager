@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 
 interface ThemeSyncProps {
@@ -9,17 +9,22 @@ interface ThemeSyncProps {
 }
 
 /**
- * Syncs the DB theme preference into next-themes on mount.
- * Renders nothing — side-effect only.
+ * Applies the DB theme preference once on mount.
+ * Using a ref to capture the initial value prevents re-running when next-themes
+ * updates its internal setTheme reference after a user toggle — which was causing
+ * the toggle to be immediately reverted back to the DB value.
  */
 export function ThemeSync({ dbTheme }: ThemeSyncProps) {
   const { setTheme } = useTheme();
+  const initialTheme = useRef(dbTheme);
 
   useEffect(() => {
-    if (dbTheme === 'light' || dbTheme === 'dark') {
-      setTheme(dbTheme);
+    const t = initialTheme.current;
+    if (t === 'light' || t === 'dark') {
+      setTheme(t);
     }
-  }, [dbTheme, setTheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only: DB theme sets initial state; user toggles persist via localStorage
 
   return null;
 }

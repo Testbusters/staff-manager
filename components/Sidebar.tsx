@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
 import NotificationBell from '@/components/NotificationBell';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -115,11 +115,15 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
           className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
                      text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition mb-1"
         >
-          {resolvedTheme === 'dark'
-            ? <Sun className="h-3.5 w-3.5 shrink-0" />
-            : <Moon className="h-3.5 w-3.5 shrink-0" />}
+          <Switch
+            checked={resolvedTheme === 'dark'}
+            onCheckedChange={handleToggleTheme}
+            suppressHydrationWarning
+            aria-label="Toggle dark mode"
+            className="pointer-events-none"
+          />
           <span suppressHydrationWarning>
-            {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+            {resolvedTheme === 'dark' ? 'Dark mode' : 'Light mode'}
           </span>
         </button>
 
