@@ -32,10 +32,10 @@ export type PendingExp = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const COMP_COMPETENZA_BADGE: Record<string, string> = {
-  corsi:                'bg-blue-900/40 text-blue-300 border-blue-700/50',
-  sb:                   'bg-violet-900/40 text-violet-300 border-violet-700/50',
-  produzione_materiale: 'bg-amber-900/40 text-amber-300 border-amber-700/50',
-  extra:                'bg-emerald-900/40 text-emerald-300 border-emerald-700/50',
+  corsi:                'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/50',
+  sb:                   'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700/50',
+  produzione_materiale: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700/50',
+  extra:                'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700/50',
 };
 
 function formatAge(iso: string): string {

@@ -21,18 +21,18 @@ interface Props {
 
 function TypeBadge({ tipo }: { tipo: DocumentType | string }) {
   if (tipo === 'CONTRATTO_OCCASIONALE') {
-    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-violet-900/40 text-violet-300 border-violet-700/40">Occasionale</span>;
+    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700/40">Occasionale</span>;
   }
   if (tipo === 'CU') {
-    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-blue-900/40 text-blue-300 border-blue-700/40">CU</span>;
+    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/40">CU</span>;
   }
   return <span className="text-muted-foreground text-xs">{tipo}</span>;
 }
 
 function SignBadge({ stato }: { stato: string }) {
   const config: Record<string, { variant: 'outline' | 'secondary'; className?: string }> = {
-    DA_FIRMARE:    { variant: 'outline', className: 'border-amber-600 text-amber-400' },
-    FIRMATO:       { variant: 'outline', className: 'border-green-600 text-green-400' },
+    DA_FIRMARE:    { variant: 'outline', className: 'border-amber-500 text-amber-700 dark:border-amber-600 dark:text-amber-400' },
+    FIRMATO:       { variant: 'outline', className: 'border-green-500 text-green-700 dark:border-green-600 dark:text-green-400' },
     NON_RICHIESTO: { variant: 'secondary' },
   };
   const { variant, className } = config[stato] ?? config.NON_RICHIESTO;
