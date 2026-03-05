@@ -20,8 +20,8 @@ function expiryBadge(valid_to: string | null) {
   const exp = new Date(valid_to);
   const diffDays = Math.ceil((exp.getTime() - today.getTime()) / 86_400_000);
   if (diffDays < 0) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Scaduto</span>;
-  if (diffDays <= 7) return <span className="rounded-full bg-yellow-900/40 border border-yellow-700 px-2 py-0.5 text-xs text-yellow-300">In scadenza</span>;
-  return <span className="rounded-full bg-green-900/30 border border-green-800 px-2 py-0.5 text-xs text-green-400">Attivo</span>;
+  if (diffDays <= 7) return <span className="rounded-full bg-yellow-100 border border-yellow-200 px-2 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-700 dark:text-yellow-300">In scadenza</span>;
+  return <span className="rounded-full bg-green-100 border border-green-200 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400">Attivo</span>;
 }
 
 interface FormData {
@@ -132,10 +132,12 @@ export default function DiscountList({
   discounts,
   canWrite,
   communities,
+  brand = 'testbusters',
 }: {
   discounts: Discount[];
   canWrite: boolean;
   communities: Community[];
+  brand?: string;
 }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
@@ -145,7 +147,7 @@ export default function DiscountList({
     const res = await fetch('/api/discounts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, community_ids: data.community_ids }),
+      body: JSON.stringify({ ...data, community_ids: data.community_ids, brand }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
     setShowForm(false);
@@ -156,7 +158,7 @@ export default function DiscountList({
     const res = await fetch(`/api/discounts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, community_ids: data.community_ids }),
+      body: JSON.stringify({ ...data, community_ids: data.community_ids, brand }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
     setEditingId(null);
@@ -215,7 +217,7 @@ export default function DiscountList({
               {d.descrizione && <RichTextDisplay html={d.descrizione} />}
               <div className="flex items-center gap-3 flex-wrap">
                 {d.codice_sconto && (
-                  <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-300">
+                  <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-700 dark:text-yellow-300">
                     {d.codice_sconto}
                   </span>
                 )}

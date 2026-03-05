@@ -18,14 +18,14 @@ export type DashboardTicket = {
 const CARD_CLS = 'rounded-2xl bg-card border border-border';
 
 const STATO_BADGE: Record<string, string> = {
-  APERTO:         'bg-rose-900/40 text-rose-300 border-rose-700/50',
-  IN_LAVORAZIONE: 'bg-amber-900/40 text-amber-300 border-amber-700/50',
+  APERTO:         'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-700/50',
+  IN_LAVORAZIONE: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700/50',
   CHIUSO:         'bg-muted text-muted-foreground border-border',
 };
 
 const CATEGORIA_BADGE: Record<string, string> = {
-  Compenso: 'bg-blue-900/40 text-blue-300 border-blue-700/50',
-  Rimborso: 'bg-violet-900/40 text-violet-300 border-violet-700/50',
+  Compenso: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/50',
+  Rimborso: 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700/50',
 };
 
 const STATO_LABELS: Record<string, string> = {

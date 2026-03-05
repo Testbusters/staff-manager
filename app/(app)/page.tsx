@@ -83,7 +83,7 @@ function DocCard({ count }: { count: number }) {
         <h2 className="text-sm font-medium text-foreground">Da firmare</h2>
         <span className={
           count > 0
-            ? 'rounded-full bg-amber-900/60 border border-amber-700/50 px-2.5 py-0.5 text-xs text-amber-300'
+            ? 'rounded-full bg-amber-100 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-700 dark:bg-amber-900/60 dark:border-amber-700/50 dark:text-amber-300'
             : 'rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-muted-foreground'
         }>
           {count}
@@ -1203,7 +1203,7 @@ export default async function DashboardPage() {
               <Link
                 key={item.href + item.text}
                 href={item.href}
-                className="flex items-center gap-2.5 rounded-lg bg-amber-950/30 border border-amber-800/30 px-3 py-2.5 text-sm text-amber-300 hover:bg-amber-950/50 transition"
+                className="flex items-center gap-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-sm text-amber-700 hover:bg-amber-100 transition dark:bg-amber-950/30 dark:border-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-950/50"
               >
                 <span className="flex-shrink-0">⚠</span>
                 <span className="flex-1 min-w-0 truncate">{item.text}</span>

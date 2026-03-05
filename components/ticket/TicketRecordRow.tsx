@@ -15,8 +15,8 @@ function formatAge(iso: string): string {
 }
 
 const CATEGORIA_BADGE: Record<string, string> = {
-  Compenso: 'bg-blue-900/40 text-blue-300 border-blue-700/50',
-  Rimborso: 'bg-violet-900/40 text-violet-300 border-violet-700/50',
+  Compenso: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/50',
+  Rimborso: 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700/50',
 };
 
 const PRIORITY_DOT: Record<string, string> = {
