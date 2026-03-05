@@ -35,6 +35,7 @@
 | `civico_residenza` | ✅ required | ✅ | ✅ | ✅ |
 | `telefono` | ✅ required | ✅ | ✅ | ✅ |
 | `iban` | ✅ required | ✅ | ✅ | ❌ sensitive |
+| `intestatario_pagamento` | ✅ required | ✅ | ✅ | ❌ sensitive |
 | `tshirt_size` | ✅ required | ✅ | ✅ | ✅ |
 | `sono_un_figlio_a_carico` | ✅ | ✅ | ✅ | ✅ |
 | `importo_lordo_massimale` | — | ✅ | ✅ | ✅ |
@@ -69,7 +70,7 @@ Before starting any block that touches profile data:
 
 ## Known Constraints
 
-- `IBAN` is treated as sensitive: visible to collaboratore and admin only.
+- `IBAN` and `intestatario_pagamento` are treated as sensitive payment fields: visible to collaboratore and admin only.
 - `username` is the import key for compensation ingestion — uniqueness is enforced at DB level (UNIQUE constraint) and via 409 error at API level.
 - Community check for `responsabile_compensi`: verified via `user_community_access` JOIN `collaborator_communities` on the collaborator's ID.
 - `onboarding_completed=false` guard is on `POST /api/onboarding/complete` only — repeated calls are rejected.

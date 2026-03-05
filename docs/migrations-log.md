@@ -40,3 +40,5 @@
 | 033 | `033_drop_periodo_riferimento.sql` | 2026-03-04 | DROP COLUMN `periodo_riferimento` from `compensations` — field removed from the entity entirely |
 | 034 | `034_ticket_rls_and_updates.sql` | 2026-03-04 | ADD COLUMN `updated_at`, `last_message_at`, `last_message_author_name`, `last_message_author_role` on `tickets`; fix `tickets_manager_read` RLS (use collaborator community join instead of `can_manage_community(community_id)` which fails for NULL); add `tickets_admin_read` policy |
 | 035 | `035_add_theme_preference.sql` | 2026-03-05 | ADD COLUMN `theme_preference VARCHAR(5) DEFAULT 'light' CHECK (IN ('light','dark'))` on `user_profiles`; CREATE POLICY `user_profiles_own_theme_update` (UPDATE own row) |
+| 036 | `036_intestatario_pagamento.sql` | 2026-03-05 | ADD COLUMN `intestatario_pagamento TEXT` (nullable) on `collaborators` — payment account holder name |
+| 037 | `037_discount_brand.sql` | 2026-03-05 | ADD COLUMN `brand TEXT NOT NULL DEFAULT 'testbusters'` on `discounts` — separates Testbusters vs Peer4Med discount catalogs |
