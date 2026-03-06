@@ -1,34 +1,28 @@
 import type { Role } from './types';
-import type { LucideIcon } from 'lucide-react';
-import {
-  Home, User, Wallet, GraduationCap, School, CalendarDays,
-  Megaphone, Gift, Zap, Users, BarChart3, FileText,
-  Ticket, ClipboardList, Settings, MessageSquare,
-} from 'lucide-react';
 
 export interface NavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  iconName: string;
   comingSoon?: boolean;
 }
 
 export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   collaboratore: [
-    { label: 'Home',                    href: '/',              icon: Home },
-    { label: 'Profilo e Documenti',     href: '/profilo',       icon: User },
-    { label: 'Compensi e Rimborsi',     href: '/compensi',      icon: Wallet },
-    { label: 'Corsi',                   href: '#',              icon: GraduationCap, comingSoon: true },
-    { label: 'Schoolbusters',           href: '#',              icon: School, comingSoon: true },
-    { label: 'Eventi',                  href: '/eventi',        icon: CalendarDays },
-    { label: 'Comunicazioni e Risorse', href: '/comunicazioni', icon: Megaphone },
-    { label: 'Opportunità e Sconti',    href: '/opportunita',   icon: Gift },
+    { label: 'Home',                    href: '/',              iconName: 'Home' },
+    { label: 'Profilo e Documenti',     href: '/profilo',       iconName: 'User' },
+    { label: 'Compensi e Rimborsi',     href: '/compensi',      iconName: 'Wallet' },
+    { label: 'Corsi',                   href: '#',              iconName: 'GraduationCap', comingSoon: true },
+    { label: 'Schoolbusters',           href: '#',              iconName: 'School', comingSoon: true },
+    { label: 'Eventi',                  href: '/eventi',        iconName: 'CalendarDays' },
+    { label: 'Comunicazioni e Risorse', href: '/comunicazioni', iconName: 'Megaphone' },
+    { label: 'Opportunità e Sconti',    href: '/opportunita',   iconName: 'Gift' },
   ],
 
   responsabile_compensi: [
-    { label: 'Dashboard',    href: '/',             icon: Home },
-    { label: 'Compensi e rimborsi', href: '/approvazioni', icon: Wallet },
-    { label: 'Ticket',       href: '/ticket',       icon: Ticket },
+    { label: 'Dashboard',           href: '/',             iconName: 'Home' },
+    { label: 'Compensi e rimborsi', href: '/approvazioni', iconName: 'Wallet' },
+    { label: 'Ticket',              href: '/ticket',       iconName: 'Ticket' },
   ],
 
   responsabile_cittadino: [],
@@ -36,15 +30,15 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   responsabile_servizi_individuali: [],
 
   amministrazione: [
-    { label: 'Dashboard',    href: '/',              icon: Home },
-    { label: 'Coda lavoro',  href: '/coda',         icon: Zap },
-    { label: 'Collaboratori',href: '/collaboratori', icon: Users },
-    { label: 'Export',       href: '/export',        icon: BarChart3 },
-    { label: 'Documenti',    href: '/documenti',     icon: FileText },
-    { label: 'Ticket',       href: '/ticket',        icon: Ticket },
-    { label: 'Contenuti',    href: '/contenuti',     icon: ClipboardList },
-    { label: 'Impostazioni', href: '/impostazioni',  icon: Settings },
-    { label: 'Feedback',     href: '/feedback',      icon: MessageSquare },
+    { label: 'Dashboard',     href: '/',              iconName: 'Home' },
+    { label: 'Coda lavoro',   href: '/coda',          iconName: 'Zap' },
+    { label: 'Collaboratori', href: '/collaboratori', iconName: 'Users' },
+    { label: 'Export',        href: '/export',        iconName: 'BarChart3' },
+    { label: 'Documenti',     href: '/documenti',     iconName: 'FileText' },
+    { label: 'Ticket',        href: '/ticket',        iconName: 'Ticket' },
+    { label: 'Contenuti',     href: '/contenuti',     iconName: 'ClipboardList' },
+    { label: 'Impostazioni',  href: '/impostazioni',  iconName: 'Settings' },
+    { label: 'Feedback',      href: '/feedback',      iconName: 'MessageSquare' },
   ],
 
 };

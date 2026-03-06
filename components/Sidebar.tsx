@@ -3,9 +3,20 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Users } from 'lucide-react';
+import {
+  Home, User, Wallet, GraduationCap, School, CalendarDays,
+  Megaphone, Gift, Zap, Users, BarChart3, FileText,
+  Ticket, ClipboardList, Settings, MessageSquare,
+  type LucideIcon,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Home, User, Wallet, GraduationCap, School, CalendarDays,
+  Megaphone, Gift, Zap, Users, BarChart3, FileText,
+  Ticket, ClipboardList, Settings, MessageSquare,
+};
 import NotificationBell from '@/components/NotificationBell';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -63,7 +74,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-0.5">
         {navItems.map((item) => {
-          const Icon = item.icon;
+          const Icon = ICON_MAP[item.iconName] ?? Home;
           if (item.comingSoon) {
             return (
               <span
