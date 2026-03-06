@@ -123,7 +123,7 @@ export default async function ProfiloPage({
       {activeTab === 'documenti' && (
         <div className="space-y-6">
           <div className="flex justify-end">
-            <Button asChild className="bg-brand hover:bg-blue-500 text-white">
+            <Button asChild className="bg-brand hover:bg-brand/90 text-white">
               <Link href="/rimborsi/nuova">Nuovo rimborso</Link>
             </Button>
           </div>

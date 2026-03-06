@@ -225,7 +225,7 @@ export default function ApprovazioniRimborsi({
             <Button
               onClick={handleBulkApprove}
               disabled={bulkLoading || isPending}
-              className="bg-brand hover:bg-blue-500 text-white"
+              className="bg-brand hover:bg-brand/90 text-white"
             >
               {bulkLoading ? 'Approvazione...' : 'Approva selezionati'}
             </Button>
@@ -327,6 +327,7 @@ export default function ApprovazioniRimborsi({
             size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
+            aria-label="Pagina precedente"
           >
             ‹
           </Button>
@@ -336,6 +337,7 @@ export default function ApprovazioniRimborsi({
             size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
+            aria-label="Pagina successiva"
           >
             ›
           </Button>

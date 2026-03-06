@@ -445,7 +445,7 @@ export default function CreateUserForm() {
       <Button
         type="submit"
         disabled={loading || !email || (needsContract && (mode === 'quick' && (!nome.trim() || !cognome.trim())))}
-        className="w-full bg-brand hover:bg-blue-500 text-white"
+        className="w-full bg-brand hover:bg-brand/90 text-white"
       >
         {loading ? (
           <>

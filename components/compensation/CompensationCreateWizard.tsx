@@ -398,7 +398,7 @@ export default function CompensationCreateWizard({
             </Button>
             <Button
               onClick={handleStep2Next}
-              className="bg-brand hover:bg-blue-500 text-white"
+              className="bg-brand hover:bg-brand/90 text-white"
             >
               Avanti →
             </Button>
@@ -463,7 +463,7 @@ export default function CompensationCreateWizard({
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="bg-brand hover:bg-blue-500 text-white"
+            className="bg-brand hover:bg-brand/90 text-white"
           >
             {submitting ? 'Creazione...' : 'Crea compenso'}
           </Button>

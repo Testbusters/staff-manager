@@ -225,7 +225,7 @@ export default function CompensationEditModal({
             <Button
               onClick={handleSave}
               disabled={loading || !isValid}
-              className="bg-brand hover:bg-blue-500 text-white"
+              className="bg-brand hover:bg-brand/90 text-white"
             >
               {loading ? 'Salvataggio…' : 'Salva'}
             </Button>

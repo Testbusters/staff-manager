@@ -191,7 +191,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               Scarica contratto
             </button>
 
-            <Button onClick={handleFinish} className="w-full bg-brand hover:bg-blue-500 text-white">
+            <Button onClick={handleFinish} className="w-full bg-brand hover:bg-brand/90 text-white">
               Ho scaricato il contratto — Accedi alla piattaforma
             </Button>
           </div>
@@ -217,7 +217,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               <Button
                 onClick={handleCompleteOnboarding}
                 disabled={loading}
-                className="w-full bg-brand hover:bg-blue-500 text-white"
+                className="w-full bg-brand hover:bg-brand/90 text-white"
               >
                 {loading ? (
                   <>
@@ -230,7 +230,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 ) : 'Genera e scarica contratto'}
               </Button>
             ) : (
-              <Button onClick={handleFinish} className="w-full bg-brand hover:bg-blue-500 text-white">
+              <Button onClick={handleFinish} className="w-full bg-brand hover:bg-brand/90 text-white">
                 Accedi alla piattaforma
               </Button>
             )}
@@ -409,7 +409,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
         )}
 
-        <Button type="submit" disabled={!step1Valid} className="w-full bg-brand hover:bg-blue-500 text-white">
+        <Button type="submit" disabled={!step1Valid} className="w-full bg-brand hover:bg-brand/90 text-white">
           Avanti — Genera contratto
         </Button>
       </form>

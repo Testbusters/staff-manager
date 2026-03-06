@@ -129,7 +129,7 @@ export default function CUBatchUpload() {
       <Button
         onClick={handleSubmit}
         disabled={!isValid || loading}
-        className="bg-brand hover:bg-blue-500 text-white"
+        className="bg-brand hover:bg-brand/90 text-white"
       >
         {loading ? 'Elaborazione…' : 'Avvia importazione'}
       </Button>

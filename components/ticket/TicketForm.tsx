@@ -116,7 +116,7 @@ export default function TicketForm() {
       </div>
 
       <div className="flex items-center gap-3 pt-1">
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-blue-500 text-white">
+        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
           {loading ? 'Apertura…' : 'Apri ticket'}
         </Button>
       </div>

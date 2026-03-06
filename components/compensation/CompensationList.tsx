@@ -179,6 +179,7 @@ export default function CompensationList({
             size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
+            aria-label="Pagina precedente"
           >
             ‹
           </Button>
@@ -188,6 +189,7 @@ export default function CompensationList({
             size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
+            aria-label="Pagina successiva"
           >
             ›
           </Button>

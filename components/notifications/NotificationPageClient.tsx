@@ -152,7 +152,7 @@ export default function NotificationPageClient() {
             onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
             className={`text-xs px-3 py-1.5 rounded-full border h-auto ${
               unreadOnly
-                ? 'bg-brand text-white border-blue-600 hover:bg-blue-500'
+                ? 'bg-brand text-white border-blue-600 hover:bg-brand/90'
                 : 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground hover:bg-transparent'
             }`}
           >
@@ -217,7 +217,7 @@ export default function NotificationPageClient() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       {!n.read && (
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
                       )}
                       {badge && (
                         <span className={`shrink-0 rounded-full border px-2 py-px text-[10px] font-semibold uppercase tracking-wide ${badge.cls}`}>

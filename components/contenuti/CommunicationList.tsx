@@ -105,7 +105,7 @@ function CommunicationForm({
       </label>
       <div className="flex gap-2 pt-1">
         <button type="submit" disabled={loading}
-          className="rounded-lg bg-brand hover:bg-blue-500 disabled:opacity-50 px-4 py-1.5 text-sm font-medium text-white transition">
+          className="rounded-lg bg-brand hover:bg-brand/90 disabled:opacity-50 px-4 py-1.5 text-sm font-medium text-white transition">
           {loading ? 'Salvataggio…' : 'Salva'}
         </button>
         <button type="button" onClick={onCancel}

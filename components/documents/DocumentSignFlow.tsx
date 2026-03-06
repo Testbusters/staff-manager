@@ -139,7 +139,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
           <Button
             onClick={handleUploadSigned}
             disabled={!file || !confirmed || loading}
-            className="bg-brand hover:bg-blue-500 text-white"
+            className="bg-brand hover:bg-brand/90 text-white"
           >
             {loading ? 'Caricamento…' : 'Invia documento firmato'}
           </Button>

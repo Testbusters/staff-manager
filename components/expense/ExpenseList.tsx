@@ -87,7 +87,7 @@ export default function ExpenseList({
         {role === 'collaboratore' && (
           <Link
             href="/rimborsi/nuova"
-            className="shrink-0 rounded-lg bg-brand hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+            className="shrink-0 rounded-lg bg-brand hover:bg-brand/90 px-4 py-2 text-sm font-medium text-white transition"
           >
             Nuovo rimborso
           </Link>
@@ -154,6 +154,7 @@ export default function ExpenseList({
             size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
+            aria-label="Pagina precedente"
           >
             ‹
           </Button>
@@ -163,6 +164,7 @@ export default function ExpenseList({
             size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
+            aria-label="Pagina successiva"
           >
             ›
           </Button>

@@ -160,7 +160,7 @@ export default function TicketDetailModal({
               <Button
                 type="submit"
                 disabled={sending || !reply.trim()}
-                className="self-end bg-brand hover:bg-blue-500 text-white"
+                className="self-end bg-brand hover:bg-brand/90 text-white"
               >
                 {sending ? '…' : 'Invia'}
               </Button>

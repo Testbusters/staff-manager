@@ -121,7 +121,7 @@ export default function CommunityManager({
             <Input value={newName} onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome community"
               className="flex-1" />
-            <Button type="submit" disabled={createLoading || !newName.trim()} className="bg-brand hover:bg-blue-500 text-white">
+            <Button type="submit" disabled={createLoading || !newName.trim()} className="bg-brand hover:bg-brand/90 text-white">
               {createLoading ? 'Creazione…' : 'Crea'}
             </Button>
           </form>
@@ -145,7 +145,7 @@ export default function CommunityManager({
                 <>
                   <Input value={editName} onChange={(e) => setEditName(e.target.value)}
                     className="flex-1" />
-                  <Button onClick={() => handleRename(c.id)} disabled={editLoading} size="sm" className="bg-brand hover:bg-blue-500 text-white">
+                  <Button onClick={() => handleRename(c.id)} disabled={editLoading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
                     Salva
                   </Button>
                   <button onClick={() => setEditingId(null)}
@@ -212,7 +212,7 @@ export default function CommunityManager({
                   </label>
                 {editingUserId === resp.user_id ? (
                   <div className="flex gap-2">
-                    <Button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading} size="sm" className="bg-brand hover:bg-blue-500 text-white">
+                    <Button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
                       Salva
                     </Button>
                     <button onClick={() => setEditingUserId(null)}

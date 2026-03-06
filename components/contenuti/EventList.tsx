@@ -139,7 +139,7 @@ function EventForm({
         </div>
       </div>
       <div className="flex gap-2 pt-1">
-        <Button type="submit" disabled={loading} size="sm" className="bg-brand hover:bg-blue-500 text-white">
+        <Button type="submit" disabled={loading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
           {loading ? 'Salvataggio…' : 'Salva'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} size="sm">

@@ -115,7 +115,7 @@ export default function ChangePasswordPage() {
             <Button
               type="submit"
               disabled={loading || !password || !confirm}
-              className="w-full bg-brand hover:bg-blue-500 text-white"
+              className="w-full bg-brand hover:bg-brand/90 text-white"
             >
               {loading ? <>{spinner} Aggiornamento…</> : 'Imposta nuova password'}
             </Button>

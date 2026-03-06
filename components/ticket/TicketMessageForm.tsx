@@ -93,7 +93,7 @@ export default function TicketMessageForm({
             )}
           </div>
 
-          <Button type="submit" disabled={sending || !message.trim()} className="bg-brand hover:bg-blue-500 text-white">
+          <Button type="submit" disabled={sending || !message.trim()} className="bg-brand hover:bg-brand/90 text-white">
             {sending ? 'Invio…' : 'Invia risposta'}
           </Button>
         </div>

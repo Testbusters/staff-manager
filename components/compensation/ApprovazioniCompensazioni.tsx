@@ -102,7 +102,7 @@ export default function ApprovazioniCompensazioni({
             </div>
             <Link
               href="/approvazioni/carica"
-              className="shrink-0 rounded-lg bg-brand hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition"
+              className="shrink-0 rounded-lg bg-brand hover:bg-brand/90 px-3 py-1.5 text-xs font-medium text-white transition"
             >
               + Inserimento manuale
             </Link>
@@ -205,6 +205,7 @@ export default function ApprovazioniCompensazioni({
             size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
+            aria-label="Pagina precedente"
           >
             ‹
           </Button>
@@ -214,6 +215,7 @@ export default function ApprovazioniCompensazioni({
             size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
+            aria-label="Pagina successiva"
           >
             ›
           </Button>

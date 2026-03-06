@@ -161,7 +161,7 @@ export default function NotificationBell() {
           {unread > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition"
+              className="text-xs text-link hover:text-link/80 transition"
             >
               Segna tutte come lette
             </button>
@@ -198,7 +198,7 @@ export default function NotificationBell() {
 
                   <div className="flex items-center gap-1.5 pr-4">
                     {!n.read && (
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
                     )}
                     {badge && (
                       <span className={`shrink-0 rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide ${badge.cls}`}>

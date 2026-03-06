@@ -101,7 +101,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full bg-brand hover:bg-blue-500 text-white"
+              className="w-full bg-brand hover:bg-brand/90 text-white"
             >
               {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
             </Button>

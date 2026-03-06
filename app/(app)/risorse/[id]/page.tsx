@@ -88,7 +88,7 @@ export default async function ResourceDetailPage({
       <div className="flex flex-wrap gap-3">
         {r.link && (
           <a href={r.link} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-700 hover:bg-brand px-4 py-2 text-sm font-medium text-white transition">
+            className="inline-flex items-center gap-2 rounded-lg bg-brand hover:bg-brand/90 px-4 py-2 text-sm font-medium text-white transition">
             🔗 Apri link
           </a>
         )}
