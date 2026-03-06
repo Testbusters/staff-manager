@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bell } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -186,7 +188,7 @@ export default function CommunicationList({
         <CommunicationForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {communications.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground py-6 text-center">Nessuna comunicazione pubblicata.</p>
+        <EmptyState icon={Bell} title="Nessuna comunicazione" description="Non ci sono comunicazioni pubblicate al momento." />
       )}
       {communications.map((c) => (
         <div key={c.id} className={`rounded-xl border p-4 space-y-2 ${

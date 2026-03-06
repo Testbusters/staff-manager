@@ -71,7 +71,7 @@ export default function ExportTable({ tab, items, selected, onToggle, onSelectAl
             <TableRow
               key={item.id}
               className={cn(
-                "cursor-pointer hover:bg-muted/50 border-border",
+                "cursor-pointer hover:bg-muted/60 border-border",
                 selected.has(item.id) && "bg-blue-50 dark:bg-blue-900/20"
               )}
               onClick={() => onToggle(item.id)}

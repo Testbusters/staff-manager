@@ -163,7 +163,7 @@ export default function NotificationPageClient() {
               variant="ghost"
               size="sm"
               onClick={handleMarkAllRead}
-              className="text-xs text-blue-400 hover:text-blue-300 h-auto p-0"
+              className="text-xs text-link hover:text-link/80 h-auto p-0"
             >
               Segna tutte come lette
             </Button>
@@ -211,7 +211,7 @@ export default function NotificationPageClient() {
               const inner = (
                 <li
                   className={`group flex items-start gap-3 px-4 py-3.5
-                              hover:bg-muted/50 transition
+                              hover:bg-muted/60 transition
                               ${!n.read ? 'bg-muted/30' : ''}`}
                 >
                   <div className="flex-1 min-w-0">
@@ -241,7 +241,7 @@ export default function NotificationPageClient() {
                         variant="ghost"
                         size="sm"
                         onClick={(e) => { e.preventDefault(); handleMarkRead(n.id); }}
-                        className="text-[10px] text-blue-400 hover:text-blue-300 whitespace-nowrap h-auto p-0"
+                        className="text-[10px] text-link hover:text-link/80 whitespace-nowrap h-auto p-0"
                       >
                         Segna letta
                       </Button>

@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Wallet, Receipt, FileText } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -302,9 +304,6 @@ export default function CollaboratoreDetail({
     </div>
   );
 
-  const emptyRow = (msg: string) => (
-    <p className="text-xs text-muted-foreground py-4 text-center">{msg}</p>
-  );
 
   return (
     <div className="p-6 max-w-4xl space-y-8">
@@ -388,7 +387,7 @@ export default function CollaboratoreDetail({
             <button
               type="button"
               onClick={openProfileEdit}
-              className="text-xs text-blue-400 hover:text-blue-300 transition"
+              className="text-xs text-link hover:text-link/80 transition"
             >
               Modifica profilo
             </button>
@@ -562,7 +561,7 @@ export default function CollaboratoreDetail({
       <div>
         {sectionTitle('Compensi', compensations.length)}
         {compensations.length === 0 ? (
-          emptyRow('Nessun compenso.')
+          <EmptyState icon={Wallet} title="Nessun compenso." />
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <Table>
@@ -606,7 +605,7 @@ export default function CollaboratoreDetail({
                             </button>
                           )}
                           {!canApprove && !canReject && (
-                            <Link href={`/compensi/${comp.id}`} className="text-xs text-blue-400 hover:text-blue-300">
+                            <Link href={`/compensi/${comp.id}`} className="text-xs text-link hover:text-link/80">
                               Vedi →
                             </Link>
                           )}
@@ -625,7 +624,7 @@ export default function CollaboratoreDetail({
       <div>
         {sectionTitle('Rimborsi', expenses.length)}
         {expenses.length === 0 ? (
-          emptyRow('Nessun rimborso.')
+          <EmptyState icon={Receipt} title="Nessun rimborso." />
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <Table>
@@ -671,7 +670,7 @@ export default function CollaboratoreDetail({
                             </button>
                           )}
                           {!canApprove && !canReject && (
-                            <Link href={`/rimborsi/${exp.id}`} className="text-xs text-blue-400 hover:text-blue-300">
+                            <Link href={`/rimborsi/${exp.id}`} className="text-xs text-link hover:text-link/80">
                               Vedi →
                             </Link>
                           )}
@@ -690,7 +689,7 @@ export default function CollaboratoreDetail({
       <div>
         {sectionTitle('Documenti', documents.length)}
         {documents.length === 0 ? (
-          emptyRow('Nessun documento.')
+          <EmptyState icon={FileText} title="Nessun documento." />
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <Table>
@@ -716,7 +715,7 @@ export default function CollaboratoreDetail({
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{formatDate(doc.created_at)}</TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/documenti/${doc.id}`} className="text-xs text-blue-400 hover:text-blue-300">
+                      <Link href={`/documenti/${doc.id}`} className="text-xs text-link hover:text-link/80">
                         Vedi →
                       </Link>
                     </TableCell>

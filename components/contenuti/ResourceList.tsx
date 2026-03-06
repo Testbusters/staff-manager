@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BookOpen } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Resource, ResourceCategoria, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -186,7 +188,7 @@ export default function ResourceList({
         <ResourceForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {resources.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground py-6 text-center">Nessuna risorsa disponibile.</p>
+        <EmptyState icon={BookOpen} title="Nessuna risorsa disponibile" description="Non ci sono risorse pubblicate al momento." />
       )}
       {resources.map((r) => (
         <div key={r.id} className="rounded-xl border border-border bg-card p-4 space-y-2">

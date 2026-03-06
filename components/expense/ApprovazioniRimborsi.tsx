@@ -3,7 +3,9 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Expense, ExpenseStatus, ExpenseCategory } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS, EXPENSE_CATEGORIES, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
@@ -235,7 +237,7 @@ export default function ApprovazioniRimborsi({
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
+            <EmptyState icon={Receipt} title="Nessun rimborso trovato" description="Non ci sono rimborsi che corrispondono ai filtri selezionati." />
           </CardContent>
         </Card>
       ) : (
@@ -262,7 +264,7 @@ export default function ApprovazioniRimborsi({
             return (
               <div
                 key={e.id}
-                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/50 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
+                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/60 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
               >
                 {/* Checkbox column */}
                 <div className="w-5 shrink-0 flex items-center justify-center">

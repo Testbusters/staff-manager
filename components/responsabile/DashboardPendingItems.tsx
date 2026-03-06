@@ -133,7 +133,7 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
               <Link
                 href={`/compensi/${compId}`}
                 onClick={onClose}
-                className="text-xs text-blue-400 hover:text-blue-300 transition"
+                className="text-xs text-link hover:text-link/80 transition"
               >
                 Apri pagina completa →
               </Link>
@@ -211,7 +211,7 @@ function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
               <Link
                 href={`/rimborsi/${expId}`}
                 onClick={onClose}
-                className="text-xs text-blue-400 hover:text-blue-300 transition"
+                className="text-xs text-link hover:text-link/80 transition"
               >
                 Apri pagina completa →
               </Link>

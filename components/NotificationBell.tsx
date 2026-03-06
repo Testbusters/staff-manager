@@ -183,7 +183,7 @@ export default function NotificationBell() {
               const inner = (
                 <div
                   className={`group px-4 py-3 border-b border-border last:border-0
-                              hover:bg-muted/50 transition cursor-pointer relative
+                              hover:bg-muted/60 transition cursor-pointer relative
                               ${!n.read ? 'bg-muted/30' : ''}`}
                 >
                   {/* Dismiss button */}
@@ -244,7 +244,7 @@ export default function NotificationBell() {
           <Link
             href="/notifiche"
             onClick={() => setOpen(false)}
-            className="text-xs text-blue-400 hover:text-blue-300 ml-auto"
+            className="text-xs text-link hover:text-link/80 ml-auto"
           >
             Vedi tutte →
           </Link>

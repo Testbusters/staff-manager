@@ -130,7 +130,7 @@ export default async function EventDetailPage({
                 href={buildMapsUrl(event.location)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-400 hover:text-blue-300 transition"
+                className="text-xs text-link hover:text-link/80 transition"
               >
                 Vedi su Maps →
               </a>
@@ -141,7 +141,7 @@ export default async function EventDetailPage({
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground">🔗</span>
             <a href={event.luma_url} target="_blank" rel="noopener noreferrer"
-              className="text-sm text-blue-400 hover:text-blue-300 underline transition">
+              className="text-sm text-link hover:text-link/80 underline transition">
               Pagina evento →
             </a>
           </div>
@@ -150,7 +150,7 @@ export default async function EventDetailPage({
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground">📎</span>
             <a href={event.file_url} target="_blank" rel="noopener noreferrer"
-              className="text-sm text-blue-400 hover:text-blue-300 underline transition">
+              className="text-sm text-link hover:text-link/80 underline transition">
               Scarica allegato →
             </a>
           </div>

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Compensation, CompensationStatus, Role } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
@@ -120,7 +122,7 @@ export default function CompensationList({
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
+            <EmptyState icon={Wallet} title="Nessun compenso trovato" description="Nessun compenso corrisponde ai filtri selezionati." />
           </CardContent>
         </Card>
       ) : (
@@ -130,7 +132,7 @@ export default function CompensationList({
             <Link
               key={c.id}
               href={`/compensi/${c.id}`}
-              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-muted/50 transition"
+              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-muted/60 transition"
             >
               {/* Left: description + meta */}
               <div className="min-w-0 flex-1">

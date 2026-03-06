@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Bell, BookOpen } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Resource, ResourceCategoria } from '@/lib/types';
 
 type Tab = 'comunicazioni' | 'risorse';
@@ -117,13 +119,13 @@ export default async function ComunicazioniPage({
       {activeTab === 'comunicazioni' && (
         <div className="space-y-3">
           {communications.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8 text-center">Nessuna comunicazione.</p>
+            <EmptyState icon={Bell} title="Nessuna comunicazione" description="Non ci sono comunicazioni pubblicate al momento." />
           )}
           {communications.map((c) => (
             <Link
               key={c.id}
               href={`/comunicazioni/${c.id}`}
-              className={`block rounded-xl border p-4 hover:bg-muted/50 transition group ${
+              className={`block rounded-xl border p-4 hover:bg-muted/60 transition group ${
                 c.pinned ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20' : 'border-border bg-card'
               }`}
             >
@@ -168,13 +170,13 @@ export default async function ComunicazioniPage({
             })}
           </div>
           {resources.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8 text-center">Nessuna risorsa disponibile.</p>
+            <EmptyState icon={BookOpen} title="Nessuna risorsa disponibile" description="Non ci sono risorse pubblicate al momento." />
           )}
           {resources.map((r) => (
             <Link
               key={r.id}
               href={`/risorse/${r.id}`}
-              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/60 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">

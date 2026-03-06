@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Calendar } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { ContentEvent, EventTipo } from '@/lib/types';
 
 const TIPO_LABELS: Record<EventTipo, string> = {
@@ -77,7 +79,7 @@ export default async function EventiPage() {
     return (
       <Link
         href={`/eventi/${ev.id}`}
-        className={`flex items-start gap-4 rounded-xl border p-4 hover:bg-muted/50 transition group ${
+        className={`flex items-start gap-4 rounded-xl border p-4 hover:bg-muted/60 transition group ${
           isPast ? 'border-border bg-card/50' : 'border-border bg-card'
         }`}
       >
@@ -127,7 +129,7 @@ export default async function EventiPage() {
       </div>
 
       {events.length === 0 && (
-        <p className="text-sm text-muted-foreground py-8 text-center">Nessun evento in programma.</p>
+        <EmptyState icon={Calendar} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
 
       {upcoming.length > 0 && (

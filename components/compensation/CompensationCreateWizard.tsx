@@ -249,7 +249,7 @@ export default function CompensationCreateWizard({
               </TableHeader>
               <TableBody>
                 {collaborators.map((c) => (
-                  <TableRow key={c.id} className="hover:bg-muted/50">
+                  <TableRow key={c.id} className="hover:bg-muted/60">
                     <TableCell className="text-foreground">
                       {c.cognome} {c.nome}
                     </TableCell>

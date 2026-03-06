@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { MessageSquare } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { TicketStatus, Role } from '@/lib/types';
 import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/lib/types';
 import TicketStatusBadge from './TicketStatusBadge';
@@ -94,8 +96,8 @@ export default function TicketList({
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Nessun ticket trovato.</p>
-            <Link href="/ticket/nuova" className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300">
+            <EmptyState icon={MessageSquare} title="Nessun ticket trovato" description="Non ci sono ticket che corrispondono ai filtri selezionati." />
+            <Link href="/ticket/nuova" className="mt-3 inline-block text-sm text-link hover:text-link/80">
               Apri il primo ticket →
             </Link>
           </CardContent>
@@ -122,7 +124,7 @@ export default function TicketList({
                 <TableRow
                   key={t.id}
                   onClick={() => router.push(`/ticket/${t.id}`)}
-                  className="hover:bg-muted/50 cursor-pointer"
+                  className="hover:bg-muted/60 cursor-pointer"
                 >
                   <TableCell>
                     <TicketStatusBadge stato={t.stato} />

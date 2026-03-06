@@ -36,6 +36,7 @@
   --color-primary: var(--primary);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-link: var(--link);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -98,6 +99,8 @@
   /* Brand — Testbusters blue, stable across themes */
   --brand: oklch(0.546 0.245 262.881);
   --brand-foreground: oklch(1 0 0);
+  /* Link — blue with good contrast in light mode */
+  --link: oklch(0.488 0.243 264.376);
 }
 
 /* Dark mode — semantic tokens mapped to --base-* scale */
@@ -135,6 +138,8 @@
   --sidebar-accent-foreground: var(--base-200);
   --sidebar-border: var(--base-800);
   --sidebar-ring: var(--base-500);
+  /* Link — blue with good contrast in dark mode */
+  --link: oklch(0.707 0.165 254.624);
 }
 
 @layer base {

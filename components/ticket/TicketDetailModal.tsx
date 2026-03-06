@@ -101,7 +101,7 @@ export default function TicketDetailModal({
           {ticket && (
             <Link
               href={`/ticket/${ticketId}`}
-              className="text-xs text-blue-400 hover:text-blue-300 transition flex-shrink-0"
+              className="text-xs text-link hover:text-link/80 transition flex-shrink-0"
               onClick={onClose}
             >
               Apri →
@@ -130,7 +130,7 @@ export default function TicketDetailModal({
                       href={m.signed_attachment_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 block text-xs text-blue-400 hover:text-blue-300 underline"
+                      className="mt-1 block text-xs text-link hover:text-link/80 underline"
                     >
                       📎 {m.attachment_name ?? 'Allegato'}
                     </a>

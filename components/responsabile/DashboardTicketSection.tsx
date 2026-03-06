@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { Ticket } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export type DashboardTicket = {
   id: string;
@@ -107,7 +109,7 @@ export default function DashboardTicketSection({
           </Link>
         </div>
         {ricevuti.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-muted-foreground text-center">Nessun ticket aperto.</p>
+          <EmptyState icon={Ticket} title="Nessun ticket aperto" />
         ) : (
           <div className="divide-y divide-border">
             {ricevuti.map((t) => <TicketRow key={t.id} ticket={t} />)}

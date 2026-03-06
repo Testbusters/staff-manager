@@ -22,7 +22,7 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
         <TabsTrigger
           value="compensi"
           className="group flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
-                     text-muted-foreground hover:text-foreground hover:bg-muted/50
+                     text-muted-foreground hover:text-foreground hover:bg-muted/60
                      data-[state=active]:bg-muted data-[state=active]:text-foreground
                      data-[state=active]:shadow-none bg-transparent"
         >
@@ -40,7 +40,7 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
         <TabsTrigger
           value="rimborsi"
           className="group flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
-                     text-muted-foreground hover:text-foreground hover:bg-muted/50
+                     text-muted-foreground hover:text-foreground hover:bg-muted/60
                      data-[state=active]:bg-muted data-[state=active]:text-foreground
                      data-[state=active]:shadow-none bg-transparent"
         >

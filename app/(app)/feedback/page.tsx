@@ -66,7 +66,7 @@ function FeedbackCard({ item }: { item: FeedbackRow }) {
           href={item.screenshot_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition"
+          className="inline-flex items-center gap-1.5 text-xs text-link hover:text-link/80 transition"
         >
           🖼 Visualizza screenshot
         </a>

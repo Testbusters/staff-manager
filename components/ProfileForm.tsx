@@ -436,7 +436,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               variant="ghost"
               size="sm"
               onClick={() => setShowGuida(true)}
-              className="text-xs text-blue-400 hover:text-blue-300 h-auto p-0 underline underline-offset-2"
+              className="text-xs text-link hover:text-link/80 h-auto p-0 underline underline-offset-2"
             >
               Come funziona la prestazione occasionale?
             </Button>
@@ -486,7 +486,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 Importo lordo massimo che vuoi ricevere da noi nell&apos;anno solare.
                 Se hai altre collaborazioni, abbassa questo valore per rispettare i tuoi limiti personali.
                 <Button type="button" variant="ghost" size="sm" onClick={() => setShowGuida(true)}
-                  className="ml-1 text-blue-400 hover:text-blue-300 underline underline-offset-2 h-auto p-0 text-xs">
+                  className="ml-1 text-link hover:text-link/80 underline underline-offset-2 h-auto p-0 text-xs">
                   Come scegliere il valore?
                 </Button>
               </p>

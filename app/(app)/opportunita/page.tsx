@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Briefcase, Tag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Opportunity, Discount, OpportunityTipo } from '@/lib/types';
 
 type Tab = 'opportunita' | 'sconti' | 'sconti_peer4med';
@@ -143,13 +145,13 @@ export default async function OpportunitaPage({
       {activeTab === 'opportunita' && (
         <div className="space-y-3">
           {opportunities.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8 text-center">Nessuna opportunità disponibile.</p>
+            <EmptyState icon={Briefcase} title="Nessuna opportunità disponibile" description="Non ci sono opportunità pubblicate al momento." />
           )}
           {opportunities.map((o) => (
             <Link
               key={o.id}
               href={`/opportunita/${o.id}`}
-              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/60 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -172,13 +174,13 @@ export default async function OpportunitaPage({
       {activeTab === 'sconti' && (
         <div className="space-y-3">
           {discounts.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8 text-center">Nessuno sconto disponibile.</p>
+            <EmptyState icon={Tag} title="Nessuno sconto disponibile" description="Non ci sono sconti pubblicati al momento." />
           )}
           {discounts.map((d) => (
             <Link
               key={d.id}
               href={`/sconti/${d.id}`}
-              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/60 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -199,13 +201,13 @@ export default async function OpportunitaPage({
       {activeTab === 'sconti_peer4med' && (
         <div className="space-y-3">
           {discountsPeer4med.length === 0 && (
-            <p className="text-sm text-muted-foreground py-8 text-center">Nessuno sconto Peer4Med disponibile.</p>
+            <EmptyState icon={Tag} title="Nessuno sconto Peer4Med disponibile" description="Non ci sono sconti Peer4Med pubblicati al momento." />
           )}
           {discountsPeer4med.map((d) => (
             <Link
               key={d.id}
               href={`/sconti/${d.id}`}
-              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition group"
+              className="block rounded-xl border border-border bg-card p-4 hover:bg-muted/60 transition group"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">

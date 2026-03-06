@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Expense, ExpenseStatus, Role } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
@@ -96,11 +98,11 @@ export default function ExpenseList({
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Nessun rimborso trovato.</p>
+            <EmptyState icon={Receipt} title="Nessun rimborso trovato" description="Nessun rimborso corrisponde ai filtri selezionati." />
             {role === 'collaboratore' && (
               <Link
                 href="/rimborsi/nuova"
-                className="mt-3 inline-block text-sm text-blue-400 hover:text-blue-300"
+                className="mt-3 inline-block text-sm text-link hover:text-link/80"
               >
                 Crea la prima richiesta →
               </Link>
@@ -114,7 +116,7 @@ export default function ExpenseList({
             <Link
               key={e.id}
               href={`/rimborsi/${e.id}`}
-              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-muted/50 transition"
+              className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-muted/60 transition"
             >
               {/* Left: category + meta */}
               <div className="min-w-0 flex-1">

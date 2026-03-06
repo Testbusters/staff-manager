@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Tag } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Discount, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -183,7 +185,7 @@ export default function DiscountList({
         <DiscountForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {discounts.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground py-6 text-center">Nessuno sconto disponibile.</p>
+        <EmptyState icon={Tag} title="Nessuno sconto disponibile" description="Non ci sono sconti pubblicati al momento." />
       )}
       {discounts.map((d) => (
         <div key={d.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
@@ -223,7 +225,7 @@ export default function DiscountList({
                 )}
                 {d.link && (
                   <a href={d.link} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-blue-400 hover:text-blue-300 underline transition">
+                    className="text-xs text-link hover:text-link/80 underline transition">
                     Scopri →
                   </a>
                 )}

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Compensation, CompensationStatus } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
@@ -146,7 +148,7 @@ export default function ApprovazioniCompensazioni({
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Nessun compenso trovato.</p>
+            <EmptyState icon={Wallet} title="Nessun compenso trovato" description="Non ci sono compensi che corrispondono ai filtri selezionati." />
           </CardContent>
         </Card>
       ) : (
@@ -158,7 +160,7 @@ export default function ApprovazioniCompensazioni({
             return (
               <div
                 key={c.id}
-                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/50 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
+                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/60 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
               >
                 <Link
                   href={`/compensi/${c.id}`}

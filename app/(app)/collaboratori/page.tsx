@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Users } from 'lucide-react';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Role } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -151,7 +153,7 @@ export default async function CollaboratoriPage({
           Nessun collaboratore presente.
         </p>
       ) : collaborators.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">Nessun collaboratore trovato per il filtro selezionato.</p>
+        <EmptyState icon={Users} title="Nessun collaboratore trovato" description="Nessun risultato per il filtro selezionato." />
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
           <Table>
@@ -173,7 +175,7 @@ export default async function CollaboratoriPage({
                   <TableCell className="text-right">
                     <Link
                       href={`/collaboratori/${c.id}`}
-                      className="text-blue-400 hover:text-blue-300 text-xs font-medium"
+                      className="text-link hover:text-link/80 text-xs font-medium"
                     >
                       Dettaglio →
                     </Link>

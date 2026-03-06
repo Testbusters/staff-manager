@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Briefcase } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Opportunity, OpportunityTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -189,7 +191,7 @@ export default function OpportunityList({
         <OpportunityForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {opportunities.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground py-6 text-center">Nessuna opportunità disponibile.</p>
+        <EmptyState icon={Briefcase} title="Nessuna opportunità disponibile" description="Non ci sono opportunità pubblicate al momento." />
       )}
       {opportunities.map((o) => (
         <div key={o.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
@@ -229,7 +231,7 @@ export default function OpportunityList({
                 )}
                 {o.link_candidatura && (
                   <a href={o.link_candidatura} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-blue-400 hover:text-blue-300 underline transition">
+                    className="text-xs text-link hover:text-link/80 underline transition">
                     Candidati →
                   </a>
                 )}

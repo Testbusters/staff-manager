@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Calendar } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { ContentEvent, EventTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -223,7 +225,7 @@ export default function EventList({
         <EventForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {events.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground py-6 text-center">Nessun evento in programma.</p>
+        <EmptyState icon={Calendar} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
       {events.map((ev) => (
         <div key={ev.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -264,7 +266,7 @@ export default function EventList({
                 {ev.location && <span>📍 {ev.location}</span>}
                 {ev.luma_url && (
                   <a href={ev.luma_url} target="_blank" rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline transition">
+                    className="text-link hover:text-link/80 underline transition">
                     Pagina evento →
                   </a>
                 )}

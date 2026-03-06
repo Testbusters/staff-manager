@@ -94,7 +94,7 @@ function DocCard({ count }: { count: number }) {
           <p className="text-sm text-amber-700 dark:text-amber-300/80">
             {count === 1 ? 'Hai 1 documento' : `Hai ${count} documenti`} in attesa di firma.
           </p>
-          <Link href="/profilo?tab=documenti" className="text-xs text-blue-400 hover:text-blue-300 transition">
+          <Link href="/profilo?tab=documenti" className="text-xs text-link hover:text-link/80 transition">
             Vai ai documenti →
           </Link>
         </>
@@ -1141,7 +1141,7 @@ export default async function DashboardPage() {
       {/* 4 KPI card */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Compensi in corso */}
-        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
+        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/60 transition'}>
           <div className="flex items-center justify-between gap-1">
             <span className="text-xs text-muted-foreground truncate">Compensi</span>
             <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground tabular-nums">
@@ -1153,7 +1153,7 @@ export default async function DashboardPage() {
         </Link>
 
         {/* Rimborsi in corso */}
-        <Link href="/rimborsi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
+        <Link href="/rimborsi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/60 transition'}>
           <div className="flex items-center justify-between gap-1">
             <span className="text-xs text-muted-foreground truncate">Rimborsi</span>
             <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground tabular-nums">
@@ -1165,7 +1165,7 @@ export default async function DashboardPage() {
         </Link>
 
         {/* Da ricevere */}
-        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
+        <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/60 transition'}>
           <span className="text-xs text-muted-foreground">Da ricevere</span>
           <p className={`text-lg font-semibold tabular-nums leading-tight ${daRicevere > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}`}>
             {eur(daRicevere)}
@@ -1174,7 +1174,7 @@ export default async function DashboardPage() {
         </Link>
 
         {/* Da firmare */}
-        <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/50 transition'}>
+        <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/60 transition'}>
           <span className="text-xs text-muted-foreground">Da firmare</span>
           <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}`}>
             {daFirmareCount}

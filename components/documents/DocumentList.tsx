@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { FileText } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Document, DocumentType, DocumentMacroType } from '@/lib/types';
 import { DOCUMENT_SIGN_STATUS_LABELS, DOCUMENT_MACRO_TYPE, DOCUMENT_MACRO_TYPE_LABELS } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -79,7 +81,7 @@ export default function DocumentList({ documents, isAdmin }: Props) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-sm text-muted-foreground">Nessun documento disponibile.</p>
+          <EmptyState icon={FileText} title="Nessun documento disponibile" description="Non sono presenti documenti per questo collaboratore." />
         </CardContent>
       </Card>
     );
@@ -120,7 +122,7 @@ export default function DocumentList({ documents, isAdmin }: Props) {
               </TableHeader>
               <TableBody>
                 {docs.map((doc) => (
-                  <TableRow key={doc.id} className="hover:bg-muted/50">
+                  <TableRow key={doc.id} className="hover:bg-muted/60">
                     {isAdmin && (
                       <TableCell className="text-foreground text-sm">
                         {doc.collaborators
@@ -158,7 +160,7 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                         )}
                         <Link
                           href={`/documenti/${doc.id}`}
-                          className="text-xs text-blue-400 hover:text-blue-300"
+                          className="text-xs text-link hover:text-link/80"
                         >
                           Apri →
                         </Link>
