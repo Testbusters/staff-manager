@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell } from 'lucide-react';
+import { Bell, Pin, Paperclip } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -209,7 +209,7 @@ export default function CommunicationList({
             <>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  {c.pinned && <span className="text-blue-400 text-sm">📌</span>}
+                  {c.pinned && <Pin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
                   <h3 className="text-sm font-semibold text-foreground">{c.titolo}</h3>
                 </div>
                 {canWrite && (
@@ -225,7 +225,7 @@ export default function CommunicationList({
                   {c.file_urls.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                      📎 Allegato {i + 1}
+                      <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato {i + 1}
                     </a>
                   ))}
                 </div>

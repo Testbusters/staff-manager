@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ExternalLink, Paperclip } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Resource, ResourceCategoria, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -215,13 +215,13 @@ export default function ResourceList({
                 {r.link && (
                   <a href={r.link} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1 text-xs text-foreground transition">
-                    🔗 Apri link
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />Apri link
                   </a>
                 )}
                 {r.file_url && (
                   <a href={r.file_url} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1 text-xs text-foreground transition">
-                    📎 File
+                    <Paperclip className="h-3.5 w-3.5 shrink-0" />File
                   </a>
                 )}
               </div>

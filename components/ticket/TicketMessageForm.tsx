@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { Paperclip } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { TicketStatus } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -78,7 +79,7 @@ export default function TicketMessageForm({
               htmlFor="ticket-file"
               className="cursor-pointer rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-muted-foreground transition"
             >
-              📎 Allega file
+              <Paperclip className="h-3.5 w-3.5 shrink-0" />Allega file
             </label>
             <input
               id="ticket-file"

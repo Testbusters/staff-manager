@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { CalendarDays, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Opportunity, OpportunityTipo } from '@/lib/types';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -100,7 +101,7 @@ export default async function OpportunityDetailPage({
 
         {o.scadenza_candidatura && (
           <div className="border-t border-border pt-3 flex items-center gap-2">
-            <span className="text-muted-foreground">📅</span>
+            <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
             <div>
               <p className="text-xs text-muted-foreground">Scadenza candidatura</p>
               <p className="text-sm text-foreground">{formatDate(o.scadenza_candidatura)}</p>
@@ -119,7 +120,7 @@ export default async function OpportunityDetailPage({
         {o.file_url && (
           <a href={o.file_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition">
-            📎 Scarica allegato
+            <Paperclip className="h-3.5 w-3.5 shrink-0" />Scarica allegato
           </a>
         )}
       </div>

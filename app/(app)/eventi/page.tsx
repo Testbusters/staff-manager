@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar } from 'lucide-react';
+import { CalendarDays, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ContentEvent, EventTipo } from '@/lib/types';
@@ -98,7 +98,7 @@ export default async function EventiPage() {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
             {ev.tipo && (
               <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[ev.tipo as EventTipo] ?? TIPO_COLORS.ALTRO}`}>
                 {TIPO_LABELS[ev.tipo as EventTipo] ?? ev.tipo}
@@ -109,11 +109,11 @@ export default async function EventiPage() {
             </h3>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-            {ev.start_datetime && <span>📅 {formatDatetime(ev.start_datetime)}</span>}
-            {ev.location && <span>📍 {ev.location}</span>}
+            {ev.start_datetime && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDatetime(ev.start_datetime)}</span>}
+            {ev.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{ev.location}</span>}
           </div>
           {ev.descrizione && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ev.descrizione}</p>
+            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{ev.descrizione}</p>
           )}
         </div>
         <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition text-sm">→</span>
@@ -129,7 +129,7 @@ export default async function EventiPage() {
       </div>
 
       {events.length === 0 && (
-        <EmptyState icon={Calendar} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
+        <EmptyState icon={CalendarDays} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
 
       {upcoming.length > 0 && (

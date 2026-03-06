@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { CalendarDays, MapPin, ExternalLink, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { ContentEvent, EventTipo } from '@/lib/types';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -110,7 +111,7 @@ export default async function EventDetailPage({
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
         {(event.start_datetime || event.end_datetime) && (
           <div className="flex items-start gap-3">
-            <span className="text-muted-foreground mt-0.5">📅</span>
+            <CalendarDays className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <div>
               {event.start_datetime && (
                 <p className="text-sm text-foreground">{formatDatetime(event.start_datetime)}</p>
@@ -123,7 +124,7 @@ export default async function EventDetailPage({
         )}
         {event.location && (
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">📍</span>
+            <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
             <div className="flex items-center gap-3">
               <p className="text-sm text-foreground">{event.location}</p>
               <a
@@ -139,7 +140,7 @@ export default async function EventDetailPage({
         )}
         {event.luma_url && (
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">🔗</span>
+            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
             <a href={event.luma_url} target="_blank" rel="noopener noreferrer"
               className="text-sm text-link hover:text-link/80 underline transition">
               Pagina evento →
@@ -148,7 +149,7 @@ export default async function EventDetailPage({
         )}
         {event.file_url && (
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">📎</span>
+            <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
             <a href={event.file_url} target="_blank" rel="noopener noreferrer"
               className="text-sm text-link hover:text-link/80 underline transition">
               Scarica allegato →
@@ -165,7 +166,7 @@ export default async function EventDetailPage({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition"
           >
-            📅 Aggiungi a Google Calendar
+            <CalendarDays className="h-3.5 w-3.5 shrink-0" />Aggiungi a Google Calendar
           </a>
         </div>
       ) : null; })()}

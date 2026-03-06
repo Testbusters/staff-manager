@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar } from 'lucide-react';
+import { CalendarDays, MapPin } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ContentEvent, EventTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -225,7 +225,7 @@ export default function EventList({
         <EventForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
       )}
       {events.length === 0 && !showForm && (
-        <EmptyState icon={Calendar} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
+        <EmptyState icon={CalendarDays} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
       {events.map((ev) => (
         <div key={ev.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -261,9 +261,9 @@ export default function EventList({
               {ev.descrizione && <RichTextDisplay html={ev.descrizione} />}
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 {(ev.start_datetime || ev.end_datetime) && (
-                  <span>📅 {formatDateRange(ev.start_datetime, ev.end_datetime)}</span>
+                  <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDateRange(ev.start_datetime, ev.end_datetime)}</span>
                 )}
-                {ev.location && <span>📍 {ev.location}</span>}
+                {ev.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{ev.location}</span>}
                 {ev.luma_url && (
                   <a href={ev.luma_url} target="_blank" rel="noopener noreferrer"
                     className="text-link hover:text-link/80 underline transition">

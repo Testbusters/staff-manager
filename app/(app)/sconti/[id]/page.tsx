@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Discount } from '@/lib/types';
 import CopyButton from '@/components/ui/CopyButton';
@@ -125,7 +126,7 @@ export default async function DiscountDetailPage({
         {d.file_url && (
           <a href={d.file_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition">
-            📎 Scarica allegato
+            <Paperclip className="h-3.5 w-3.5 shrink-0" />Scarica allegato
           </a>
         )}
       </div>

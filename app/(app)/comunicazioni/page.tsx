@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, BookOpen } from 'lucide-react';
+import { Bell, BookOpen, Megaphone, Pin, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Resource, ResourceCategoria } from '@/lib/types';
@@ -112,8 +112,8 @@ export default async function ComunicazioniPage({
       </div>
 
       <div className="flex gap-2">
-        <Link href="?tab=comunicazioni" className={tabCls('comunicazioni')}>📌 Comunicazioni</Link>
-        <Link href="?tab=risorse" className={tabCls('risorse')}>📚 Risorse</Link>
+        <Link href="?tab=comunicazioni" className={tabCls('comunicazioni')}><span className="inline-flex items-center gap-1.5"><Megaphone className="h-3.5 w-3.5" />Comunicazioni</span></Link>
+        <Link href="?tab=risorse" className={tabCls('risorse')}><span className="inline-flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" />Risorse</span></Link>
       </div>
 
       {activeTab === 'comunicazioni' && (
@@ -131,7 +131,7 @@ export default async function ComunicazioniPage({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  {c.pinned && <span className="text-blue-400 text-sm flex-shrink-0">📌</span>}
+                  {c.pinned && <Pin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
                   <h3 className="text-sm font-semibold text-foreground truncate">
                     {c.titolo}
                   </h3>
@@ -142,7 +142,7 @@ export default async function ComunicazioniPage({
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                 <span>{formatDate(c.published_at)}</span>
                 {c.file_urls && c.file_urls.length > 0 && (
-                  <span>📎 {c.file_urls.length} allegat{c.file_urls.length === 1 ? 'o' : 'i'}</span>
+                  <span className="inline-flex items-center gap-1"><Paperclip className="h-3.5 w-3.5 shrink-0" />{c.file_urls.length} allegat{c.file_urls.length === 1 ? 'o' : 'i'}</span>
                 )}
               </div>
             </Link>

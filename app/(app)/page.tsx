@@ -18,6 +18,7 @@ import DashboardUpdates from '@/components/compensation/DashboardUpdates';
 import type { DashboardDocItem, DashboardEventItem, DashboardCommItem, DashboardOppItem } from '@/components/compensation/DashboardUpdates';
 import CollabOpenTicketsSection from '@/components/ticket/CollabOpenTicketsSection';
 import ResponsabileAvatarHero from '@/components/responsabile/ResponsabileAvatarHero';
+import { AlertTriangle } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
@@ -1182,7 +1183,7 @@ export default async function DashboardPage() {
                 href={item.href}
                 className="flex items-center gap-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-sm text-amber-700 hover:bg-amber-100 transition dark:bg-amber-950/30 dark:border-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-950/50"
               >
-                <span className="flex-shrink-0">⚠</span>
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 <span className="flex-1 min-w-0 truncate">{item.text}</span>
                 <span className="flex-shrink-0 text-xs text-amber-500/60">→</span>
               </Link>

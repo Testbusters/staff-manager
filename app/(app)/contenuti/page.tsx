@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Megaphone, Tag, BookOpen, CalendarDays, Briefcase } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import CommunicationList from '@/components/contenuti/CommunicationList';
 import DiscountList from '@/components/contenuti/DiscountList';
@@ -119,12 +120,12 @@ export default async function ContenutiPage({
 
       {/* Tab bar */}
       <div className="flex gap-2 mb-6 overflow-x-auto">
-        <Link href="?tab=comunicazioni" className={tabCls('comunicazioni')}>📌 Comunicazioni</Link>
-        <Link href="?tab=sconti" className={tabCls('sconti')}>🎁 Sconti</Link>
-        <Link href="?tab=sconti_peer4med" className={tabCls('sconti_peer4med')}>🏥 Sconti Peer4Med</Link>
-        <Link href="?tab=risorse" className={tabCls('risorse')}>📚 Risorse</Link>
-        <Link href="?tab=eventi" className={tabCls('eventi')}>🗓 Eventi</Link>
-        <Link href="?tab=opportunita" className={tabCls('opportunita')}>💼 Opportunità</Link>
+        <Link href="?tab=comunicazioni" className={tabCls('comunicazioni')}><span className="inline-flex items-center gap-1.5"><Megaphone className="h-3.5 w-3.5" />Comunicazioni</span></Link>
+        <Link href="?tab=sconti" className={tabCls('sconti')}><span className="inline-flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Sconti</span></Link>
+        <Link href="?tab=sconti_peer4med" className={tabCls('sconti_peer4med')}><span className="inline-flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Sconti Peer4Med</span></Link>
+        <Link href="?tab=risorse" className={tabCls('risorse')}><span className="inline-flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" />Risorse</span></Link>
+        <Link href="?tab=eventi" className={tabCls('eventi')}><span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Eventi</span></Link>
+        <Link href="?tab=opportunita" className={tabCls('opportunita')}><span className="inline-flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" />Opportunità</span></Link>
       </div>
 
       {activeTab === 'comunicazioni' && (

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, CalendarDays, Paperclip } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Opportunity, OpportunityTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -227,7 +227,7 @@ export default function OpportunityList({
               {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
               <div className="flex items-center gap-3 flex-wrap">
                 {o.scadenza_candidatura && (
-                  <span className="text-xs text-muted-foreground">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</span>
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</span>
                 )}
                 {o.link_candidatura && (
                   <a href={o.link_candidatura} target="_blank" rel="noopener noreferrer"
@@ -238,7 +238,7 @@ export default function OpportunityList({
                 {o.file_url && (
                   <a href={o.file_url} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                    📎 Allegato
+                    <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
                   </a>
                 )}
               </div>

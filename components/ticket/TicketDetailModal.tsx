@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Paperclip } from 'lucide-react';
 import Link from 'next/link';
 import type { TicketStatus } from '@/lib/types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -132,7 +133,7 @@ export default function TicketDetailModal({
                       rel="noopener noreferrer"
                       className="mt-1 block text-xs text-link hover:text-link/80 underline"
                     >
-                      📎 {m.attachment_name ?? 'Allegato'}
+                      <Paperclip className="h-3.5 w-3.5 shrink-0" />{m.attachment_name ?? 'Allegato'}
                     </a>
                   )}
                 </div>

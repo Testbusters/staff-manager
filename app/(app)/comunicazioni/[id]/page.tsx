@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { Pin, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Communication } from '@/lib/types';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -65,7 +66,7 @@ export default async function CommunicationDetailPage({
       </Link>
 
       <div className="space-y-2">
-        {c.pinned && <span className="text-blue-400 text-sm">📌 In evidenza</span>}
+        {c.pinned && <span className="inline-flex items-center gap-1.5 text-blue-400 text-sm"><Pin className="h-3.5 w-3.5" />In evidenza</span>}
         <h1 className="text-2xl font-semibold text-foreground">{c.titolo}</h1>
         <p className="text-sm text-muted-foreground">{formatDate(c.published_at)}</p>
       </div>
@@ -86,7 +87,7 @@ export default async function CommunicationDetailPage({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-2 text-sm text-foreground transition"
               >
-                📎 Allegato {i + 1}
+                <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato {i + 1}
               </a>
             ))}
           </div>

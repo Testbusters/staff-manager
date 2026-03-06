@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Briefcase, Tag } from 'lucide-react';
+import { Briefcase, Tag, CalendarDays } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Opportunity, Discount, OpportunityTipo } from '@/lib/types';
@@ -137,9 +137,9 @@ export default async function OpportunitaPage({
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <Link href="?tab=opportunita" className={tabCls('opportunita')}>💼 Opportunità</Link>
-        <Link href="?tab=sconti" className={tabCls('sconti')}>🎁 Sconti</Link>
-        <Link href="?tab=sconti_peer4med" className={tabCls('sconti_peer4med')}>🏥 Sconti Peer4Med</Link>
+        <Link href="?tab=opportunita" className={tabCls('opportunita')}><span className="inline-flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5" />Opportunità</span></Link>
+        <Link href="?tab=sconti" className={tabCls('sconti')}><span className="inline-flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Sconti</span></Link>
+        <Link href="?tab=sconti_peer4med" className={tabCls('sconti_peer4med')}><span className="inline-flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Sconti Peer4Med</span></Link>
       </div>
 
       {activeTab === 'opportunita' && (
@@ -162,9 +162,9 @@ export default async function OpportunitaPage({
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{o.descrizione}</p>
+              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{o.descrizione}</p>
               {o.scadenza_candidatura && (
-                <p className="text-xs text-muted-foreground mt-2">📅 Scadenza: {formatDate(o.scadenza_candidatura)}</p>
+                <p className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2.5"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</p>
               )}
             </Link>
           ))}
@@ -191,7 +191,7 @@ export default async function OpportunitaPage({
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
               {d.descrizione && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.descrizione}</p>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{d.descrizione}</p>
               )}
             </Link>
           ))}
@@ -218,7 +218,7 @@ export default async function OpportunitaPage({
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
               {d.descrizione && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.descrizione}</p>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{d.descrizione}</p>
               )}
             </Link>
           ))}

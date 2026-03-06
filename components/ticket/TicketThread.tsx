@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Paperclip } from 'lucide-react';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -101,10 +102,10 @@ export default function TicketThread({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-1.5 text-xs text-link hover:text-link/80 transition"
                       >
-                        📎 {m.attachment_name}
+                        <Paperclip className="h-3.5 w-3.5 shrink-0" />{m.attachment_name}
                       </a>
                     ) : (
-                      <span className="text-xs text-muted-foreground">📎 {m.attachment_name}</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Paperclip className="h-3.5 w-3.5 shrink-0" />{m.attachment_name}</span>
                     )}
                   </div>
                 )}

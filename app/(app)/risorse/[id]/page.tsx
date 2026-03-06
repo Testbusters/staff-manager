@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { ExternalLink, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Resource, ResourceCategoria } from '@/lib/types';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
@@ -89,13 +90,13 @@ export default async function ResourceDetailPage({
         {r.link && (
           <a href={r.link} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-brand hover:bg-brand/90 px-4 py-2 text-sm font-medium text-white transition">
-            🔗 Apri link
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" />Apri link
           </a>
         )}
         {r.file_url && (
           <a href={r.file_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition">
-            📎 Scarica file
+            <Paperclip className="h-3.5 w-3.5 shrink-0" />Scarica file
           </a>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag } from 'lucide-react';
+import { Tag, Paperclip } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Discount, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -232,7 +232,7 @@ export default function DiscountList({
                 {d.file_url && (
                   <a href={d.file_url} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                    📎 Allegato
+                    <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
                   </a>
                 )}
                 {(d.valid_from || d.valid_to) && (
