@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import CompensationList from '@/components/compensation/CompensationList';
 import ExpenseList from '@/components/expense/ExpenseList';
-import TicketList from '@/components/ticket/TicketList';
 import type { Role } from '@/lib/types';
 
 export default async function CodaPage({
@@ -26,7 +25,7 @@ export default async function CodaPage({
   if (!['amministrazione'].includes(profile.role)) redirect('/');
 
   const { tab } = await searchParams;
-  const activeTab = tab === 'rimborsi' ? 'rimborsi' : tab === 'ticket' ? 'ticket' : 'compensi';
+  const activeTab = tab === 'rimborsi' ? 'rimborsi' : 'compensi';
 
   const role = profile.role as Role;
 
@@ -45,15 +44,6 @@ export default async function CodaPage({
         .from('expense_reimbursements')
         .select('*')
         .eq('stato', 'APPROVATO')
-        .order('created_at', { ascending: true })
-        .then((r) => r.data ?? [])
-    : [];
-
-  const tickets = activeTab === 'ticket'
-    ? await supabase
-        .from('tickets')
-        .select('*')
-        .in('stato', ['APERTO', 'IN_LAVORAZIONE'])
         .order('created_at', { ascending: true })
         .then((r) => r.data ?? [])
     : [];
@@ -78,7 +68,6 @@ export default async function CodaPage({
       <div className="flex gap-2 mb-6 overflow-x-auto">
         <Link href="?tab=compensi" className={tabCls('compensi')}>Compensi</Link>
         <Link href="?tab=rimborsi" className={tabCls('rimborsi')}>Rimborsi</Link>
-        <Link href="?tab=ticket" className={tabCls('ticket')}>Ticket aperti</Link>
       </div>
 
       {activeTab === 'compensi' && (
@@ -86,9 +75,6 @@ export default async function CodaPage({
       )}
       {activeTab === 'rimborsi' && (
         <ExpenseList expenses={expenses} role={role} />
-      )}
-      {activeTab === 'ticket' && (
-        <TicketList tickets={tickets as Parameters<typeof TicketList>[0]['tickets']} role={role} />
       )}
     </div>
   );
