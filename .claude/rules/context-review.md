@@ -101,10 +101,33 @@ Each check has a specific, verifiable pass/fail condition.
 
 ---
 
+## C10 — Dead file references (cross-doc)
+
+**What**: file paths referenced in context docs must exist on disk. Any `docs/*.md` or `.claude/*.md` path mentioned in CLAUDE.md, pipeline.md, or refactoring-backlog.md that no longer exists is a silent broken pointer.
+**Run**:
+```
+grep -oE "docs/[a-z A-Z0-9_-]+\.md|\.claude/[a-zA-Z0-9/_-]+\.md" \
+  CLAUDE.md .claude/rules/pipeline.md docs/refactoring-backlog.md
+```
+For each path found, verify it exists: `ls [path]`.
+**Pass**: all referenced paths resolve.
+**Fail**: remove or update the stale reference before closing.
+
+---
+
+## C11 — Refactoring backlog: completed items
+
+**What**: items in `docs/refactoring-backlog.md` that correspond to work completed in the current block must be removed. Completed items inflate the backlog and dilute attention on real open issues.
+**Run**: read the current block's Log row in `docs/implementation-checklist.md`. Grep `docs/refactoring-backlog.md` for any ID or topic that matches completed work (e.g. shadcn migration → UI1/UI2/UI3; dead code removed → N1).
+**Pass**: no completed item remains open in the priority index or detail sections.
+**Fail**: remove from priority index table AND delete the corresponding detail section.
+
+---
+
 ## Execution order and completion condition
 
-Run C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 in sequence.
+Run C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 → C10 → C11 in sequence.
 Apply any fixes found before moving to the next check.
-**The phase is complete when C1–C9 have all passed.** Then run `/compact`.
+**The phase is complete when C1–C11 have all passed.** Then run `/compact`.
 
 > If a check reveals a pattern worth adding to CLAUDE.md or auto-memory, add it before C6 (duplication check) so the dedup pass catches any overlap.

@@ -34,6 +34,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 **Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or touching >5 files)*
 - Present a design outline: data flow, data structures involved, main trade-offs.
 - State any discarded alternatives and rationale.
+- **For blocks with new pages or complex UI patterns**: optionally invoke the `frontend-design` skill for a conceptual wireframe. Its output must be filtered through the MANDATORY RULES (tokens, components, accessibility) before use in Phase 2 — never adopt generated code directly.
 - For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
 - **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
 - *** STOP — wait for design confirmation before writing code. ***
@@ -58,9 +59,10 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   7. **Icon-only buttons**: always `aria-label="..."`. Pagination `‹`/`›`: `aria-label="Pagina precedente"` / `"Pagina successiva"`.
   8. **Nav data**: icon references in `lib/nav.ts` use `iconName: string`, never `icon: LucideIcon` — Lucide components cannot cross the Server→Client serialization boundary.
   9. **Semantic tokens only**: `bg-card`, `bg-muted`, `bg-background`, `border-border`, `text-foreground`, `text-muted-foreground`. Hardcoded `gray-*`/`slate-*`/`zinc-*` only allowed for semantic badge color pairs (e.g. `bg-green-100 text-green-700`). Never use non-existent steps like `gray-850`.
+  10. **Theme verification**: for any new UI element, toggle the sidebar theme (light ↔ dark) and confirm no visual anomalies before committing. Semantic tokens are the primary protection — any hardcoded color on structural elements will break one of the two themes.
   Full rules in CLAUDE.md § "UI Design System — MANDATORY RULES".
 - Do not add unrequested features. No unrequested refactoring.
-- **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB via Management API (Node.js `https.request` with `SUPABASE_ACCESS_TOKEN` from `.env.local` — `curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
+- **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB — use `mcp__claude_ai_Supabase__execute_sql` (preferred, no shell interpolation issues) or Node.js `https.request` as fallback (`curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
 - **PostgREST join syntax** (`table!relation`, `!inner`): verify FK existence before using it. If FK absent → two-step query (separate fetches + in-memory merge). Verification query: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f';`
 - **DROP CONSTRAINT before UPDATE** (migrations): if a column has a CHECK constraint and the UPDATE sets a value not allowed by the current constraint (e.g. renaming an enum value), the UPDATE fails. Pattern inside a single migration: (1) `ALTER TABLE t DROP CONSTRAINT c;` (2) `UPDATE t SET col = new_val WHERE ...;` (3) `ALTER TABLE t ADD CONSTRAINT c CHECK (...);` — all three statements in the same migration file so they run atomically.
@@ -99,10 +101,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Output: summary line only. If something fails: paste the failing request + response body, fix, re-run. Do not proceed with open failures.
 
 **Phase 4 — UAT definition + Playwright e2e** ⏸ SUSPENDED
-> Suspended pending completion of shadcn/ui migration (Fasi 5–9 in `docs/shadcn-migration.md`).
-> All existing specs deleted — will be rewritten from scratch post-Fase 9 using stable `data-*` selectors.
-> **Do not write new e2e specs until migration is complete.** Re-enable this phase after Fase 9 closes.
->
+> Suspended via `.claude/CLAUDE.local.md`. Remove that file (with explicit user confirmation) to re-enable.
 > When re-enabling: use `data-*` attribute selectors (see CLAUDE.md "shadcn e2e selectors").
 > Never use `span.text-{color}` for status badges — Badge renders `<div>`, not `<span>`.
 
@@ -128,6 +127,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Run 3-5 quick steps in the browser to verify the main flow.
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
+- **For blocks with UI changes**: run the smoke test once in light mode and once in dark mode (sidebar theme toggle). Confirm both themes render correctly.
 
 **Phase 6 — Outcome checklist + confirmation**
 Present this checklist filled with actual results, then wait for explicit confirmation before proceeding to Phase 8:
@@ -151,6 +151,7 @@ Present this checklist filled with actual results, then wait for explicit confir
 - [ ] New page routes have a `loading.tsx` with Skeleton placeholders
 - [ ] Icon-only buttons have `aria-label`
 - [ ] No Lucide icon components in Server→Client data props (use `iconName: string`)
+- [ ] New UI verified in both light and dark mode (sidebar theme toggle)
 
 ### Implemented features
 - [ ] [feature 1]: [outcome]

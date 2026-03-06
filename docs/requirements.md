@@ -74,6 +74,8 @@
 
 ## 3. Data model
 
+> **Historical reference only.** The pseudocode below reflects the schema as of Block 8 (migrations 001–024). For the current schema see `docs/migrations-log.md` (migrations 001–037) and `supabase/migrations/`. Key post-Block-8 changes: migration 026 (announcements→communications, benefits→discounts), 027 (notifications), 029 (community_ids UUID[]), 030 (compensation schema alignment: nome_servizio_ruolo, info_specifiche, competenza FK, community_id nullable), 033 (drop periodo_riferimento), 034 (ticket columns + RLS), 035 (theme_preference), 036 (intestatario_pagamento), 037 (discount brand).
+
 ```sql
 Community(id, name)
 UserProfile(id, user_id, role, is_active, member_status, must_change_password, created_at)
