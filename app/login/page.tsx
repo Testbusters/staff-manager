@@ -26,9 +26,9 @@ export default function LoginPage() {
   const supabase = createClient();
   const { setTheme } = useTheme();
 
-  // Login page is always light — override any stored preference
+  // Login page is always dark — override any stored preference
   useEffect(() => {
-    setTheme('light');
+    setTheme('dark');
   }, [setTheme]);
 
   const handleLogin = async (e: React.FormEvent) => {
