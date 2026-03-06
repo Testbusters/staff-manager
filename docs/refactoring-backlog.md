@@ -41,7 +41,6 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | T3 | `Record<string, unknown>` for updatePayload without narrowing | LOW |
 | T4 | State machine action is not a discriminated union | LOW |
 | T5 | `tipo` column in documents is `text + CHECK` instead of a PostgreSQL ENUM | LOW |
-| TC2 | No unit test for null values in `buildCSV` | LOW |
 | P2 | Index on `collaborators.user_id` not documented | LOW |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW |
 | N2 | `contenuti/page.tsx` accessible to collaboratori but not in nav — consider redirect to /comunicazioni | LOW |
@@ -269,12 +268,6 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Files**: `__tests__/compensation-transitions.test.ts`, `__tests__/expense-transitions.test.ts`
 - **Impact**: MEDIUM
 - **Fix**: Add tests for reopen, approve_all, reject (with rejection_note). To be done in Block 7c.
-
-### TC2 — No unit test for null values in `buildCSV`
-- **Problem**: `buildCSV` uses `?? ''` for null fields but no test verifies the output for an item with `importo=null`.
-- **Files**: `__tests__/export-utils.test.ts`
-- **Impact**: LOW
-- **Fix**: Add test `buildCSV([{ ...item, importo: null }])` → verify empty column.
 
 ### TC3 — No e2e test for bulk mark-paid
 - **Problem**: `POST /api/export/mark-paid` with an array of multiple IDs is not covered by any Playwright test.

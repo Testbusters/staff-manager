@@ -147,6 +147,29 @@ export async function fetchPendingRows(): Promise<SheetRow[]> {
 }
 
 /**
+ * Appends export rows to the export sheet.
+ * Reads GOOGLE_SHEET_EXPORT_ID + GOOGLE_SHEET_EXPORT_TAB_NAME env vars.
+ * No header row is written — assumes the sheet already has headers.
+ */
+export async function writeExportRows(rows: string[][]): Promise<void> {
+  if (rows.length === 0) return;
+
+  const sheetId = process.env.GOOGLE_SHEET_EXPORT_ID;
+  const tabName = process.env.GOOGLE_SHEET_EXPORT_TAB_NAME ?? 'Export';
+  if (!sheetId) throw new Error('GOOGLE_SHEET_EXPORT_ID not set');
+
+  const auth = await buildAuth();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: sheetId,
+    range: `${tabName}!A:O`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: rows },
+  });
+}
+
+/**
  * Writes "PROCESSED" to the stato column for each given 1-based row number.
  */
 export async function markRowsProcessed(rowNumbers: number[]): Promise<void> {

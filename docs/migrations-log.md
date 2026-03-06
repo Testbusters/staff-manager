@@ -42,3 +42,4 @@
 | 035 | `035_add_theme_preference.sql` | 2026-03-05 | ADD COLUMN `theme_preference VARCHAR(5) DEFAULT 'light' CHECK (IN ('light','dark'))` on `user_profiles`; CREATE POLICY `user_profiles_own_theme_update` (UPDATE own row) |
 | 036 | `036_intestatario_pagamento.sql` | 2026-03-05 | ADD COLUMN `intestatario_pagamento TEXT` (nullable) on `collaborators` — payment account holder name |
 | 037 | `037_discount_brand.sql` | 2026-03-05 | ADD COLUMN `brand TEXT NOT NULL DEFAULT 'testbusters'` on `discounts` — separates Testbusters vs Peer4Med discount catalogs |
+| 038 | `038_export_tracking.sql` | 2026-03-06 | ADD COLUMN `exported_at TIMESTAMPTZ` on `compensations` and `expense_reimbursements`; CREATE TABLE `export_runs` (id, exported_at, exported_by, collaborator_count, compensation_count, expense_count, storage_path) + RLS admin-only; private bucket `exports` + storage policy |
