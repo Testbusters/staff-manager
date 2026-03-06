@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, BookOpen, Megaphone, Pin, Paperclip } from 'lucide-react';
+import { Bell, BookOpen, Megaphone, Pin, Paperclip, CalendarDays } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Resource, ResourceCategoria } from '@/lib/types';
@@ -144,7 +144,7 @@ export default async function ComunicazioniPage({
               </div>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{stripHtml(c.contenuto)}</p>
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                <span>{formatDate(c.published_at)}</span>
+                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(c.published_at)}</span>
                 {c.file_urls && c.file_urls.length > 0 && (
                   <span className="inline-flex items-center gap-1"><Paperclip className="h-3.5 w-3.5 shrink-0" />{c.file_urls.length} allegat{c.file_urls.length === 1 ? 'o' : 'i'}</span>
                 )}

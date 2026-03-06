@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Pin, Paperclip } from 'lucide-react';
+import { Bell, Pin, Paperclip, CalendarDays } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -231,7 +231,7 @@ export default function CommunicationList({
                 </div>
               )}
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{formatDate(c.published_at)}</span>
+                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(c.published_at)}</span>
                 {c.expires_at && <span>· Scade: {formatDate(c.expires_at)}</span>}
               </div>
             </>
