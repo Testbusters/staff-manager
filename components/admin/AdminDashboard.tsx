@@ -180,7 +180,7 @@ function CommunityColumn({ card }: { card: AdminCommunityCard }) {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-end gap-1 pt-1">
           <button
             onClick={() => setPage(p => p - 1)}
             disabled={page === 0}
@@ -189,7 +189,7 @@ function CommunityColumn({ card }: { card: AdminCommunityCard }) {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-xs text-muted-foreground">{page + 1} / {totalPages}</span>
+          <span className="text-xs text-muted-foreground px-1">{page + 1} / {totalPages}</span>
           <button
             onClick={() => setPage(p => p + 1)}
             disabled={page >= totalPages - 1}
