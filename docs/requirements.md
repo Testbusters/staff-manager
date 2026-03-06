@@ -452,71 +452,71 @@ All data is collected in local React state; the actual submit happens only on "C
 - **Ticket reference** (required field): `Compenso` or `Rimborso` — the only accepted values. Tickets not linked to these two scopes are removed from DB (migration 028).
 - Implicit recipient: `responsabile_compensi` (workflow to be revised in a dedicated block).
 
-### Finalizzazione sezione Collaboratore — Compensi e Rimborsi (Block 9)
+### Collaborator section finalisation — Compensations and Reimbursements (Block 9)
 
-**Regola strutturale**: le sezioni di navigazione del collaboratore (8 voci) sono fisse — non aggiungere nuove route o pagine. Tutti i nuovi elementi vanno integrati dentro `/compensi`.
+**Structural rule**: the collaborator navigation items (8 items) are fixed — do not add new routes or pages. All new elements must be integrated within `/compensi`.
 
-#### Layout pagina — tab Compensi / Rimborsi
-Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab orizzontali:
-- Header tab: `Compensi (N)` | `Rimborsi (N)` — N = conteggio totale richieste per tipo
-- Tab Compensi: sezione "Da ricevere" (se APPROVATO > 0) + filtri chip + lista card
-- Tab Rimborsi: filtri chip + lista card + pulsante "Nuovo rimborso"
-- Filtri chip per stato (Tutti / In attesa / Approvato / Rifiutato / Liquidato) in entrambi i tab
+#### Page layout — Compensi / Rimborsi tabs
+Replaces the two stacked vertical sections (COMPENSI + RIMBORSI) with horizontal tabs:
+- Tab header: `Compensi (N)` | `Rimborsi (N)` — N = total request count per type
+- Compensi tab: "Da ricevere" section (if APPROVATO > 0) + chip filters + card list
+- Rimborsi tab: chip filters + card list + "Nuovo rimborso" button
+- Chip filters by state (Tutti / In attesa / Approvato / Rifiutato / Liquidato) in both tabs
 
-#### PaymentOverview — modifiche
-- Label progress bar massimale: `Massimale annuo {anno}` → `Massimale annuo {anno} lordo`
-- Card "Compensi liquidati": riga `Lordo {anno corrente}: X €` sempre visibile (non gated su massimale). Somma di `importo_lordo` per compensazioni LIQUIDATO nell'anno solare corrente.
+#### PaymentOverview — changes
+- Cap progress bar label: `Massimale annuo {anno}` → `Massimale annuo {anno} lordo`
+- Card "Compensi liquidati": row `Lordo {anno corrente}: X €` always visible (not gated on cap). Sum of `importo_lordo` for LIQUIDATO compensations in the current calendar year.
 
-#### Sezione "Da ricevere" (nel tab Compensi, solo se APPROVATO > 0)
-- Colonne: Descrizione, Community, Periodo, Lordo ℹ, Netto ℹ, link dettaglio
-- Riga totale: somma Lordo + somma Netto
-- Tooltip ℹ su colonne lordo/netto con testo esplicativo sulla ritenuta
+#### "Da ricevere" section (in Compensi tab, only if APPROVATO > 0)
+- Columns: Description, Community, Period, Gross ℹ, Net ℹ, detail link
+- Total row: sum Gross + sum Net
+- ℹ tooltip on gross/net columns with explanatory text about withholding tax
 
-#### Design lista compensi — card style (Block 9)
-- Sostituisce la tabella con header con righe card:
-  - LEFT: Descrizione (bold), Community (dot colorato + nome), Data, Periodo
-  - RIGHT: `X,XX € lordi ℹ` + `X,XX € netti ℹ` (colore contestuale) + badge stato (pill)
-- Community dot: colore deterministico da hash dell'ID community (palette Tailwind fissa)
-- Colore netto: APPROVATO → amber-400; LIQUIDATO → green-400; IN_ATTESA / RIFIUTATO → gray-400
-- Tooltip ℹ CSS-only (hover): "Lordo: compenso prima della ritenuta d'acconto (20%). Netto = Lordo − 20% = importo accreditato sul conto."
+#### Compensation list design — card style (Block 9)
+- Replaces the header table with card rows:
+  - LEFT: Description (bold), Community (coloured dot + name), Date, Period
+  - RIGHT: `X,XX € lordi ℹ` + `X,XX € netti ℹ` (contextual colour) + state badge (pill)
+- Community dot: deterministic colour from community ID hash (fixed Tailwind palette)
+- Net colour: APPROVATO → amber-400; LIQUIDATO → green-400; IN_ATTESA / RIFIUTATO → gray-400
+- ℹ CSS-only tooltip (hover): "Lordo: compenso prima della ritenuta d'acconto (20%). Netto = Lordo − 20% = importo accreditato sul conto."
 
-#### Design lista rimborsi — card style (Block 9)
-- Layout card equivalente ma con singolo importo (rimborsi non hanno ritenuta d'acconto)
+#### Reimbursement list design — card style (Block 9)
+- Equivalent card layout but with a single amount (reimbursements have no withholding tax)
 
-### Sezione Documenti Collaboratore — Tab Documenti (Block 10)
+### Collaborator Documents section — Documents tab (Block 10)
 
-**Scope**: `/profilo?tab=documenti` — pulizia tipi documento e aggiunta funzionalità self-service.
+**Scope**: `/profilo?tab=documenti` — document type cleanup and self-service feature additions.
 
-#### Modifiche al tipo documento
-- Rimosso tipo `RICEVUTA_PAGAMENTO` (le ricevute appartengono agli allegati rimborso, non ai documenti generali)
-- Tipi validi: `CONTRATTO_OCCASIONALE` | `CU`
-- `DocumentMacroType`: `CONTRATTO` | `CU` (rimosso `RICEVUTA_PAGAMENTO`)
+#### Document type changes
+- Removed type `RICEVUTA_PAGAMENTO` (receipts belong to reimbursement attachments, not general documents)
+- Valid types: `CONTRATTO_OCCASIONALE` | `CU`
+- `DocumentMacroType`: `CONTRATTO` | `CU` (removed `RICEVUTA_PAGAMENTO`)
 
-#### Tab Documenti — layout aggiornato
-- **CTA blu** in alto a destra: "Nuovo rimborso" → `/rimborsi/nuova`
-- **Form self-upload** (`DocumentUploadForm`, `isAdmin=false`): collaboratore può caricare `CONTRATTO_OCCASIONALE` o `CU` direttamente
-  - Dropdown tipo: solo 2 opzioni (niente optgroup)
-  - `stato_firma` sempre `NON_RICHIESTO` (forzato lato API per non-admin)
-  - Unicità contratto: 409 se esiste già un CONTRATTO per il collaboratore
-- **DocumentList**: invariato sotto il form
+#### Documents tab — updated layout
+- **Blue CTA** top right: "Nuovo rimborso" → `/rimborsi/nuova`
+- **Self-upload form** (`DocumentUploadForm`, `isAdmin=false`): collaborator can upload `CONTRATTO_OCCASIONALE` or `CU` directly
+  - Type dropdown: 2 options only (no optgroup)
+  - `stato_firma` always `NON_RICHIESTO` (forced server-side for non-admin)
+  - Contract uniqueness: 409 if a CONTRATTO already exists for the collaborator
+- **DocumentList**: unchanged below the form
 
-#### Sicurezza API
-- `POST /api/documents`: `validTipi` ristretto a `['CONTRATTO_OCCASIONALE', 'CU']`
+#### API security
+- `POST /api/documents`: `validTipi` restricted to `['CONTRATTO_OCCASIONALE', 'CU']`
   - CONTRATTO_COCOCO, CONTRATTO_PIVA, RICEVUTA_PAGAMENTO → 400
 
 #### Migration 025
 - `DELETE FROM documents WHERE tipo = 'RICEVUTA_PAGAMENTO'`
-- DROP + recreate `macro_type` generated column (solo CONTRATTO/CU)
-- CHECK constraint aggiornato a `('CONTRATTO_OCCASIONALE', 'CU')`
-- Unique index `uq_one_contratto_per_collaborator` ricreato
+- DROP + recreate `macro_type` generated column (CONTRATTO/CU only)
+- CHECK constraint updated to `('CONTRATTO_OCCASIONALE', 'CU')`
+- Unique index `uq_one_contratto_per_collaborator` recreated
 
-### Revisione Dashboard Collaboratore (Block 11)
+### Collaborator Dashboard Redesign (Block 11)
 
-**Scope**: `/` (ruolo collaboratore) — redesign completo della sezione collaboratore.
+**Scope**: `/` (collaboratore role) — full redesign of the collaborator section.
 
-#### Layout approvato
+#### Approved layout
 
-1. **Header**: `Ciao [Nome]!` + data corrente in italiano
+1. **Header**: `Ciao [Nome]!` + current date in Italian
 2. **4 KPI card** (grid 2×2 mobile, 1×4 desktop):
    - Compensi in corso: count IN_ATTESA+APPROVATO · importo netto totale → `/compensi`
    - Rimborsi in corso: count IN_ATTESA+APPROVATO · importo totale → `/rimborsi`
@@ -536,7 +536,7 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
    - Decremento: quando il collaboratore apre il dettaglio di un item, le notifiche unread con quel `entity_type`+`entity_id` vengono marcate read (write server-side nella page di dettaglio, service role)
    - Copertura: solo item pubblicati dopo Block 13 (quando le notifiche contenuto sono state introdotte)
 
-#### Dati aggiuntivi necessari (espansione select esistenti, zero query nuove)
+#### Additional data needed (expanding existing selects, zero new queries)
 - `collaborators`: aggiungere `nome, cognome, importo_lordo_massimale`
 - `compensations`: aggiungere `importo_lordo, liquidated_at`
 - `expense_reimbursements`: aggiungere `liquidated_at`
@@ -546,9 +546,9 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
 
 ## Block 13 — Compensi e rimborsi (responsabile_compensi) + Importazione da Google Sheet
 
-### 13a — Redesign sezione Approvazioni (✅ completato)
+### 13a — Approvals section redesign (✅ complete)
 
-**Scope**: `/approvazioni` — redesign completo per `responsabile_compensi`: KPI cards, ricerca per nome, filtri stato, selezione checkbox, bulk approve. Stessa struttura per tab Rimborsi. Import section placeholder (disabilitato).
+**Scope**: `/approvazioni` — full redesign for `responsabile_compensi`: KPI cards, name search, state filters, checkbox selection, bulk approve. Same structure for Rimborsi tab. Import section placeholder (disabled).
 
 **Campi KPI compensi**: count IN_ATTESA, totale lordo IN_ATTESA, count APPROVATO, totale lordo APPROVATO.
 **Campi KPI rimborsi**: count IN_ATTESA, totale IN_ATTESA, count APPROVATO, totale APPROVATO.
@@ -557,7 +557,7 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
 
 ### 13b-I — Schema alignment compensations (migration 030)
 
-**Obiettivo**: allineare struttura DB di `compensations` ai campi del Google Sheet sorgente (mapping 1:1).
+**Goal**: align the `compensations` DB structure to the source Google Sheet fields (1:1 mapping).
 
 **Migration 030**:
 - RENAME `compensations.descrizione` → `nome_servizio_ruolo`
@@ -569,28 +569,28 @@ Sostituisce le due sezioni verticali impilate (COMPENSI + RIMBORSI) con tab oriz
 - RLS `compensations_responsabile_read` + `_update`: riscritta su `collaborator_id IN (collaborator_communities JOIN user_community_access)` — indipendente da `community_id` sul record
 - DROP policy stale `compensations_own_update_bozza` (stato BOZZA rimosso da workflow)
 
-**Consumer aggiornati**: `lib/types.ts`, `CompensationDetail`, `CompensationList`, `PendingApprovedList`, `ApprovazioniCompensazioni`, `CompensationCreateWizard`, `app/api/compensations/route.ts`.
+**Updated consumers**: `lib/types.ts`, `CompensationDetail`, `CompensationList`, `PendingApprovedList`, `ApprovazioniCompensazioni`, `CompensationCreateWizard`, `app/api/compensations/route.ts`.
 
 ### 13b-II — Import da Google Sheet
 
-**Flusso**: fetch GSheet (googleapis service account) → filtra `stato = TO_PROCESS` → valida → preview paginata → conferma → bulk insert IN_ATTESA + writeback `PROCESSED`. Re-pull disponibile dopo correzioni.
+**Flow**: fetch GSheet (googleapis service account) → filter `stato = TO_PROCESS` → validate → paginated preview → confirm → bulk insert IN_ATTESA + writeback `PROCESSED`. Re-pull available after corrections.
 
-**GSheet**: `GOOGLE_SHEET_ID` + `GOOGLE_SERVICE_ACCOUNT_JSON` in `.env.local`. URL/tab configurabile da admin in /impostazioni.
+**GSheet**: `GOOGLE_SHEET_ID` + `GOOGLE_SERVICE_ACCOUNT_JSON` in `.env.local`. URL/tab configurable by admin in /impostazioni.
 
-**Errori file-level** (bloccano tutto): file irraggiungibile, formato non valido, header mancante.
-**Errori row-level** (skip riga): campo mancante, importo non valido, data non valida, username non trovato, collaboratore fuori community, uscente_senza_compenso.
+**File-level errors** (block everything): file unreachable, invalid format, missing header.
+**Row-level errors** (skip row): missing field, invalid amount, invalid date, username not found, collaborator outside community, uscente_senza_compenso.
 
 **Valori fissi su import**: `community_id = null`, `ritenuta_acconto = 20`, `importo_netto = lordo × 0.80`, `periodo_riferimento = "MMM YYYY"` derivato da `data_competenza`, `stato = IN_ATTESA`.
 
 **Mapping colonne GSheet → DB**: Data competenza → `data_competenza`, Importo → `importo_lordo`, collaboratore → match su `collaborators.username`, nome servizio / ruolo → `nome_servizio_ruolo`, Info specifiche → `info_specifiche`, competenza → `competenza`.
 
-### 13b-III — Form creazione compenso individuale
+### 13b-III — Individual compensation creation form
 
-**Scope**: sostituisce `/approvazioni/carica` per admin + responsabile_compensi.
+**Scope**: replaces `/approvazioni/carica` for admin + responsabile_compensi.
 
-**Campi**: collaboratore (autocomplete username), competenza (select da `compensation_competenze`), data_competenza, importo_lordo (lordo → netto calcolato 20%), nome_servizio_ruolo, info_specifiche (opzionale), periodo_riferimento (testo manuale).
+**Fields**: collaboratore (username autocomplete), competenza (select from `compensation_competenze`), data_competenza, importo_lordo (gross → net computed at 20%), nome_servizio_ruolo, info_specifiche (optional), periodo_riferimento (manual text).
 
-**Valori fissi**: `community_id = null`, `ritenuta_acconto = 20`, `importo_netto` calcolato server-side, `stato = IN_ATTESA`.
+**Fixed values**: `community_id = null`, `ritenuta_acconto = 20`, `importo_netto` computed server-side, `stato = IN_ATTESA`.
 
 ---
 

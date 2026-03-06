@@ -46,8 +46,8 @@
 
 ## Blocco 1 — Revisione ruoli e utenze di test ✅
 
-> Requisito: `docs/requirements.md` §2 — Ruoli e permessi, Utenze di test
-> Dipendenze: nessuna
+> Requirement:`docs/requirements.md` §2 — Ruoli e permessi, Utenze di test
+> Dependencies: none
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -55,65 +55,65 @@
 | 1b — Mass replace `responsabile` nel codice | ✅ | ~40 file aggiornati |
 | 1c — Login page + E2E credentials | ✅ | `login/page.tsx` + 20 spec files aggiornati |
 
-### Sotto-blocco 1a — Type system e migration
+### Sub-block 1a — Type system and migration
 
 **`lib/types.ts`**
-- Rimuovere `'responsabile'` dal tipo `Role`
-- Aggiungere `'responsabile_cittadino'` | `'responsabile_compensi'` | `'responsabile_servizi_individuali'`
-- Aggiornare `ROLE_LABELS`
+- Remove `'responsabile'` from the `Role` type
+- Add `'responsabile_cittadino'` | `'responsabile_compensi'` | `'responsabile_servizi_individuali'`
+- Update `ROLE_LABELS`
 
 **`supabase/migrations/017_roles_rename.sql`**
-- Aggiorna `CHECK constraint` su `user_profiles.role` con i nuovi valori
+- Update `CHECK constraint` on `user_profiles.role` with new values
 - `UPDATE user_profiles SET role = 'responsabile_compensi' WHERE role = 'responsabile'`
-- Aggiorna tutte le RLS policy che referenziano `'responsabile'`
-- Rename email utenze esistenti:
+- Update all RLS policies referencing `'responsabile'`
+- Rename existing test accounts:
   - `responsabile@test.com` → `responsabile_compensi@test.com`
   - `responsabile_test@test.com` → `responsabile_compensi_test@test.com`
   - `admin-test@example.com` → `admin@test.com`
-- Crea 4 nuovi utenti Supabase Auth (password `Testbusters123`):
-  - `responsabile_cittadino@test.com` (ruolo: `responsabile_cittadino`)
-  - `responsabile_servizi_individuali@test.com` (ruolo: `responsabile_servizi_individuali`)
-  - `responsabile_cittadino_test@test.com` (ruolo: `responsabile_cittadino`)
-  - `responsabile_servizi_individuali_test@test.com` (ruolo: `responsabile_servizi_individuali`)
+- Create 4 new Supabase Auth users (password `Testbusters123`):
+  - `responsabile_cittadino@test.com` (role: `responsabile_cittadino`)
+  - `responsabile_servizi_individuali@test.com` (role: `responsabile_servizi_individuali`)
+  - `responsabile_cittadino_test@test.com` (role: `responsabile_cittadino`)
+  - `responsabile_servizi_individuali_test@test.com` (role: `responsabile_servizi_individuali`)
 
-### Sotto-blocco 1b — Mass replace nel codice
+### Sub-block 1b — Mass replace in code
 
-File core:
-- `lib/nav.ts` — chiave `responsabile` → `responsabile_compensi`
+Core files:
+- `lib/nav.ts` — key `responsabile` → `responsabile_compensi`
 - `lib/compensation-transitions.ts` — `allowedRoles`
 - `lib/expense-transitions.ts` — `allowedRoles`
 
-API routes (~40 file) — tutti i RBAC check su `'responsabile'`:
+API routes (~40 files) — all RBAC checks on `'responsabile'`:
 - `app/api/compensations/`, `app/api/expenses/`, `app/api/documents/`
 - `app/api/tickets/`, `app/api/announcements/`, `app/api/admin/`
 
-Componenti UI:
-- `components/impostazioni/CreateUserForm.tsx` — dropdown ruoli
-- `components/impostazioni/CommunityManager.tsx` — assegnazione responsabile → community
+UI components:
+- `components/impostazioni/CreateUserForm.tsx` — role dropdown
+- `components/impostazioni/CommunityManager.tsx` — responsabile → community assignment
 - `components/responsabile/CollaboratoreDetail.tsx`, `TicketList.tsx`, `TicketMessageForm.tsx` — label display
 
-Unit test da aggiornare:
+Unit tests to update:
 - `__tests__/compensation-transitions.test.ts`
 - `__tests__/expense-transitions.test.ts`
 
-### Sotto-blocco 1c — Login page e E2E
+### Sub-block 1c — Login page and E2E
 
-**`app/login/page.tsx`** — aggiorna `TEST_USERS` array con le 9 utenze definite in §2
+**`app/login/page.tsx`** — update `TEST_USERS` array with the 9 accounts defined in §2
 
-**`e2e/*.spec.ts`** (19 file) — sostituzioni:
+**`e2e/*.spec.ts`** (19 files) — replacements:
 - `responsabile@test.com` → `responsabile_compensi@test.com`
 - `admin-test@example.com` → `admin@test.com`
 
-### Punti aperti
-- `responsabile_cittadino`: permessi, navigazione e visibilità → da definire in blocco dedicato
-- `responsabile_servizi_individuali`: idem
+### Open points
+- `responsabile_cittadino`: permissions, navigation and visibility → to be defined in a dedicated block
+- `responsabile_servizi_individuali`: same
 
 ---
 
 ## Blocco 2 — Ristrutturazione menu collaboratore ✅
 
-> Requisito: `docs/requirements.md` §3 — Navigazione collaboratore
-> Dipendenze: Blocco 1
+> Requirement:`docs/requirements.md` §3 — Navigazione collaboratore
+> Dependencies:Blocco 1
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -127,8 +127,8 @@ Unit test da aggiornare:
 
 ## Blocco 3 — Correzioni sezione profilo + consolidamento OCCASIONALE ✅
 
-> Requisito: `docs/requirements.md` §3 Modello dati, §12 Profilo
-> Dipendenze: Blocco 1, Blocco 2
+> Requirement:`docs/requirements.md` §3 Modello dati, §12 Profilo
+> Dependencies:Blocco 1, Blocco 2
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -140,8 +140,8 @@ Unit test da aggiornare:
 
 ## Blocco 5 — Editing profilo responsabile_compensi + security fix + contratto profilo ✅
 
-> Requisito: `docs/requirements.md` §5 — Modifica profilo responsabile_compensi
-> Dipendenze: Blocco 4
+> Requirement:`docs/requirements.md` §5 — Modifica profilo responsabile_compensi
+> Dependencies:Blocco 4
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -155,8 +155,8 @@ Unit test da aggiornare:
 
 ## Blocco 4 — Username generation + validazioni CF/IBAN ✅
 
-> Requisito: `docs/requirements.md` §4 — Username e validazioni
-> Dipendenze: Blocco 1, Blocco 3
+> Requirement:`docs/requirements.md` §4 — Username e validazioni
+> Dependencies:Blocco 1, Blocco 3
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -169,8 +169,8 @@ Unit test da aggiornare:
 
 ## Blocco 6 — Wizard rimborso 3-step + aggiornamento categorie ✅
 
-> Requisito: `docs/requirements.md` §12 — Richiesta rimborso spese e ticket da compensi (Block 6)
-> Dipendenze: Blocco 2, Blocco 3
+> Requirement:`docs/requirements.md` §12 — Richiesta rimborso spese e ticket da compensi (Block 6)
+> Dependencies:Blocco 2, Blocco 3
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -183,8 +183,8 @@ Unit test da aggiornare:
 
 ## Blocco 7 — Refactor workflow compensi ✅
 
-> Requisito: `docs/requirements.md` §4 — Workflow operativi
-> Dipendenze: tutti i blocchi precedenti
+> Requirement:`docs/requirements.md` §4 — Workflow operativi
+> Dependencies:tutti i blocchi precedenti
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -203,8 +203,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 8 — Wizard carico compensi (responsabile) ✅
 
-> Requisito: `docs/requirements.md` §4 — Creazione compensi da responsabile
-> Dipendenze: Blocco 7
+> Requirement:`docs/requirements.md` §4 — Creazione compensi da responsabile
+> Dependencies:Blocco 7
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -216,8 +216,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 9 — Finalizzazione sezione Collaboratore - Compensi e Rimborsi ✅
 
-> Requisito: `docs/requirements.md` §13 — Sezione Compensi e Rimborsi (collaboratore)
-> Dipendenze: Blocco 7, Blocco 8
+> Requirement:`docs/requirements.md` §13 — Sezione Compensi e Rimborsi (collaboratore)
+> Dependencies:Blocco 7, Blocco 8
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -233,8 +233,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 10 — Sezione Documenti Collaboratore ✅
 
-> Requisito: `docs/requirements.md` — Sezione Documenti Collaboratore (Block 10)
-> Dipendenze: Blocco 3 (rimozione COCOCO/PIVA), Blocco 9 (layout profilo)
+> Requirement:`docs/requirements.md` — Sezione Documenti Collaboratore (Block 10)
+> Dependencies:Blocco 3 (rimozione COCOCO/PIVA), Blocco 9 (layout profilo)
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -249,8 +249,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 12 — Content Types Redesign ✅
 
-> Requisito: `docs/requirements.md` — Block 12: Content Types
-> Dipendenze: Blocco 11 (DashboardUpdates stub)
+> Requirement:`docs/requirements.md` — Block 12: Content Types
+> Dependencies:Blocco 11 (DashboardUpdates stub)
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -266,8 +266,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 13a — Compensi e rimborsi responsabile (redesign) ✅
 
-> Requisito: `docs/requirements.md` — Block 13: 13a
-> Dipendenze: Blocco 12
+> Requirement:`docs/requirements.md` — Block 13: 13a
+> Dependencies:Blocco 12
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -281,8 +281,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 13 — Notification System Overhaul ✅
 
-> Requisito: `docs/requirements.md` — Block 13: Notifications
-> Dipendenze: Blocco 12 (content types), Blocco 10 (documenti), Blocco 9 (compensi)
+> Requirement:`docs/requirements.md` — Block 13: Notifications
+> Dependencies:Blocco 12 (content types), Blocco 10 (documenti), Blocco 9 (compensi)
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -302,8 +302,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 13b — Schema alignment + GSheet import + Individual form ✅
 
-> Requisito: `docs/requirements.md` — Block 13: 13b-I/II/III
-> Dipendenze: Blocco 13a (compensation redesign), migration 030
+> Requirement:`docs/requirements.md` — Block 13: 13b-I/II/III
+> Dependencies:Blocco 13a (compensation redesign), migration 030
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -317,8 +317,8 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ## Blocco 14 — Rich Text Editor + Notification Alerts ✅
 
-> Requisito: `docs/requirements.md` — Block 14: Rich Text Editor + Notification Alerts
-> Dipendenze: Blocco 12 (content types), Blocco 13 (notifications)
+> Requirement:`docs/requirements.md` — Block 14: Rich Text Editor + Notification Alerts
+> Dependencies:Blocco 12 (content types), Blocco 13 (notifications)
 
 | Sotto-blocco | Stato | Note |
 |---|---|---|
@@ -334,11 +334,11 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ---
 
-## Legenda
+## Legend
 
-| Simbolo | Significato |
+| Symbol | Meaning |
 |---|---|
-| ✅ | Completato: build ✅, unit test ✅, Playwright ⏸ sospeso (istruzione temporanea), checklist firmata, CLAUDE.md aggiornato |
-| 🔄 | In corso (blocco attivo) |
-| 🔲 | Non iniziato |
-| ⏸ | Sospeso / bloccato da dipendenza |
+| ✅ | Complete: build ✅, unit tests ✅, Playwright ⏸ suspended (temporary instruction), checklist signed off, CLAUDE.md updated |
+| 🔄 | In progress (active block) |
+| 🔲 | Not started |
+| ⏸ | Suspended / blocked by dependency |
