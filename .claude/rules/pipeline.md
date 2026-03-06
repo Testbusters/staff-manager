@@ -35,6 +35,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Present a design outline: data flow, data structures involved, main trade-offs.
 - State any discarded alternatives and rationale.
 - For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
+- **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
 - *** STOP — wait for design confirmation before writing code. ***
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
@@ -228,4 +229,4 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **FK check before PostgREST joins**: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f'`. If FK absent: two-step query.
 - **Locators from real JSX**: before writing every e2e locator, read the component (Read tool). Identify unique classes for each target element — never assume from memory.
 - **Playwright UAT**: CSS class selectors (e.g. `span.text-green-300`) for status badges. Never `getByText()` for status values.
-- **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5.
+- **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5. After compact completes, re-read `.claude/CLAUDE.local.md` to restore any active session overrides before resuming.
