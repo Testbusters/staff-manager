@@ -25,10 +25,33 @@ function stripHtml(html: string) {
 
 const VALID_CATEGORIA = ['GUIDA', 'NORMATIVA', 'PROCEDURA', 'MODELLO', 'ALTRO'] as const;
 
+const PAGE_SIZE = 20;
+
+function PaginationNav({ page, totalPages, makeUrl }: {
+  page: number; totalPages: number; makeUrl: (p: number) => string;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-4 border-t border-border">
+      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
+      <div className="flex gap-2">
+        {page > 1
+          ? <a href={makeUrl(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</a>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
+        }
+        {page < totalPages
+          ? <a href={makeUrl(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</a>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
+        }
+      </div>
+    </div>
+  );
+}
+
 export default async function ComunicazioniPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; categoria?: string }>;
+  searchParams: Promise<{ tab?: string; categoria?: string; page?: string }>;
 }) {
   const supabase = await createClient();
 
@@ -63,6 +86,7 @@ export default async function ComunicazioniPage({
 
   const params = await searchParams;
   const activeTab: Tab = params.tab === 'risorse' ? 'risorse' : 'comunicazioni';
+  const page = Math.max(1, parseInt(params.page ?? '1'));
   const categoriaFilter = VALID_CATEGORIA.includes(params.categoria as ResourceCategoria)
     ? (params.categoria as ResourceCategoria)
     : null;
@@ -99,6 +123,12 @@ export default async function ComunicazioniPage({
         r.community_ids.length === 0 || r.community_ids.some((id) => userCommunityIds.includes(id)))
     : allResources;
 
+  const commTotalPages = Math.ceil(communications.length / PAGE_SIZE);
+  const pageCommunications = communications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const resTotalPages = Math.ceil(resources.length / PAGE_SIZE);
+  const pageResources = resources.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
@@ -125,7 +155,7 @@ export default async function ComunicazioniPage({
           {communications.length === 0 && (
             <EmptyState icon={Bell} title="Nessuna comunicazione" description="Non ci sono comunicazioni pubblicate al momento." />
           )}
-          {communications.map((c) => (
+          {pageCommunications.map((c) => (
             <Link
               key={c.id}
               href={`/comunicazioni/${c.id}`}
@@ -151,6 +181,7 @@ export default async function ComunicazioniPage({
               </div>
             </Link>
           ))}
+          <PaginationNav page={page} totalPages={commTotalPages} makeUrl={(p) => `?tab=comunicazioni&page=${p}`} />
         </div>
       )}
 
@@ -176,7 +207,7 @@ export default async function ComunicazioniPage({
           {resources.length === 0 && (
             <EmptyState icon={BookOpen} title="Nessuna risorsa disponibile" description="Non ci sono risorse pubblicate al momento." />
           )}
-          {resources.map((r) => (
+          {pageResources.map((r) => (
             <Link
               key={r.id}
               href={`/risorse/${r.id}`}
@@ -205,6 +236,7 @@ export default async function ComunicazioniPage({
               )}
             </Link>
           ))}
+          <PaginationNav page={page} totalPages={resTotalPages} makeUrl={(p) => `?tab=risorse&page=${p}${categoriaFilter ? `&categoria=${categoriaFilter}` : ''}`} />
         </div>
       )}
     </div>

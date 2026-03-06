@@ -121,6 +121,28 @@ function parseFileUrls(raw: string): string[] {
   return raw.split('\n').map((u) => u.trim()).filter(Boolean);
 }
 
+const PAGE_SIZE = 20;
+
+function PaginationNav({ page, total, onPage }: { page: number; total: number; onPage: (p: number) => void }) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-4 border-t border-border">
+      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
+      <div className="flex gap-2">
+        {page > 1
+          ? <button onClick={() => onPage(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</button>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
+        }
+        {page < totalPages
+          ? <button onClick={() => onPage(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</button>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
+        }
+      </div>
+    </div>
+  );
+}
+
 export default function CommunicationList({
   communications,
   canWrite,
@@ -133,6 +155,7 @@ export default function CommunicationList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/communications', {
@@ -190,7 +213,7 @@ export default function CommunicationList({
       {communications.length === 0 && !showForm && (
         <EmptyState icon={Bell} title="Nessuna comunicazione" description="Non ci sono comunicazioni pubblicate al momento." />
       )}
-      {communications.map((c) => (
+      {communications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((c) => (
         <div key={c.id} className={`rounded-xl border p-4 space-y-2 ${
           c.pinned ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20' : 'border-border bg-card'
         }`}>
@@ -238,6 +261,7 @@ export default function CommunicationList({
           )}
         </div>
       ))}
+      <PaginationNav page={page} total={communications.length} onPage={setPage} />
     </div>
   );
 }

@@ -150,6 +150,28 @@ function EventForm({
   );
 }
 
+const PAGE_SIZE = 20;
+
+function PaginationNav({ page, total, onPage }: { page: number; total: number; onPage: (p: number) => void }) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-4 border-t border-border">
+      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
+      <div className="flex gap-2">
+        {page > 1
+          ? <button onClick={() => onPage(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</button>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
+        }
+        {page < totalPages
+          ? <button onClick={() => onPage(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</button>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
+        }
+      </div>
+    </div>
+  );
+}
+
 export default function EventList({
   events,
   canWrite,
@@ -162,6 +184,7 @@ export default function EventList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/events', {
@@ -227,7 +250,7 @@ export default function EventList({
       {events.length === 0 && !showForm && (
         <EmptyState icon={CalendarDays} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
-      {events.map((ev) => (
+      {events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((ev) => (
         <div key={ev.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
           {editingId === ev.id ? (
             <EventForm
@@ -286,6 +309,7 @@ export default function EventList({
           )}
         </div>
       ))}
+      <PaginationNav page={page} total={events.length} onPage={setPage} />
     </div>
   );
 }

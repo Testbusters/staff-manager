@@ -130,6 +130,34 @@ function DiscountForm({
   );
 }
 
+const PAGE_SIZE = 20;
+
+function isActive(d: Discount): boolean {
+  if (!d.valid_to) return true;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return new Date(d.valid_to) >= today;
+}
+
+function PaginationNav({ page, total, onPage }: { page: number; total: number; onPage: (p: number) => void }) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-4 border-t border-border">
+      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
+      <div className="flex gap-2">
+        {page > 1
+          ? <button onClick={() => onPage(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</button>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
+        }
+        {page < totalPages
+          ? <button onClick={() => onPage(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</button>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
+        }
+      </div>
+    </div>
+  );
+}
+
 export default function DiscountList({
   discounts,
   canWrite,
@@ -144,6 +172,7 @@ export default function DiscountList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/discounts', {
@@ -173,6 +202,13 @@ export default function DiscountList({
     router.refresh();
   }
 
+  const active = discounts.filter(isActive);
+  const expired = discounts.filter((d) => !isActive(d));
+  const sorted = [...active, ...expired];
+  const pageItems = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageActive = pageItems.filter(isActive);
+  const pageExpired = pageItems.filter((d) => !isActive(d));
+
   return (
     <div className="space-y-4">
       {canWrite && !showForm && (
@@ -187,66 +223,82 @@ export default function DiscountList({
       {discounts.length === 0 && !showForm && (
         <EmptyState icon={Tag} title="Nessuno sconto disponibile" description="Non ci sono sconti pubblicati al momento." />
       )}
-      {discounts.map((d) => (
-        <div key={d.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
-          {editingId === d.id ? (
-            <DiscountForm
-              initial={{
-                titolo: d.titolo, descrizione: d.descrizione ?? '', codice_sconto: d.codice_sconto ?? '',
-                link: d.link ?? '', valid_from: d.valid_from ?? '', valid_to: d.valid_to ?? '',
-                community_ids: d.community_ids ?? [], fornitore: d.fornitore ?? '',
-                logo_url: d.logo_url ?? '', file_url: d.file_url ?? '',
-              }}
-              communities={communities}
-              onSave={(data) => handleEdit(d.id, data)}
-              onCancel={() => setEditingId(null)}
-            />
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-semibold text-foreground">{d.titolo}</h3>
-                  {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
-                  {expiryBadge(d.valid_to)}
-                </div>
-                {canWrite && (
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(d.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                    <button onClick={() => handleDelete(d.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
-                  </div>
-                )}
-              </div>
-              {d.descrizione && <RichTextDisplay html={d.descrizione} />}
-              <div className="flex items-center gap-3 flex-wrap">
-                {d.codice_sconto && (
-                  <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-700 dark:text-yellow-300">
-                    {d.codice_sconto}
-                  </span>
-                )}
-                {d.link && (
-                  <a href={d.link} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-link hover:text-link/80 underline transition">
-                    Scopri →
-                  </a>
-                )}
-                {d.file_url && (
-                  <a href={d.file_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                    <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
-                  </a>
-                )}
-                {(d.valid_from || d.valid_to) && (
-                  <span className="text-xs text-muted-foreground">
-                    {d.valid_from && `Dal ${formatDate(d.valid_from)}`}
-                    {d.valid_from && d.valid_to && ' · '}
-                    {d.valid_to && `Al ${formatDate(d.valid_to)}`}
-                  </span>
-                )}
-              </div>
-            </>
-          )}
+      {pageActive.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Attivi</h2>
+          {pageActive.map((d) => renderCard(d, false))}
         </div>
-      ))}
+      )}
+      {pageExpired.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Scaduti</h2>
+          {pageExpired.map((d) => renderCard(d, true))}
+        </div>
+      )}
+      <PaginationNav page={page} total={sorted.length} onPage={setPage} />
     </div>
   );
+
+  function renderCard(d: Discount, expired: boolean) {
+    return (
+      <div key={d.id} className={`rounded-xl border p-4 space-y-2 ${expired ? 'border-border bg-card/50 opacity-70' : 'border-border bg-card'}`}>
+        {editingId === d.id ? (
+          <DiscountForm
+            initial={{
+              titolo: d.titolo, descrizione: d.descrizione ?? '', codice_sconto: d.codice_sconto ?? '',
+              link: d.link ?? '', valid_from: d.valid_from ?? '', valid_to: d.valid_to ?? '',
+              community_ids: d.community_ids ?? [], fornitore: d.fornitore ?? '',
+              logo_url: d.logo_url ?? '', file_url: d.file_url ?? '',
+            }}
+            communities={communities}
+            onSave={(data) => handleEdit(d.id, data)}
+            onCancel={() => setEditingId(null)}
+          />
+        ) : (
+          <>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-semibold text-foreground">{d.titolo}</h3>
+                {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
+                {expiryBadge(d.valid_to)}
+              </div>
+              {canWrite && (
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => setEditingId(d.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
+                  <button onClick={() => handleDelete(d.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
+                </div>
+              )}
+            </div>
+            {d.descrizione && <RichTextDisplay html={d.descrizione} />}
+            <div className="flex items-center gap-3 flex-wrap">
+              {d.codice_sconto && (
+                <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-700 dark:text-yellow-300">
+                  {d.codice_sconto}
+                </span>
+              )}
+              {d.link && (
+                <a href={d.link} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-link hover:text-link/80 underline transition">
+                  Scopri →
+                </a>
+              )}
+              {d.file_url && (
+                <a href={d.file_url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
+                  <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
+                </a>
+              )}
+              {(d.valid_from || d.valid_to) && (
+                <span className="text-xs text-muted-foreground">
+                  {d.valid_from && `Dal ${formatDate(d.valid_from)}`}
+                  {d.valid_from && d.valid_to && ' · '}
+                  {d.valid_to && `Al ${formatDate(d.valid_to)}`}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
 }

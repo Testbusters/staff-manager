@@ -28,7 +28,34 @@ function formatDatetime(iso: string) {
   });
 }
 
-export default async function EventiPage() {
+const PAGE_SIZE = 20;
+
+function PaginationNav({ page, totalPages, makeUrl }: {
+  page: number; totalPages: number; makeUrl: (p: number) => string;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-4 border-t border-border">
+      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
+      <div className="flex gap-2">
+        {page > 1
+          ? <a href={makeUrl(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</a>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
+        }
+        {page < totalPages
+          ? <a href={makeUrl(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</a>
+          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
+        }
+      </div>
+    </div>
+  );
+}
+
+export default async function EventiPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -65,6 +92,9 @@ export default async function EventiPage() {
     .select('id, titolo, tipo, start_datetime, end_datetime, location, descrizione, community_ids')
     .order('start_datetime', { ascending: false, nullsFirst: false });
 
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? '1'));
+
   const now = new Date();
   const allEvents: ContentEvent[] = (data ?? []) as ContentEvent[];
   const events = profile.role === 'collaboratore'
@@ -74,6 +104,13 @@ export default async function EventiPage() {
 
   const upcoming = events.filter((e) => !e.start_datetime || new Date(e.start_datetime) >= now);
   const past = events.filter((e) => e.start_datetime && new Date(e.start_datetime) < now);
+
+  // Paginate combined list (upcoming first, then past)
+  const allSorted = [...upcoming, ...past];
+  const totalPages = Math.ceil(allSorted.length / PAGE_SIZE);
+  const pageItems = allSorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageUpcoming = pageItems.filter((e) => !e.start_datetime || new Date(e.start_datetime) >= now);
+  const pagePast = pageItems.filter((e) => e.start_datetime && new Date(e.start_datetime) < now);
 
   function EventRow({ ev, isPast }: { ev: ContentEvent; isPast: boolean }) {
     return (
@@ -132,19 +169,21 @@ export default async function EventiPage() {
         <EmptyState icon={CalendarDays} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
 
-      {upcoming.length > 0 && (
+      {pageUpcoming.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">In programma</h2>
-          {upcoming.map((ev) => <EventRow key={ev.id} ev={ev} isPast={false} />)}
+          {pageUpcoming.map((ev) => <EventRow key={ev.id} ev={ev} isPast={false} />)}
         </div>
       )}
 
-      {past.length > 0 && (
+      {pagePast.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Passati</h2>
-          {past.map((ev) => <EventRow key={ev.id} ev={ev} isPast={true} />)}
+          {pagePast.map((ev) => <EventRow key={ev.id} ev={ev} isPast={true} />)}
         </div>
       )}
+
+      <PaginationNav page={page} totalPages={totalPages} makeUrl={(p) => `?page=${p}`} />
     </div>
   );
 }
