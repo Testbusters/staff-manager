@@ -10,7 +10,7 @@ export default function NotFound() {
               d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <p className="text-5xl font-bold text-gray-700 mb-3">404</p>
+        <p className="text-5xl font-bold text-foreground mb-3">404</p>
         <h1 className="text-lg font-semibold text-foreground mb-2">Pagina non trovata</h1>
         <p className="text-sm text-muted-foreground mb-8">
           La pagina che stai cercando non esiste o è stata spostata.

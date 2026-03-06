@@ -28,6 +28,10 @@ function formatDatetime(iso: string) {
   });
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 const PAGE_SIZE = 20;
 
 function PaginationNav({ page, totalPages, makeUrl }: {
@@ -150,7 +154,7 @@ export default async function EventiPage({
             {ev.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{ev.location}</span>}
           </div>
           {ev.descrizione && (
-            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{ev.descrizione}</p>
+            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{stripHtml(ev.descrizione)}</p>
           )}
         </div>
         <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition text-sm">→</span>

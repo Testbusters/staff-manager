@@ -474,6 +474,10 @@ export default function ProfileForm({ collaborator, role, email, communities, al
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Seleziona se sei fiscalmente a carico di un familiare (es. genitore).
                 </p>
+                <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground list-none">
+                  <li>· Figli under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
+                  <li>· Figli 24+ anni (dall'1/01 dell'anno del 24° compleanno): soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
+                </ul>
               </div>
             </label>
             {sonoFiglio && <GuideBox guide={guidaFigli} />}
