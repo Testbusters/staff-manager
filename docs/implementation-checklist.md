@@ -2,13 +2,14 @@
 
 > Update this file at the end of every functional block (Phase 8 of the pipeline).
 > This is the source of truth for project status. Read before starting a new block.
-> Last updated 2026-03-06. All implemented blocks ✅. UI Kit Phases A–D ✅. Context audit + maintenance ✅ (2026-03-06). Rifinitura collab+responsabile ✅ (2026-03-06). Next: to be planned.
+> Last updated 2026-03-06. All implemented blocks ✅. UI Kit Phases A–D ✅. Context audit + maintenance ✅ (2026-03-06). Rifinitura collab+responsabile ✅ (2026-03-06). Export GSheet redesign ✅ (2026-03-06). Next: to be planned.
 
 ---
 
 ## Log
 
 | Data | Blocco | Stato | Test | Note |
+| 2026-03-06 | Export GSheet redesign | ✅ | tsc ✅, build ✅, vitest 264/264 ✅, e2e ⏸ | Migration 038: exported_at on compensations+expenses, export_runs table, exports bucket. Rewritten lib/export-utils (groupToCollaboratorRows, formatDate/Euro, toGSheetRow 15-col, buildHistoryXLSXWorkbook). lib/google-sheets: +writeExportRows (append to GOOGLE_SHEET_EXPORT_ID). POST /api/export/gsheet (full flow: fetch→aggregate→GSheet push→stamp→XLS upload→record run). GET /api/export/history (last 50 runs + signed URLs). UI: ExportSection (Anteprima/Storico tabs), ExportPreviewTable (per-collaborator aggregated), ExportHistoryTab (run list + XLS download). 18 unit tests. |
 | 2026-03-06 | Rifinitura collab+responsabile | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Item 1: avatar URL cache bust (?t=). Item 2: PATCH /api/profile/communities (collab self-edit) + ProfileForm community checkboxes. Item 3: profile field reorder (indirizzo→Informazioni personali, email→Contatti) in ProfileForm+OnboardingWizard+CreateUserForm. Item 4: sidebar badge "In arrivo". Item 5: ResponsabileAvatarHero client component with upload. Item 6: CompensationEditModal auto-calc ritenuta (read-only), no user input. |
 |---|---|---|---|---|
 | 2026-03-05 | Compensation edit + bulk UI removal | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Feature A: PATCH /api/compensations/[id]/edit + GET /api/compensations/competenze + CompensationEditModal + ActionPanel "Modifica" CTA (admin + responsabile_compensi, stato=IN_ATTESA only) + compensation_history edited event with field diff. Feature B: rimossi checkbox, select-all, bulk bar da ApprovazioniCompensazioni (pagina responsabile-only). |
