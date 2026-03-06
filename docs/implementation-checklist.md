@@ -2,13 +2,14 @@
 
 > Update this file at the end of every functional block (Phase 8 of the pipeline).
 > This is the source of truth for project status. Read before starting a new block.
-> Last updated 2026-03-06. All implemented blocks ✅. UI Kit Phases A–D ✅. Context audit + maintenance ✅ (2026-03-06). Rifinitura collab+responsabile ✅ (2026-03-06). Admin dashboard community redesign ✅ (2026-03-06). Next: to be planned.
+> Last updated 2026-03-06. All implemented blocks ✅. UI Kit Phases A–D ✅. Context audit + maintenance ✅ (2026-03-06). Rifinitura collab+responsabile ✅ (2026-03-06). Admin dashboard redesign (community columns, feed removal, pagination) ✅ (2026-03-06). Next: to be planned.
 
 ---
 
 ## Log
 
 | Data | Blocco | Stato | Test | Note |
+| 2026-03-06 | Admin dashboard — Feed removal + pagination fix | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Removed "Attività recenti" feed section (FeedRow, search/filter state, Select import, communities field from AdminDashboardData + dashData). Pagination aligned right with compact arrows (justify-end gap-1). Files: components/admin/AdminDashboard.tsx, components/admin/types.ts, app/(app)/page.tsx. |
 | 2026-03-06 | Admin dashboard — Community section redesign | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Replaced static CommunityCard with interactive 2-column CommunityColumn layout. 3 filter tabs per column (Compensi/Rimborsi/Da firmare) with active counts. Record list with StatusBadge + amount/date. Pagination (PAGE_SIZE=20). Community data via new Promise.all (communityCompsRes/expsRes/docsRes/collabsRes). communityCollabMap replaces collabCommRes. Removed: CommunityCard, UrgentRow, urgentItems, collabBreakdown, AdminCollabBreakdown, AdminUrgentItem types. Files: components/admin/types.ts, app/(app)/page.tsx, components/admin/AdminDashboard.tsx. |
 | 2026-03-06 | Rifinitura collab+responsabile | ✅ | tsc ✅, build ✅, vitest 252/252 ✅, e2e ⏸ | Item 1: avatar URL cache bust (?t=). Item 2: PATCH /api/profile/communities (collab self-edit) + ProfileForm community checkboxes. Item 3: profile field reorder (indirizzo→Informazioni personali, email→Contatti) in ProfileForm+OnboardingWizard+CreateUserForm. Item 4: sidebar badge "In arrivo". Item 5: ResponsabileAvatarHero client component with upload. Item 6: CompensationEditModal auto-calc ritenuta (read-only), no user input. |
 |---|---|---|---|---|
