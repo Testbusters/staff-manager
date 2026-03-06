@@ -18,6 +18,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Check `docs/refactoring-backlog.md`: if there are entries that intersect the current block, include them in the work plan or flag them explicitly.
 - Summarize the block's requirements concisely.
 - **Dependency scan** (mandatory when the block touches existing routes, components, or pages — cannot be skipped): before declaring the file list, grep/glob for ALL usages of affected entities. Minimum checks:
+  0. **Consult `docs/dependency-map.md` first**: look up the entity being modified. Every listed surface is a mandatory candidate for the file list. If the entity is not listed, add it to the map before proceeding.
   1. Every route being moved/repurposed/removed → `grep href="/route"` across all `.tsx`/`.ts`
   2. Every component being modified → find all import consumers
   3. Every redirect being added → check breadcrumbs and CTAs in pages that link to the old route
