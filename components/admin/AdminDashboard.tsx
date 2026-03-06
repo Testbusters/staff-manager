@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import CountUp from 'react-countup';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -20,21 +21,25 @@ const sectionCls = 'rounded-2xl bg-card border border-border';
 
 // ── KPI Card ───────────────────────────────────────────────
 function KpiCard({
-  label, value, sub, highlight,
+  label, value, sub, highlight, currency,
 }: {
   label: string;
-  value: string | number;
+  value: number;
   sub?: string;
   highlight?: boolean;
+  currency?: boolean;
 }) {
+  const formattingFn = currency
+    ? (n: number) => n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
+    : undefined;
   return (
-    <div className={sectionCls + ' p-5'}>
+    <div className={sectionCls + ' p-5 animate-in fade-in slide-in-from-bottom-2 duration-500'}>
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={
         'text-2xl font-semibold tabular-nums ' +
         (highlight ? 'text-amber-600 dark:text-amber-300' : 'text-foreground')
       }>
-        {value}
+        <CountUp end={value} duration={1.2} formattingFn={formattingFn} />
       </p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
@@ -289,8 +294,8 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <KpiCard label="Compensi in coda" value={kpis.pendingCompsCount} />
           <KpiCard label="Rimborsi in coda" value={kpis.pendingExpsCount} />
-          <KpiCard label="In approvazione" value={eur(kpis.inApprovalAmount)} highlight={kpis.inApprovalAmount > 0} />
-          <KpiCard label="Da pagare" value={eur(kpis.toPayAmount)} highlight={kpis.toPayAmount > 0} />
+          <KpiCard label="In approvazione" value={kpis.inApprovalAmount} currency highlight={kpis.inApprovalAmount > 0} />
+          <KpiCard label="Da pagare" value={kpis.toPayAmount} currency highlight={kpis.toPayAmount > 0} />
           <KpiCard label="Doc. da firmare" value={kpis.docsToSignCount} />
           <KpiCard label="Collaboratori attivi" value={kpis.activeCollabsCount} />
         </div>
@@ -412,9 +417,9 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
             <p className="text-xs text-muted-foreground mb-4">Importo pagato (€)</p>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={chartData} barSize={28}>
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={v => `€${(v / 1000).toFixed(0)}k`} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} tickFormatter={v => `€${(v / 1000).toFixed(0)}k`} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(128,128,128,0.06)' }} />
                 <Bar dataKey="Importo pagato" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -425,10 +430,10 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
             <p className="text-xs text-muted-foreground mb-4">Compensi approvati / Nuovi collaboratori</p>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={chartData} barSize={20} barCategoryGap="30%">
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Legend wrapperStyle={{ fontSize: 11, color: '#9ca3af' }} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(128,128,128,0.06)' }} />
+                <Legend wrapperStyle={{ fontSize: 11, color: 'var(--color-muted-foreground)' }} />
                 <Bar dataKey="Compensi approvati" fill="#10b981" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Nuovi collab." fill="#8b5cf6" radius={[4, 4, 0, 0]} />
               </BarChart>

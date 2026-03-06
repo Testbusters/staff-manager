@@ -5,6 +5,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
 import DashboardTicketSection from '@/components/responsabile/DashboardTicketSection';
+import RKpiCard from '@/components/responsabile/RKpiCard';
 import type { DashboardTicket } from '@/components/responsabile/DashboardTicketSection';
 import DashboardPendingItems from '@/components/responsabile/DashboardPendingItems';
 import type { PendingComp, PendingExp } from '@/components/responsabile/DashboardPendingItems';
@@ -110,18 +111,6 @@ function DocCard({ count }: { count: number }) {
 
 function formatCurrencyR(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
-}
-
-function RKpiCard({ label, count, sub, color, href }: {
-  label: string; count: number; sub: string | null; color: string; href: string;
-}) {
-  return (
-    <Link href={href} className="rounded-xl bg-card border border-border px-4 py-4 hover:bg-muted/80 transition">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-2xl font-semibold tabular-nums ${color}`}>{count}</p>
-      {sub && <p className="text-sm text-muted-foreground tabular-nums mt-0.5">{sub}</p>}
-    </Link>
-  );
 }
 
 // ── Collaboratore data helpers ──────────────────────────────
@@ -382,7 +371,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* KPI row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <RKpiCard
             label="Compensi in attesa"
             count={pendingComps.length}
@@ -1139,7 +1128,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* 4 KPI card */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* Compensi in corso */}
         <Link href="/compensi" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/60 transition'}>
           <div className="flex items-center justify-between gap-1">

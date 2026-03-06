@@ -20,14 +20,14 @@ const fmt = (v: number) =>
 
 const tooltipStyle = {
   contentStyle: {
-    background: '#111827',
-    border: '1px solid #1f2937',
+    background: 'var(--color-card)',
+    border: '1px solid var(--color-border)',
     borderRadius: 8,
     fontSize: 12,
-    color: '#e5e7eb',
+    color: 'var(--color-foreground)',
   },
-  labelStyle: { color: '#9ca3af', marginBottom: 4 },
-  cursor: { fill: 'rgba(255,255,255,0.04)' },
+  labelStyle: { color: 'var(--color-muted-foreground)', marginBottom: 4 },
+  cursor: { fill: 'rgba(128,128,128,0.06)' },
 };
 
 function tooltipFormatter(value: number | undefined, name: string | undefined) {
@@ -45,12 +45,12 @@ export default function DashboardBarChart({ data }: { data: BarMonthData[] }) {
       >
         <XAxis
           dataKey="month"
-          tick={{ fill: '#6b7280', fontSize: 11 }}
+          tick={{ fill: 'var(--color-muted-foreground)', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fill: '#6b7280', fontSize: 10 }}
+          tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10 }}
           axisLine={false}
           tickLine={false}
           tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v > 0 ? String(v) : '')}
