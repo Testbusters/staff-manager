@@ -27,6 +27,10 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function expiryBadge(valid_to: string | null) {
   if (!valid_to) return null;
   const today = new Date();
@@ -162,7 +166,7 @@ export default async function OpportunitaPage({
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{o.descrizione}</p>
+              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{stripHtml(o.descrizione)}</p>
               {o.scadenza_candidatura && (
                 <p className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2.5"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</p>
               )}
@@ -190,9 +194,7 @@ export default async function OpportunitaPage({
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              {d.descrizione && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{d.descrizione}</p>
-              )}
+              {d.descrizione && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{stripHtml(d.descrizione)}</p>}
             </Link>
           ))}
         </div>
@@ -217,9 +219,7 @@ export default async function OpportunitaPage({
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              {d.descrizione && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{d.descrizione}</p>
-              )}
+              {d.descrizione && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{stripHtml(d.descrizione)}</p>}
             </Link>
           ))}
         </div>

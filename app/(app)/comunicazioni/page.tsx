@@ -19,6 +19,10 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 const VALID_CATEGORIA = ['GUIDA', 'NORMATIVA', 'PROCEDURA', 'MODELLO', 'ALTRO'] as const;
 
 export default async function ComunicazioniPage({
@@ -138,7 +142,7 @@ export default async function ComunicazioniPage({
                 </div>
                 <span className="flex-shrink-0 text-muted-foreground group-hover:text-foreground text-sm transition">→</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.contenuto}</p>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{stripHtml(c.contenuto)}</p>
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                 <span>{formatDate(c.published_at)}</span>
                 {c.file_urls && c.file_urls.length > 0 && (
