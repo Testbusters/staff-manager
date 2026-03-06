@@ -52,7 +52,7 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
               step === current
                 ? 'bg-brand text-white'
                 : step < current
-                ? 'bg-green-700 text-white'
+                ? 'bg-green-700 dark:bg-green-800 text-white'
                 : 'bg-accent text-muted-foreground'
             }`}
           >

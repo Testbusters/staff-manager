@@ -128,7 +128,7 @@ export default function ExportSection({ tab, items }: Props) {
             setShowModal(true);
           }}
           disabled={selected.size === 0}
-          className="bg-emerald-700 hover:bg-emerald-600 text-white"
+          className="bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white"
         >
           Segna pagati ({selected.size})
         </Button>
@@ -188,7 +188,7 @@ export default function ExportSection({ tab, items }: Props) {
             <Button
               onClick={handleMarkPaid}
               disabled={!paymentRef.trim() || loading}
-              className="bg-emerald-700 hover:bg-emerald-600 text-white"
+              className="bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white"
             >
               {loading ? 'Salvataggio…' : 'Conferma pagamento'}
             </Button>

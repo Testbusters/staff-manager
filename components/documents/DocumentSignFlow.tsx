@@ -66,7 +66,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
             href={originalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition"
+            className="shrink-0 rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition"
           >
             Scarica
           </a>
@@ -112,7 +112,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, firmatoUr
               type="file"
               accept=".pdf"
               onChange={(e) => { setFile(e.target.files?.[0] ?? null); setConfirmed(false); }}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
             />
             {file && <p className="mt-1 text-xs text-muted-foreground">{file.name}</p>}
           </div>

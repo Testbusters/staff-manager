@@ -180,7 +180,7 @@ export default function CreateUserForm() {
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-lg bg-card px-3 py-2 text-sm text-foreground font-mono">{credentials.email}</code>
               <button onClick={() => copyToClipboard(credentials.email, 'email')}
-                className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-2 text-xs text-foreground transition whitespace-nowrap">
+                className="rounded-lg bg-accent hover:bg-muted px-3 py-2 text-xs text-foreground transition whitespace-nowrap">
                 {copied === 'email' ? 'Copiato!' : 'Copia'}
               </button>
             </div>
@@ -190,7 +190,7 @@ export default function CreateUserForm() {
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-lg bg-card px-3 py-2 text-sm text-foreground font-mono tracking-wider">{credentials.password}</code>
               <button onClick={() => copyToClipboard(credentials.password, 'password')}
-                className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-2 text-xs text-foreground transition whitespace-nowrap">
+                className="rounded-lg bg-accent hover:bg-muted px-3 py-2 text-xs text-foreground transition whitespace-nowrap">
                 {copied === 'password' ? 'Copiata!' : 'Copia'}
               </button>
             </div>

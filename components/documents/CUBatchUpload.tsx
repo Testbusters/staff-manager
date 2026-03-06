@@ -104,7 +104,7 @@ export default function CUBatchUpload() {
           type="file"
           accept=".zip"
           onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
+          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
         />
         {zipFile && <p className="mt-1 text-xs text-muted-foreground">{zipFile.name} ({(zipFile.size / 1024).toFixed(0)} KB)</p>}
       </div>
@@ -118,7 +118,7 @@ export default function CUBatchUpload() {
           type="file"
           accept=".csv,.txt"
           onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-gray-600"
+          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
         />
         {csvFile && <p className="mt-1 text-xs text-muted-foreground">{csvFile.name}</p>}
         <p className="mt-1.5 text-xs text-muted-foreground">

@@ -118,7 +118,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                             <Link
                               href={item.href}
                               onClick={onClose}
-                              className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition inline-block"
+                              className="rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition inline-block"
                             >
                               Vai al profilo
                             </Link>
@@ -127,7 +127,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                             <Link
                               href={item.href}
                               onClick={onClose}
-                              className="rounded-lg bg-accent hover:bg-gray-600 px-3 py-1.5 text-xs font-medium text-foreground transition inline-block"
+                              className="rounded-lg bg-accent hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition inline-block"
                             >
                               Vai alla coda
                             </Link>

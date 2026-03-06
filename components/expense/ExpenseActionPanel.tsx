@@ -184,7 +184,7 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
             </Button>
             <Button
               disabled={loading !== null}
-              className="bg-emerald-700 hover:bg-emerald-600 text-white"
+              className="bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white"
               onClick={async () => {
                 await perform('mark_liquidated', { payment_reference: paymentReference || undefined });
                 setShowLiquidatedModal(false);

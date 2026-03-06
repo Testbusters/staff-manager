@@ -590,7 +590,7 @@ export default function CollaboratoreDetail({
                             <button
                               onClick={() => handleApprove('comp', comp.id)}
                               disabled={loading === comp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 hover:bg-green-600 text-white transition disabled:opacity-50"
+                              className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 hover:bg-green-600 dark:bg-green-800 dark:hover:bg-green-700 text-white transition disabled:opacity-50"
                             >
                               {loading === comp.id ? '…' : 'Approva'}
                             </button>
@@ -599,7 +599,7 @@ export default function CollaboratoreDetail({
                             <button
                               onClick={() => openReject('comp', comp.id)}
                               disabled={loading === comp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-red-700 hover:bg-red-600 text-white transition disabled:opacity-50"
+                              className="px-2.5 py-1 rounded text-xs font-medium bg-red-700 hover:bg-red-600 dark:bg-red-800 dark:hover:bg-red-700 text-white transition disabled:opacity-50"
                             >
                               Rifiuta
                             </button>
@@ -655,7 +655,7 @@ export default function CollaboratoreDetail({
                             <button
                               onClick={() => handleApprove('exp', exp.id)}
                               disabled={loading === exp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 hover:bg-green-600 text-white transition disabled:opacity-50"
+                              className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 hover:bg-green-600 dark:bg-green-800 dark:hover:bg-green-700 text-white transition disabled:opacity-50"
                             >
                               {loading === exp.id ? '…' : 'Approva'}
                             </button>
@@ -664,7 +664,7 @@ export default function CollaboratoreDetail({
                             <button
                               onClick={() => openReject('exp', exp.id)}
                               disabled={loading === exp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-red-700 hover:bg-red-600 text-white transition disabled:opacity-50"
+                              className="px-2.5 py-1 rounded text-xs font-medium bg-red-700 hover:bg-red-600 dark:bg-red-800 dark:hover:bg-red-700 text-white transition disabled:opacity-50"
                             >
                               Rifiuta
                             </button>

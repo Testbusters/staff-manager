@@ -161,7 +161,7 @@ export default function PaymentOverview({
   const showMassimale = massimale != null && massimale > 0;
   const pct = showMassimale ? Math.min(100, (paidCurrentYear / massimale) * 100) : 0;
   const isNearLimit = pct >= 80;
-  const barColor = pct >= 100 ? 'bg-red-500' : isNearLimit ? 'bg-yellow-400' : 'bg-green-500';
+  const barColor = pct >= 100 ? 'bg-red-500 dark:bg-red-400' : isNearLimit ? 'bg-yellow-400 dark:bg-yellow-300' : 'bg-green-500 dark:bg-green-400';
 
   if (!hasData && !showMassimale) return null;
 

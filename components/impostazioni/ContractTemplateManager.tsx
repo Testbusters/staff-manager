@@ -95,7 +95,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                   ${isUploading
                     ? 'bg-accent text-muted-foreground pointer-events-none'
                     : tpl
-                      ? 'bg-accent hover:bg-gray-600 text-foreground'
+                      ? 'bg-accent hover:bg-muted text-foreground'
                       : 'bg-brand hover:bg-brand/90 text-white'
                   }`}
                 >

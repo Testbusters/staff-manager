@@ -281,7 +281,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
           }
         >
           {blockItems.length > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 rounded-full bg-red-500 dark:bg-red-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
               {blockItems.length}
             </span>
           )}

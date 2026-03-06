@@ -14,9 +14,9 @@ type OpenTicket = {
 };
 
 const PRIORITY_DOT: Record<string, string> = {
-  ALTA:    'bg-red-500',
-  NORMALE: 'bg-yellow-500',
-  BASSA:   'bg-gray-500',
+  ALTA:    'bg-red-500 dark:bg-red-400',
+  NORMALE: 'bg-yellow-500 dark:bg-yellow-400',
+  BASSA:   'bg-gray-500 dark:bg-gray-400',
 };
 
 

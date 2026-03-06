@@ -139,7 +139,7 @@ export default function FeedbackButton() {
                     accept="image/jpeg,image/png,image/webp,image/gif"
                     disabled={loading}
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-xs file:text-foreground file:cursor-pointer hover:file:bg-gray-600 transition"
+                    className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-xs file:text-foreground file:cursor-pointer hover:file:bg-muted transition"
                   />
                   {file && (
                     <p className="text-xs text-muted-foreground mt-1">
