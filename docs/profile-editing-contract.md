@@ -40,7 +40,8 @@
 | `sono_un_figlio_a_carico` | ✅ | ✅ | ✅ | ✅ |
 | `importo_lordo_massimale` | — | ✅ | ✅ | ✅ |
 | `email` | — | ✅ (via auth API) | — | ❌ |
-| `foto_profilo_url` | — | ✅ (avatar upload) | — | ❌ |
+| `foto_profilo_url` | — | ✅ (avatar upload) | — | ✅ (own avatar via dashboard) |
+| `community_ids` | — | ✅ (PATCH /api/profile/communities, ≥1 required) | ❌ | ❌ |
 | `data_ingresso` | — | ❌ | ✅ (admin only) | ❌ |
 | `tipo_contratto` | — | ❌ | ✅ (admin only) | ❌ |
 
