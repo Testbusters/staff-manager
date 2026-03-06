@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Banknote, CreditCard } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, ArrowUpDown, ArrowUp, ArrowDown, Clock, Banknote, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -40,6 +41,7 @@ type ExpenseRow = {
 };
 
 type FilterStato = 'TUTTI' | 'IN_ATTESA' | 'APPROVATO' | 'RIFIUTATO' | 'LIQUIDATO';
+type SortDir = 'asc' | 'desc' | null;
 
 const FILTER_LABELS: Record<FilterStato, string> = {
   TUTTI: 'Tutti',
@@ -55,6 +57,18 @@ const STATO_BADGE: Record<string, { label: string; variant: 'default' | 'seconda
   RIFIUTATO: { label: 'Rifiutato', variant: 'destructive' },
   LIQUIDATO: { label: 'Liquidato', variant: 'outline' },
 };
+
+const STATO_STRIPE: Record<string, string> = {
+  IN_ATTESA: 'bg-amber-400/80',
+  APPROVATO: 'bg-green-500/80',
+  RIFIUTATO: 'bg-destructive/70',
+  LIQUIDATO: 'bg-border',
+};
+
+function fmt(amount: number | null) {
+  if (amount == null) return <span className="text-muted-foreground/40">—</span>;
+  return `€\u202f${amount.toFixed(2)}`;
+}
 
 function checkMassimale(items: ExpenseRow[]): MassimaleImpact[] {
   const byCollab = new Map<string, ExpenseRow[]>();
@@ -89,6 +103,7 @@ function checkMassimale(items: ExpenseRow[]): MassimaleImpact[] {
 export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
   const router = useRouter();
   const [filterStato, setFilterStato] = useState<FilterStato>('TUTTI');
+  const [sortDir, setSortDir] = useState<SortDir>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote] = useState('');
@@ -96,16 +111,46 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const filtered = filterStato === 'TUTTI'
-    ? expenses
-    : expenses.filter((e) => e.stato === filterStato);
+  // ── Derived data ──────────────────────────────────────────────
+
+  const stats = useMemo(() => {
+    const sum = (stato: string) => expenses
+      .filter((e) => e.stato === stato)
+      .reduce((s, e) => s + (e.importo ?? 0), 0);
+    return {
+      inAttesa:  { count: expenses.filter((e) => e.stato === 'IN_ATTESA').length,  total: sum('IN_ATTESA') },
+      approvato: { count: expenses.filter((e) => e.stato === 'APPROVATO').length, total: sum('APPROVATO') },
+      liquidato: { count: expenses.filter((e) => e.stato === 'LIQUIDATO').length, total: sum('LIQUIDATO') },
+    };
+  }, [expenses]);
+
+  const filtered = useMemo(() => {
+    let rows = filterStato === 'TUTTI' ? expenses : expenses.filter((e) => e.stato === filterStato);
+    if (sortDir) {
+      rows = [...rows].sort((a, b) => {
+        const da = a.data_spesa ?? '';
+        const db = b.data_spesa ?? '';
+        return sortDir === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+      });
+    }
+    return rows;
+  }, [expenses, filterStato, sortDir]);
+
+  const filteredTotal = useMemo(
+    () => filtered.reduce((s, e) => s + (e.importo ?? 0), 0),
+    [filtered],
+  );
 
   const countByStato = (stato: FilterStato) =>
     stato === 'TUTTI' ? expenses.length : expenses.filter((e) => e.stato === stato).length;
 
   const approvedIds = expenses.filter((e) => e.stato === 'APPROVATO').map((e) => e.id);
-  const inAttesaCount = expenses.filter((e) => e.stato === 'IN_ATTESA').length;
+  const inAttesaCount = stats.inAttesa.count;
   const allApprovedSelected = approvedIds.length > 0 && selectedIds.size === approvedIds.length;
+
+  function cycleSortDir() {
+    setSortDir((d) => (d === null ? 'asc' : d === 'asc' ? 'desc' : null));
+  }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -171,10 +216,49 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
     } finally { setLoading(false); }
   }
 
+  const SortIcon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
+
   return (
     <div className="space-y-4">
 
-      {/* ── Actions bar ─────────────────────────────────── */}
+      {/* ── Stats strip ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Clock className="h-4 w-4 text-amber-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">In attesa</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {stats.inAttesa.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.inAttesa.total.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-green-500/15 flex items-center justify-center shrink-0">
+            <CheckCheck className="h-4 w-4 text-green-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">Approvati</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {stats.approvato.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.approvato.total.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+            <Banknote className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">Liquidati</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {stats.liquidato.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.liquidato.total.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Actions bar ──────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
@@ -183,7 +267,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
           className="bg-brand hover:bg-brand/90 text-white"
         >
           <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-          Approva tutti IN_ATTESA ({inAttesaCount})
+          Approva tutti ({inAttesaCount})
         </Button>
 
         {approvedIds.length > 0 && (
@@ -194,15 +278,15 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
 
         {selectedIds.size > 0 && (
           <Button size="sm" variant="outline" onClick={() => doLiquidate([...selectedIds])} disabled={loading}>
-            <Banknote className="h-3.5 w-3.5 mr-1.5" />
-            Liquida selezionati ({selectedIds.size})
+            <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+            Liquida ({selectedIds.size})
           </Button>
         )}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* ── Sub-filter pills ─────────────────────────────── */}
+      {/* ── Sub-filter pills ─────────────────────────────────────── */}
       <div className="flex gap-1.5 flex-wrap">
         {(Object.keys(FILTER_LABELS) as FilterStato[]).map((stato) => (
           <button
@@ -219,36 +303,49 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
         ))}
       </div>
 
-      {/* ── Table ───────────────────────────────────────── */}
+      {/* ── Table ────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
         <EmptyState icon={Banknote} title="Nessun rimborso" description="Non ci sono rimborsi per questo filtro." />
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+                <TableHead className="w-1 p-0" />
                 <TableHead className="w-10 text-xs uppercase tracking-wide text-muted-foreground" />
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Data</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <button
+                    onClick={cycleSortDir}
+                    className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    aria-label="Ordina per data"
+                  >
+                    Data <SortIcon className="h-3 w-3" />
+                  </button>
+                </TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Stato</TableHead>
                 <TableHead className="w-24 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {filtered.map((exp) => {
                 const isApprovato = exp.stato === 'APPROVATO';
-                const isInAttesa = exp.stato === 'IN_ATTESA';
-                const badgeDef = STATO_BADGE[exp.stato] ?? { label: exp.stato, variant: 'outline' as const };
+                const isInAttesa  = exp.stato === 'IN_ATTESA';
+                const badgeDef    = STATO_BADGE[exp.stato] ?? { label: exp.stato, variant: 'outline' as const };
+                const isSelected  = selectedIds.has(exp.id);
 
                 return (
-                  <TableRow key={exp.id} className={selectedIds.has(exp.id) ? 'bg-muted/40' : ''}>
+                  <TableRow key={exp.id} className={isSelected ? 'bg-brand/5 hover:bg-brand/8' : ''}>
+                    {/* Left accent stripe */}
+                    <TableCell className={`p-0 w-1 ${STATO_STRIPE[exp.stato] ?? 'bg-border'}`} />
 
                     {/* Checkbox */}
                     <TableCell className="py-3">
                       {isApprovato && (
                         <Checkbox
-                          checked={selectedIds.has(exp.id)}
+                          checked={isSelected}
                           onCheckedChange={() => toggleSelect(exp.id)}
                           aria-label={`Seleziona ${exp.collabName}`}
                         />
@@ -275,9 +372,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
 
                     {/* Importo */}
                     <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
-                      {exp.importo != null
-                        ? `€\u202f${exp.importo.toFixed(2)}`
-                        : <span className="text-muted-foreground/40">—</span>}
+                      {fmt(exp.importo)}
                     </TableCell>
 
                     {/* Stato */}
@@ -293,8 +388,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
                         {isInAttesa && (
                           <>
                             <Button
-                              size="sm"
-                              variant="ghost"
+                              size="sm" variant="ghost"
                               className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
                               onClick={() => handleApproveSingle(exp.id)}
                               disabled={loading}
@@ -303,8 +397,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
                               <CheckCircle className="h-4 w-4" />
                             </Button>
                             <Button
-                              size="sm"
-                              variant="ghost"
+                              size="sm" variant="ghost"
                               className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => { setRejectTargetId(exp.id); setRejectionNote(''); }}
                               disabled={loading}
@@ -316,8 +409,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
                         )}
                         {isApprovato && (
                           <Button
-                            size="sm"
-                            variant="ghost"
+                            size="sm" variant="ghost"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                             onClick={() => doLiquidate([exp.id])}
                             disabled={loading}
@@ -332,11 +424,27 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
                 );
               })}
             </TableBody>
+
+            {/* ── Footer totals ─────────────────────────────────── */}
+            <TableFooter>
+              <TableRow className="border-t border-border bg-muted/30 hover:bg-muted/30">
+                <TableCell className="p-0 w-1" />
+                <TableCell />
+                <TableCell className="py-2.5 text-xs text-muted-foreground">
+                  {filtered.length} {filtered.length === 1 ? 'voce' : 'voci'}
+                </TableCell>
+                <TableCell />
+                <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
+                  €{filteredTotal.toFixed(2)}
+                </TableCell>
+                <TableCell colSpan={2} />
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       )}
 
-      {/* ── Reject dialog ────────────────────────────────── */}
+      {/* ── Reject dialog ────────────────────────────────────────── */}
       <Dialog open={rejectTargetId !== null} onOpenChange={(open) => { if (!open) { setRejectTargetId(null); setRejectionNote(''); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -358,7 +466,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
         </DialogContent>
       </Dialog>
 
-      {/* ── Massimale warning modal ──────────────────────── */}
+      {/* ── Massimale warning modal ───────────────────────────────── */}
       {massimaleWarning && (
         <MassimaleCheckModal
           open

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Banknote, CreditCard } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, ArrowUpDown, ArrowUp, ArrowDown, Clock, Banknote, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -41,6 +42,7 @@ type CompensationRow = {
 };
 
 type FilterStato = 'TUTTI' | 'IN_ATTESA' | 'APPROVATO' | 'RIFIUTATO' | 'LIQUIDATO';
+type SortDir = 'asc' | 'desc' | null;
 
 const FILTER_LABELS: Record<FilterStato, string> = {
   TUTTI: 'Tutti',
@@ -51,11 +53,24 @@ const FILTER_LABELS: Record<FilterStato, string> = {
 };
 
 const STATO_BADGE: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  IN_ATTESA: { label: 'In attesa',  variant: 'secondary' },
-  APPROVATO: { label: 'Approvato',  variant: 'default' },
-  RIFIUTATO: { label: 'Rifiutato',  variant: 'destructive' },
-  LIQUIDATO: { label: 'Liquidato',  variant: 'outline' },
+  IN_ATTESA: { label: 'In attesa', variant: 'secondary' },
+  APPROVATO: { label: 'Approvato', variant: 'default' },
+  RIFIUTATO: { label: 'Rifiutato', variant: 'destructive' },
+  LIQUIDATO: { label: 'Liquidato', variant: 'outline' },
 };
+
+// Left accent stripe colors per stato
+const STATO_STRIPE: Record<string, string> = {
+  IN_ATTESA: 'bg-amber-400/80',
+  APPROVATO: 'bg-green-500/80',
+  RIFIUTATO: 'bg-destructive/70',
+  LIQUIDATO: 'bg-border',
+};
+
+function fmt(amount: number | null) {
+  if (amount == null) return <span className="text-muted-foreground/40">—</span>;
+  return `€\u202f${amount.toFixed(2)}`;
+}
 
 function checkMassimale(items: CompensationRow[]): MassimaleImpact[] {
   const byCollab = new Map<string, CompensationRow[]>();
@@ -90,6 +105,7 @@ function checkMassimale(items: CompensationRow[]): MassimaleImpact[] {
 export default function CodaCompensazioni({ compensations }: { compensations: CompensationRow[] }) {
   const router = useRouter();
   const [filterStato, setFilterStato] = useState<FilterStato>('TUTTI');
+  const [sortDir, setSortDir] = useState<SortDir>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote] = useState('');
@@ -97,16 +113,46 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const filtered = filterStato === 'TUTTI'
-    ? compensations
-    : compensations.filter((c) => c.stato === filterStato);
+  // ── Derived data ──────────────────────────────────────────────
+
+  const stats = useMemo(() => {
+    const sum = (stato: string) => compensations
+      .filter((c) => c.stato === stato)
+      .reduce((s, c) => s + (c.importo_lordo ?? 0), 0);
+    return {
+      inAttesa:  { count: compensations.filter((c) => c.stato === 'IN_ATTESA').length,  total: sum('IN_ATTESA') },
+      approvato: { count: compensations.filter((c) => c.stato === 'APPROVATO').length, total: sum('APPROVATO') },
+      liquidato: { count: compensations.filter((c) => c.stato === 'LIQUIDATO').length, total: sum('LIQUIDATO') },
+    };
+  }, [compensations]);
+
+  const filtered = useMemo(() => {
+    let rows = filterStato === 'TUTTI' ? compensations : compensations.filter((c) => c.stato === filterStato);
+    if (sortDir) {
+      rows = [...rows].sort((a, b) => {
+        const da = a.data_competenza ?? '';
+        const db = b.data_competenza ?? '';
+        return sortDir === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+      });
+    }
+    return rows;
+  }, [compensations, filterStato, sortDir]);
+
+  const filteredTotal = useMemo(
+    () => filtered.reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
+    [filtered],
+  );
 
   const countByStato = (stato: FilterStato) =>
     stato === 'TUTTI' ? compensations.length : compensations.filter((c) => c.stato === stato).length;
 
   const approvedIds = compensations.filter((c) => c.stato === 'APPROVATO').map((c) => c.id);
-  const inAttesaCount = compensations.filter((c) => c.stato === 'IN_ATTESA').length;
+  const inAttesaCount = stats.inAttesa.count;
   const allApprovedSelected = approvedIds.length > 0 && selectedIds.size === approvedIds.length;
+
+  function cycleSortDir() {
+    setSortDir((d) => (d === null ? 'asc' : d === 'asc' ? 'desc' : null));
+  }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -172,10 +218,49 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     } finally { setLoading(false); }
   }
 
+  const SortIcon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
+
   return (
     <div className="space-y-4">
 
-      {/* ── Actions bar ─────────────────────────────────── */}
+      {/* ── Stats strip ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Clock className="h-4 w-4 text-amber-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">In attesa</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {stats.inAttesa.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.inAttesa.total.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-green-500/15 flex items-center justify-center shrink-0">
+            <CheckCheck className="h-4 w-4 text-green-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">Approvati</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {stats.approvato.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.approvato.total.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+            <Banknote className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">Liquidati</p>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {stats.liquidato.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.liquidato.total.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Actions bar ──────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
@@ -184,7 +269,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
           className="bg-brand hover:bg-brand/90 text-white"
         >
           <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-          Approva tutti IN_ATTESA ({inAttesaCount})
+          Approva tutti ({inAttesaCount})
         </Button>
 
         {approvedIds.length > 0 && (
@@ -195,15 +280,15 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
 
         {selectedIds.size > 0 && (
           <Button size="sm" variant="outline" onClick={() => doLiquidate([...selectedIds])} disabled={loading}>
-            <Banknote className="h-3.5 w-3.5 mr-1.5" />
-            Liquida selezionati ({selectedIds.size})
+            <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+            Liquida ({selectedIds.size})
           </Button>
         )}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* ── Sub-filter pills ─────────────────────────────── */}
+      {/* ── Sub-filter pills ─────────────────────────────────────── */}
       <div className="flex gap-1.5 flex-wrap">
         {(Object.keys(FILTER_LABELS) as FilterStato[]).map((stato) => (
           <button
@@ -220,36 +305,51 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
         ))}
       </div>
 
-      {/* ── Table ───────────────────────────────────────── */}
+      {/* ── Table ────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
         <EmptyState icon={CheckCircle} title="Nessun compenso" description="Non ci sono compensi per questo filtro." />
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
+                {/* Stripe col */}
+                <TableHead className="w-1 p-0" />
+                {/* Checkbox col */}
                 <TableHead className="w-10 text-xs uppercase tracking-wide text-muted-foreground" />
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Data</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <button
+                    onClick={cycleSortDir}
+                    className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    aria-label="Ordina per data"
+                  >
+                    Data <SortIcon className="h-3 w-3" />
+                  </button>
+                </TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Stato</TableHead>
                 <TableHead className="w-24 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {filtered.map((comp) => {
                 const isApprovato = comp.stato === 'APPROVATO';
-                const isInAttesa = comp.stato === 'IN_ATTESA';
-                const badgeDef = STATO_BADGE[comp.stato] ?? { label: comp.stato, variant: 'outline' as const };
+                const isInAttesa  = comp.stato === 'IN_ATTESA';
+                const badgeDef    = STATO_BADGE[comp.stato] ?? { label: comp.stato, variant: 'outline' as const };
+                const isSelected  = selectedIds.has(comp.id);
 
                 return (
-                  <TableRow key={comp.id} className={selectedIds.has(comp.id) ? 'bg-muted/40' : ''}>
+                  <TableRow key={comp.id} className={isSelected ? 'bg-brand/5 hover:bg-brand/8' : ''}>
+                    {/* Left accent stripe */}
+                    <TableCell className={`p-0 w-1 ${STATO_STRIPE[comp.stato] ?? 'bg-border'}`} />
 
                     {/* Checkbox */}
                     <TableCell className="py-3">
                       {isApprovato && (
                         <Checkbox
-                          checked={selectedIds.has(comp.id)}
+                          checked={isSelected}
                           onCheckedChange={() => toggleSelect(comp.id)}
                           aria-label={`Seleziona ${comp.collabName}`}
                         />
@@ -276,9 +376,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
 
                     {/* Importo */}
                     <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
-                      {comp.importo_lordo != null
-                        ? `€\u202f${comp.importo_lordo.toFixed(2)}`
-                        : <span className="text-muted-foreground/40">—</span>}
+                      {fmt(comp.importo_lordo)}
                     </TableCell>
 
                     {/* Stato */}
@@ -294,8 +392,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                         {isInAttesa && (
                           <>
                             <Button
-                              size="sm"
-                              variant="ghost"
+                              size="sm" variant="ghost"
                               className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
                               onClick={() => handleApproveSingle(comp.id)}
                               disabled={loading}
@@ -304,8 +401,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                               <CheckCircle className="h-4 w-4" />
                             </Button>
                             <Button
-                              size="sm"
-                              variant="ghost"
+                              size="sm" variant="ghost"
                               className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => { setRejectTargetId(comp.id); setRejectionNote(''); }}
                               disabled={loading}
@@ -317,8 +413,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                         )}
                         {isApprovato && (
                           <Button
-                            size="sm"
-                            variant="ghost"
+                            size="sm" variant="ghost"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                             onClick={() => doLiquidate([comp.id])}
                             disabled={loading}
@@ -333,11 +428,27 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                 );
               })}
             </TableBody>
+
+            {/* ── Footer totals ─────────────────────────────────── */}
+            <TableFooter>
+              <TableRow className="border-t border-border bg-muted/30 hover:bg-muted/30">
+                <TableCell className="p-0 w-1" />
+                <TableCell />
+                <TableCell className="py-2.5 text-xs text-muted-foreground">
+                  {filtered.length} voce{filtered.length !== 1 ? '' : ''}
+                </TableCell>
+                <TableCell />
+                <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
+                  €{filteredTotal.toFixed(2)}
+                </TableCell>
+                <TableCell colSpan={2} />
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       )}
 
-      {/* ── Reject dialog ────────────────────────────────── */}
+      {/* ── Reject dialog ────────────────────────────────────────── */}
       <Dialog open={rejectTargetId !== null} onOpenChange={(open) => { if (!open) { setRejectTargetId(null); setRejectionNote(''); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -359,7 +470,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
         </DialogContent>
       </Dialog>
 
-      {/* ── Massimale warning modal ──────────────────────── */}
+      {/* ── Massimale warning modal ───────────────────────────────── */}
       {massimaleWarning && (
         <MassimaleCheckModal
           open
