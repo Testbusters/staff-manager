@@ -27,7 +27,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   - **Always delegate the full dependency scan to an Explore subagent** — the standard checklist (items 1–6) is inherently multi-query and must never run in the main context. Pass all 6 checks in a single Agent call.
   - An incomplete dependency scan = incomplete file list = rework discovered in Phase 2. This is a process error.
 - For broad codebase searches (≥2 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` to protect the main context.
-- If anything is ambiguous: use AskUserQuestion BEFORE writing code.
+- **All clarification questions must use the `AskUserQuestion` tool** — never present open questions as inline text. Group all questions for the block into a single `AskUserQuestion` call and resolve them before the STOP gate.
 - Expected output: feature summary, **complete** file list verified by dependency scan, open questions.
 - *** STOP — present requirements summary and file list. Wait for explicit confirmation before proceeding. ***
 
@@ -36,6 +36,13 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - State any discarded alternatives and rationale.
 - For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
 - *** STOP — wait for design confirmation before writing code. ***
+
+**Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
+- Use `EnterPlanMode` to present the complete approved plan in structured, locked form.
+- Prompt the user to enable **auto-accept edits** in the Claude Code UI before proceeding.
+- Call `ExitPlanMode` once the user confirms auto-accept is enabled.
+- Run `/compact` immediately to reset context and preserve enough window for the full Phase 2 implementation.
+- Phase 2 begins only after `/compact` completes.
 
 **Phase 2 — Implementation**
 - **First action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
