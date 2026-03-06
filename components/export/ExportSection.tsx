@@ -1,98 +1,51 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import * as XLSX from 'xlsx';
-import type { ExportItem, ExportTab } from '@/lib/export-utils';
-import { buildCSV, buildXLSXWorkbook } from '@/lib/export-utils';
-import ExportTable from './ExportTable';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Upload, History, Table2 } from 'lucide-react';
+import type { ExportCollaboratorRow, ExportRunWithUrl } from '@/lib/export-utils';
+import ExportPreviewTable from './ExportTable';
+import ExportHistoryTab from './ExportHistoryTab';
 import { Button } from '@/components/ui/button';
 
+type Tab = 'anteprima' | 'storico';
+
 interface Props {
-  tab: ExportTab;
-  items: ExportItem[];
+  rows: ExportCollaboratorRow[];
+  runs: ExportRunWithUrl[];
 }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export default function ExportSection({ tab, items }: Props) {
+export default function ExportSection({ rows, runs }: Props) {
   const router = useRouter();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [showModal, setShowModal] = useState(false);
-  const [paymentRef, setPaymentRef] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('anteprima');
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleToggle = useCallback((id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const handleSelectAll = useCallback(() => {
-    setSelected((prev) => {
-      const allIds = new Set(items.map((i) => i.id));
-      const allSelected = items.every((i) => prev.has(i.id));
-      return allSelected ? new Set() : allIds;
-    });
-  }, [items]);
-
-  const handleExportCSV = () => {
-    const csv = buildCSV(items, tab);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `export-${tab}-${todayISO()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportXLSX = () => {
-    const wb = buildXLSXWorkbook(items, tab);
-    XLSX.writeFile(wb, `export-${tab}-${todayISO()}.xlsx`);
-  };
-
-  const handleMarkPaid = async () => {
-    if (!paymentRef.trim()) return;
-    setLoading(true);
-    setError(null);
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    setSuccessMsg(null);
     try {
-      const tableParam = tab === 'rimborsi' ? 'expenses' : 'compensations';
-      const res = await fetch('/api/export/mark-paid', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: Array.from(selected),
-          payment_reference: paymentRef.trim(),
-          table: tableParam,
-        }),
-      });
+      const res = await fetch('/api/export/gsheet', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? 'Errore durante il salvataggio');
+        setExportError(data.error ?? 'Errore durante l\'export');
         return;
       }
-      setShowModal(false);
-      setPaymentRef('');
-      setSelected(new Set());
+      setSuccessMsg(
+        `Export completato: ${data.collaborator_count} collaboratori, ${data.item_count} voci.`,
+      );
       router.refresh();
     } catch {
-      setError('Errore di rete. Riprova.');
+      setExportError('Errore di rete. Riprova.');
     } finally {
-      setLoading(false);
+      setExporting(false);
     }
   };
 
-  const tabCls = (t: ExportTab) =>
-    `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
+  const tabCls = (t: Tab) =>
+    `flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       tab === t
         ? 'bg-brand text-white'
         : 'bg-muted text-muted-foreground hover:bg-accent'
@@ -100,101 +53,53 @@ export default function ExportSection({ tab, items }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Tab bar */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <Link href="?tab=occasionali" className={tabCls('occasionali')}>Occasionali</Link>
-        <Link href="?tab=rimborsi" className={tabCls('rimborsi')}>Rimborsi</Link>
-      </div>
+      {/* Tab bar + export CTA */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            type="button"
+            className={tabCls('anteprima')}
+            onClick={() => setTab('anteprima')}
+          >
+            <Table2 className="h-4 w-4" />
+            Anteprima
+          </button>
+          <button
+            type="button"
+            className={tabCls('storico')}
+            onClick={() => setTab('storico')}
+          >
+            <History className="h-4 w-4" />
+            Storico
+          </button>
+        </div>
 
-      {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          onClick={handleExportCSV}
-          disabled={items.length === 0}
-          variant="outline"
-        >
-          Esporta CSV
-        </Button>
-        <Button
-          onClick={handleExportXLSX}
-          disabled={items.length === 0}
-          variant="outline"
-        >
-          Esporta XLSX
-        </Button>
-        <Button
-          onClick={() => {
-            setError(null);
-            setShowModal(true);
-          }}
-          disabled={selected.size === 0}
-          className="bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white"
-        >
-          Segna pagati ({selected.size})
-        </Button>
-
-        {selected.size > 0 && (
-          <span className="text-xs text-muted-foreground">
-            {selected.size} su {items.length} selezionati
-          </span>
+        {tab === 'anteprima' && (
+          <Button
+            onClick={handleExport}
+            disabled={exporting || rows.length === 0}
+            className="bg-brand hover:bg-brand/90 text-white"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {exporting ? 'Esportazione…' : 'Esporta su Google Sheets'}
+          </Button>
         )}
       </div>
 
-      {/* Table */}
-      <ExportTable
-        tab={tab}
-        items={items}
-        selected={selected}
-        onToggle={handleToggle}
-        onSelectAll={handleSelectAll}
-      />
+      {/* Feedback messages */}
+      {exportError && (
+        <p className="text-sm text-red-600 dark:text-red-400">{exportError}</p>
+      )}
+      {successMsg && (
+        <p className="text-sm text-green-600 dark:text-green-400">{successMsg}</p>
+      )}
 
-      {/* Mark-paid modal */}
-      <Dialog open={showModal} onOpenChange={(v) => { if (!v) { setShowModal(false); setPaymentRef(''); setError(null); } }}>
-        <DialogContent className="max-w-md bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-foreground">Segna come pagati</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Stai per segnare <span className="font-medium text-foreground">{selected.size}</span> record come pagati.
-            Inserisci un riferimento di pagamento (es. numero bonifico, batch ID).
-          </p>
-
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">
-              Riferimento pagamento <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="es. BON-2026-001"
-              value={paymentRef}
-              onChange={(e) => setPaymentRef(e.target.value)}
-              className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {error && (
-            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => { setShowModal(false); setPaymentRef(''); setError(null); }}
-              disabled={loading}
-            >
-              Annulla
-            </Button>
-            <Button
-              onClick={handleMarkPaid}
-              disabled={!paymentRef.trim() || loading}
-              className="bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white"
-            >
-              {loading ? 'Salvataggio…' : 'Conferma pagamento'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Tab content */}
+      {tab === 'anteprima' ? (
+        <ExportPreviewTable rows={rows} />
+      ) : (
+        <ExportHistoryTab runs={runs} />
+      )}
     </div>
   );
 }
