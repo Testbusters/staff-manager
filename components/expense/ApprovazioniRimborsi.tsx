@@ -293,9 +293,9 @@ export default function ApprovazioniRimborsi({
                         {e.categoria}
                       </span>
                       {e.data_spesa && (
-                        <><span className="text-gray-700">·</span><span>Spesa: {formatDate(e.data_spesa)}</span></>
+                        <><span className="text-muted-foreground">·</span><span>Spesa: {formatDate(e.data_spesa)}</span></>
                       )}
-                      <span className="text-gray-700">·</span>
+                      <span className="text-muted-foreground">·</span>
                       <span>{formatDate(e.created_at)}</span>
                     </div>
                   </div>

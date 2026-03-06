@@ -217,7 +217,7 @@ export default function EventList({
     <div className="space-y-4">
       {canWrite && !showForm && (
         <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-border hover:border-blue-600 px-4 py-2 text-sm text-muted-foreground hover:text-blue-400 transition">
+          className="rounded-lg border border-dashed border-border hover:border-brand px-4 py-2 text-sm text-muted-foreground hover:text-link transition">
           + Nuovo evento
         </button>
       )}
@@ -254,7 +254,7 @@ export default function EventList({
                 {canWrite && (
                   <div className="flex gap-2 shrink-0">
                     <button onClick={() => setEditingId(ev.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                    <button onClick={() => handleDelete(ev.id)} className="text-xs text-red-600 hover:text-red-400 transition">Elimina</button>
+                    <button onClick={() => handleDelete(ev.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
                   </div>
                 )}
               </div>

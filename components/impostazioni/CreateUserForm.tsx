@@ -279,7 +279,7 @@ export default function CreateUserForm() {
             <div>
               <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS['OCCASIONALE']}</p>
               {!hasTemplate('OCCASIONALE') && (
-                <p className="text-xs text-yellow-600 mt-0.5">Nessun template caricato — il contratto non sarà generato automaticamente.</p>
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">Nessun template caricato — il contratto non sarà generato automaticamente.</p>
               )}
             </div>
             <span className="text-xs text-muted-foreground ml-4">Tipo fisso</span>

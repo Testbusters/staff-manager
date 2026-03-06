@@ -56,7 +56,7 @@ export default async function DocumentDetailPage({
         <Link href="/documenti" className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Documenti
         </Link>
-        <span className="text-gray-700">/</span>
+        <span className="text-muted-foreground">/</span>
         <h1 className="text-xl font-semibold text-foreground">Dettaglio documento</h1>
       </div>
 

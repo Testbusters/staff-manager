@@ -123,7 +123,7 @@ export default function ExpenseList({
                 <p className="text-sm font-semibold text-foreground">{e.categoria}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span>Spesa: {formatDate(e.data_spesa)}</span>
-                  <span className="text-gray-700">·</span>
+                  <span className="text-muted-foreground">·</span>
                   <span>Inviato: {formatDate(e.created_at)}</span>
                 </div>
               </div>

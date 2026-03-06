@@ -48,7 +48,17 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 **Phase 2 — Implementation**
 - **First action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
 - Write the code. Follow the project's Coding Conventions.
-- **UI components**: before writing native `<button>`, `<input>`, `<select>`, `<textarea>`, or custom modal/backdrop HTML, check `docs/ui-components.md` (Component Map). Prefer the mapped shadcn component. If the relevant shadcn phase is not yet complete, add a note in `docs/refactoring-backlog.md`.
+- **UI components** — MANDATORY checklist before writing any UI code:
+  1. Native HTML elements (`<button>`, `<input>`, `<select>`, `<textarea>`, modal/backdrop): check `docs/ui-components.md` and use the mapped shadcn component instead.
+  2. **Buttons with primary action**: `bg-brand hover:bg-brand/90 text-white`. Never `bg-blue-*`.
+  3. **Link-style text**: `text-link hover:text-link/80`. Never `text-blue-400` or similar hardcoded pairs.
+  4. **List row hover**: `hover:bg-muted/60`. Never lower opacity.
+  5. **Empty list states**: use `<EmptyState icon={X} title="..." />` from `@/components/ui/empty-state`. Never a bare `<p className="text-center ...">`.
+  6. **New page routes** in `app/(app)/`: create a sibling `loading.tsx` with `<Skeleton>` placeholders mirroring the page layout.
+  7. **Icon-only buttons**: always `aria-label="..."`. Pagination `‹`/`›`: `aria-label="Pagina precedente"` / `"Pagina successiva"`.
+  8. **Nav data**: icon references in `lib/nav.ts` use `iconName: string`, never `icon: LucideIcon` — Lucide components cannot cross the Server→Client serialization boundary.
+  9. **Semantic tokens only**: `bg-card`, `bg-muted`, `bg-background`, `border-border`, `text-foreground`, `text-muted-foreground`. Hardcoded `gray-*`/`slate-*`/`zinc-*` only allowed for semantic badge color pairs (e.g. `bg-green-100 text-green-700`). Never use non-existent steps like `gray-850`.
+  Full rules in CLAUDE.md § "UI Design System — MANDATORY RULES".
 - Do not add unrequested features. No unrequested refactoring.
 - **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB via Management API (Node.js `https.request` with `SUPABASE_ACCESS_TOKEN` from `.env.local` — `curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
@@ -133,6 +143,14 @@ Present this checklist filled with actual results, then wait for explicit confir
 - [ ] HTTP integration (Bruno CLI): N/N passed *(if Phase 3c executed)*
 - [ ] Playwright e2e: N/N passed *(⏸ suspended if CLAUDE.local.md active)*
 - [ ] Visual baseline + axe-core: passed *(if Phase 4b executed)*
+
+### UI Design System compliance *(skip if block has no UI changes)*
+- [ ] No hardcoded `bg-blue-*` on interactive elements (use `bg-brand hover:bg-brand/90`)
+- [ ] No hardcoded `text-blue-*` link pairs (use `text-link hover:text-link/80`)
+- [ ] Empty states use `<EmptyState>` component, not bare `<p>`
+- [ ] New page routes have a `loading.tsx` with Skeleton placeholders
+- [ ] Icon-only buttons have `aria-label`
+- [ ] No Lucide icon components in Server→Client data props (use `iconName: string`)
 
 ### Implemented features
 - [ ] [feature 1]: [outcome]

@@ -235,7 +235,7 @@ export default function DashboardUpdates({
                 onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(0, p - 1)); }}
                 className={cn(
                   "text-xs text-muted-foreground hover:text-foreground",
-                  page === 0 && "pointer-events-none text-gray-700 opacity-50"
+                  page === 0 && "pointer-events-none text-muted-foreground opacity-50"
                 )}
               />
             </PaginationItem>
@@ -247,7 +247,7 @@ export default function DashboardUpdates({
                 onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(pageCount - 1, p + 1)); }}
                 className={cn(
                   "text-xs text-muted-foreground hover:text-foreground",
-                  page === pageCount - 1 && "pointer-events-none text-gray-700 opacity-50"
+                  page === pageCount - 1 && "pointer-events-none text-muted-foreground opacity-50"
                 )}
               />
             </PaginationItem>

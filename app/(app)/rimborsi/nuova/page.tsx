@@ -25,7 +25,7 @@ export default async function NuovoRimborsoPage() {
         <Link href="/rimborsi" className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Rimborsi
         </Link>
-        <span className="text-gray-700">/</span>
+        <span className="text-muted-foreground">/</span>
         <h1 className="text-xl font-semibold text-foreground">Nuovo rimborso</h1>
       </div>
 

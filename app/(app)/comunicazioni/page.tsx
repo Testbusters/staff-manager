@@ -160,7 +160,7 @@ export default async function ComunicazioniPage({
                 <Link key={key || 'all'} href={href}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                     active
-                      ? 'bg-gray-200 text-gray-900'
+                      ? 'bg-accent text-foreground'
                       : 'bg-muted text-muted-foreground border border-border hover:bg-accent'
                   }`}
                 >

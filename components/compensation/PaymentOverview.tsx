@@ -173,7 +173,7 @@ export default function PaymentOverview({
             <h2 className="text-sm font-medium text-foreground">
               Massimale annuo {currentYear} lordo
             </h2>
-            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-600 dark:text-red-400' : isNearLimit ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`}>
+            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-600 dark:text-red-400' : isNearLimit ? 'text-yellow-600 dark:text-yellow-400 dark:text-yellow-400' : 'text-muted-foreground'}`}>
               {fmt(paidCurrentYear)} / {fmt(massimale)}
             </span>
           </div>
@@ -187,7 +187,7 @@ export default function PaymentOverview({
             <p className="text-xs text-red-600 dark:text-red-400 mt-2">Hai raggiunto il massimale impostato.</p>
           )}
           {isNearLimit && pct < 100 && (
-            <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+            <p className="text-xs text-yellow-600 dark:text-yellow-400 dark:text-yellow-400 mt-2">
               Stai avvicinandoti al massimale ({pct.toFixed(0)}%).
             </p>
           )}

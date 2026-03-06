@@ -522,7 +522,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 <p>Puoi guadagnare fino a <strong className="text-foreground">5.000€ lordi all&apos;anno</strong> da prestazioni occasionali senza dover versare contributi INPS:</p>
                 <ul className="mt-2 space-y-1.5 list-none">
                   <li className="flex gap-2"><Check className="h-4 w-4 text-green-700 dark:text-green-400 shrink-0 mt-0.5" /> Sotto 5.000€: nessun contributo INPS da versare</li>
-                  <li className="flex gap-2"><AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" /> Sopra 5.000€: sulla parte eccedente devi versare ~33% alla Gestione Separata INPS</li>
+                  <li className="flex gap-2"><AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 dark:text-yellow-400 shrink-0 mt-0.5" /> Sopra 5.000€: sulla parte eccedente devi versare ~33% alla Gestione Separata INPS</li>
                 </ul>
                 <p className="mt-2 text-xs text-muted-foreground">Questa soglia vale sulla <strong className="text-muted-foreground">somma di tutti i compensi occasionali dell&apos;anno</strong>, non solo quelli con noi.</p>
               </section>
@@ -551,7 +551,7 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                   <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">2.840€</span><span className="text-muted-foreground">— sei figlio a carico con più di 24 anni</span></div>
                   <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">4.000€</span><span className="text-muted-foreground">— sei figlio a carico con fino a 24 anni</span></div>
                   <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">5.000€</span><span className="text-muted-foreground">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-yellow-600 dark:text-yellow-400 font-semibold">Meno</span><span className="text-muted-foreground">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
+                  <div className="flex items-start gap-2"><span className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400 font-semibold">Meno</span><span className="text-muted-foreground">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
                 </div>
               </section>
 

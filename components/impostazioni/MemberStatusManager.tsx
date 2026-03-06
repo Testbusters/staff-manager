@@ -25,7 +25,7 @@ const STATUS_LABELS: Record<MemberStatus, string> = {
 
 const STATUS_COLORS: Record<MemberStatus, string> = {
   attivo:                   'text-green-700 dark:text-green-400',
-  uscente_con_compenso:     'text-yellow-600 dark:text-yellow-400',
+  uscente_con_compenso:     'text-yellow-600 dark:text-yellow-400 dark:text-yellow-400',
   uscente_senza_compenso:   'text-muted-foreground',
 };
 

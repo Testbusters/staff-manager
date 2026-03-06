@@ -125,7 +125,7 @@ export default async function TicketDetailPage({
             ← Ticket
           </Link>
         )}
-        {isManager && <span className="text-gray-700">/</span>}
+        {isManager && <span className="text-muted-foreground">/</span>}
         <h1 className="text-xl font-semibold text-foreground truncate">{ticket.oggetto}</h1>
       </div>
 

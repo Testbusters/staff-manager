@@ -88,7 +88,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                       {tpl.file_name} · {new Date(tpl.uploaded_at).toLocaleDateString('it-IT')}
                     </p>
                   ) : (
-                    <p className="text-xs text-yellow-600 mt-0.5">Nessun template caricato</p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">Nessun template caricato</p>
                   )}
                 </div>
                 <label className={`ml-4 flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer

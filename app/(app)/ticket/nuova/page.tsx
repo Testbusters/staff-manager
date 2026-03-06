@@ -25,7 +25,7 @@ export default async function NuovoTicketPage() {
         <Link href="/ticket" className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Ticket
         </Link>
-        <span className="text-gray-700">/</span>
+        <span className="text-muted-foreground">/</span>
         <h1 className="text-xl font-semibold text-foreground">Nuovo ticket</h1>
       </div>
 

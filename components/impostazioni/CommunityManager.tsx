@@ -167,7 +167,7 @@ export default function CommunityManager({
                   </button>
                   <button onClick={() => handleToggle(c.id, c.is_active)}
                     disabled={togglingId === c.id}
-                    className={`text-xs transition ${c.is_active ? 'text-yellow-600 hover:text-yellow-700 dark:hover:text-yellow-400' : 'text-green-700 hover:text-green-500'}`}>
+                    className={`text-xs transition ${c.is_active ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-400' : 'text-green-700 hover:text-green-500'}`}>
                     {togglingId === c.id ? '…' : c.is_active ? 'Disattiva' : 'Riattiva'}
                   </button>
                 </>

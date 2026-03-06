@@ -140,7 +140,7 @@ export default function CUBatchUpload() {
           <div className="flex gap-6 text-sm">
             <span className="text-muted-foreground">Elaborati: <strong className="text-foreground">{result.processed}</strong></span>
             <span className="text-green-700 dark:text-green-400">Caricati: <strong>{result.success}</strong></span>
-            <span className="text-yellow-600 dark:text-yellow-400">Duplicati: <strong>{result.duplicates}</strong></span>
+            <span className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400">Duplicati: <strong>{result.duplicates}</strong></span>
             {result.errors > 0 && (
               <span className="text-red-600 dark:text-red-400">Errori: <strong>{result.errors}</strong></span>
             )}
@@ -157,7 +157,7 @@ export default function CUBatchUpload() {
 
           {result.detail.duplicates.length > 0 && (
             <details className="text-xs">
-              <summary className="text-yellow-600 dark:text-yellow-400 cursor-pointer">Duplicati saltati ({result.detail.duplicates.length})</summary>
+              <summary className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400 cursor-pointer">Duplicati saltati ({result.detail.duplicates.length})</summary>
               <ul className="mt-2 space-y-0.5 text-muted-foreground">
                 {result.detail.duplicates.map((s, i) => <li key={i}>{s}</li>)}
               </ul>

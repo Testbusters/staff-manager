@@ -36,7 +36,7 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
         <div
           key={s}
           className={`h-1 flex-1 rounded-full transition-colors ${
-            s < step ? 'bg-brand' : s === step ? 'bg-blue-500' : 'bg-accent'
+            s < step ? 'bg-brand' : s === step ? 'bg-brand' : 'bg-accent'
           }`}
         />
       ))}

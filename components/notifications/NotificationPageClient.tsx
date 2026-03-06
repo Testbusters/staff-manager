@@ -132,7 +132,7 @@ export default function NotificationPageClient() {
   const totalPages = Math.ceil(total / LIMIT);
 
   const chipBase = 'whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium border transition cursor-pointer select-none';
-  const chipActive = 'bg-gray-100 text-gray-900 border-gray-100';
+  const chipActive = 'bg-accent text-foreground border-accent';
   const chipInactive = 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground hover:text-foreground';
 
   return (
