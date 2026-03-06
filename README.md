@@ -135,8 +135,8 @@ app/
     approvazioni/carica/page.tsx → Responsabile/admin: choice screen (Singolo per docente | Excel placeholder) + CompensationCreateWizard
     collaboratori/page.tsx       → Responsabile + admin: paginated list (20/page) with URL-driven filters (all/doc-da-firmare/stallo)
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
-    coda/page.tsx                → Admin: pre-approved + approved queue (?tab=compensi|rimborsi)
-    export/page.tsx              → Admin: export approved records as CSV/XLSX + bulk mark-paid (?tab=occasionali|piva|rimborsi)
+    coda/page.tsx                → Admin: full lifecycle queue — all stati (IN_ATTESA/APPROVATO/RIFIUTATO/LIQUIDATO), stats strip, sub-filter pills, approve/reject/liquidate per row + bulk (?tab=compensi|rimborsi)
+    export/page.tsx              → Admin: export approved records to Google Sheet + XLSX download + run history (?tab=anteprima|storico)
     documenti/page.tsx           → Admin: 3 tabs (list/upload/cu-batch). Collaboratore: redirect → /profilo?tab=documenti. Responsabile: redirect → /
     eventi/page.tsx              → Collaboratore: events list (read-only, ordered by start_datetime ASC, upcoming/past sections)
     eventi/[id]/page.tsx         → Event detail: tipo, datetime, location + Maps link, Google Calendar link, descrizione, luma embed
@@ -173,15 +173,20 @@ app/
     feedback/[id]/route.ts       → PATCH mark completato + DELETE hard delete + storage cleanup (admin only)
     compensations/route.ts       → GET (list, role-filtered) + POST (create, responsabile/admin only, always IN_ATTESA)
     compensations/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
+    compensations/bulk-approve/route.ts → POST bulk approve (admin-only, no community scope)
+    compensations/bulk-liquidate/route.ts → POST bulk liquidate APPROVATO→LIQUIDATO (admin-only)
     compensations/[id]/route.ts  → GET (detail + history)
     compensations/[id]/transition/route.ts → POST (state machine: reopen/approve/reject/mark_liquidated)
     compensations/communities/route.ts → GET (collaboratore's communities)
-    expenses/route.ts            → GET (list) + POST (create, always INVIATO)
+    expenses/route.ts            → GET (list) + POST (create, always IN_ATTESA)
     expenses/approve-bulk/route.ts → POST bulk approve by ID array (community-scoped for responsabile, history entries)
+    expenses/bulk-approve/route.ts → POST bulk approve (admin-only, no community scope)
+    expenses/bulk-liquidate/route.ts → POST bulk liquidate APPROVATO→LIQUIDATO (admin-only)
     expenses/[id]/route.ts       → GET (detail + history + attachments)
     expenses/[id]/transition/route.ts → POST (reimbursement state machine)
     expenses/[id]/attachments/route.ts → POST (register uploaded file)
-    export/mark-paid/route.ts    → POST (bulk mark APPROVATO_ADMIN → PAGATO + history, admin only)
+    export/gsheet/route.ts       → POST full export flow: fetch APPROVATO→aggregate→GSheet push→stamp exported_at→XLS upload→record run (admin only)
+    export/history/route.ts      → GET last 50 export runs + signed XLSX download URLs (admin only)
     documents/route.ts           → GET (list, RLS-filtered) + POST (create; collab/resp forces NON_RICHIESTO; enforces 1 CONTRATTO per collaboratore)
     documents/[id]/route.ts      → GET (detail + signed URL) + DELETE (admin only, CONTRATTO only, hard-deletes storage + DB)
     documents/[id]/sign/route.ts → POST (collab/resp uploads signed PDF; requires confirmed=true in FormData)
@@ -248,8 +253,13 @@ components/
     ExpenseActionPanel.tsx       → Role-aware action buttons + modals for reimbursements (approve/reject/liquidate hidden for responsabile_compensi)
     ExpenseForm.tsx              → Single-step creation form (categoria, data, importo, descrizione + file upload)
   export/
-    ExportSection.tsx            → Client: tab bar + action buttons (CSV/XLSX/mark-paid) + modal
-    ExportTable.tsx              → Table with checkboxes, columns vary by tab
+    ExportSection.tsx            → Client: Anteprima/Storico tab bar + "Esporta su GSheet" action + loading state
+    ExportPreviewTable.tsx       → Per-collaborator aggregated preview table (nome, count comps/rimborsi, totale lordo)
+    ExportHistoryTab.tsx         → Run history list (date, count, totale) + signed XLSX download links
+  admin/
+    CodaCompensazioni.tsx        → Admin coda tab: stats strip (3 cards), sub-filter pills ×5, shadcn Table with left accent stripe, date sort, footer totals, approve/reject/liquidate per row + bulk select
+    CodaRimborsi.tsx             → Admin coda tab: same pattern for expense_reimbursements
+    MassimaleCheckModal.tsx      → Blocking warning modal: collapsible per-collaborator impact cards + total eccedenza strip
   documents/
     DocumentList.tsx             → Documents grouped by macro-type (CONTRATTO/CU) with type badges (violet/blue) + delete button for admin on CONTRATTO
     DocumentUploadForm.tsx       → Bifurcated admin/non-admin: admin gets collaboratore selector + firma toggle (CONTRATTO only); non-admin gets 2-option flat dropdown (CONTRATTO_OCCASIONALE/CU, NON_RICHIESTO enforced server-side)
@@ -295,13 +305,13 @@ lib/
   nav.ts                         → NAV_BY_ROLE config; NavItem supports comingSoon flag (collaboratore: 8 voci semantiche)
   compensation-transitions.ts    → Pure state machine: canTransition, applyTransition (4 actions: reopen/approve/reject/mark_liquidated)
   expense-transitions.ts         → Pure state machine: canExpenseTransition, applyExpenseTransition (7 actions incl. reject_manager)
-  export-utils.ts                → Pure functions: buildCSV, buildXLSXWorkbook, ExportItem type
+  export-utils.ts                → Pure functions: groupToCollaboratorRows, toGSheetRow (15-col), buildHistoryXLSXWorkbook, formatDate/Euro helpers
   documents-storage.ts           → buildStoragePath, getSignedUrl, getDocumentUrls (1h TTL, service role)
   notification-utils.ts          → Pure notification payload builders (comp/expense/ticket — collaboratore + responsabile side); buildCompensationReopenNotification; buildContentNotification (4 content types)
   notification-helpers.ts        → DB helpers: getNotificationSettings (SettingsMap), getCollaboratorInfo, getResponsabiliForCommunity/Collaborator/User, getAllActiveCollaboratori (broadcast), getCollaboratoriForCommunities (targeted community dispatch)
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
   email-templates.ts             → 12 branded HTML templates E1–E12 (Testbusters logo + legal footer; APP_URL env controls all CTA links; E9=ticket reply, E10=nuova comunicazione, E11=nuovo evento, E12=nuovo contenuto)
-  google-sheets.ts               → Google Sheets API wrapper: fetchPendingRows (TO_PROCESS rows), markRowsProcessed (writeback)
+  google-sheets.ts               → Google Sheets API wrapper: fetchPendingRows (TO_PROCESS rows), markRowsProcessed (writeback), writeExportRows (append to GOOGLE_SHEET_EXPORT_ID)
 
 supabase/migrations/
   001_schema.sql                 → Full schema (compensations, expense_reimbursements, communities, documents, etc.)
@@ -338,11 +348,15 @@ supabase/migrations/
   032_fix_comp_history_rls.sql    → Fix comp_history_manager_read: can_manage_community(community_id) returns false for NULL community_id (GSheet imports); rewritten to use collaborator_id membership check
   033_drop_periodo_riferimento.sql → DROP COLUMN periodo_riferimento from compensations (no longer part of entity)
   034_ticket_rls_and_updates.sql  → ADD 4 denorm columns (updated_at, last_message_at, last_message_author_name/_role); DROP+recreate tickets_manager_read (creator→collaborators→collaborator_communities→user_community_access join, fixes NULL community); ADD tickets_admin_read policy
+  035_add_theme_preference.sql    → ADD COLUMN theme_preference TEXT DEFAULT 'dark' on user_profiles
+  036_intestatario_pagamento.sql  → ADD COLUMN intestatario_pagamento on compensations
+  037_discount_brand.sql          → ADD COLUMN brand TEXT on discounts
+  038_export_runs.sql             → ADD COLUMN exported_at on compensations + expenses; CREATE TABLE export_runs (id, run_at, record_count, total_lordo, gsheet_url, xlsx_storage_path); CREATE exports storage bucket; RLS
 
-__tests__/                         → 252 tests total (vitest)
+__tests__/                         → 264 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
-  export-utils.test.ts             → Unit tests for CSV/XLSX builders
+  export-utils.test.ts             → Unit tests for groupToCollaboratorRows, toGSheetRow, buildHistoryXLSXWorkbook (18 cases)
   cu-batch-parser.test.ts          → Unit tests for CU batch CSV parser + dedup logic (11 cases)
   notification-utils.test.ts       → Unit tests for notification payload builders
   ticket-notification.test.ts      → Unit tests for buildTicketReplyNotification (6 cases)
