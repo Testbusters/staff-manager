@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import FeedbackButton from '@/components/FeedbackButton';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeSync } from '@/components/ThemeSync';
+import { SessionGuard } from '@/components/SessionGuard';
 import { NAV_BY_ROLE } from '@/lib/nav';
 import type { Role } from '@/lib/types';
 
@@ -38,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <ThemeSync dbTheme={dbTheme} />
+      <SessionGuard />
       <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar
           navItems={navItems}
