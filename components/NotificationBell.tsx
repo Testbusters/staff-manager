@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { Bell } from 'lucide-react';
 import type { Notification } from '@/lib/types';
 import {
   DropdownMenu,
@@ -130,16 +131,14 @@ export default function NotificationBell() {
                      text-muted-foreground hover:text-foreground hover:bg-muted transition"
           aria-label="Notifiche"
         >
-          <span
+          <Bell
             className={[
-              'text-base leading-none',
+              'h-4 w-4',
               fetchError ? 'text-red-600 dark:text-red-400' : loading ? 'opacity-50' : '',
               bellPulse ? 'bell-pulse' : '',
             ].join(' ')}
             onAnimationEnd={() => setBellPulse(false)}
-          >
-            🔔
-          </span>
+          />
           {unread > 0 && (
             <span
               className="absolute top-0.5 right-0.5 min-w-[14px] h-3.5 flex items-center justify-center

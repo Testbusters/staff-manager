@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
 import NotificationBell from '@/components/NotificationBell';
@@ -53,7 +54,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-sidebar-border">
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand flex-shrink-0">
-          <span className="text-sm">👥</span>
+          <Users className="h-5 w-5 text-white" />
         </div>
         <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
         <NotificationBell />
@@ -62,13 +63,14 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-0.5">
         {navItems.map((item) => {
+          const Icon = item.icon;
           if (item.comingSoon) {
             return (
               <span
                 key={item.label}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed select-none"
               >
-                <span className="text-base leading-none">{item.icon}</span>
+                <Icon className="h-4 w-4 shrink-0" />
                 <span className="flex-1">{item.label}</span>
                 <span className="text-[10px] font-medium rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">
                   Presto
@@ -88,7 +90,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
                   : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
               }`}
             >
-              <span className="text-base leading-none">{item.icon}</span>
+              <Icon className="h-4 w-4 shrink-0" />
               {item.label}
             </Link>
           );

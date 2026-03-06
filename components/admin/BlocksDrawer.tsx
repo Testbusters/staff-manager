@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { KeyRound, ClipboardList, Briefcase, Receipt, CheckCircle2, type LucideIcon } from 'lucide-react';
 import type { AdminBlockItem } from './types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
@@ -12,11 +13,11 @@ const BLOCK_LABELS: Record<AdminBlockItem['blockType'], string> = {
   stalled_exp:           'Rimborso in stallo',
 };
 
-const BLOCK_ICONS: Record<AdminBlockItem['blockType'], string> = {
-  must_change_password:  '🔑',
-  onboarding_incomplete: '📋',
-  stalled_comp:          '💼',
-  stalled_exp:           '🧾',
+const BLOCK_ICONS: Record<AdminBlockItem['blockType'], LucideIcon> = {
+  must_change_password:  KeyRound,
+  onboarding_incomplete: ClipboardList,
+  stalled_comp:          Briefcase,
+  stalled_exp:           Receipt,
 };
 
 const BLOCK_DESCRIPTIONS: Record<AdminBlockItem['blockType'], string> = {
@@ -74,14 +75,14 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           {visibleItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <span className="text-2xl mb-2">✅</span>
+              <CheckCircle2 className="h-8 w-8 mb-2 text-green-500" />
               <p className="text-sm text-muted-foreground">Nessuna situazione di blocco attiva.</p>
             </div>
           ) : (
             grouped.map(group => (
               <div key={group.type}>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-base">{BLOCK_ICONS[group.type]}</span>
+                  {(() => { const Icon = BLOCK_ICONS[group.type]; return <Icon className="h-4 w-4 text-muted-foreground shrink-0" />; })()}
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     {BLOCK_LABELS[group.type]} ({group.items.length})
                   </h3>

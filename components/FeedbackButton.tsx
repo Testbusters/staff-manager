@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -71,7 +72,7 @@ export default function FeedbackButton() {
         aria-label="Invia feedback"
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-brand hover:bg-brand/90 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition"
       >
-        <span>💬</span>
+        <MessageSquare className="h-4 w-4" />
         <span className="hidden sm:inline">Feedback</span>
       </button>
 
@@ -79,7 +80,7 @@ export default function FeedbackButton() {
         <DialogContent className="max-w-md bg-card border-border">
           {success ? (
             <div className="py-8 text-center space-y-3">
-              <div className="text-4xl">✅</div>
+              <div className="flex justify-center"><CheckCircle2 className="h-12 w-12 text-green-500" /></div>
               <p className="font-medium text-foreground">Grazie per il feedback!</p>
               <p className="text-sm text-muted-foreground">Il messaggio è stato inviato.</p>
             </div>
