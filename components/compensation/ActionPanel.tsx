@@ -113,7 +113,7 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
                 onClick={a.onClick}
                 disabled={loading !== null}
                 variant={a.variant === 'danger' ? 'destructive' : a.variant === 'secondary' ? 'outline' : undefined}
-                className={a.variant === 'primary' ? 'bg-blue-600 hover:bg-blue-500 text-white' : undefined}
+                className={a.variant === 'primary' ? 'bg-brand hover:bg-blue-500 text-white' : undefined}
               >
                 {loading === a.action ? 'Attendere…' : a.label}
               </Button>

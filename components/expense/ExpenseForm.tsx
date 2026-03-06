@@ -36,7 +36,7 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
         <div
           key={s}
           className={`h-1 flex-1 rounded-full transition-colors ${
-            s < step ? 'bg-blue-600' : s === step ? 'bg-blue-500' : 'bg-accent'
+            s < step ? 'bg-brand' : s === step ? 'bg-blue-500' : 'bg-accent'
           }`}
         />
       ))}
@@ -213,7 +213,7 @@ export default function ExpenseForm() {
             <Button type="button" variant="outline" onClick={() => router.push('/rimborsi')}>
               ← Annulla
             </Button>
-            <Button onClick={() => setStep(2)} disabled={!step1Valid} className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Button onClick={() => setStep(2)} disabled={!step1Valid} className="bg-brand hover:bg-blue-500 text-white">
               Avanti →
             </Button>
           </div>
@@ -270,7 +270,7 @@ export default function ExpenseForm() {
             <Button type="button" variant="ghost" onClick={() => setStep(1)}>
               ← Indietro
             </Button>
-            <Button onClick={() => setStep(3)} disabled={files.length === 0} className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Button onClick={() => setStep(3)} disabled={files.length === 0} className="bg-brand hover:bg-blue-500 text-white">
               Avanti →
             </Button>
           </div>
@@ -334,7 +334,7 @@ export default function ExpenseForm() {
             <Button type="button" variant="ghost" onClick={() => setStep(2)} disabled={loading}>
               ← Indietro
             </Button>
-            <Button onClick={handleSubmit} disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Button onClick={handleSubmit} disabled={loading} className="bg-brand hover:bg-blue-500 text-white">
               {loading ? 'Invio in corso…' : 'Conferma e invia'}
             </Button>
           </div>

@@ -53,18 +53,18 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-sm">
         {/* Logo / Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand mb-4">
             <span className="text-xl">👥</span>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900">Staff Manager</h1>
+          <h1 className="text-xl font-semibold text-foreground">Staff Manager</h1>
           <p className="text-sm text-muted-foreground mt-1">Accedi alla tua area personale</p>
         </div>
 
-        <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
+        <div className="rounded-2xl bg-card border border-border p-6 shadow-sm">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Email</label>
@@ -101,7 +101,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+              className="w-full bg-brand hover:bg-blue-500 text-white"
             >
               {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
             </Button>
@@ -125,7 +125,7 @@ export default function LoginPage() {
                   setPassword('Testbusters123');
                   passwordRef.current?.focus();
                 }}
-                className="rounded-lg bg-white border border-gray-200 px-2 py-2.5 text-left hover:border-gray-300 hover:bg-gray-50 transition"
+                className="rounded-lg bg-background border border-border px-2 py-2.5 text-left hover:border-muted-foreground/30 hover:bg-muted/60 transition"
               >
                 <p className="text-xs font-medium text-muted-foreground">{u.role}</p>
                 <p className="text-xs text-muted-foreground truncate mt-0.5">{u.email}</p>

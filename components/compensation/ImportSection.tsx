@@ -97,7 +97,7 @@ export default function ImportSection() {
         {state.phase === 'idle' && (
           <Button
             onClick={handlePreview}
-            className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white"
+            className="shrink-0 bg-brand hover:bg-blue-500 text-white"
           >
             Anteprima
           </Button>
@@ -217,7 +217,7 @@ export default function ImportSection() {
               {state.rows.length > 0 && (
                 <Button
                   onClick={handleConfirm}
-                  className="bg-blue-600 hover:bg-blue-500 text-white"
+                  className="bg-brand hover:bg-blue-500 text-white"
                 >
                   Importa {state.rows.length} {state.rows.length === 1 ? 'compenso' : 'compensi'}
                 </Button>

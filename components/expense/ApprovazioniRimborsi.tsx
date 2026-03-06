@@ -173,7 +173,7 @@ export default function ApprovazioniRimborsi({
             onClick={() => handleFilterChange(s)}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
@@ -188,7 +188,7 @@ export default function ApprovazioniRimborsi({
           onClick={() => handleCategoriaChange('ALL')}
           className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
             filterCategoria === 'ALL'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-brand text-white'
               : 'bg-muted text-muted-foreground hover:bg-accent'
           }`}
         >
@@ -200,7 +200,7 @@ export default function ApprovazioniRimborsi({
             onClick={() => handleCategoriaChange(cat)}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterCategoria === cat
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
@@ -223,7 +223,7 @@ export default function ApprovazioniRimborsi({
             <Button
               onClick={handleBulkApprove}
               disabled={bulkLoading || isPending}
-              className="bg-blue-600 hover:bg-blue-500 text-white"
+              className="bg-brand hover:bg-blue-500 text-white"
             >
               {bulkLoading ? 'Approvazione...' : 'Approva selezionati'}
             </Button>

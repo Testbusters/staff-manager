@@ -32,7 +32,7 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
           Compensi
           <span className="rounded-full px-1.5 py-0.5 text-xs font-semibold
                            bg-accent text-muted-foreground
-                           group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-foreground">
+                           group-data-[state=active]:bg-brand group-data-[state=active]:text-foreground">
             {compensations.length}
           </span>
         </TabsTrigger>
@@ -50,7 +50,7 @@ export default function CompenseTabs({ compensations, expenses, role }: Props) {
           Rimborsi
           <span className="rounded-full px-1.5 py-0.5 text-xs font-semibold
                            bg-accent text-muted-foreground
-                           group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-foreground">
+                           group-data-[state=active]:bg-brand group-data-[state=active]:text-foreground">
             {expenses.length}
           </span>
         </TabsTrigger>

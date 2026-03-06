@@ -61,7 +61,7 @@ export default function TicketList({
             onClick={() => setFilterStato('ALL')}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium h-auto ${
               filterStato === 'ALL'
-                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                ? 'bg-brand text-white hover:bg-blue-500'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
@@ -73,7 +73,7 @@ export default function TicketList({
               onClick={() => setFilterStato(s)}
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium h-auto ${
                 filterStato === s
-                  ? 'bg-blue-600 text-white hover:bg-blue-500'
+                  ? 'bg-brand text-white hover:bg-blue-500'
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -84,7 +84,7 @@ export default function TicketList({
 
         <Link
           href="/ticket/nuova"
-          className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+          className="shrink-0 rounded-lg bg-brand hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
         >
           Nuovo ticket
         </Link>

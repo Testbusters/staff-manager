@@ -69,7 +69,7 @@ export default function TicketThread({
               <div
                 className={`max-w-[78%] rounded-2xl px-4 py-3 ${
                   m.is_own
-                    ? 'bg-blue-600/20 border border-blue-500/30 rounded-tr-sm'
+                    ? 'bg-brand/20 border border-blue-500/30 rounded-tr-sm'
                     : 'bg-card border border-border rounded-tl-sm'
                 }`}
               >

@@ -121,7 +121,7 @@ export default function CommunityManager({
             <Input value={newName} onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome community"
               className="flex-1" />
-            <Button type="submit" disabled={createLoading || !newName.trim()} className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Button type="submit" disabled={createLoading || !newName.trim()} className="bg-brand hover:bg-blue-500 text-white">
               {createLoading ? 'Creazione…' : 'Crea'}
             </Button>
           </form>
@@ -145,7 +145,7 @@ export default function CommunityManager({
                 <>
                   <Input value={editName} onChange={(e) => setEditName(e.target.value)}
                     className="flex-1" />
-                  <Button onClick={() => handleRename(c.id)} disabled={editLoading} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
+                  <Button onClick={() => handleRename(c.id)} disabled={editLoading} size="sm" className="bg-brand hover:bg-blue-500 text-white">
                     Salva
                   </Button>
                   <button onClick={() => setEditingId(null)}
@@ -202,7 +202,7 @@ export default function CommunityManager({
                       disabled={togglingPublishId === resp.user_id}
                       onClick={() => togglePublish(resp.user_id, resp.can_publish_announcements)}
                       className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none disabled:opacity-50 ${
-                        resp.can_publish_announcements ? 'bg-blue-600' : 'bg-accent'
+                        resp.can_publish_announcements ? 'bg-brand' : 'bg-accent'
                       }`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
@@ -212,7 +212,7 @@ export default function CommunityManager({
                   </label>
                 {editingUserId === resp.user_id ? (
                   <div className="flex gap-2">
-                    <Button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
+                    <Button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading} size="sm" className="bg-brand hover:bg-blue-500 text-white">
                       Salva
                     </Button>
                     <button onClick={() => setEditingUserId(null)}

@@ -112,7 +112,7 @@ export default async function OpportunityDetailPage({
       <div className="flex flex-wrap gap-3">
         {o.link_candidatura && (
           <a href={o.link_candidatura} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-700 hover:bg-blue-600 px-4 py-2 text-sm font-medium text-white transition">
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-700 hover:bg-brand px-4 py-2 text-sm font-medium text-white transition">
             Candidati →
           </a>
         )}

@@ -357,7 +357,7 @@ export default function CollaboratoreDetail({
                   <button
                     onClick={handleSaveUsername}
                     disabled={usernameSaving || usernameEdit.trim().length < 3}
-                    className="px-2.5 py-1 rounded text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition disabled:opacity-50"
+                    className="px-2.5 py-1 rounded text-xs font-medium bg-brand hover:bg-blue-500 text-white transition disabled:opacity-50"
                   >
                     {usernameSaving ? '…' : 'Salva'}
                   </button>
@@ -527,7 +527,7 @@ export default function CollaboratoreDetail({
                 type="submit"
                 size="sm"
                 disabled={profileSaving}
-                className="bg-blue-600 hover:bg-blue-500 text-white"
+                className="bg-brand hover:bg-blue-500 text-white"
               >
                 {profileSaving ? 'Salvataggio…' : 'Salva'}
               </Button>

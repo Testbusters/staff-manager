@@ -137,7 +137,7 @@ export default async function CollaboratoriPage({
             href={`/collaboratori?filter=${f}&page=1`}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
               filter === f
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-accent'
             }`}
           >

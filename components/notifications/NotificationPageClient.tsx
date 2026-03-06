@@ -152,7 +152,7 @@ export default function NotificationPageClient() {
             onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
             className={`text-xs px-3 py-1.5 rounded-full border h-auto ${
               unreadOnly
-                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-500'
+                ? 'bg-brand text-white border-blue-600 hover:bg-blue-500'
                 : 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground hover:bg-transparent'
             }`}
           >

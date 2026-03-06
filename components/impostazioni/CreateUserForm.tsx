@@ -213,7 +213,7 @@ export default function CreateUserForm() {
           onClick={() => setMode('quick')}
           className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
             mode === 'quick'
-              ? 'bg-blue-600 border-blue-600 text-white'
+              ? 'bg-brand border-blue-600 text-white'
               : 'bg-muted border-border text-muted-foreground hover:border-border'
           }`}>
           Invito rapido
@@ -222,7 +222,7 @@ export default function CreateUserForm() {
           onClick={() => setMode('full')}
           className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
             mode === 'full'
-              ? 'bg-blue-600 border-blue-600 text-white'
+              ? 'bg-brand border-blue-600 text-white'
               : 'bg-muted border-border text-muted-foreground hover:border-border'
           }`}>
           Invito completo
@@ -445,7 +445,7 @@ export default function CreateUserForm() {
       <Button
         type="submit"
         disabled={loading || !email || (needsContract && (mode === 'quick' && (!nome.trim() || !cognome.trim())))}
-        className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+        className="w-full bg-brand hover:bg-blue-500 text-white"
       >
         {loading ? (
           <>

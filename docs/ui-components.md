@@ -1,16 +1,16 @@
 # UI Components — Reference
 
-> File permanente. Non eliminare.
-> Aggiornare ogni volta che viene introdotto o adottato un nuovo pattern UI.
+> Permanent file. Do not delete.
+> Update every time a new UI pattern is introduced or adopted.
 
 ---
 
 ## Component Map
 
-Prima di scrivere HTML nativo (`<button>`, `<input>`, `<select>`, `<div>` come modal, ecc.),
-verificare se esiste un componente mappato qui.
+Before writing native HTML (`<button>`, `<input>`, `<select>`, `<div>` as modal, etc.),
+check whether a mapped component exists here.
 
-| Esigenza UI | Componente | File | Stato |
+| UI Need | Component | File | Status |
 |---|---|---|---|
 | Modal centrato / conferma | `Dialog` | `components/ui/dialog.tsx` | ✅ Disponibile |
 | Conferma distruttiva | `AlertDialog` | `components/ui/alert-dialog.tsx` | ✅ Disponibile |
@@ -100,12 +100,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 </Sheet>
 ```
 
-**Regole chiave:**
-- `onOpenChange(false)` si attiva per click su X e per Esc — resettare sempre lo stato form lì
-- X button built-in posizionato `absolute top-4 right-4` — aggiungere `pr-10` agli header custom per evitare sovrapposizione
-- `showCloseButton={false}` su `DialogContent` per sopprimere la X built-in
-- Per body scrollabile: `p-0 gap-0` su DialogContent + padding manuale sui figli
-- Sheet: `sm:max-w-lg` sovrascrive il default `sm:max-w-sm`
+**Key rules:**
+- `onOpenChange(false)` fires on X click and Esc — always reset form state there
+- Built-in X button positioned `absolute top-4 right-4` — add `pr-10` to custom headers to avoid overlap
+- `showCloseButton={false}` on `DialogContent` to suppress the built-in X
+- For scrollable body: `p-0 gap-0` on DialogContent + manual padding on children
+- Sheet: `sm:max-w-lg` overrides the default `sm:max-w-sm`
 
 ---
 
@@ -123,14 +123,14 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 <InfoTooltip tip="testo del tooltip" />
 ```
 
-**Note:** Radix Tooltip usa un portale — `overflow-hidden` sui container padre non clippa più il tooltip.
+**Note:** Radix Tooltip uses a portal — `overflow-hidden` on parent containers no longer clips the tooltip.
 
 ---
 
 ## Selettori e2e — Strategia
 
-I test e2e devono usare `data-*` attribute, non classi CSS colore.
-Le classi colore cambiano con le fasi di migrazione — i `data-*` sono stabili.
+e2e tests must use `data-*` attributes, not CSS color classes.
+Color classes change across migration phases — `data-*` attributes are stable.
 
 | Target | Selettore | Note |
 |---|---|---|
@@ -140,7 +140,7 @@ Le classi colore cambiano con le fasi di migrazione — i `data-*` sono stabili.
 | Dialog content | `[data-slot="dialog-content"]` | Per scoping selettori dentro modal |
 | Badge generico | `[data-slot="badge"]` | Tutti i Badge shadcn |
 
-**Mai usare** `span.text-{color}` per status badge — Badge renderizza `<div>`, non `<span>`.
+**Never use** `span.text-{color}` for status badges — Badge renders `<div>`, not `<span>`.
 
 ---
 
@@ -247,33 +247,27 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 ---
 
-## Theme system — Note tecniche
+## Theme system — Technical notes
 
-Il progetto supporta light/dark mode via `next-themes` (ThemeProvider in `app/layout.tsx`).
-- Default: `light`. Toggle in Sidebar per ogni ruolo.
-- Login page: sempre light (via `useEffect(() => setTheme('light'), [setTheme])`).
-- Persistenza: `user_profiles.theme_preference` (migration 035). Sync via `ThemeSync.tsx` al mount.
+The project supports light/dark mode via `next-themes` (ThemeProvider in `app/layout.tsx`).
+- Default: `light`. Toggle in Sidebar for every role.
+- Login page: always light (via `useEffect(() => setTheme('light'), [setTheme])`).
+- Persistence: `user_profiles.theme_preference` (migration 035). Synced via `ThemeSync.tsx` on mount.
 - Toggle API: `PATCH /api/profile/theme` (fire-and-forget, `{ theme: 'light' | 'dark' }`).
-- `suppressHydrationWarning` necessario su `<html>` e su elementi che leggono `resolvedTheme`.
+- `suppressHydrationWarning` required on `<html>` and on elements reading `resolvedTheme`.
 
 ---
 
-## Note tecniche: shadcn components
+## Technical notes: shadcn components
 
-**Componenti `components/ui/` da NON sovrascrivere con `npx shadcn add`:**
+**`components/ui/` files that must NOT be overwritten by `npx shadcn add`:**
 - `CopyButton.tsx`
 - `RichTextDisplay.tsx`
 - `RichTextEditor.tsx`
-- `InfoTooltip.tsx` — wrapper su shadcn Tooltip, da mantenere per backward compat
-- shadcn usa `dark:` variants — funzionano perché la classe `dark` è sempre presente
-- I CSS custom properties in `:root` valgono solo se non sovrascritti da `.dark`
-- Verificare dopo ogni `npx shadcn add` che le variabili in `.dark` siano corrette
-
-**Componenti `components/ui/` da NON sovrascrivere con `npx shadcn add`:**
-- `CopyButton.tsx`
-- `RichTextDisplay.tsx`
-- `RichTextEditor.tsx`
-- `InfoTooltip.tsx` — wrapper su shadcn Tooltip, da mantenere per backward compat
+- `InfoTooltip.tsx` — wrapper over shadcn Tooltip, keep for backward compat
+- shadcn uses `dark:` variants — they work because the `dark` class is always present
+- CSS custom properties in `:root` apply only if not overridden by `.dark`
+- After every `npx shadcn add`, verify that `.dark` variables are correct
 
 ---
 
@@ -410,6 +404,6 @@ const config: ChartConfig = {
 
 ---
 
-## Roadmap componenti futuri
+## Future components roadmap
 
-Tutti i componenti principali sono ora disponibili. Aggiungere qui nuovi componenti on demand.
+All core components are now available. Add new components here on demand.

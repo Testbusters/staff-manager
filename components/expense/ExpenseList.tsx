@@ -61,7 +61,7 @@ export default function ExpenseList({
             onClick={() => handleFilterChange('ALL')}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === 'ALL'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
@@ -73,7 +73,7 @@ export default function ExpenseList({
               onClick={() => handleFilterChange(s)}
               className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
                 filterStato === s
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-brand text-white'
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -85,7 +85,7 @@ export default function ExpenseList({
         {role === 'collaboratore' && (
           <Link
             href="/rimborsi/nuova"
-            className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+            className="shrink-0 rounded-lg bg-brand hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
           >
             Nuovo rimborso
           </Link>

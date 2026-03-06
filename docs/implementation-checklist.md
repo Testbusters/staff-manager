@@ -1,8 +1,8 @@
 # Staff Manager — Implementation Checklist
 
-> Aggiornare questo file al termine di ogni blocco funzionale (Fase 8 della pipeline).
-> È la fonte di verità sullo stato dei lavori. Leggere prima di iniziare un nuovo blocco.
-> Aggiornato 2026-03-05. Blocco 13a ✅ + 13b ✅ + Blocco 14 ✅ + Blocco 15a ✅ + Blocco 15c ✅ + shadcn completo ✅ + UI Kit Phase A ✅. Prossimo: UI Kit Phase C (componenti on demand).
+> Update this file at the end of every functional block (Phase 8 of the pipeline).
+> This is the source of truth for project status. Read before starting a new block.
+> Last updated 2026-03-05. Block 13a ✅ + 13b ✅ + Block 14 ✅ + Block 15a ✅ + Block 15c ✅ + shadcn complete ✅ + UI Kit Phase A ✅. Next: UI Kit Phase C (on-demand components).
 
 ---
 

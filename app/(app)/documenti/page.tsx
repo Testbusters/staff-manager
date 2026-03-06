@@ -62,7 +62,7 @@ export default async function DocumentiPage({
   const tabCls = (t: string) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       tab === t
-        ? 'bg-blue-600 text-white'
+        ? 'bg-brand text-white'
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 

@@ -108,7 +108,7 @@ export default function BlocksDrawer({ items, open, onClose }: Props) {
                             <button
                               onClick={() => handleClearFlag(item)}
                               disabled={clearing === item.key}
-                              className="rounded-lg bg-blue-700 hover:bg-blue-600 disabled:opacity-50 px-3 py-1.5 text-xs font-medium text-white transition"
+                              className="rounded-lg bg-blue-700 hover:bg-brand disabled:opacity-50 px-3 py-1.5 text-xs font-medium text-white transition"
                             >
                               {clearing === item.key ? '...' : 'Azzera flag'}
                             </button>

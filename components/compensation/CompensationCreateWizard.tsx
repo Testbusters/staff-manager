@@ -50,7 +50,7 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
           <div
             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
               step === current
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : step < current
                 ? 'bg-green-700 text-white'
                 : 'bg-accent text-muted-foreground'
@@ -398,7 +398,7 @@ export default function CompensationCreateWizard({
             </Button>
             <Button
               onClick={handleStep2Next}
-              className="bg-blue-600 hover:bg-blue-500 text-white"
+              className="bg-brand hover:bg-blue-500 text-white"
             >
               Avanti →
             </Button>
@@ -463,7 +463,7 @@ export default function CompensationCreateWizard({
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="bg-blue-600 hover:bg-blue-500 text-white"
+            className="bg-brand hover:bg-blue-500 text-white"
           >
             {submitting ? 'Creazione...' : 'Crea compenso'}
           </Button>

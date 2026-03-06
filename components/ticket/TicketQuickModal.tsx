@@ -61,7 +61,7 @@ export default function TicketQuickModal() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white">
+      <Button onClick={() => setOpen(true)} className="shrink-0 bg-brand hover:bg-blue-500 text-white">
         Apri ticket
       </Button>
 
@@ -132,7 +132,7 @@ export default function TicketQuickModal() {
             </div>
 
             <div className="flex items-center gap-3 pt-1">
-              <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500 text-white">
+              <Button type="submit" disabled={loading} className="bg-brand hover:bg-blue-500 text-white">
                 {loading ? 'Apertura…' : 'Apri ticket'}
               </Button>
               <Button type="button" variant="outline" onClick={handleClose}>

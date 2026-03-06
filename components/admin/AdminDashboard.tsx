@@ -301,7 +301,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/coda"
-            className="rounded-xl bg-blue-700 hover:bg-blue-600 px-4 py-2 text-sm font-medium text-white transition"
+            className="rounded-xl bg-blue-700 hover:bg-brand px-4 py-2 text-sm font-medium text-white transition"
           >
             Vai alla coda
           </Link>

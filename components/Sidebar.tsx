@@ -52,7 +52,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
     <aside className="flex h-screen w-56 flex-col bg-sidebar border-r border-sidebar-border flex-shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-sidebar-border">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 flex-shrink-0">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand flex-shrink-0">
           <span className="text-sm">👥</span>
         </div>
         <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>

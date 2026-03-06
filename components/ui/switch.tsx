@@ -17,7 +17,7 @@ function Switch({
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:cursor-not-allowed disabled:opacity-50",
         // checked (dark mode on) → blue track
-        "data-[state=checked]:bg-blue-600",
+        "data-[state=checked]:bg-brand",
         // unchecked (light mode) → gray track
         "data-[state=unchecked]:bg-input",
         className
@@ -30,7 +30,7 @@ function Switch({
           "pointer-events-none block h-3.5 w-3.5 rounded-full shadow-md ring-0 transition-all duration-200",
           // unchecked (light mode): blue thumb on gray track → high contrast
           // checked (dark mode): white thumb on blue track → high contrast
-          "data-[state=unchecked]:bg-blue-600",
+          "data-[state=unchecked]:bg-brand",
           "data-[state=checked]:bg-white",
           "data-[state=checked]:translate-x-[18px] data-[state=unchecked]:translate-x-0.5"
         )}

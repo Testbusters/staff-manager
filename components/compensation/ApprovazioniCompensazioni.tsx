@@ -100,7 +100,7 @@ export default function ApprovazioniCompensazioni({
             </div>
             <Link
               href="/approvazioni/carica"
-              className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition"
+              className="shrink-0 rounded-lg bg-brand hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition"
             >
               + Inserimento manuale
             </Link>
@@ -133,7 +133,7 @@ export default function ApprovazioniCompensazioni({
             onClick={() => handleFilterChange(s)}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >

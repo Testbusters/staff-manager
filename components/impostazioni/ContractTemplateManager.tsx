@@ -96,7 +96,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                     ? 'bg-accent text-muted-foreground pointer-events-none'
                     : tpl
                       ? 'bg-accent hover:bg-gray-600 text-foreground'
-                      : 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-brand hover:bg-blue-500 text-white'
                   }`}
                 >
                   {isUploading ? 'Caricamento…' : tpl ? 'Sostituisci' : 'Carica'}

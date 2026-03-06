@@ -1225,7 +1225,7 @@ export default async function DashboardPage() {
         <div className="p-5 flex flex-wrap gap-3">
           <Link
             href="/rimborsi/nuova"
-            className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
+            className="rounded-lg bg-brand hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition"
           >
             + Nuovo rimborso
           </Link>

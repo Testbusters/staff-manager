@@ -146,7 +146,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         {/* Progress */}
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
@@ -155,7 +155,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           </div>
           <div className="flex-1 h-px bg-accent" />
           <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">2</div>
+            <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center text-xs font-bold text-white">2</div>
             <span className="text-xs text-foreground font-medium">Contratto</span>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               Scarica contratto
             </button>
 
-            <Button onClick={handleFinish} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
+            <Button onClick={handleFinish} className="w-full bg-brand hover:bg-blue-500 text-white">
               Ho scaricato il contratto — Accedi alla piattaforma
             </Button>
           </div>
@@ -217,7 +217,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               <Button
                 onClick={handleCompleteOnboarding}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                className="w-full bg-brand hover:bg-blue-500 text-white"
               >
                 {loading ? (
                   <>
@@ -230,7 +230,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 ) : 'Genera e scarica contratto'}
               </Button>
             ) : (
-              <Button onClick={handleFinish} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
+              <Button onClick={handleFinish} className="w-full bg-brand hover:bg-blue-500 text-white">
                 Accedi alla piattaforma
               </Button>
             )}
@@ -248,7 +248,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
       {/* Progress */}
       <div className="flex items-center gap-3 mb-6">
         <div className="flex items-center gap-1.5">
-          <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">1</div>
+          <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center text-xs font-bold text-white">1</div>
           <span className="text-xs text-foreground font-medium">Dati personali</span>
         </div>
         <div className="flex-1 h-px bg-accent" />
@@ -409,7 +409,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
         )}
 
-        <Button type="submit" disabled={!step1Valid} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
+        <Button type="submit" disabled={!step1Valid} className="w-full bg-brand hover:bg-blue-500 text-white">
           Avanti — Genera contratto
         </Button>
       </form>

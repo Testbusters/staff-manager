@@ -75,7 +75,7 @@ export default async function ProfiloPage({
   const tabCls = (t: string) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
-        ? 'bg-blue-600 text-white'
+        ? 'bg-brand text-white'
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
@@ -123,7 +123,7 @@ export default async function ProfiloPage({
       {activeTab === 'documenti' && (
         <div className="space-y-6">
           <div className="flex justify-end">
-            <Button asChild className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Button asChild className="bg-brand hover:bg-blue-500 text-white">
               <Link href="/rimborsi/nuova">Nuovo rimborso</Link>
             </Button>
           </div>

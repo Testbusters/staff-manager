@@ -117,7 +117,7 @@ function DiscountForm({
         </div>
       </div>
       <div className="flex gap-2 pt-1">
-        <Button type="submit" disabled={loading} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
+        <Button type="submit" disabled={loading} size="sm" className="bg-brand hover:bg-blue-500 text-white">
           {loading ? 'Salvataggio…' : 'Salva'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} size="sm">

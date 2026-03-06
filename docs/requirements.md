@@ -1,78 +1,78 @@
-# Staff Manager — Specifica di Prodotto
+# Staff Manager — Product Specification
 
-> Documento di riferimento per l'implementazione. Leggere le sezioni pertinenti al blocco in lavorazione prima di iniziare la Fase 2 (Implementazione).
-> Aggiornare questo file se i requisiti cambiano in corso d'opera.
-
----
-
-## 1. Brief di progetto
-
-**Contesto.** Gestionale amministrativo unico per i collaboratori COMMUNITY (Testbusters e Peer4Med). Dati oggi dispersi, flussi (approvazioni, pagamenti, documenti, ticket) non tracciati in modo chiaro.
-
-**Obiettivo.** Ridurre attrito ed errori: richieste standardizzate, export pagamenti pulito, documenti archiviati e firmati, comunicazioni e risorse in un posto solo.
-
-**Problemi da risolvere:**
-- Collaboratori modificano autonomamente i propri dati senza passare dall'amministrazione
-- Inserimento dichiarazione figli a carico (con soglie età/reddito visibili) e P.IVA (con spiegazione procedura)
-- Uniformare il meccanismo di caricamento file compensi (oggi diverso tra Corsi ed Extra)
-- Collaboratori vedono in front-end quanto liquidato e quanto ancora da ricevere
-- Slot rimborsi integrato (non form Google separato)
-
-**Utenti.** Collaboratori (non tecnici), Responsabile Cittadino, Responsabile Compensi, Responsabile Servizi Individuali, Amministrazione (Finance/HR).
-
-**Criteri di accettazione UX:**
-- Collaboratore inserisce un compenso in < 60 secondi (wizard 3 step)
-- Responsabile pre-approva 20 richieste in 5 minuti (azioni inline + filtri)
-- Admin esporta "da pagare" in 2 click e segna pagato singolo o massivo
+> Reference document for implementation. Read the sections relevant to the current block before starting Phase 2 (Implementation).
+> Update this file if requirements change during development.
 
 ---
 
-## 2. Ruoli e permessi (RBAC)
+## 1. Project brief
 
-| Ruolo | Label UI | Visibilità | Note |
+**Context.** Single admin portal for collaborators across COMMUNITY (Testbusters and Peer4Med). Data currently scattered; flows (approvals, payments, documents, tickets) not clearly tracked.
+
+**Goal.** Reduce friction and errors: standardised requests, clean payment export, archived and signed documents, communications and resources in one place.
+
+**Problems to solve:**
+- Collaborators modify their own data independently, bypassing administration
+- Declaration of fiscal dependence (with visible age/income thresholds) and VAT number (with procedure explanation)
+- Standardise the compensation file upload mechanism (currently different between Corsi and Extra)
+- Collaborators see in the front-end how much has been paid out and how much is still pending
+- Integrated reimbursement slot (not a separate Google Form)
+
+**Users.** Collaborators (non-technical), Responsabile Cittadino, Responsabile Compensi, Responsabile Servizi Individuali, Administration (Finance/HR).
+
+**UX acceptance criteria:**
+- Collaborator submits a compensation request in < 60 seconds (3-step wizard)
+- Responsabile pre-approves 20 requests in 5 minutes (inline actions + filters)
+- Admin exports "to pay" in 2 clicks and marks payment for single or bulk records
+
+---
+
+## 2. Roles and permissions (RBAC)
+
+| Role | UI Label | Visibility | Notes |
 |---|---|---|---|
-| `collaboratore` | Collaboratore | Propri record | As-is |
-| `responsabile_cittadino` | Responsabile Cittadino | Da definire | Permessi da definire |
-| `responsabile_compensi` | Responsabile Compensi | Community assegnate da admin | Ex `responsabile` |
-| `responsabile_servizi_individuali` | Responsabile Servizi Individuali | Da definire | Permessi da definire |
-| `amministrazione` | Admin | Tutte le community | As-is |
+| `collaboratore` | Collaboratore | Own records | As-is |
+| `responsabile_cittadino` | Responsabile Cittadino | To be defined | Permissions TBD |
+| `responsabile_compensi` | Responsabile Compensi | Admin-assigned communities | Formerly `responsabile` |
+| `responsabile_servizi_individuali` | Responsabile Servizi Individuali | To be defined | Permissions TBD |
+| `amministrazione` | Admin | All communities | As-is |
 
-**Regole chiave:**
-- RLS reale su ogni tabella — nessun accesso a record altrui via URL
-- Collaboratore vede solo i propri record; IBAN e documenti visibili solo a collaboratore proprietario + admin
-- Responsabile Compensi vede solo le community assegnate e fa pre-approvazione obbligatoria
-- Timeline stato senza nominativi: mostrare solo il label del ruolo (es. "Responsabile Compensi" / "Amministrazione")
-- La community è autonoma nel creare/caricare allegati e nel settare i ruoli di ogni persona (non richiedere intervento tecnico per nuovi ruoli)
+**Key rules:**
+- Real RLS on every table — no access to other users' records via URL
+- Collaborator sees only their own records; IBAN and documents visible only to the owning collaborator + admin
+- Responsabile Compensi sees only their assigned communities and performs mandatory pre-approval
+- Status timeline without names: show only the role label (e.g. "Responsabile Compensi" / "Amministrazione")
+- The community manages attachments and role assignments autonomously — no technical intervention required for new roles
 
-**Gestione uscenti (member_status):**
-- `uscente_con_compenso` — ha ancora compensi da ricevere; non vede documenti relativi al nuovo anno; accesso limitato ai propri record in corso
-- `uscente_senza_compenso` — nessun compenso pendente; account disabilitato tranne accesso in sola lettura alla pagina documenti storici
-- `attivo` — accesso completo per ruolo
+**Departing members (member_status):**
+- `uscente_con_compenso` — still has pending compensations; cannot see documents for the new year; limited access to their in-progress records
+- `uscente_senza_compenso` — no pending compensations; account disabled except read-only access to the historical documents page
+- `attivo` — full access per role
 
-**Nuovi ingressi:** nella realtà avvengono in modo sporadico durante tutto l'anno (non 1-2 volte come previsto teoricamente). La community deve poter gestire in autonomia: registrazione anagrafica, generazione contratto, assegnazione ruolo.
+**New members:** in practice they join sporadically throughout the year (not 1–2 times as theoretically planned). The community must be able to manage onboarding autonomously: profile registration, contract generation, role assignment.
 
-### Utenze di test
+### Test users
 
-| Email | Tipo | Ruolo | Stato |
+| Email | Type | Role | Status |
 |---|---|---|---|
 | `collaboratore@test.com` | Playwright | collaboratore | as-is |
-| `responsabile_cittadino@test.com` | Playwright | responsabile_cittadino | da creare |
-| `responsabile_compensi@test.com` | Playwright | responsabile_compensi | rinomina da `responsabile@test.com` |
-| `responsabile_servizi_individuali@test.com` | Playwright | responsabile_servizi_individuali | da creare |
-| `admin@test.com` | Playwright | amministrazione | rinomina da `admin-test@example.com` |
-| `collaboratore_test@test.com` | Manuale | collaboratore | as-is |
-| `responsabile_cittadino_test@test.com` | Manuale | responsabile_cittadino | da creare |
-| `responsabile_compensi_test@test.com` | Manuale | responsabile_compensi | rinomina da `responsabile_test@test.com` |
-| `responsabile_servizi_individuali_test@test.com` | Manuale | responsabile_servizi_individuali | da creare |
-| `admin_test@test.com` | Manuale | amministrazione | as-is |
+| `responsabile_cittadino@test.com` | Playwright | responsabile_cittadino | to create |
+| `responsabile_compensi@test.com` | Playwright | responsabile_compensi | renamed from `responsabile@test.com` |
+| `responsabile_servizi_individuali@test.com` | Playwright | responsabile_servizi_individuali | to create |
+| `admin@test.com` | Playwright | amministrazione | renamed from `admin-test@example.com` |
+| `collaboratore_test@test.com` | Manual | collaboratore | as-is |
+| `responsabile_cittadino_test@test.com` | Manual | responsabile_cittadino | to create |
+| `responsabile_compensi_test@test.com` | Manual | responsabile_compensi | renamed from `responsabile_test@test.com` |
+| `responsabile_servizi_individuali_test@test.com` | Manual | responsabile_servizi_individuali | to create |
+| `admin_test@test.com` | Manual | amministrazione | as-is |
 
-### Punti aperti
-- `responsabile_cittadino`: permessi e visibilità da definire
-- `responsabile_servizi_individuali`: permessi e visibilità da definire
+### Open points
+- `responsabile_cittadino`: permissions and visibility TBD
+- `responsabile_servizi_individuali`: permissions and visibility TBD
 
 ---
 
-## 3. Modello dati
+## 3. Data model
 
 ```sql
 Community(id, name)
@@ -127,9 +127,9 @@ Event(id, community_id nullable, titolo, descrizione, start_datetime?, end_datet
 
 ---
 
-## 4. Workflow operativi
+## 4. Operational workflows
 
-### 4.1 Compensi
+### 4.1 Compensations
 
 ```
 IN_ATTESA → APPROVATO → LIQUIDATO
@@ -137,54 +137,54 @@ IN_ATTESA → APPROVATO → LIQUIDATO
 Da RIFIUTATO: il collaboratore può riaprire → torna a IN_ATTESA
 ```
 
-| Azione | Da stato | A stato | Ruolo |
+| Action | From state | To state | Role |
 |---|---|---|---|
-| crea | — | IN_ATTESA | responsabile_compensi / amministrazione |
+| create | — | IN_ATTESA | responsabile_compensi / amministrazione |
 | reopen | RIFIUTATO | IN_ATTESA | collaboratore |
 | approve | IN_ATTESA | APPROVATO | responsabile_compensi / amministrazione |
-| approve_all | IN_ATTESA (tutti community) | APPROVATO | responsabile_compensi |
+| approve_all | IN_ATTESA (all community) | APPROVATO | responsabile_compensi |
 | reject | IN_ATTESA | RIFIUTATO | responsabile_compensi / amministrazione |
 | mark_liquidated | APPROVATO | LIQUIDATO | responsabile_compensi / amministrazione |
 
-Rifiuto: `rejection_note` testo libero obbligatoria. Visibile al collaboratore nel dettaglio.
-Approvazione responsabile = definitiva (nessuna doppia conferma admin).
+Rejection: `rejection_note` free text, required. Visible to the collaborator in the detail view.
+Responsabile approval is final (no admin double-confirm).
 
-**Caricamento compensi** (responsabile_compensi / amministrazione):
-- Modalità singola: wizard 3-step (seleziona collaboratore → dati compenso → riepilogo) — nasce IN_ATTESA
-- Modalità batch: import da file XLS/CSV (futuro blocco dedicato — placeholder UI)
-- Campo `corso_appartenenza` (opzionale): libero testo, identifica il corso di riferimento
-- Community del compenso: intersezione community del responsabile ∩ community del collaboratore (se unica: auto; se multipla: dropdown in Step 2)
+**Compensation loading** (responsabile_compensi / amministrazione):
+- Single mode: 3-step wizard (select collaborator → compensation data → summary) — created as IN_ATTESA
+- Batch mode: import from XLS/CSV file (future dedicated block — UI placeholder)
+- Field `corso_appartenenza` (optional): free text identifying the reference course
+- Compensation community: intersection of responsabile communities ∩ collaborator communities (if unique: auto; if multiple: dropdown in Step 2)
 
-### 4.2 Rimborsi
+### 4.2 Reimbursements
 
 ```
 IN_ATTESA → APPROVATO → LIQUIDATO
          ↘ RIFIUTATO (rejection_note obbligatoria)
 ```
 
-Stessa action table dei compensi senza submit/withdraw/reopen (creati direttamente IN_ATTESA — niente BOZZA). Allegati ricevute. Export dedicato "Da pagare".
+Same action table as compensations without submit/withdraw/reopen (created directly as IN_ATTESA — no BOZZA). Receipt attachments. Dedicated "Da pagare" export.
 
-### 4.3 Documenti
+### 4.3 Documents
 
-- **Admin** carica PDF (`file_original_url`) e imposta `DA_FIRMARE`
-- **Collaboratore** scarica PDF originale, firma offline, ricarica PDF firmato → stato `FIRMATO` (`signed_at` automatico)
-- **Notifica in-app** ad Admin quando il documento viene firmato
-- **NON_RICHIESTO**: documenti informativi (ricevute di pagamento, CU) che non richiedono firma
+- **Admin** uploads PDF (`file_original_url`) and sets `DA_FIRMARE`
+- **Collaborator** downloads original PDF, signs offline, re-uploads signed PDF → state `FIRMATO` (`signed_at` set automatically)
+- **In-app notification** to Admin when document is signed
+- **NON_RICHIESTO**: informational documents (payment receipts, CU) that do not require signature
 
 **CU batch (Certificazione Unica):**
-- Contabilità invia una cartella ZIP con tutti i PDF + un file CSV con la mappa `nome_pdf → nome_cognome_utente`
-- Il sistema deve permettere upload ZIP + CSV e associare automaticamente ogni PDF al collaboratore corretto (match su `nome_cognome`)
-- Dedup: se un CU per lo stesso collaboratore e anno esiste già, non sovrascrivere (segnalare come duplicato)
-- **Nota operativa:** fare un passaggio con contabilità per allinare il formato esatto del CSV prima dell'implementazione. Il formato attuale del nome file è `nome_cognome` (nome utente gestionale).
+- Accounting sends a ZIP folder with all PDFs + a CSV file mapping `pdf_name → first_last_name_user`
+- The system must allow ZIP + CSV upload and automatically associate each PDF with the correct collaborator (match on `nome_cognome`)
+- Dedup: if a CU for the same collaborator and year already exists, do not overwrite (flag as duplicate)
+- **Operational note:** align with accounting on the exact CSV format before implementing the batch import. Current file name format is `nome_cognome` (portal username).
 
-**Allegati contratto:**
-- Logica allegati invece di 100 template contratto diversi: l'admin carica il PDF del contratto specifico e lo assegna al collaboratore
-- Filtro risorse per ruolo: ogni documento/risorsa è visibile solo ai ruoli abilitati
-- La community gestisce autonomamente creazione allegati, upload, assegnazione ruoli — senza intervento tecnico
+**Contract attachments:**
+- Attachment logic instead of 100 different contract templates: admin uploads the specific contract PDF and assigns it to the collaborator
+- Resource filter by role: each document/resource is visible only to enabled roles
+- The community manages attachment creation, upload, and role assignment autonomously — no technical intervention required
 
-### 4.4 Ticket
+### 4.4 Tickets
 
-Thread messaggi + allegati, stati APERTO / IN_LAVORAZIONE / CHIUSO, notifiche in-app minime.
+Message thread + attachments, states APERTO / IN_LAVORAZIONE / CHIUSO, minimal in-app notifications.
 
 #### Block 15a — Ticket system overhaul
 
@@ -223,234 +223,234 @@ Thread messaggi + allegati, stati APERTO / IN_LAVORAZIONE / CHIUSO, notifiche in
 
 ### 4.5 Export
 
-**Compensi "Da pagare"** (stato = APPROVATO):
+**Compensations "Da pagare"** (stato = APPROVATO):
 - Nome, Cognome, CF, Community, Periodo, Causale, Data competenza, Lordo, Ritenuta, Netto, IBAN
 
-**Rimborsi "Da pagare"** (stato = APPROVATO):
+**Reimbursements "Da pagare"** (stato = APPROVATO):
 - Nome, Cognome, CF, Community, Categoria, Data spesa, Importo, IBAN, Note
 
 ---
 
-## 5. Pagine e navigazione
+## 5. Pages and navigation
 
-### Collaboratore (8 voci)
-| Voce | Route | Contenuto |
+### Collaboratore (8 items)
+| Item | Route | Content |
 |---|---|---|
-| Home | `/` | Dashboard: card metriche, azioni rapide, feed |
-| Profilo e Documenti | `/profilo` | Tab **Profilo** (dati anagrafici, IBAN, figli a carico) + Tab **Documenti** (DocumentList storico firmato) |
-| Compensi e Rimborsi | `/compensi` | PaymentOverview + lista compensi (tutti gli stati) + lista rimborsi + pulsante "Apri ticket" (TicketQuickModal) |
-| Corsi | `#` | Coming soon — voce visibile, non cliccabile |
-| Schoolbusters | `#` | Coming soon — voce visibile, non cliccabile |
-| Eventi | `/eventi` | Lista eventi community (read-only, ordinati per data ASC) |
-| Comunicazioni e Risorse | `/comunicazioni` | Tab **Comunicazioni** (bacheca annunci, read-only) + Tab **Risorse** (guide e materiali, read-only) |
-| Opportunità e Sconti | `/opportunita` | Lista benefit e agevolazioni (read-only) |
+| Home | `/` | Dashboard: metric cards, quick actions, feed |
+| Profilo e Documenti | `/profilo` | Tab **Profilo** (personal data, IBAN, fiscal dependence) + Tab **Documenti** (signed document history) |
+| Compensi e Rimborsi | `/compensi` | PaymentOverview + compensation list (all states) + reimbursement list + "Apri ticket" button (TicketQuickModal) |
+| Corsi | `#` | Coming soon — item visible, not clickable |
+| Schoolbusters | `#` | Coming soon — item visible, not clickable |
+| Eventi | `/eventi` | Community events list (read-only, sorted by date ASC) |
+| Comunicazioni e Risorse | `/comunicazioni` | Tab **Comunicazioni** (announcements board, read-only) + Tab **Risorse** (guides and materials, read-only) |
+| Opportunità e Sconti | `/opportunita` | Benefits and discounts list (read-only) |
 
-**Regole navigazione collaboratore:**
-- Il collaboratore **non crea** compensi — `/compensi/nuova` reindirizza a `/compensi`
-- I rimborsi sono visibili in `/compensi`; `/rimborsi` reindirizza a `/compensi`
-- I documenti sono accessibili solo da `/profilo?tab=documenti`; `/documenti` reindirizza lì
-- I ticket si aprono tramite modale da `/compensi`, non da una pagina dedicata
-- `uscente_senza_compenso`: accesso solo a `/profilo?tab=documenti`
+**Collaborator navigation rules:**
+- Collaborator **does not create** compensations — `/compensi/nuova` redirects to `/compensi`
+- Reimbursements are visible in `/compensi`; `/rimborsi` redirects to `/compensi`
+- Documents are accessible only from `/profilo?tab=documenti`; `/documenti` redirects there
+- Tickets are opened via modal from `/compensi`, not from a dedicated page
+- `uscente_senza_compenso`: access only to `/profilo?tab=documenti`
 
-### Responsabile Compensi (max 7 voci)
-Approvazioni (tab Compensi/Rimborsi), Collaboratori (community assegnate), Ticket, Contenuti.
+### Responsabile Compensi (max 7 items)
+Approvals (tab Compensi/Rimborsi), Collaborators (assigned communities), Tickets, Contents.
 
 ### Responsabile Cittadino / Responsabile Servizi Individuali
-Navigazione da definire al momento della specifica funzionale dei ruoli.
+Navigation to be defined when the functional spec for these roles is written.
 
-### Amministrazione (max 7 voci)
-Coda lavoro (tab: Da approvare / Documenti da firmare / Ticket aperti), Collaboratori, Export, Documenti, Ticket, Contenuti, Impostazioni.
-
----
-
-## 6. Requisiti UX (vincolanti)
-
-- **Anonimato**: collaboratore non vede nome/email di chi approva. Timeline mostra solo "Responsabile" / "Amministrazione"
-- **Rifiuto**: `rejection_note` testo libero obbligatoria. Il collaboratore vede la nota nel dettaglio e può riaprire il compenso (→ BOZZA) per modificarlo e reinviarlo
-- **Liquidazione**: responsabile_compensi e admin possono "Segna liquidato" singolo (da dettaglio) e massivo. `liquidated_at` automatico. `payment_reference` opzionale ma consigliato
-- **Approva tutte**: responsabile può approvare in blocco tutti i compensi/rimborsi IN_ATTESA della community
-- **Filtro default**: "Solo cose che richiedono la mia azione" attivo di default per Responsabile e Admin
-- **Wizard**: max 3 step per creare richieste (Dati → Allegati → Riepilogo e invio)
-- **Timeline**: sempre visibile nel dettaglio richiesta
+### Amministrazione (max 7 items)
+Work queue (tabs: Da approvare / Documenti da firmare / Ticket aperti), Collaborators, Export, Documents, Tickets, Contents, Settings.
 
 ---
 
-## 7. Sicurezza
+## 6. UX requirements (binding)
 
-- RLS su tutte le tabelle
-- IBAN e documenti: accesso solo ad admin e collaboratore proprietario
-- Storage privato Supabase (signed URL, nessun bucket pubblico)
-- Log: chi approva, quando, chi marca pagato
+- **Anonymity**: collaborator does not see the name/email of the approver. Timeline shows only "Responsabile" / "Amministrazione"
+- **Rejection**: `rejection_note` free text, required. Collaborator sees the note in the detail view and can reopen the compensation (→ BOZZA) to edit and resubmit
+- **Liquidation**: responsabile_compensi and admin can "Segna liquidato" individually (from detail) and in bulk. `liquidated_at` set automatically. `payment_reference` optional but recommended
+- **Approve all**: responsabile can bulk-approve all IN_ATTESA compensations/reimbursements for the community
+- **Default filter**: "Only items requiring my action" active by default for Responsabile and Admin
+- **Wizard**: max 3 steps to create requests (Data → Attachments → Summary and submit)
+- **Timeline**: always visible in the request detail view
 
 ---
 
-## 8. Notifiche (in-app, minimo)
+## 7. Security
 
-### 8.1 Trigger eventi
-- Documento da firmare assegnato
-- Documento firmato ricevuto (notifica ad admin)
-- Risposta ticket
-- Cambio stato generico richiesta
+- RLS on all tables
+- IBAN and documents: access only to admin and the owning collaborator
+- Private Supabase Storage (signed URL, no public buckets)
+- Log: who approves, when, who marks as paid
 
-### 8.2 Comportamento UI campanello
-- **Link entità**: tutte le notifiche con `entity_type` valorizzato sono cliccabili:
+---
+
+## 8. Notifications (in-app, minimal)
+
+### 8.1 Event triggers
+- Document assigned for signature
+- Signed document received (notification to admin)
+- Ticket reply
+- Generic request state change
+
+### 8.2 Bell UI behaviour
+- **Entity link**: all notifications with a populated `entity_type` are clickable:
   `compensation → /compensi/:id`, `reimbursement → /rimborsi/:id`, `document → /documenti/:id`, `ticket → /ticket/:id`
-- **Mark-read singola**: cliccare una notifica la marca come letta; nessun auto-mark-all-read all'apertura del dropdown
-- **"Segna tutte come lette"**: pulsante esplicito nell'header del dropdown, visibile solo se `unread > 0`
-- **Stato loading/errore**: indicatore visivo durante il primo fetch; messaggio se la fetch fallisce
-- **Dismiss singola**: pulsante × (visibile on hover) per rimuovere definitivamente una notifica
-- **Avviso lista troncata**: se il dropdown raggiunge il limite (50 notifiche), mostrare banner + link "Vedi tutte"
-- **Pagina completa**: link "Vedi tutte →" in fondo al dropdown → `/notifiche` con:
-  - Paginazione (20 per pagina)
-  - Toggle "Solo non lette"
-  - Mark-read singola e dismiss per ogni voce
+- **Single mark-read**: clicking a notification marks it as read; no auto-mark-all-read on dropdown open
+- **"Segna tutte come lette"**: explicit button in the dropdown header, visible only if `unread > 0`
+- **Loading/error state**: visual indicator during first fetch; message if fetch fails
+- **Single dismiss**: × button (visible on hover) to permanently remove a notification
+- **Truncated list warning**: if the dropdown reaches the limit (50 notifications), show banner + "Vedi tutte" link
+- **Full page**: "Vedi tutte →" link at the bottom of the dropdown → `/notifiche` with:
+  - Pagination (20 per page)
+  - "Solo non lette" toggle
+  - Single mark-read and dismiss for each item
 
 ---
 
-## 9. Fuori perimetro attuale (note per futuro)
+## 9. Out of current scope (notes for future)
 
-**Definizione corso unificata (idea mai implementata):**
-- Staff: definizione corso → chi ha fatto il corso → pagamenti
-- Simu: definizione corso → gestione aule → notifiche a studenti e docenti
-- Oggi i pagamenti Simu sono relativi a una definizione corso separata
-- Non implementare in Phase 1-2; valutare in Phase 3+
-
----
-
-## 10. Note operative
-
-- **Lingua UI**: italiano. Codice/commit: inglese.
-- **Storage**: bucket privati Supabase con signed URL. Mai link pubblici per documenti.
-- **CU batch**: allineare con contabilità il formato CSV prima di implementare il batch import.
-- **Nuovi ingressi**: flusso di onboarding deve essere completabile in autonomia dall'admin senza intervento tecnico (registrazione anagrafica + generazione contratto + assegnazione ruolo).
+**Unified course definition (idea never implemented):**
+- Staff: course definition → who attended → payments
+- Simu: course definition → classroom management → notifications to students and teachers
+- Currently Simu payments relate to a separate course definition
+- Do not implement in Phase 1–2; evaluate in Phase 3+
 
 ---
 
-## 11. Dashboard collaboratore (Phase 3)
+## 10. Operational notes
 
-Pagina principale del collaboratore. Attualmente placeholder "In costruzione".
-
-### Card di riepilogo (3 card grandi)
-Ogni card mostra: conteggio richieste attive + importo totale in euro + conteggio richieste in attesa liquidazione (APPROVATO) + relativo importo.
-
-- **Compensi**: richieste attive (stato ≠ LIQUIDATO, ≠ RIFIUTATO) + di cui in attesa liquidazione (APPROVATO)
-- **Rimborsi**: stessa logica compensi, conteggi e importi separati
-- **Documenti da firmare**: solo conteggio documenti in stato DA_FIRMARE
-
-### Azioni rapide
-- Nuovo compenso → `/compensi/nuova`
-- Nuovo rimborso → `/rimborsi/nuova`
-- Apri ticket → `/ticket/nuova`
-
-### "Cosa mi manca"
-Sezione che segnala azioni richieste al collaboratore. Trigger:
-- Richieste in stato RIFIUTATO → "Hai X richiesta/e rifiutata/e da riaprire"
-- Documenti in stato DA_FIRMARE → "Hai X documento/i da firmare"
-- Ticket aperti senza risposta del collaboratore (ultimo messaggio non è dell'utente corrente)
-- Profilo incompleto: campi obbligatori mancanti (IBAN, codice fiscale) → "Completa il tuo profilo"
-  - Nota: una volta implementato l'onboarding, il profilo sarà sempre completo all'attivazione. Il check rimane come fallback.
-
-### Ultimi aggiornamenti (feed)
-Mostrare le ultime 10 voci aggregate da:
-- Cambi stato su compensi e rimborsi propri (da `compensation_history` / `expense_history`)
-- Risposte ai propri ticket (nuovi `ticket_messages` da altri utenti)
-- Nuovi annunci in bacheca (`announcements`, max 3, pinned first)
+- **UI language**: Italian. Code/commits: English.
+- **Storage**: private Supabase buckets with signed URL. Never public links for documents.
+- **CU batch**: align with accounting on the CSV format before implementing the batch import.
+- **New members**: onboarding flow must be completable autonomously by the admin without technical intervention (profile registration + contract generation + role assignment).
 
 ---
 
-## 12. Profilo collaboratore esteso (Phase 3)
+## 11. Collaborator dashboard (Phase 3)
 
-Estensione del profilo attuale (IBAN, tel, indirizzo, tshirt_size).
+Collaborator home page. Currently a "Under construction" placeholder.
 
-### Schema DB — note
-Campo rinominato in Block 3: `ha_figli_a_carico` → `sono_un_figlio_a_carico` (migration 018).
-Aggiunto `importo_lordo_massimale decimal(10,2) nullable` (migration 019).
-Tipo contratto unificato a solo `OCCASIONALE` (migration 020 — rimosse COCOCO/PIVA).
+### Summary cards (3 large cards)
+Each card shows: active request count + total amount in euros + count of requests pending liquidation (APPROVATO) + related amount.
 
-### Dati fiscali — Sono fiscalmente a carico
-- Semantica: il collaboratore dichiara se È fiscalmente a carico di un familiare (es. genitore). Non se "ha figli a carico".
-- Campo DB: `sono_un_figlio_a_carico` boolean (rinominato in Block 3 da `ha_figli_a_carico`)
-- Checkbox "Sono fiscalmente a carico" + testo esplicativo
-- Se true: mostrare collassabile una guida con soglie reddito/età — contenuto gestito dall'admin tramite Contenuti > Guide (tag: `detrazioni-figli`)
+- **Compensations**: active requests (state ≠ LIQUIDATO, ≠ RIFIUTATO) + of which pending liquidation (APPROVATO)
+- **Reimbursements**: same logic as compensations, counts and amounts separate
+- **Documents to sign**: count only of documents in DA_FIRMARE state
 
-### Info P.IVA
-- Campo `partita_iva` (testo, opzionale) già nel modello: editabile dal collaboratore
-- Se `partita_iva` valorizzato: mostrare banner "Sei registrato come P.IVA" + contenuto di una guida gestita dall'admin (tag: `procedura-piva`). Stesso meccanismo del punto precedente.
+### Quick actions
+- New compensation → `/compensi/nuova`
+- New reimbursement → `/rimborsi/nuova`
+- Open ticket → `/ticket/nuova`
 
-### Data ingresso
-- Campo `data_ingresso` (date): impostato dall'admin nel form di creazione utente
-- Modificabile dall'admin o responsabile nella pagina Impostazioni > Collaboratori (MemberStatusManager o sezione dedicata)
-- Read-only per il collaboratore nel proprio profilo
+### "What I need to do"
+Section signalling actions required from the collaborator. Triggers:
+- Requests in RIFIUTATO state → "Hai X richiesta/e rifiutata/e da riaprire"
+- Documents in DA_FIRMARE state → "Hai X documento/i da firmare"
+- Open tickets with no collaborator reply (last message is not from the current user)
+- Incomplete profile: missing required fields (IBAN, codice fiscale) → "Completa il tuo profilo"
+  - Note: once onboarding is implemented, the profile will always be complete at activation. The check remains as a fallback.
 
-### Foto profilo
-- Campo `foto_profilo_url` nel record collaboratore
-- Upload da parte del collaboratore nel proprio profilo (Supabase Storage, bucket `avatars` pubblico o signed URL)
-- Non obbligatoria; mostrata in Sidebar se presente, altrimenti iniziali
+### Latest updates (feed)
+Show the last 10 aggregated items from:
+- State changes on own compensations and reimbursements (from `compensation_history` / `expense_history`)
+- Replies to own tickets (new `ticket_messages` from other users)
+- New announcements on the board (`announcements`, max 3, pinned first)
 
-### Panoramica pagamenti — pagina Compensi
-Sezione "I miei pagamenti" posizionata in testa alla pagina `/compensi`, con due card:
-- **Compensi ricevuti**: breakdown per anno — totale LIQUIDATO per anno corrente e anni precedenti
-- **Rimborsi ricevuti**: stesso breakdown per anno
+---
 
-Importi "in attesa" (IN_ATTESA + APPROVATO) mostrati separatamente sotto le card come riga riepilogativa.
-Calcolato dinamicamente — nessun campo persisted.
+## 12. Extended collaborator profile (Phase 3)
 
-### Massimale lordo annuo (`importo_lordo_massimale`)
-- Campo collaborator-editable nel profilo; valore max 5000€; nullable (= nessun massimale impostato).
-- Se impostato: progress bar nella pagina Compensi che mostra `somma importo_lordo compensi LIQUIDATO anno corrente / massimale`.
-  - Progress bar non mostrata se `importo_lordo_massimale IS NULL`.
-- La legislazione italiana prevede due soglie standard di riferimento:
-  - Prestazioni occasionali: 5000€/anno
-  - Figlio fiscalmente a carico: ~2840€/anno (varia; vedi guida `detrazioni-figli`)
-  - Il collaboratore imposta manualmente il proprio massimale in base alle proprie situazioni lavorative aggiuntive.
+Extension of the current profile (IBAN, phone, address, tshirt_size).
 
-### Tipo contratto
-- Unico tipo contratto supportato: `OCCASIONALE` (Block 3 — rimossi COCOCO e PIVA).
-- Il campo `tipo_contratto` su `collaborators` non è più editabile dall'utente; hardcodato a `OCCASIONALE` alla creazione.
-- Template contratto: solo template di tipo OCCASIONALE gestito da admin in Impostazioni.
-- Il campo `tipo` sui record `compensations` è stato rimosso in Block 7 (PIVA eliminato — solo OCCASIONALE supportato).
+### DB schema — notes
+Field renamed in Block 3: `ha_figli_a_carico` → `sono_un_figlio_a_carico` (migration 018).
+Added `importo_lordo_massimale decimal(10,2) nullable` (migration 019).
+Contract type unified to `OCCASIONALE` only (migration 020 — COCOCO/PIVA removed).
 
-### Username collaboratore (Block 4)
-- Colonna `username TEXT UNIQUE` su `collaborators` (nullable per i record pre-esistenti).
-- **Generazione**: auto-calcolato da `{nome}_{cognome}` (lowercase, accenti rimossi, non-alfanumerici → `_`).
-- **Creazione utente (CreateUserForm)**: campo username calcolato live da nome+cognome, editabile dall'admin prima del submit. Se admin fornisce un username esplicito → server valida unicità → 409 se già in uso. Se non fornito → auto-genera con suffisso numerico (`_2`, `_3`) in modo trasparente.
-- **Onboarding wizard**: mostra username (da prefill DB) come preview readonly nella sezione Identità; se prefill.username è null, calcolato live da nome+cognome digitati.
-- **Profilo collaboratore (ProfileForm)**: badge colorato readonly affianco all'avatar.
-- **Vista admin (CollaboratoreDetail)**: mostra username + modifica inline → `PATCH /api/admin/collaboratori/[id]` (solo admin/responsabile_compensi). Validazione unicità server-side → 409 se già in uso.
+### Fiscal data — Fiscal dependence
+- Semantics: the collaborator declares whether they ARE fiscally dependent on a relative (e.g. parent). Not whether they "have dependent children".
+- DB field: `sono_un_figlio_a_carico` boolean (renamed in Block 3 from `ha_figli_a_carico`)
+- Checkbox "Sono fiscalmente a carico" + explanatory text
+- If true: show a collapsible guide with income/age thresholds — content managed by admin via Contenuti > Guide (tag: `detrazioni-figli`)
 
-### Validazioni e normalizzazioni campi (Block 4)
-- **Codice fiscale**: solo alfanumerico + uppercase durante input (nei form); regex formato completo in Zod API: `/^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/`.
-- **IBAN**: uppercase + rimozione spazi (già esistente); regex Zod: `/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/`.
-- **Telefono**: formato permissivo — cifre, `+`, `-`, spazi, parentesi; min 7 cifre.
-- **Provincia**: 2 lettere uppercase; regex `/^[A-Z]{2}$/`.
+### VAT number info
+- Field `partita_iva` (text, optional) already in the model: editable by the collaborator
+- If `partita_iva` is set: show banner "Sei registrato come P.IVA" + content from an admin-managed guide (tag: `procedura-piva`). Same mechanism as above.
 
-### Modifica profilo collaboratore da responsabile_compensi (Block 5)
-- `responsabile_compensi` e `amministrazione` possono modificare tutti i campi profilo di un collaboratore **ad eccezione di IBAN** (dato sensibile).
-- Il `responsabile_compensi` può modificare solo i collaboratori nelle proprie community gestite.
-- Endpoint: `PATCH /api/admin/collaboratori/[id]/profile` — gestisce tutti i campi profilo + username.
-- Username incluso nello stesso endpoint; logica identica all'admin: validazione unicità server-side → 409 se già in uso.
-- Fix security: aggiunto community check anche al PATCH username esistente (`/api/admin/collaboratori/[id]`).
-- UI: sezione "Modifica profilo" toggle-able in CollaboratoreDetail — form inline con tutti i campi editabili.
-- **Regola di coerenza profilo**: documentata in `docs/profile-editing-contract.md`. Ogni blocco che tocca dati profilo collaboratore deve verificare allineamento tra onboarding, admin edit e responsabile edit (vedere file per matrice campi × entry point).
+### Start date
+- Field `data_ingresso` (date): set by admin in the user creation form
+- Editable by admin or responsabile in Settings > Collaborators (MemberStatusManager or dedicated section)
+- Read-only for the collaborator in their own profile
 
-### Richiesta rimborso spese e ticket da compensi (Block 6)
+### Profile photo
+- Field `foto_profilo_url` in the collaborator record
+- Uploaded by the collaborator in their own profile (Supabase Storage, `avatars` bucket — public or signed URL)
+- Not required; shown in Sidebar if present, otherwise initials
 
-#### Rimborso spese — wizard 3-step
-Il collaboratore crea una richiesta di rimborso da `/rimborsi/nuova` tramite wizard 3-step.
-Tutti i dati sono raccolti in stato React locale; la submit reale avviene solo al "Conferma e invia" in Step 3.
+### Payment overview — Compensations page
+Section "I miei pagamenti" at the top of `/compensi`, with two cards:
+- **Compensi ricevuti**: year-by-year breakdown — total LIQUIDATO for current year and prior years
+- **Rimborsi ricevuti**: same year-by-year breakdown
 
-- **Step 1 — Dati rimborso**: Categoria (obbligatoria), Data spesa (obbligatoria), Importo in € (obbligatorio), Descrizione (opzionale — testare nota libera sulla spesa). Avanti abilitato solo con categoria + data + importo validi.
-- **Step 2 — Allegati**: Upload documenti giustificativi (PDF, JPG, PNG, max 10 MB ciascuno). Allegati opzionali. Bucket Supabase Storage `expenses`, path `{user_id}/{expenseId}/{filename}`. Il campo `community_id` è ignorato in questo blocco.
-- **Step 3 — Riepilogo + Conferma**: mostra tutti i dati inseriti + nomi file allegati. "Conferma e invia" → `POST /api/expenses` → upload allegati → redirect `/rimborsi`.
+Pending amounts (IN_ATTESA + APPROVATO) shown separately below the cards as a summary row.
+Calculated dynamically — no persisted field.
 
-**Categorie rimborso** (Block 6 — aggiornate): `Trasporti, Vitto, Alloggio, Materiali, Cancelleria, Altro`.
+### Annual gross cap (`importo_lordo_massimale`)
+- Collaborator-editable field in the profile; max value 5000€; nullable (= no cap set).
+- If set: progress bar on the Compensations page showing `sum of importo_lordo for LIQUIDATO compensations current year / cap`.
+  - Progress bar not shown if `importo_lordo_massimale IS NULL`.
+- Italian legislation defines two standard reference thresholds:
+  - Occasional services: 5000€/year
+  - Fiscally dependent child: ~2840€/year (varies; see `detrazioni-figli` guide)
+  - The collaborator sets their own cap manually based on their additional employment situation.
 
-**`descrizione`** — resa opzionale (Block 6): migration `022_expense_descrizione_nullable.sql` rimuove il `NOT NULL`. Campo opzionale nel form e nell'API.
+### Contract type
+- Only supported contract type: `OCCASIONALE` (Block 3 — COCOCO and PIVA removed).
+- The `tipo_contratto` field on `collaborators` is no longer user-editable; hardcoded to `OCCASIONALE` at creation.
+- Contract template: only the OCCASIONALE template managed by admin in Settings.
+- The `tipo` field on `compensations` records was removed in Block 7 (PIVA eliminated — only OCCASIONALE supported).
 
-#### Ticket da sezione Compensi e Rimborsi
-- Disponibile solo via `TicketQuickModal` nella pagina `/compensi` (header in alto a destra).
-- **Riferimento ticket** (campo obbligatorio): `Compenso` o `Rimborso` — unici valori ammessi. I ticket non legati a questi due ambiti sono eliminati dal DB (migration 028).
-- Destinatario implicito: `responsabile_compensi` (workflow da rivedere in blocco dedicato).
+### Collaborator username (Block 4)
+- Column `username TEXT UNIQUE` on `collaborators` (nullable for pre-existing records).
+- **Generation**: auto-computed from `{nome}_{cognome}` (lowercase, accents removed, non-alphanumeric → `_`).
+- **User creation (CreateUserForm)**: username field computed live from nome+cognome, editable by admin before submit. If admin provides an explicit username → server validates uniqueness → 409 if already in use. If not provided → auto-generates with numeric suffix (`_2`, `_3`) transparently.
+- **Onboarding wizard**: shows username (from DB prefill) as readonly preview in the Identity section; if prefill.username is null, computed live from typed nome+cognome.
+- **Collaborator profile (ProfileForm)**: read-only coloured badge next to the avatar.
+- **Admin view (CollaboratoreDetail)**: shows username + inline edit → `PATCH /api/admin/collaboratori/[id]` (admin/responsabile_compensi only). Server-side uniqueness validation → 409 if already in use.
+
+### Field validations and normalisation (Block 4)
+- **Codice fiscale**: alphanumeric + uppercase only during input (in forms); full format regex in Zod API: `/^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/`.
+- **IBAN**: uppercase + space removal (already existing); Zod regex: `/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/`.
+- **Phone**: permissive format — digits, `+`, `-`, spaces, parentheses; min 7 digits.
+- **Province**: 2 uppercase letters; regex `/^[A-Z]{2}$/`.
+
+### Collaborator profile editing by responsabile_compensi (Block 5)
+- `responsabile_compensi` and `amministrazione` can edit all profile fields of a collaborator **except IBAN** (sensitive data).
+- `responsabile_compensi` can only edit collaborators in their managed communities.
+- Endpoint: `PATCH /api/admin/collaboratori/[id]/profile` — handles all profile fields + username.
+- Username included in the same endpoint; same logic as admin: server-side uniqueness validation → 409 if already in use.
+- Security fix: community check also added to the existing PATCH username endpoint (`/api/admin/collaboratori/[id]`).
+- UI: toggle-able "Modifica profilo" section in CollaboratoreDetail — inline form with all editable fields.
+- **Profile consistency rule**: documented in `docs/profile-editing-contract.md`. Every block touching collaborator profile data must verify alignment across onboarding, admin edit, and responsabile edit (see file for field × entry point matrix).
+
+### Reimbursement request and ticket from compensations (Block 6)
+
+#### Reimbursement — 3-step wizard
+Collaborator creates a reimbursement request from `/rimborsi/nuova` via a 3-step wizard.
+All data is collected in local React state; the actual submit happens only on "Conferma e invia" in Step 3.
+
+- **Step 1 — Reimbursement data**: Category (required), Expense date (required), Amount in € (required), Description (optional — free note on the expense). Next enabled only with valid category + date + amount.
+- **Step 2 — Attachments**: Upload supporting documents (PDF, JPG, PNG, max 10 MB each). Attachments optional. Supabase Storage bucket `expenses`, path `{user_id}/{expenseId}/{filename}`. The `community_id` field is ignored in this block.
+- **Step 3 — Summary + Confirm**: shows all entered data + attachment filenames. "Conferma e invia" → `POST /api/expenses` → upload attachments → redirect `/rimborsi`.
+
+**Reimbursement categories** (Block 6 — updated): `Trasporti, Vitto, Alloggio, Materiali, Cancelleria, Altro`.
+
+**`descrizione`** — made optional (Block 6): migration `022_expense_descrizione_nullable.sql` removes `NOT NULL`. Optional field in form and API.
+
+#### Ticket from Compensations and Reimbursements section
+- Available only via `TicketQuickModal` on the `/compensi` page (top right header).
+- **Ticket reference** (required field): `Compenso` or `Rimborso` — the only accepted values. Tickets not linked to these two scopes are removed from DB (migration 028).
+- Implicit recipient: `responsabile_compensi` (workflow to be revised in a dedicated block).
 
 ### Finalizzazione sezione Collaboratore — Compensi e Rimborsi (Block 9)
 

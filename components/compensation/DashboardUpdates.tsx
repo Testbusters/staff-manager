@@ -122,7 +122,7 @@ export default function DashboardUpdates({
               >
                 {tab.label}
                 {count > 0 && (
-                  <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none tabular-nums">
+                  <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white leading-none tabular-nums">
                     {count}
                   </span>
                 )}

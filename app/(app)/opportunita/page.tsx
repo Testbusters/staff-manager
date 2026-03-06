@@ -121,7 +121,7 @@ export default async function OpportunitaPage({
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
-        ? 'bg-blue-600 text-white'
+        ? 'bg-brand text-white'
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 

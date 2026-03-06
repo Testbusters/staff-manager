@@ -69,7 +69,7 @@ export default function FeedbackButton() {
       <button
         onClick={openModal}
         aria-label="Invia feedback"
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-blue-600 hover:bg-blue-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-brand hover:bg-blue-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition"
       >
         <span>💬</span>
         <span className="hidden sm:inline">Feedback</span>
@@ -157,7 +157,7 @@ export default function FeedbackButton() {
                   <Button type="button" variant="outline" onClick={closeModal} disabled={loading}>
                     Annulla
                   </Button>
-                  <Button type="submit" disabled={loading || !messaggio.trim()} className="bg-blue-600 hover:bg-blue-500 text-white">
+                  <Button type="submit" disabled={loading || !messaggio.trim()} className="bg-brand hover:bg-blue-500 text-white">
                     {loading ? 'Invio…' : 'Invia'}
                   </Button>
                 </div>

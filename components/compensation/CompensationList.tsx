@@ -95,7 +95,7 @@ export default function CompensationList({
           onClick={() => handleFilterChange('ALL')}
           className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
             filterStato === 'ALL'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-brand text-white'
               : 'bg-muted text-muted-foreground hover:bg-accent'
           }`}
         >
@@ -107,7 +107,7 @@ export default function CompensationList({
             onClick={() => handleFilterChange(s)}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
-                ? 'bg-blue-600 text-white'
+                ? 'bg-brand text-white'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
