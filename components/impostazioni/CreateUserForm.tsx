@@ -387,20 +387,6 @@ export default function CreateUserForm() {
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
                 disabled={loading} maxLength={2} className="font-mono uppercase" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Comune di residenza</label>
-                <Input type="text" placeholder="Milano" value={comuneRes}
-                  onChange={(e) => setComuneRes(e.target.value)}
-                  disabled={loading} />
-              </div>
-              <div>
-                <label className={labelCls}>Provincia di residenza (sigla)</label>
-                <Input type="text" placeholder="MI" value={provinciaRes}
-                  onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                  disabled={loading} maxLength={2} className="font-mono uppercase" />
-              </div>
-            </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
                 <label className={labelCls}>Via/Piazza</label>
@@ -413,6 +399,20 @@ export default function CreateUserForm() {
                 <Input type="text" placeholder="1" value={civico}
                   onChange={(e) => setCivico(e.target.value)}
                   disabled={loading} maxLength={10} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Comune di residenza</label>
+                <Input type="text" placeholder="Milano" value={comuneRes}
+                  onChange={(e) => setComuneRes(e.target.value)}
+                  disabled={loading} />
+              </div>
+              <div>
+                <label className={labelCls}>Provincia di residenza (sigla)</label>
+                <Input type="text" placeholder="MI" value={provinciaRes}
+                  onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
+                  disabled={loading} maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div>

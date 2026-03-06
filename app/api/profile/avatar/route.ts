@@ -58,5 +58,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ url: publicUrl });
+  return NextResponse.json({ url: `${publicUrl}?t=${Date.now()}` });
 }

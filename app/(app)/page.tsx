@@ -17,6 +17,7 @@ import type { BarMonthData } from '@/components/compensation/DashboardBarChart';
 import DashboardUpdates from '@/components/compensation/DashboardUpdates';
 import type { DashboardDocItem, DashboardEventItem, DashboardCommItem, DashboardOppItem } from '@/components/compensation/DashboardUpdates';
 import CollabOpenTicketsSection from '@/components/ticket/CollabOpenTicketsSection';
+import ResponsabileAvatarHero from '@/components/responsabile/ResponsabileAvatarHero';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
@@ -349,26 +350,13 @@ export default async function DashboardPage() {
       <div className="p-6 max-w-5xl space-y-6">
 
         {/* Hero */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-accent flex-shrink-0 overflow-hidden flex items-center justify-center">
-              {ownCollab?.foto_profilo_url ? (
-                <img src={ownCollab.foto_profilo_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-lg font-medium text-foreground select-none">{rInitials}</span>
-              )}
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">
-                Ciao{rFullName ? `, ${rFullName}` : ''}!
-              </h1>
-              <span className="mt-1.5 inline-flex items-center rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground">
-                {rRoleLabel}
-              </span>
-            </div>
-          </div>
-          <p className="shrink-0 pt-1 text-right text-sm text-muted-foreground">{rTodayStr}</p>
-        </div>
+        <ResponsabileAvatarHero
+          initialAvatarUrl={ownCollab?.foto_profilo_url ?? null}
+          initials={rInitials}
+          fullName={rFullName}
+          roleLabel={rRoleLabel}
+          todayStr={rTodayStr}
+        />
 
         {/* KPI row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">

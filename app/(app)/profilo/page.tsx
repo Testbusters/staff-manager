@@ -20,6 +20,7 @@ export default async function ProfiloPage({
     { data: profile },
     { data: collaborator },
     { data: guidaFigliRow },
+    { data: allCommunitiesData },
   ] = await Promise.all([
     supabase
       .from('user_profiles')
@@ -34,7 +35,7 @@ export default async function ProfiloPage({
         comune, provincia_residenza, data_ingresso,
         telefono, indirizzo, civico_residenza, iban, intestatario_pagamento, tshirt_size,
         foto_profilo_url, sono_un_figlio_a_carico, importo_lordo_massimale,
-        collaborator_communities ( communities ( name ) )
+        collaborator_communities ( communities ( id, name ) )
       `)
       .eq('user_id', user.id)
       .single(),
@@ -44,16 +45,22 @@ export default async function ProfiloPage({
       .contains('tag', ['detrazioni-figli'])
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('communities')
+      .select('id, name')
+      .order('name'),
   ]);
 
   const communities =
     collaborator?.collaborator_communities?.flatMap(
-      (cc: { communities: { name: string } | { name: string }[] | null }) => {
+      (cc: { communities: { id: string; name: string } | { id: string; name: string }[] | null }) => {
         const c = cc.communities;
         if (!c) return [];
         return Array.isArray(c) ? c : [c];
       },
     ) ?? [];
+
+  const allCommunities = (allCommunitiesData ?? []) as { id: string; name: string }[];
 
   const role = profile?.role ?? '';
   if (role === 'responsabile_compensi') redirect('/');
@@ -88,6 +95,7 @@ export default async function ProfiloPage({
           role={role}
           email={user.email ?? ''}
           communities={communities}
+          allCommunities={allCommunities}
           guidaFigli={guidaFigliRow ?? null}
         />
       </div>
@@ -115,6 +123,7 @@ export default async function ProfiloPage({
             role={role}
             email={user.email ?? ''}
             communities={communities}
+            allCommunities={allCommunities}
             guidaFigli={guidaFigliRow ?? null}
           />
         </div>

@@ -319,6 +319,20 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
                 required maxLength={2} className="font-mono uppercase" />
             </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <label className={labelCls}>Via/Piazza di residenza <span className="text-red-500">*</span></label>
+                <Input type="text" placeholder="Via Roma" value={indirizzo}
+                  onChange={(e) => setIndirizzo(e.target.value)}
+                  required />
+              </div>
+              <div>
+                <label className={labelCls}>Civico <span className="text-red-500">*</span></label>
+                <Input type="text" placeholder="1" value={civico}
+                  onChange={(e) => setCivico(e.target.value)}
+                  required maxLength={10} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -338,20 +352,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 <Input type="text" placeholder="MI" value={provinciaRes}
                   onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
                   required maxLength={2} className="font-mono uppercase" />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2">
-                <label className={labelCls}>Via/Piazza di residenza <span className="text-red-500">*</span></label>
-                <Input type="text" placeholder="Via Roma" value={indirizzo}
-                  onChange={(e) => setIndirizzo(e.target.value)}
-                  required />
-              </div>
-              <div>
-                <label className={labelCls}>Civico <span className="text-red-500">*</span></label>
-                <Input type="text" placeholder="1" value={civico}
-                  onChange={(e) => setCivico(e.target.value)}
-                  required maxLength={10} />
               </div>
             </div>
             <div>

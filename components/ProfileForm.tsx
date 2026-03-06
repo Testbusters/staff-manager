@@ -40,7 +40,8 @@ type Props = {
   collaborator: Collaborator | null;
   role: string;
   email: string;
-  communities: { name: string }[];
+  communities: { id: string; name: string }[];
+  allCommunities: { id: string; name: string }[];
   guidaFigli: GuideContent;
 };
 
@@ -86,7 +87,7 @@ function GuideBox({ guide }: { guide: GuideContent }) {
   );
 }
 
-export default function ProfileForm({ collaborator, role, email, communities, guidaFigli }: Props) {
+export default function ProfileForm({ collaborator, role, email, communities, allCommunities, guidaFigli }: Props) {
   // Editable personal data
   const [emailVal, setEmailVal]       = useState(email);
   const [nome, setNome]               = useState(collaborator?.nome ?? '');
@@ -114,6 +115,14 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
   const [tshirt, setTshirt]     = useState(collaborator?.tshirt_size ?? '');
   // Avatar
   const [avatarUrl, setAvatarUrl] = useState(collaborator?.foto_profilo_url ?? '');
+
+  // Communities (collaboratore self-edit)
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>(
+    communities.map((c) => c.id),
+  );
+  const [communityLoading, setCommunityLoading] = useState(false);
+  const [communitySaved, setCommunitySaved]     = useState(false);
+  const [communityError, setCommunityError]     = useState<string | null>(null);
 
   const [loading, setLoading]           = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -179,6 +188,26 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
     if (!res.ok) { setAvatarError(data.error ?? 'Errore caricamento foto'); return; }
     setAvatarUrl(data.url);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSaveCommunities = async () => {
+    if (selectedCommunityIds.length === 0) {
+      setCommunityError('Seleziona almeno una community');
+      return;
+    }
+    setCommunityLoading(true);
+    setCommunityError(null);
+    setCommunitySaved(false);
+    const res = await fetch('/api/profile/communities', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ community_ids: selectedCommunityIds }),
+    });
+    const data = await res.json();
+    setCommunityLoading(false);
+    if (!res.ok) { setCommunityError(data.error ?? 'Errore durante il salvataggio'); return; }
+    setCommunitySaved(true);
+    setTimeout(() => setCommunitySaved(false), 3000);
   };
 
   const initials = collaborator
@@ -285,15 +314,6 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
             </div>
           </div>
           <div>
-            <label className={labelCls}>Email</label>
-            <Input
-              type="email"
-              value={emailVal}
-              onChange={(e) => setEmailVal(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          <div>
             <label className={labelCls}>Codice fiscale</label>
             <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
               onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
@@ -319,51 +339,6 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
               onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
               disabled={loading} maxLength={2} className="font-mono uppercase" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Comune di residenza</label>
-              <Input type="text" placeholder="Milano" value={comuneRes}
-                onChange={(e) => setComuneRes(e.target.value)}
-                disabled={loading} />
-            </div>
-            <div>
-              <label className={labelCls}>Provincia di residenza (sigla)</label>
-              <Input type="text" placeholder="MI" value={provinciaRes}
-                onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                disabled={loading} maxLength={2} className="font-mono uppercase" />
-            </div>
-          </div>
-          {communities.length > 0 && (
-            <div>
-              <p className={labelCls}>Community</p>
-              <div className="flex gap-2 flex-wrap">
-                {communities.map((c) => (
-                  <span key={c.name} className="rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/40 px-3 py-1 text-xs text-blue-700 dark:text-blue-300">
-                    {c.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Contacts — editable */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Contatti</h2>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <label className={labelCls}>Telefono di contatto</label>
-            <Input
-              type="tel"
-              placeholder="+39 333 0000000"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              disabled={loading}
-            />
-          </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
               <label className={labelCls}>Via/Piazza di residenza</label>
@@ -386,6 +361,48 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
                 maxLength={10}
               />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Comune di residenza</label>
+              <Input type="text" placeholder="Milano" value={comuneRes}
+                onChange={(e) => setComuneRes(e.target.value)}
+                disabled={loading} />
+            </div>
+            <div>
+              <label className={labelCls}>Provincia di residenza (sigla)</label>
+              <Input type="text" placeholder="MI" value={provinciaRes}
+                onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
+                disabled={loading} maxLength={2} className="font-mono uppercase" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contacts — editable */}
+      <div className={sectionCls}>
+        <div className={sectionHeader}>
+          <h2 className="text-sm font-medium text-foreground">Contatti</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className={labelCls}>Email</label>
+            <Input
+              type="email"
+              value={emailVal}
+              onChange={(e) => setEmailVal(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Telefono di contatto</label>
+            <Input
+              type="tel"
+              placeholder="+39 333 0000000"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              disabled={loading}
+            />
           </div>
         </div>
       </div>
@@ -563,6 +580,44 @@ export default function ProfileForm({ collaborator, role, email, communities, gu
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Community — collaboratore self-edit */}
+      {role === 'collaboratore' && allCommunities.length > 0 && (
+        <div className={sectionCls}>
+          <div className={sectionHeader}>
+            <h2 className="text-sm font-medium text-foreground">Community</h2>
+          </div>
+          <div className="p-5 space-y-4">
+            <div className="space-y-2">
+              {allCommunities.map((c) => (
+                <label key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/60 border border-border px-3 py-2.5 cursor-pointer hover:bg-muted/80 transition">
+                  <Checkbox
+                    checked={selectedCommunityIds.includes(c.id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedCommunityIds((prev) =>
+                        checked ? [...prev, c.id] : prev.filter((id) => id !== c.id),
+                      );
+                    }}
+                    disabled={communityLoading}
+                  />
+                  <span className="text-sm text-foreground">{c.name}</span>
+                </label>
+              ))}
+            </div>
+            {communityError && (
+              <p className="text-xs text-red-600 dark:text-red-400">{communityError}</p>
+            )}
+            <Button
+              type="button"
+              onClick={handleSaveCommunities}
+              disabled={communityLoading || selectedCommunityIds.length === 0}
+              className="bg-brand hover:bg-brand/90 text-white"
+            >
+              {communityLoading ? 'Salvataggio…' : communitySaved ? <><Check className="h-4 w-4 mr-1" />Salvato</> : 'Salva community'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Preferences — editable */}
       <div className={sectionCls}>

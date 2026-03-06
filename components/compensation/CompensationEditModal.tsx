@@ -29,11 +29,13 @@ export default function CompensationEditModal({
   onSuccess,
 }: CompensationEditModalProps) {
   const [importo_lordo, setImportoLordo] = useState('');
-  const [ritenuta_acconto, setRitenutaAcconto] = useState('');
   const [data_competenza, setDataCompetenza] = useState('');
   const [nome_servizio_ruolo, setNomeServizioRuolo] = useState('');
   const [competenza, setCompetenza] = useState('');
   const [info_specifiche, setInfoSpecifiche] = useState('');
+
+  // Withholding rate derived from original compensation (immutable during edit)
+  const [rateDecimal, setRateDecimal] = useState(0.20);
 
   const [competenze, setCompetenze] = useState<Competenza[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,12 +45,15 @@ export default function CompensationEditModal({
   useEffect(() => {
     if (open) {
       setImportoLordo(compensation.importo_lordo?.toString() ?? '');
-      setRitenutaAcconto(compensation.ritenuta_acconto?.toString() ?? '');
       setDataCompetenza(formatDateInput(compensation.data_competenza));
       setNomeServizioRuolo(compensation.nome_servizio_ruolo ?? '');
       setCompetenza(compensation.competenza ?? '');
       setInfoSpecifiche(compensation.info_specifiche ?? '');
       setError(null);
+      // Derive rate from original values
+      const lordo = compensation.importo_lordo ?? 0;
+      const ritenuta = compensation.ritenuta_acconto ?? 0;
+      setRateDecimal(lordo > 0 ? ritenuta / lordo : 0.20);
     }
   }, [open, compensation]);
 
@@ -61,7 +66,7 @@ export default function CompensationEditModal({
   }, []);
 
   const lordo = parseFloat(importo_lordo) || 0;
-  const ritenuta = parseFloat(ritenuta_acconto) || 0;
+  const ritenuta = Math.round(lordo * rateDecimal * 100) / 100;
   const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
   function handleClose() {
@@ -78,7 +83,7 @@ export default function CompensationEditModal({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         importo_lordo: lordo,
-        ritenuta_acconto: ritenuta,
+        ritenuta_acconto: ritenuta, // auto-calculated, not from user input
         data_competenza,
         nome_servizio_ruolo: nome_servizio_ruolo.trim(),
         competenza,
@@ -99,7 +104,6 @@ export default function CompensationEditModal({
 
   const isValid =
     lordo > 0 &&
-    ritenuta >= 0 &&
     data_competenza.length > 0 &&
     nome_servizio_ruolo.trim().length > 0 &&
     competenza.length > 0;
@@ -155,44 +159,37 @@ export default function CompensationEditModal({
             </Select>
           </div>
 
-          {/* Importo lordo + ritenuta */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">
-                Importo lordo (€) <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={importo_lordo}
-                onChange={(e) => setImportoLordo(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">
-                Ritenuta acconto (€) <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={ritenuta_acconto}
-                onChange={(e) => setRitenutaAcconto(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
+          {/* Importo lordo */}
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1.5">
+              Importo lordo (€) <span className="text-red-500">*</span>
+            </label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={importo_lordo}
+              onChange={(e) => setImportoLordo(e.target.value)}
+              placeholder="0.00"
+            />
           </div>
 
-          {/* Importo netto (computed) */}
+          {/* Ritenuta (read-only) + Netto (computed) */}
           {lordo > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Importo netto:{' '}
-              <span className="text-foreground font-medium">
-                {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(netto)}
-              </span>
-            </p>
+            <div className="rounded-lg bg-muted/60 border border-border px-4 py-3 space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Ritenuta d&apos;acconto ({Math.round(rateDecimal * 100)}%)</span>
+                <span className="text-foreground font-medium tabular-nums">
+                  − {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(ritenuta)}
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-border pt-1.5">
+                <span className="text-muted-foreground font-medium">Importo netto</span>
+                <span className="text-foreground font-semibold tabular-nums">
+                  {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(netto)}
+                </span>
+              </div>
+            </div>
           )}
 
           {/* Info specifiche */}
