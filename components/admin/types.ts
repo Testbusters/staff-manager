@@ -97,6 +97,5 @@ export type AdminDashboardData = {
   periodMetrics: AdminPeriodMetrics;
   feedItems: AdminFeedItem[];
   blockItems: AdminBlockItem[];
-  communities: { id: string; name: string }[];
   hero: AdminHero;
 };

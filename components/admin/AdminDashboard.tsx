@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import CountUp from 'react-countup';
 import Link from 'next/link';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
@@ -205,40 +204,6 @@ function CommunityColumn({ card }: { card: AdminCommunityCard }) {
   );
 }
 
-// ── Feed row ───────────────────────────────────────────────
-function FeedRow({
-  collabName, communityName, entityType, stato, amount, createdAt, href,
-}: {
-  collabName: string;
-  communityName: string;
-  entityType: string;
-  stato: string;
-  amount: number;
-  createdAt: string;
-  href: string;
-}) {
-  const typeLabel = entityType === 'compensation' ? 'Compenso' : entityType === 'expense' ? 'Rimborso' : 'Documento';
-  const date = new Date(createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
-  return (
-    <Link
-      href={href}
-      className="flex items-center justify-between gap-4 rounded-xl bg-muted/40 border border-border/30 px-4 py-3 hover:bg-muted/70 transition"
-    >
-      <div className="min-w-0">
-        <p className="text-sm text-foreground truncate">
-          <span className="font-medium">{collabName}</span>
-          <span className="text-muted-foreground"> · {typeLabel}</span>
-        </p>
-        <p className="text-xs text-muted-foreground truncate">{communityName} · {stato}</p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-sm tabular-nums text-foreground">{eur(amount)}</p>
-        <p className="text-xs text-muted-foreground">{date}</p>
-      </div>
-    </Link>
-  );
-}
-
 // ── Period chart tooltip ───────────────────────────────────
 function ChartTooltip({ active, payload, label }: {
   active?: boolean;
@@ -298,19 +263,10 @@ function AdminHeroSection({ hero }: { hero: AdminHero }) {
 export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
   const {
     kpis, communityCards, periodMetrics,
-    feedItems, blockItems, communities, hero,
+    blockItems, hero,
   } = data;
 
-  const [search, setSearch] = useState('');
-  const [communityFilter, setCommunityFilter] = useState('');
   const [showBlocks, setShowBlocks] = useState(false);
-
-  // Feed filtering (client-side)
-  const filteredFeed = feedItems.filter(item => {
-    const matchText = search.trim() === '' || item.collabName.toLowerCase().includes(search.toLowerCase());
-    const matchComm = communityFilter === '' || item.communityId === communityFilter;
-    return matchText && matchComm;
-  });
 
   // Period chart data
   const chartData = [
@@ -470,52 +426,6 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         </div>
       </section>
 
-      {/* ── Feed ── */}
-      <section>
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Attività recenti
-          </h2>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Cerca cognome…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="rounded-lg bg-muted border border-border px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring w-36"
-            />
-            <Select value={communityFilter || 'all'} onValueChange={(v) => setCommunityFilter(v === 'all' ? '' : v)}>
-              <SelectTrigger className="h-8 text-xs w-auto"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte le community</SelectItem>
-                {communities.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        {filteredFeed.length === 0 ? (
-          <div className={sectionCls + ' flex items-center justify-center h-20'}>
-            <p className="text-sm text-muted-foreground">Nessuna attività trovata.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredFeed.map(item => (
-              <FeedRow
-                key={item.key}
-                collabName={`${item.collabName} ${item.collabCognome}`}
-                communityName={item.communityName}
-                entityType={item.entityType}
-                stato={item.stato}
-                amount={item.amount}
-                createdAt={item.createdAt}
-                href={item.href}
-              />
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* ── Blocks drawer ── */}
       <BlocksDrawer

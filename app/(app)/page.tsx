@@ -847,7 +847,6 @@ export default async function DashboardPage() {
       periodMetrics,
       feedItems,
       blockItems,
-      communities: (communitiesRes.data ?? []).map(c => ({ id: c.id, name: c.name })),
       hero: {
         nome:            adminCollab?.nome ?? null,
         cognome:         adminCollab?.cognome ?? null,
