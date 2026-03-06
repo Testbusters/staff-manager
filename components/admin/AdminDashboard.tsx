@@ -7,10 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import type { AdminDashboardData } from './types';
+import { ShieldCheck, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { AdminDashboardData, AdminCommunityCard, AdminCommunityCompRecord, AdminCommunityExpRecord, AdminCommunityDocRecord } from './types';
 import type { AdminHero } from './types';
 import BlocksDrawer from './BlocksDrawer';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import StatusBadge from '@/components/compensation/StatusBadge';
 
 // ── Helpers ────────────────────────────────────────────────
 function eur(n: number) {
@@ -46,84 +49,159 @@ function KpiCard({
   );
 }
 
-// ── Community Card ─────────────────────────────────────────
-function CommunityCard({
-  name, pendingComps, pendingExps, docsToSign, collabCount,
+// ── Filter Tab ─────────────────────────────────────────────
+function FilterTab({
+  label, count, active, onClick,
 }: {
-  name: string;
-  pendingComps: number;
-  pendingExps: number;
-  docsToSign: number;
-  collabCount: number;
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className={sectionCls + ' p-5 space-y-3'}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground truncate">{name}</h3>
-        <span className="text-xs text-muted-foreground shrink-0 ml-2">
-          {collabCount} collab.
-        </span>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-lg bg-muted/60 border border-border/40 px-3 py-2 text-center">
-          <p className={
-            'text-lg font-semibold tabular-nums ' +
-            (pendingComps > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground')
-          }>
-            {pendingComps}
-          </p>
-          <p className="text-[10px] text-muted-foreground">Compensi</p>
-        </div>
-        <div className="rounded-lg bg-muted/60 border border-border/40 px-3 py-2 text-center">
-          <p className={
-            'text-lg font-semibold tabular-nums ' +
-            (pendingExps > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground')
-          }>
-            {pendingExps}
-          </p>
-          <p className="text-[10px] text-muted-foreground">Rimborsi</p>
-        </div>
-        <div className="rounded-lg bg-muted/60 border border-border/40 px-3 py-2 text-center">
-          <p className={
-            'text-lg font-semibold tabular-nums ' +
-            (docsToSign > 0 ? 'text-blue-600 dark:text-blue-300' : 'text-muted-foreground')
-          }>
-            {docsToSign}
-          </p>
-          <p className="text-[10px] text-muted-foreground">Da firmare</p>
-        </div>
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className={
+        'rounded-xl border px-3 py-2 text-center transition cursor-pointer w-full ' +
+        (active
+          ? 'bg-sidebar-accent border-border/60 text-foreground'
+          : 'bg-muted/60 border-border/40 text-muted-foreground hover:bg-muted')
+      }
+    >
+      <p className={
+        'text-lg font-semibold tabular-nums leading-none ' +
+        (active && count > 0 ? 'text-amber-600 dark:text-amber-300' : '')
+      }>
+        {count}
+      </p>
+      <p className="text-[10px] mt-0.5">{label}</p>
+    </button>
   );
 }
 
-// ── Urgenti row ────────────────────────────────────────────
-function UrgentRow({
-  collabName, communityName, entityType, stato, amount, daysWaiting, href,
-}: {
-  collabName: string;
-  communityName: string;
-  entityType: string;
-  stato: string;
-  amount: number;
-  daysWaiting: number;
-  href: string;
-}) {
-  const typeLabel = entityType === 'compensation' ? 'Compenso' : entityType === 'expense' ? 'Rimborso' : 'Documento';
+// ── Record Row ─────────────────────────────────────────────
+type RecordRowProps =
+  | { tab: 'comps'; record: AdminCommunityCompRecord }
+  | { tab: 'exps'; record: AdminCommunityExpRecord }
+  | { tab: 'docs'; record: AdminCommunityDocRecord };
+
+function RecordRow(props: RecordRowProps) {
+  const { tab, record } = props;
+  const fmtDate = (iso: string | null | undefined) =>
+    iso ? new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '—';
+
+  if (tab === 'comps') {
+    const r = record as AdminCommunityCompRecord;
+    return (
+      <Link
+        href={r.href}
+        className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 border border-border/30 px-3 py-2.5 hover:bg-muted/70 transition"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-foreground truncate">{r.collabName}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.dataCompetenza)}</p>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          <StatusBadge stato={r.stato as Parameters<typeof StatusBadge>[0]['stato']} />
+          <p className="text-xs font-semibold tabular-nums text-foreground">{eur(r.importoNetto)}</p>
+        </div>
+      </Link>
+    );
+  }
+
+  if (tab === 'exps') {
+    const r = record as AdminCommunityExpRecord;
+    return (
+      <Link
+        href={r.href}
+        className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 border border-border/30 px-3 py-2.5 hover:bg-muted/70 transition"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-foreground truncate">{r.collabName}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.createdAt)}</p>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          <StatusBadge stato={r.stato as Parameters<typeof StatusBadge>[0]['stato']} />
+          <p className="text-xs font-semibold tabular-nums text-foreground">{eur(r.importo)}</p>
+        </div>
+      </Link>
+    );
+  }
+
+  const r = record as AdminCommunityDocRecord;
   return (
     <Link
-      href={href}
-      className="flex items-center justify-between gap-4 rounded-xl bg-muted/50 border border-border/40 px-4 py-3 hover:bg-muted transition group"
+      href={r.href}
+      className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 border border-border/30 px-3 py-2.5 hover:bg-muted/70 transition"
     >
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{collabName}</p>
-        <p className="text-xs text-muted-foreground truncate">{communityName} · {typeLabel} · {stato}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-foreground truncate">{r.collabName}</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">{r.tipo}</p>
       </div>
-      <div className="shrink-0 text-right">
-        <p className="text-sm font-semibold tabular-nums text-foreground">{eur(amount)}</p>
-        <p className="text-xs text-red-600 dark:text-red-400">{daysWaiting}gg in attesa</p>
-      </div>
+      <p className="text-[10px] text-muted-foreground shrink-0">{fmtDate(r.createdAt)}</p>
     </Link>
+  );
+}
+
+// ── Community Column ────────────────────────────────────────
+type Tab = 'comps' | 'exps' | 'docs';
+
+function CommunityColumn({ card }: { card: AdminCommunityCard }) {
+  const [tab, setTab] = useState<Tab>('comps');
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
+
+  const records: (AdminCommunityCompRecord | AdminCommunityExpRecord | AdminCommunityDocRecord)[] =
+    tab === 'comps' ? card.comps : tab === 'exps' ? card.exps : card.docs;
+
+  const totalPages = Math.ceil(records.length / PAGE_SIZE);
+  const pageRecords = records.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const handleTab = (t: Tab) => { setTab(t); setPage(0); };
+
+  return (
+    <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+      <h3 className="text-sm font-semibold text-foreground">{card.name}</h3>
+
+      <div className="grid grid-cols-3 gap-2">
+        <FilterTab label="Compensi" count={card.compsActiveCount} active={tab === 'comps'} onClick={() => handleTab('comps')} />
+        <FilterTab label="Rimborsi" count={card.expsActiveCount} active={tab === 'exps'} onClick={() => handleTab('exps')} />
+        <FilterTab label="Da firmare" count={card.docsToSignCount} active={tab === 'docs'} onClick={() => handleTab('docs')} />
+      </div>
+
+      <div className="space-y-1.5">
+        {pageRecords.length === 0 ? (
+          <EmptyState icon={Inbox} title="Nessun elemento" className="py-6" />
+        ) : (
+          pageRecords.map(r => (
+            <RecordRow key={r.id} tab={tab} record={r as never} />
+          ))
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1">
+          <button
+            onClick={() => setPage(p => p - 1)}
+            disabled={page === 0}
+            aria-label="Pagina precedente"
+            className="rounded-lg p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-xs text-muted-foreground">{page + 1} / {totalPages}</span>
+          <button
+            onClick={() => setPage(p => p + 1)}
+            disabled={page >= totalPages - 1}
+            aria-label="Pagina successiva"
+            className="rounded-lg p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -197,11 +275,7 @@ function AdminHeroSection({ hero }: { hero: AdminHero }) {
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-accent flex-shrink-0 overflow-hidden flex items-center justify-center">
-          {hero.foto_profilo_url ? (
-            <img src={hero.foto_profilo_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-lg font-medium text-foreground select-none">{initials}</span>
-          )}
+          <ShieldCheck className="h-7 w-7 text-foreground" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-foreground">
@@ -223,8 +297,8 @@ function AdminHeroSection({ hero }: { hero: AdminHero }) {
 // ── Main component ─────────────────────────────────────────
 export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
   const {
-    kpis, communityCards, collabBreakdown, periodMetrics,
-    urgentItems, feedItems, blockItems, communities, hero,
+    kpis, communityCards, periodMetrics,
+    feedItems, blockItems, communities, hero,
   } = data;
 
   const [search, setSearch] = useState('');
@@ -292,12 +366,12 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
       {/* ── KPI cards ── */}
       <section>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <KpiCard label="Compensi in coda" value={kpis.pendingCompsCount} />
-          <KpiCard label="Rimborsi in coda" value={kpis.pendingExpsCount} />
-          <KpiCard label="In approvazione" value={kpis.inApprovalAmount} currency highlight={kpis.inApprovalAmount > 0} />
-          <KpiCard label="Da pagare" value={kpis.toPayAmount} currency highlight={kpis.toPayAmount > 0} />
-          <KpiCard label="Doc. da firmare" value={kpis.docsToSignCount} />
-          <KpiCard label="Collaboratori attivi" value={kpis.activeCollabsCount} />
+          <KpiCard label="Compensi da approvare" value={kpis.compsInAttesaCount} sub={eur(kpis.compsInAttesaAmount)} highlight={kpis.compsInAttesaCount > 0} />
+          <KpiCard label="Rimborsi da approvare" value={kpis.expsInAttesaCount} sub={eur(kpis.expsInAttesaAmount)} highlight={kpis.expsInAttesaCount > 0} />
+          <KpiCard label="Compensi da liquidare" value={kpis.compsApprovatoCount} sub={eur(kpis.compsApprovatoAmount)} highlight={kpis.compsApprovatoCount > 0} />
+          <KpiCard label="Rimborsi da liquidare" value={kpis.expsApprovatoCount} sub={eur(kpis.expsApprovatoAmount)} highlight={kpis.expsApprovatoCount > 0} />
+          <KpiCard label="Compensi liquidati" value={kpis.compsLiquidatoCount} sub={eur(kpis.compsLiquidatoAmount)} />
+          <KpiCard label="Rimborsi liquidati" value={kpis.expsLiquidatoCount} sub={eur(kpis.expsLiquidatoAmount)} />
         </div>
       </section>
 
@@ -331,79 +405,17 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         </div>
       </section>
 
-      {/* ── Community cards ── */}
+      {/* ── Community columns ── */}
       {communityCards.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Community</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {communityCards.map(c => (
-              <CommunityCard key={c.id} {...c} />
+              <CommunityColumn key={c.id} card={c} />
             ))}
           </div>
         </section>
       )}
-
-      {/* ── Urgenti + Breakdown ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Urgenti */}
-        <section>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            Urgenti ({urgentItems.length})
-          </h2>
-          {urgentItems.length === 0 ? (
-            <div className={sectionCls + ' flex items-center justify-center h-28'}>
-              <p className="text-sm text-muted-foreground">Nessun elemento urgente.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {urgentItems.map(item => (
-                <UrgentRow
-                  key={item.key}
-                  collabName={`${item.collabName} ${item.collabCognome}`}
-                  communityName={item.communityName}
-                  entityType={item.entityType}
-                  stato={item.stato}
-                  amount={item.amount}
-                  daysWaiting={item.daysWaiting}
-                  href={item.href}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Collab breakdown */}
-        <section>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            Collaboratori
-          </h2>
-          <div className={sectionCls + ' p-5 space-y-5'}>
-            <div>
-              <p className="text-xs text-muted-foreground mb-2">Per stato</p>
-              <div className="space-y-1.5">
-                {collabBreakdown.byStatus.map(s => (
-                  <div key={s.key} className="flex items-center justify-between">
-                    <span className="text-xs text-foreground">{s.label}</span>
-                    <span className="text-xs font-medium text-foreground tabular-nums">{s.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="border-t border-border pt-4">
-              <p className="text-xs text-muted-foreground mb-2">Per contratto</p>
-              <div className="space-y-1.5">
-                {collabBreakdown.byContract.map(c => (
-                  <div key={c.key} className="flex items-center justify-between">
-                    <span className="text-xs text-foreground">{c.label}</span>
-                    <span className="text-xs font-medium text-foreground tabular-nums">{c.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
 
       {/* ── Period metrics chart ── */}
       <section>

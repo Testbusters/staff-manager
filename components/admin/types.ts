@@ -1,45 +1,59 @@
 export type AdminKPIs = {
-  pendingCompsCount: number;
-  pendingExpsCount: number;
-  inApprovalAmount: number;
-  toPayAmount: number;
-  docsToSignCount: number;
-  activeCollabsCount: number;
+  compsInAttesaCount: number;
+  compsInAttesaAmount: number;
+  expsInAttesaCount: number;
+  expsInAttesaAmount: number;
+  compsApprovatoCount: number;
+  compsApprovatoAmount: number;
+  expsApprovatoCount: number;
+  expsApprovatoAmount: number;
+  compsLiquidatoCount: number;
+  compsLiquidatoAmount: number;
+  expsLiquidatoCount: number;
+  expsLiquidatoAmount: number;
+};
+
+export type AdminCommunityCompRecord = {
+  id: string;
+  collabName: string;
+  importoNetto: number;
+  dataCompetenza: string | null;
+  stato: string;
+  href: string;
+};
+
+export type AdminCommunityExpRecord = {
+  id: string;
+  collabName: string;
+  importo: number;
+  createdAt: string;
+  stato: string;
+  href: string;
+};
+
+export type AdminCommunityDocRecord = {
+  id: string;
+  collabName: string;
+  tipo: string;
+  createdAt: string;
+  href: string;
 };
 
 export type AdminCommunityCard = {
   id: string;
   name: string;
-  pendingComps: number;
-  pendingExps: number;
-  docsToSign: number;
-  collabCount: number;
-};
-
-export type AdminCollabBreakdown = {
-  byStatus: { key: string; label: string; count: number }[];
-  byContract: { key: string; label: string; count: number }[];
+  compsActiveCount: number;
+  expsActiveCount: number;
+  docsToSignCount: number;
+  comps: AdminCommunityCompRecord[];
+  exps: AdminCommunityExpRecord[];
+  docs: AdminCommunityDocRecord[];
 };
 
 export type AdminPeriodMetrics = {
   currentMonth: { paidAmount: number; approvedCount: number; newCollabs: number };
   lastMonth:    { paidAmount: number; approvedCount: number; newCollabs: number };
   ytd:          { paidAmount: number; approvedCount: number; newCollabs: number };
-};
-
-export type AdminUrgentItem = {
-  key: string;
-  entityType: 'compensation' | 'expense' | 'document';
-  entityId: string;
-  collabName: string;
-  collabCognome: string;
-  collabId: string;
-  communityId: string;
-  communityName: string;
-  daysWaiting: number;
-  stato: string;
-  amount: number;
-  href: string;
 };
 
 export type AdminFeedItem = {
@@ -80,9 +94,7 @@ export type AdminHero = {
 export type AdminDashboardData = {
   kpis: AdminKPIs;
   communityCards: AdminCommunityCard[];
-  collabBreakdown: AdminCollabBreakdown;
   periodMetrics: AdminPeriodMetrics;
-  urgentItems: AdminUrgentItem[];
   feedItems: AdminFeedItem[];
   blockItems: AdminBlockItem[];
   communities: { id: string; name: string }[];
