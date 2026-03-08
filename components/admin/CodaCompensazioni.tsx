@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, CreditCard, ArrowUpDown, ArrowUp, ArrowDown, Clock, Banknote, CheckCheck } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -41,35 +42,24 @@ type CompensationRow = {
   massimale: number | null;
 };
 
-type FilterStato = 'TUTTI' | 'IN_ATTESA' | 'APPROVATO' | 'RIFIUTATO' | 'LIQUIDATO';
 type SortDir = 'asc' | 'desc' | null;
-
-const FILTER_LABELS: Record<FilterStato, string> = {
-  TUTTI: 'Tutti',
-  IN_ATTESA: 'In attesa',
-  APPROVATO: 'Approvato',
-  RIFIUTATO: 'Rifiutato',
-  LIQUIDATO: 'Liquidato',
-};
-
-const STATO_BADGE: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  IN_ATTESA: { label: 'In attesa', variant: 'secondary' },
-  APPROVATO: { label: 'Approvato', variant: 'default' },
-  RIFIUTATO: { label: 'Rifiutato', variant: 'destructive' },
-  LIQUIDATO: { label: 'Liquidato', variant: 'outline' },
-};
-
-// Left accent stripe colors per stato
-const STATO_STRIPE: Record<string, string> = {
-  IN_ATTESA: 'bg-amber-400/80',
-  APPROVATO: 'bg-green-500/80',
-  RIFIUTATO: 'bg-destructive/70',
-  LIQUIDATO: 'bg-border',
-};
 
 function fmt(amount: number | null) {
   if (amount == null) return <span className="text-muted-foreground/40">—</span>;
   return `€\u202f${amount.toFixed(2)}`;
+}
+
+function fmtTotal(amount: number) {
+  return `€\u202f${amount.toFixed(2)}`;
+}
+
+function sortByDate(rows: CompensationRow[], dir: SortDir): CompensationRow[] {
+  if (!dir) return rows;
+  return [...rows].sort((a, b) => {
+    const da = a.data_competenza ?? '';
+    const db = b.data_competenza ?? '';
+    return dir === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
+  });
 }
 
 function checkMassimale(items: CompensationRow[]): MassimaleImpact[] {
@@ -79,13 +69,13 @@ function checkMassimale(items: CompensationRow[]): MassimaleImpact[] {
     byCollab.get(c.collaborator_id)!.push(c);
   }
   const impacts: MassimaleImpact[] = [];
-  for (const [collabId, comps] of byCollab) {
+  for (const [, comps] of byCollab) {
     const first = comps[0];
     if (!first.massimale) continue;
     const totale = comps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0);
     if (totale > first.massimale) {
       impacts.push({
-        collaboratorId: collabId,
+        collaboratorId: first.collaborator_id,
         collabName: first.collabName,
         massimale: first.massimale,
         totale,
@@ -102,53 +92,95 @@ function checkMassimale(items: CompensationRow[]): MassimaleImpact[] {
   return impacts;
 }
 
+function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => void }) {
+  const Icon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
+  return (
+    <button
+      onClick={onCycle}
+      className="flex items-center gap-1 hover:text-foreground transition-colors"
+      aria-label="Ordina per data"
+    >
+      Data <Icon className="h-3 w-3" />
+    </button>
+  );
+}
+
+function ArchiveTable({
+  rows,
+  showRejectionNote,
+  sortDir,
+  onCycleSort,
+}: {
+  rows: CompensationRow[];
+  showRejectionNote: boolean;
+  sortDir: SortDir;
+  onCycleSort: () => void;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border">
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            <SortButton sortDir={sortDir} onCycle={onCycleSort} />
+          </TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((comp) => (
+          <TableRow key={comp.id} className="opacity-70">
+            <TableCell className="py-3">
+              <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
+              {comp.nome_servizio_ruolo && (
+                <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
+              )}
+              {showRejectionNote && comp.rejection_note && (
+                <p className="text-xs text-destructive mt-0.5 leading-tight">↳ {comp.rejection_note}</p>
+              )}
+            </TableCell>
+            <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+              {comp.data_competenza
+                ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
+                : <span className="text-muted-foreground/40">—</span>}
+            </TableCell>
+            <TableCell className="py-3 text-sm text-muted-foreground text-right tabular-nums">
+              {fmt(comp.importo_lordo)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 export default function CodaCompensazioni({ compensations }: { compensations: CompensationRow[] }) {
   const router = useRouter();
-  const [filterStato, setFilterStato] = useState<FilterStato>('TUTTI');
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [archiviOpen, setArchiviOpen] = useState(false);
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote] = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Derived data ──────────────────────────────────────────────
+  // ── Sections ───────────────────────────────────────────────────
+  const inAttesa  = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'IN_ATTESA'),  sortDir), [compensations, sortDir]);
+  const approvati = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'APPROVATO'), sortDir), [compensations, sortDir]);
+  const liquidati = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'LIQUIDATO'), sortDir), [compensations, sortDir]);
+  const rifiutati = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'RIFIUTATO'), sortDir), [compensations, sortDir]);
 
-  const stats = useMemo(() => {
-    const sum = (stato: string) => compensations
-      .filter((c) => c.stato === stato)
-      .reduce((s, c) => s + (c.importo_lordo ?? 0), 0);
-    return {
-      inAttesa:  { count: compensations.filter((c) => c.stato === 'IN_ATTESA').length,  total: sum('IN_ATTESA') },
-      approvato: { count: compensations.filter((c) => c.stato === 'APPROVATO').length, total: sum('APPROVATO') },
-      liquidato: { count: compensations.filter((c) => c.stato === 'LIQUIDATO').length, total: sum('LIQUIDATO') },
-    };
-  }, [compensations]);
-
-  const filtered = useMemo(() => {
-    let rows = filterStato === 'TUTTI' ? compensations : compensations.filter((c) => c.stato === filterStato);
-    if (sortDir) {
-      rows = [...rows].sort((a, b) => {
-        const da = a.data_competenza ?? '';
-        const db = b.data_competenza ?? '';
-        return sortDir === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
-      });
-    }
-    return rows;
-  }, [compensations, filterStato, sortDir]);
-
-  const filteredTotal = useMemo(
-    () => filtered.reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
-    [filtered],
+  const totalInAttesa  = useMemo(() => inAttesa.reduce((s, c)  => s + (c.importo_lordo ?? 0), 0), [inAttesa]);
+  const totalApprovati = useMemo(() => approvati.reduce((s, c) => s + (c.importo_lordo ?? 0), 0), [approvati]);
+  const archivioCount  = liquidati.length + rifiutati.length;
+  const archivioTotal  = useMemo(
+    () => [...liquidati, ...rifiutati].reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
+    [liquidati, rifiutati],
   );
 
-  const countByStato = (stato: FilterStato) =>
-    stato === 'TUTTI' ? compensations.length : compensations.filter((c) => c.stato === stato).length;
-
-  const approvedIds = compensations.filter((c) => c.stato === 'APPROVATO').map((c) => c.id);
-  const inAttesaCount = stats.inAttesa.count;
-  const allApprovedSelected = approvedIds.length > 0 && selectedIds.size === approvedIds.length;
+  const approvedIds        = approvati.map((c) => c.id);
+  const allApprovedSelected = approvati.length > 0 && selectedIds.size === approvati.length;
 
   function cycleSortDir() {
     setSortDir((d) => (d === null ? 'asc' : d === 'asc' ? 'desc' : null));
@@ -170,9 +202,9 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     setLoading(true);
     setError(null);
     try {
-      const url = ids.length === 1 ? `/api/compensations/${ids[0]}/transition` : '/api/compensations/bulk-approve';
+      const url  = ids.length === 1 ? `/api/compensations/${ids[0]}/transition` : '/api/compensations/bulk-approve';
       const body = ids.length === 1 ? { action: 'approve' } : { ids };
-      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
       router.refresh();
     } finally { setLoading(false); }
@@ -183,7 +215,11 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/compensations/bulk-liquidate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+      const res = await fetch('/api/compensations/bulk-liquidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
       setSelectedIds(new Set());
       router.refresh();
@@ -198,7 +234,6 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
   }
 
   function handleApproveTutti() {
-    const inAttesa = compensations.filter((c) => c.stato === 'IN_ATTESA');
     if (inAttesa.length === 0) return;
     const impacts = checkMassimale(inAttesa);
     if (impacts.length > 0) { setMassimaleWarning(impacts); return; }
@@ -210,7 +245,11 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/compensations/${rejectTargetId}/transition`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject', note: rejectionNote }) });
+      const res = await fetch(`/api/compensations/${rejectTargetId}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', note: rejectionNote }),
+      });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
       setRejectTargetId(null);
       setRejectionNote('');
@@ -218,242 +257,290 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     } finally { setLoading(false); }
   }
 
-  const SortIcon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
+  const rejectTarget = rejectTargetId ? compensations.find((c) => c.id === rejectTargetId) : null;
 
   return (
-    <div className="space-y-4">
-
-      {/* ── Stats strip ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-amber-500/15 flex items-center justify-center shrink-0">
-            <Clock className="h-4 w-4 text-amber-500" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">In attesa</p>
-            <p className="text-sm font-semibold text-foreground leading-tight">
-              {stats.inAttesa.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.inAttesa.total.toFixed(2)}</span>
-            </p>
-          </div>
-        </div>
-        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-green-500/15 flex items-center justify-center shrink-0">
-            <CheckCheck className="h-4 w-4 text-green-500" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">Approvati</p>
-            <p className="text-sm font-semibold text-foreground leading-tight">
-              {stats.approvato.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.approvato.total.toFixed(2)}</span>
-            </p>
-          </div>
-        </div>
-        <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-            <Banknote className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">Liquidati</p>
-            <p className="text-sm font-semibold text-foreground leading-tight">
-              {stats.liquidato.count} <span className="text-xs font-normal text-muted-foreground">· €{stats.liquidato.total.toFixed(2)}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Actions bar ──────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          onClick={handleApproveTutti}
-          disabled={loading || inAttesaCount === 0}
-          className="bg-brand hover:bg-brand/90 text-white"
-        >
-          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-          Approva tutti ({inAttesaCount})
-        </Button>
-
-        {approvedIds.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={toggleSelectAll} disabled={loading}>
-            {allApprovedSelected ? 'Deseleziona tutti' : 'Seleziona tutti approvati'}
-          </Button>
-        )}
-
-        {selectedIds.size > 0 && (
-          <Button size="sm" variant="outline" onClick={() => doLiquidate([...selectedIds])} disabled={loading}>
-            <CreditCard className="h-3.5 w-3.5 mr-1.5" />
-            Liquida ({selectedIds.size})
-          </Button>
-        )}
-      </div>
-
+    <div className="space-y-3">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* ── Sub-filter pills ─────────────────────────────────────── */}
-      <div className="flex gap-1.5 flex-wrap">
-        {(Object.keys(FILTER_LABELS) as FilterStato[]).map((stato) => (
-          <button
-            key={stato}
-            onClick={() => setFilterStato(stato)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              filterStato === stato
-                ? 'bg-brand text-white'
-                : 'bg-muted text-muted-foreground hover:bg-muted/60'
-            }`}
+      {/* ── SECTION 1 — Da processare ──────────────────────────── */}
+      <div className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-amber-500/5">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="text-sm font-semibold text-foreground">Da processare</span>
+            <Badge className="text-xs bg-amber-500/15 text-amber-700 dark:text-amber-400 border-0 hover:bg-amber-500/15">
+              {inAttesa.length}
+            </Badge>
+            <span className="text-xs text-muted-foreground">{fmtTotal(totalInAttesa)}</span>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleApproveTutti}
+            disabled={loading || inAttesa.length === 0}
+            className="bg-brand hover:bg-brand/90 text-white shrink-0"
           >
-            {FILTER_LABELS[stato]} <span className="opacity-60">({countByStato(stato)})</span>
-          </button>
-        ))}
-      </div>
+            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+            Approva tutti ({inAttesa.length})
+          </Button>
+        </div>
 
-      {/* ── Table ────────────────────────────────────────────────── */}
-      {filtered.length === 0 ? (
-        <EmptyState icon={CheckCircle} title="Nessun compenso" description="Non ci sono compensi per questo filtro." />
-      ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        {inAttesa.length === 0 ? (
+          <div className="px-4 py-8">
+            <EmptyState icon={CheckCircle} title="Nessun compenso in attesa" description="Tutti i compensi sono stati processati." />
+          </div>
+        ) : (
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
-                {/* Stripe col */}
-                <TableHead className="w-1 p-0" />
-                {/* Checkbox col */}
-                <TableHead className="w-10 text-xs uppercase tracking-wide text-muted-foreground" />
+              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <button
-                    onClick={cycleSortDir}
-                    className="flex items-center gap-1 hover:text-foreground transition-colors"
-                    aria-label="Ordina per data"
-                  >
-                    Data <SortIcon className="h-3 w-3" />
-                  </button>
+                  <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
                 </TableHead>
                 <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Stato</TableHead>
                 <TableHead className="w-24 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
-
             <TableBody>
-              {filtered.map((comp) => {
-                const isApprovato = comp.stato === 'APPROVATO';
-                const isInAttesa  = comp.stato === 'IN_ATTESA';
-                const badgeDef    = STATO_BADGE[comp.stato] ?? { label: comp.stato, variant: 'outline' as const };
-                const isSelected  = selectedIds.has(comp.id);
+              {inAttesa.map((comp) => (
+                <TableRow key={comp.id}>
+                  <TableCell className="py-3">
+                    <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
+                    {comp.nome_servizio_ruolo && (
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                    {comp.data_competenza
+                      ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
+                      : <span className="text-muted-foreground/40">—</span>}
+                  </TableCell>
+                  <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
+                    {fmt(comp.importo_lordo)}
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                        onClick={() => handleApproveSingle(comp.id)}
+                        disabled={loading}
+                        aria-label="Approva"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => { setRejectTargetId(comp.id); setRejectionNote(''); }}
+                        disabled={loading}
+                        aria-label="Rifiuta"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow className="border-t border-border bg-muted/20 hover:bg-muted/20">
+                <TableCell className="py-2.5 text-xs text-muted-foreground">
+                  {inAttesa.length} {inAttesa.length === 1 ? 'voce' : 'voci'}
+                </TableCell>
+                <TableCell />
+                <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
+                  {fmtTotal(totalInAttesa)}
+                </TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        )}
+      </div>
 
+      {/* ── SECTION 2 — Approvati · da liquidare ──────────────── */}
+      <div className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-green-500/5">
+          <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+            <span className="text-sm font-semibold text-foreground">Approvati · da liquidare</span>
+            <Badge className="text-xs bg-green-500/15 text-green-700 dark:text-green-400 border-0 hover:bg-green-500/15">
+              {approvati.length}
+            </Badge>
+            <span className="text-xs text-muted-foreground">{fmtTotal(totalApprovati)}</span>
+            {approvati.length > 0 && (
+              <button
+                onClick={toggleSelectAll}
+                className="text-xs text-link hover:text-link/80 transition-colors ml-1"
+              >
+                {allApprovedSelected ? 'Deseleziona tutti' : 'Seleziona tutti'}
+              </button>
+            )}
+          </div>
+          <Button
+            size="sm"
+            onClick={() => doLiquidate([...selectedIds])}
+            disabled={loading || selectedIds.size === 0}
+            className="bg-brand hover:bg-brand/90 text-white shrink-0"
+          >
+            <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+            Liquida selezionati{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+          </Button>
+        </div>
+
+        {approvati.length === 0 ? (
+          <div className="px-4 py-8">
+            <EmptyState icon={CreditCard} title="Nessun compenso da liquidare" description="Non ci sono compensi approvati in attesa di liquidazione." />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
+                <TableHead className="w-10" />
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
+                </TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
+                <TableHead className="w-12 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {approvati.map((comp) => {
+                const isSelected = selectedIds.has(comp.id);
                 return (
-                  <TableRow key={comp.id} className={isSelected ? 'bg-brand/5 hover:bg-brand/8' : ''}>
-                    {/* Left accent stripe */}
-                    <TableCell className={`p-0 w-1 ${STATO_STRIPE[comp.stato] ?? 'bg-border'}`} />
-
-                    {/* Checkbox */}
+                  <TableRow key={comp.id} className={isSelected ? 'bg-brand/5' : ''}>
                     <TableCell className="py-3">
-                      {isApprovato && (
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelect(comp.id)}
-                          aria-label={`Seleziona ${comp.collabName}`}
-                        />
-                      )}
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(comp.id)}
+                        aria-label={`Seleziona ${comp.collabName}`}
+                      />
                     </TableCell>
-
-                    {/* Collaboratore */}
                     <TableCell className="py-3">
                       <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
                       {comp.nome_servizio_ruolo && (
                         <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
                       )}
-                      {comp.stato === 'RIFIUTATO' && comp.rejection_note && (
-                        <p className="text-xs text-destructive mt-0.5 leading-tight">↳ {comp.rejection_note}</p>
-                      )}
                     </TableCell>
-
-                    {/* Data */}
                     <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
                       {comp.data_competenza
                         ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
                         : <span className="text-muted-foreground/40">—</span>}
                     </TableCell>
-
-                    {/* Importo */}
                     <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
                       {fmt(comp.importo_lordo)}
                     </TableCell>
-
-                    {/* Stato */}
                     <TableCell className="py-3">
-                      <Badge variant={badgeDef.variant} data-stato={comp.stato} className="text-xs">
-                        {badgeDef.label}
-                      </Badge>
-                    </TableCell>
-
-                    {/* Azioni */}
-                    <TableCell className="py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {isInAttesa && (
-                          <>
-                            <Button
-                              size="sm" variant="ghost"
-                              className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                              onClick={() => handleApproveSingle(comp.id)}
-                              disabled={loading}
-                              aria-label="Approva"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm" variant="ghost"
-                              className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => { setRejectTargetId(comp.id); setRejectionNote(''); }}
-                              disabled={loading}
-                              aria-label="Rifiuta"
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        {isApprovato && (
-                          <Button
-                            size="sm" variant="ghost"
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                            onClick={() => doLiquidate([comp.id])}
-                            disabled={loading}
-                            aria-label="Liquida"
-                          >
-                            <CreditCard className="h-4 w-4" />
-                          </Button>
-                        )}
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm" variant="ghost"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          onClick={() => doLiquidate([comp.id])}
+                          disabled={loading}
+                          aria-label="Liquida"
+                        >
+                          <CreditCard className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
-
-            {/* ── Footer totals ─────────────────────────────────── */}
             <TableFooter>
-              <TableRow className="border-t border-border bg-muted/30 hover:bg-muted/30">
-                <TableCell className="p-0 w-1" />
+              <TableRow className="border-t border-border bg-muted/20 hover:bg-muted/20">
                 <TableCell />
                 <TableCell className="py-2.5 text-xs text-muted-foreground">
-                  {filtered.length} voce{filtered.length !== 1 ? '' : ''}
+                  {approvati.length} {approvati.length === 1 ? 'voce' : 'voci'}
                 </TableCell>
                 <TableCell />
                 <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
-                  €{filteredTotal.toFixed(2)}
+                  {fmtTotal(totalApprovati)}
                 </TableCell>
-                <TableCell colSpan={2} />
+                <TableCell />
               </TableRow>
             </TableFooter>
           </Table>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ── Reject dialog ────────────────────────────────────────── */}
-      <Dialog open={rejectTargetId !== null} onOpenChange={(open) => { if (!open) { setRejectTargetId(null); setRejectionNote(''); } }}>
+      {/* ── SECTION 3 — Archivio ──────────────────────────────── */}
+      <div className="rounded-xl border border-border border-l-4 border-l-border bg-card overflow-hidden">
+        <button
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+          onClick={() => setArchiviOpen((o) => !o)}
+          type="button"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Archivio</span>
+            <span className="text-xs text-muted-foreground/60">
+              · {archivioCount} {archivioCount === 1 ? 'voce' : 'voci'} · {fmtTotal(archivioTotal)}
+            </span>
+          </div>
+          {archiviOpen
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+        </button>
+
+        {archiviOpen && (
+          <div className="border-t border-border">
+            {archivioCount === 0 ? (
+              <div className="px-4 py-8">
+                <EmptyState icon={CheckCircle} title="Archivio vuoto" description="Non ci sono compensi liquidati o rifiutati." />
+              </div>
+            ) : (
+              <Tabs defaultValue="liquidati" className="w-full">
+                <div className="px-4 pt-3 pb-0">
+                  <TabsList className="h-8">
+                    <TabsTrigger value="liquidati" className="text-xs">
+                      Liquidati ({liquidati.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="rifiutati" className="text-xs">
+                      Rifiutati ({rifiutati.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="liquidati" className="mt-0">
+                  {liquidati.length === 0 ? (
+                    <div className="px-4 py-6">
+                      <EmptyState icon={CreditCard} title="Nessun compenso liquidato" description="Non ci sono compensi liquidati." />
+                    </div>
+                  ) : (
+                    <ArchiveTable rows={liquidati} showRejectionNote={false} sortDir={sortDir} onCycleSort={cycleSortDir} />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="rifiutati" className="mt-0">
+                  {rifiutati.length === 0 ? (
+                    <div className="px-4 py-6">
+                      <EmptyState icon={XCircle} title="Nessun compenso rifiutato" description="Non ci sono compensi rifiutati." />
+                    </div>
+                  ) : (
+                    <ArchiveTable rows={rifiutati} showRejectionNote={true} sortDir={sortDir} onCycleSort={cycleSortDir} />
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Reject dialog ─────────────────────────────────────── */}
+      <Dialog
+        open={rejectTargetId !== null}
+        onOpenChange={(open) => { if (!open) { setRejectTargetId(null); setRejectionNote(''); } }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Rifiuta compenso</DialogTitle>
-            <DialogDescription>Inserisci la motivazione. Sarà visibile al collaboratore.</DialogDescription>
+            {rejectTarget && (
+              <DialogDescription>
+                {rejectTarget.collabName}
+                {rejectTarget.importo_lordo != null && ` — €\u202f${rejectTarget.importo_lordo.toFixed(2)}`}
+                {rejectTarget.nome_servizio_ruolo && ` — ${rejectTarget.nome_servizio_ruolo}`}
+              </DialogDescription>
+            )}
           </DialogHeader>
           <Textarea
             placeholder="Motivazione obbligatoria…"
@@ -462,15 +549,21 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
             rows={4}
           />
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setRejectTargetId(null); setRejectionNote(''); }}>Annulla</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={loading || rejectionNote.trim().length === 0}>
+            <Button variant="outline" onClick={() => { setRejectTargetId(null); setRejectionNote(''); }}>
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={loading || rejectionNote.trim().length === 0}
+            >
               Conferma rifiuto
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Massimale warning modal ───────────────────────────────── */}
+      {/* ── Massimale warning modal ────────────────────────────── */}
       {massimaleWarning && (
         <MassimaleCheckModal
           open
