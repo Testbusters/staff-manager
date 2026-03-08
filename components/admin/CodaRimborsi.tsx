@@ -312,7 +312,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
 
       {/* ── SECTION 1 — Da processare ──────────────────────────── */}
       <div className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-amber-500/5">
+        <div className={`flex items-center gap-3 px-4 py-3 bg-amber-500/5 ${section1Open ? 'border-b border-border' : ''}`}>
           <SectionToggle
             label="Da processare"
             count={inAttesa.length}
@@ -439,7 +439,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
 
       {/* ── SECTION 2 — Approvati · da liquidare ──────────────── */}
       <div className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-green-500/5">
+        <div className={`flex items-center gap-3 px-4 py-3 bg-green-500/5 ${section2Open ? 'border-b border-border' : ''}`}>
           <SectionToggle
             label="Approvati · da liquidare"
             count={approvati.length}
