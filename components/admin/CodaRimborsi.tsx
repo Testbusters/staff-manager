@@ -105,14 +105,12 @@ function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => voi
 }
 
 function SectionToggle({
-  open,
   label,
   count,
   total,
   accentClass,
   onToggle,
 }: {
-  open: boolean;
   label: string;
   count: number;
   total: number;
@@ -128,9 +126,6 @@ function SectionToggle({
       <span className="text-sm font-semibold text-foreground">{label}</span>
       <Badge className={`text-xs border-0 ${accentClass}`}>{count}</Badge>
       <span className="text-xs text-muted-foreground">{fmtTotal(total)}</span>
-      {open
-        ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
     </button>
   );
 }
@@ -319,7 +314,6 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
       <div className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-amber-500/5">
           <SectionToggle
-            open={section1Open}
             label="Da processare"
             count={inAttesa.length}
             total={totalInAttesa}
@@ -344,6 +338,14 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
               <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
               Approva selezionati{selectedInAttesaIds.size > 0 ? ` (${selectedInAttesaIds.size})` : ''}
             </Button>
+            <button
+              onClick={() => setSection1Open((o) => !o)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={section1Open ? 'Comprimi sezione' : 'Espandi sezione'}
+              type="button"
+            >
+              {section1Open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
           </div>
         </div>
 
@@ -439,7 +441,6 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
       <div className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-green-500/5">
           <SectionToggle
-            open={section2Open}
             label="Approvati · da liquidare"
             count={approvati.length}
             total={totalApprovati}
@@ -464,6 +465,14 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
               <CreditCard className="h-3.5 w-3.5 mr-1.5" />
               Liquida selezionati{selectedApprovatiIds.size > 0 ? ` (${selectedApprovatiIds.size})` : ''}
             </Button>
+            <button
+              onClick={() => setSection2Open((o) => !o)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={section2Open ? 'Comprimi sezione' : 'Espandi sezione'}
+              type="button"
+            >
+              {section2Open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
           </div>
         </div>
 
