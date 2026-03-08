@@ -105,6 +105,37 @@ function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => voi
   );
 }
 
+function SectionToggle({
+  open,
+  label,
+  count,
+  total,
+  accentClass,
+  onToggle,
+}: {
+  open: boolean;
+  label: string;
+  count: number;
+  total: number;
+  accentClass: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="flex items-center gap-2 min-w-0 text-left"
+      type="button"
+    >
+      <span className="text-sm font-semibold text-foreground">{label}</span>
+      <Badge className={`text-xs border-0 ${accentClass}`}>{count}</Badge>
+      <span className="text-xs text-muted-foreground">{fmtTotal(total)}</span>
+      {open
+        ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+    </button>
+  );
+}
+
 function ArchiveTable({
   rows,
   showRejectionNote,
@@ -157,13 +188,21 @@ function ArchiveTable({
 export default function CodaCompensazioni({ compensations }: { compensations: CompensationRow[] }) {
   const router = useRouter();
   const [sortDir, setSortDir] = useState<SortDir>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [archiviOpen, setArchiviOpen] = useState(false);
+
+  // Section open/closed
+  const [section1Open, setSection1Open] = useState(true);
+  const [section2Open, setSection2Open] = useState(true);
+  const [section3Open, setSection3Open] = useState(false);
+
+  // Selection state per section
+  const [selectedInAttesaIds, setSelectedInAttesaIds]   = useState<Set<string>>(new Set());
+  const [selectedApprovatiIds, setSelectedApprovatiIds] = useState<Set<string>>(new Set());
+
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
-  const [rejectionNote, setRejectionNote] = useState('');
+  const [rejectionNote, setRejectionNote]   = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
 
   // ── Sections ───────────────────────────────────────────────────
   const inAttesa  = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'IN_ATTESA'),  sortDir), [compensations, sortDir]);
@@ -179,23 +218,35 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     [liquidati, rifiutati],
   );
 
-  const approvedIds        = approvati.map((c) => c.id);
-  const allApprovedSelected = approvati.length > 0 && selectedIds.size === approvati.length;
+  const allInAttesaSelected  = inAttesa.length > 0  && selectedInAttesaIds.size === inAttesa.length;
+  const allApprovatiSelected = approvati.length > 0 && selectedApprovatiIds.size === approvati.length;
 
   function cycleSortDir() {
     setSortDir((d) => (d === null ? 'asc' : d === 'asc' ? 'desc' : null));
   }
 
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) => {
+  function toggleSelectInAttesa(id: string) {
+    setSelectedInAttesaIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
 
-  function toggleSelectAll() {
-    setSelectedIds(allApprovedSelected ? new Set() : new Set(approvedIds));
+  function toggleSelectAllInAttesa() {
+    setSelectedInAttesaIds(allInAttesaSelected ? new Set() : new Set(inAttesa.map((c) => c.id)));
+  }
+
+  function toggleSelectApprovati(id: string) {
+    setSelectedApprovatiIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAllApprovati() {
+    setSelectedApprovatiIds(allApprovatiSelected ? new Set() : new Set(approvati.map((c) => c.id)));
   }
 
   async function doApprove(ids: string[]) {
@@ -206,6 +257,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
       const body = ids.length === 1 ? { action: 'approve' } : { ids };
       const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
+      setSelectedInAttesaIds(new Set());
       router.refresh();
     } finally { setLoading(false); }
   }
@@ -221,7 +273,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
         body: JSON.stringify({ ids }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
-      setSelectedIds(new Set());
+      setSelectedApprovatiIds(new Set());
       router.refresh();
     } finally { setLoading(false); }
   }
@@ -233,11 +285,12 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     doApprove([id]);
   }
 
-  function handleApproveTutti() {
-    if (inAttesa.length === 0) return;
-    const impacts = checkMassimale(inAttesa);
+  function handleApproveSelected() {
+    if (selectedInAttesaIds.size === 0) return;
+    const selected = inAttesa.filter((c) => selectedInAttesaIds.has(c.id));
+    const impacts  = checkMassimale(selected);
     if (impacts.length > 0) { setMassimaleWarning(impacts); return; }
-    doApprove(inAttesa.map((c) => c.id));
+    doApprove([...selectedInAttesaIds]);
   }
 
   async function handleReject() {
@@ -266,201 +319,231 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
       {/* ── SECTION 1 — Da processare ──────────────────────────── */}
       <div className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-amber-500/5">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-sm font-semibold text-foreground">Da processare</span>
-            <Badge className="text-xs bg-amber-500/15 text-amber-700 dark:text-amber-400 border-0 hover:bg-amber-500/15">
-              {inAttesa.length}
-            </Badge>
-            <span className="text-xs text-muted-foreground">{fmtTotal(totalInAttesa)}</span>
+          <SectionToggle
+            open={section1Open}
+            label="Da processare"
+            count={inAttesa.length}
+            total={totalInAttesa}
+            accentClass="bg-amber-500/15 text-amber-700 dark:text-amber-400 hover:bg-amber-500/15"
+            onToggle={() => setSection1Open((o) => !o)}
+          />
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            {section1Open && inAttesa.length > 0 && (
+              <button
+                onClick={toggleSelectAllInAttesa}
+                className="text-xs text-link hover:text-link/80 transition-colors"
+              >
+                {allInAttesaSelected ? 'Deseleziona tutti' : 'Seleziona tutti'}
+              </button>
+            )}
+            <Button
+              size="sm"
+              onClick={handleApproveSelected}
+              disabled={loading || selectedInAttesaIds.size === 0}
+              className="bg-brand hover:bg-brand/90 text-white"
+            >
+              <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+              Approva selezionati{selectedInAttesaIds.size > 0 ? ` (${selectedInAttesaIds.size})` : ''}
+            </Button>
           </div>
-          <Button
-            size="sm"
-            onClick={handleApproveTutti}
-            disabled={loading || inAttesa.length === 0}
-            className="bg-brand hover:bg-brand/90 text-white shrink-0"
-          >
-            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-            Approva tutti ({inAttesa.length})
-          </Button>
         </div>
 
-        {inAttesa.length === 0 ? (
-          <div className="px-4 py-8">
-            <EmptyState icon={CheckCircle} title="Nessun compenso in attesa" description="Tutti i compensi sono stati processati." />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
-                </TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
-                <TableHead className="w-24 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {inAttesa.map((comp) => (
-                <TableRow key={comp.id}>
-                  <TableCell className="py-3">
-                    <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
-                    {comp.nome_servizio_ruolo && (
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
-                    {comp.data_competenza
-                      ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
-                      : <span className="text-muted-foreground/40">—</span>}
-                  </TableCell>
-                  <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
-                    {fmt(comp.importo_lordo)}
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        size="sm" variant="ghost"
-                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
-                        onClick={() => handleApproveSingle(comp.id)}
-                        disabled={loading}
-                        aria-label="Approva"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm" variant="ghost"
-                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => { setRejectTargetId(comp.id); setRejectionNote(''); }}
-                        disabled={loading}
-                        aria-label="Rifiuta"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        {section1Open && (
+          inAttesa.length === 0 ? (
+            <div className="px-4 py-8">
+              <EmptyState icon={CheckCircle} title="Nessun compenso in attesa" description="Tutti i compensi sono stati processati." />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
+                  <TableHead className="w-10" />
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
+                  <TableHead className="w-24 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow className="border-t border-border bg-muted/20 hover:bg-muted/20">
-                <TableCell className="py-2.5 text-xs text-muted-foreground">
-                  {inAttesa.length} {inAttesa.length === 1 ? 'voce' : 'voci'}
-                </TableCell>
-                <TableCell />
-                <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
-                  {fmtTotal(totalInAttesa)}
-                </TableCell>
-                <TableCell />
-              </TableRow>
-            </TableFooter>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {inAttesa.map((comp) => {
+                  const isSelected = selectedInAttesaIds.has(comp.id);
+                  return (
+                    <TableRow key={comp.id} className={isSelected ? 'bg-brand/5' : ''}>
+                      <TableCell className="py-3">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelectInAttesa(comp.id)}
+                          aria-label={`Seleziona ${comp.collabName}`}
+                        />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
+                        {comp.nome_servizio_ruolo && (
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                        {comp.data_competenza
+                          ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
+                          : <span className="text-muted-foreground/40">—</span>}
+                      </TableCell>
+                      <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
+                        {fmt(comp.importo_lordo)}
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm" variant="ghost"
+                            className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                            onClick={() => handleApproveSingle(comp.id)}
+                            disabled={loading}
+                            aria-label="Approva"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm" variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => { setRejectTargetId(comp.id); setRejectionNote(''); }}
+                            disabled={loading}
+                            aria-label="Rifiuta"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+              <TableFooter>
+                <TableRow className="border-t border-border bg-muted/20 hover:bg-muted/20">
+                  <TableCell />
+                  <TableCell className="py-2.5 text-xs text-muted-foreground">
+                    {inAttesa.length} {inAttesa.length === 1 ? 'voce' : 'voci'}
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
+                    {fmtTotal(totalInAttesa)}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
+          )
         )}
       </div>
 
       {/* ── SECTION 2 — Approvati · da liquidare ──────────────── */}
       <div className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-green-500/5">
-          <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
-            <span className="text-sm font-semibold text-foreground">Approvati · da liquidare</span>
-            <Badge className="text-xs bg-green-500/15 text-green-700 dark:text-green-400 border-0 hover:bg-green-500/15">
-              {approvati.length}
-            </Badge>
-            <span className="text-xs text-muted-foreground">{fmtTotal(totalApprovati)}</span>
-            {approvati.length > 0 && (
+          <SectionToggle
+            open={section2Open}
+            label="Approvati · da liquidare"
+            count={approvati.length}
+            total={totalApprovati}
+            accentClass="bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/15"
+            onToggle={() => setSection2Open((o) => !o)}
+          />
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            {section2Open && approvati.length > 0 && (
               <button
-                onClick={toggleSelectAll}
-                className="text-xs text-link hover:text-link/80 transition-colors ml-1"
+                onClick={toggleSelectAllApprovati}
+                className="text-xs text-link hover:text-link/80 transition-colors"
               >
-                {allApprovedSelected ? 'Deseleziona tutti' : 'Seleziona tutti'}
+                {allApprovatiSelected ? 'Deseleziona tutti' : 'Seleziona tutti'}
               </button>
             )}
+            <Button
+              size="sm"
+              onClick={() => doLiquidate([...selectedApprovatiIds])}
+              disabled={loading || selectedApprovatiIds.size === 0}
+              className="bg-brand hover:bg-brand/90 text-white"
+            >
+              <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+              Liquida selezionati{selectedApprovatiIds.size > 0 ? ` (${selectedApprovatiIds.size})` : ''}
+            </Button>
           </div>
-          <Button
-            size="sm"
-            onClick={() => doLiquidate([...selectedIds])}
-            disabled={loading || selectedIds.size === 0}
-            className="bg-brand hover:bg-brand/90 text-white shrink-0"
-          >
-            <CreditCard className="h-3.5 w-3.5 mr-1.5" />
-            Liquida selezionati{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
-          </Button>
         </div>
 
-        {approvati.length === 0 ? (
-          <div className="px-4 py-8">
-            <EmptyState icon={CreditCard} title="Nessun compenso da liquidare" description="Non ci sono compensi approvati in attesa di liquidazione." />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
-                <TableHead className="w-10" />
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
-                </TableHead>
-                <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
-                <TableHead className="w-12 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {approvati.map((comp) => {
-                const isSelected = selectedIds.has(comp.id);
-                return (
-                  <TableRow key={comp.id} className={isSelected ? 'bg-brand/5' : ''}>
-                    <TableCell className="py-3">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleSelect(comp.id)}
-                        aria-label={`Seleziona ${comp.collabName}`}
-                      />
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
-                      {comp.nome_servizio_ruolo && (
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
-                      {comp.data_competenza
-                        ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
-                        : <span className="text-muted-foreground/40">—</span>}
-                    </TableCell>
-                    <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
-                      {fmt(comp.importo_lordo)}
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <div className="flex justify-end">
-                        <Button
-                          size="sm" variant="ghost"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                          onClick={() => doLiquidate([comp.id])}
-                          disabled={loading}
-                          aria-label="Liquida"
-                        >
-                          <CreditCard className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-            <TableFooter>
-              <TableRow className="border-t border-border bg-muted/20 hover:bg-muted/20">
-                <TableCell />
-                <TableCell className="py-2.5 text-xs text-muted-foreground">
-                  {approvati.length} {approvati.length === 1 ? 'voce' : 'voci'}
-                </TableCell>
-                <TableCell />
-                <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
-                  {fmtTotal(totalApprovati)}
-                </TableCell>
-                <TableCell />
-              </TableRow>
-            </TableFooter>
-          </Table>
+        {section2Open && (
+          approvati.length === 0 ? (
+            <div className="px-4 py-8">
+              <EmptyState icon={CreditCard} title="Nessun compenso da liquidare" description="Non ci sono compensi approvati in attesa di liquidazione." />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
+                  <TableHead className="w-10" />
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
+                  <TableHead className="w-12 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {approvati.map((comp) => {
+                  const isSelected = selectedApprovatiIds.has(comp.id);
+                  return (
+                    <TableRow key={comp.id} className={isSelected ? 'bg-brand/5' : ''}>
+                      <TableCell className="py-3">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelectApprovati(comp.id)}
+                          aria-label={`Seleziona ${comp.collabName}`}
+                        />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
+                        {comp.nome_servizio_ruolo && (
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                        {comp.data_competenza
+                          ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
+                          : <span className="text-muted-foreground/40">—</span>}
+                      </TableCell>
+                      <TableCell className="py-3 text-sm font-medium text-foreground text-right tabular-nums">
+                        {fmt(comp.importo_lordo)}
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm" variant="ghost"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() => doLiquidate([comp.id])}
+                            disabled={loading}
+                            aria-label="Liquida"
+                          >
+                            <CreditCard className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+              <TableFooter>
+                <TableRow className="border-t border-border bg-muted/20 hover:bg-muted/20">
+                  <TableCell />
+                  <TableCell className="py-2.5 text-xs text-muted-foreground">
+                    {approvati.length} {approvati.length === 1 ? 'voce' : 'voci'}
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="py-2.5 text-sm font-semibold text-foreground text-right tabular-nums">
+                    {fmtTotal(totalApprovati)}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
+          )
         )}
       </div>
 
@@ -468,7 +551,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
       <div className="rounded-xl border border-border border-l-4 border-l-border bg-card overflow-hidden">
         <button
           className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
-          onClick={() => setArchiviOpen((o) => !o)}
+          onClick={() => setSection3Open((o) => !o)}
           type="button"
         >
           <div className="flex items-center gap-2">
@@ -477,12 +560,12 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
               · {archivioCount} {archivioCount === 1 ? 'voce' : 'voci'} · {fmtTotal(archivioTotal)}
             </span>
           </div>
-          {archiviOpen
+          {section3Open
             ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
             : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
         </button>
 
-        {archiviOpen && (
+        {section3Open && (
           <div className="border-t border-border">
             {archivioCount === 0 ? (
               <div className="px-4 py-8">
@@ -500,7 +583,6 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                     </TabsTrigger>
                   </TabsList>
                 </div>
-
                 <TabsContent value="liquidati" className="mt-0">
                   {liquidati.length === 0 ? (
                     <div className="px-4 py-6">
@@ -510,7 +592,6 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                     <ArchiveTable rows={liquidati} showRejectionNote={false} sortDir={sortDir} onCycleSort={cycleSortDir} />
                   )}
                 </TabsContent>
-
                 <TabsContent value="rifiutati" className="mt-0">
                   {rifiutati.length === 0 ? (
                     <div className="px-4 py-6">
