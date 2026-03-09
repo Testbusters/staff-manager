@@ -92,6 +92,7 @@ Legend:
 | `/collaboratori` | `app/(app)/collaboratori/page.tsx` | admin | Full collaborator list with filters + pagination |
 | `/collaboratori/[id]` | `app/(app)/collaboratori/[id]/page.tsx` | admin | Profile detail + edit + document history |
 | `/export` | `app/(app)/export/page.tsx` | admin | CSV/XLSX export of compensations and reimbursements |
+| `/import` | `app/(app)/import/page.tsx` | admin | Bulk import UI for collaboratori, contratti, CU |
 | `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | Community config, notification settings, contract templates |
 | `/feedback` | `app/(app)/feedback/page.tsx` | admin | User feedback/suggestions |
 
