@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import ProfileForm from '@/components/ProfileForm';
 import DocumentList from '@/components/documents/DocumentList';
 import DocumentUploadForm from '@/components/documents/DocumentUploadForm';
+import PasswordChangeForm from '@/components/profilo/PasswordChangeForm';
 import { Button } from '@/components/ui/button';
 
 export default async function ProfiloPage({
@@ -117,7 +118,7 @@ export default async function ProfiloPage({
       </div>
 
       {activeTab === 'profilo' && (
-        <div className="max-w-2xl">
+        <div className="max-w-2xl space-y-8">
           <ProfileForm
             collaborator={collaborator ?? null}
             role={role}
@@ -126,6 +127,10 @@ export default async function ProfiloPage({
             allCommunities={allCommunities}
             guidaFigli={guidaFigliRow ?? null}
           />
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-base font-semibold text-foreground mb-4">Sicurezza</h2>
+            <PasswordChangeForm />
+          </div>
         </div>
       )}
 

@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('onboarding_completed')
+    .select('onboarding_completed, skip_contract_on_onboarding')
     .eq('user_id', user.id)
     .single();
 
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
   let documentId: string | null = null;
   let downloadUrl: string | null = null;
 
-  if (tipoContratto) {
+  if (tipoContratto && !profile.skip_contract_on_onboarding) {
     try {
       const tipo = tipoContratto as ContractTemplateType;
       const collabForVars = {
@@ -182,10 +182,14 @@ export async function POST(request: Request) {
     }
   }
 
-  // Mark onboarding complete
+  // Mark onboarding complete (and reset skip flag if it was set)
+  const onboardingUpdate: Record<string, unknown> = { onboarding_completed: true };
+  if (profile.skip_contract_on_onboarding) {
+    onboardingUpdate.skip_contract_on_onboarding = false;
+  }
   await admin
     .from('user_profiles')
-    .update({ onboarding_completed: true })
+    .update(onboardingUpdate)
     .eq('user_id', user.id);
 
   return NextResponse.json({ success: true, document_id: documentId, download_url: downloadUrl });

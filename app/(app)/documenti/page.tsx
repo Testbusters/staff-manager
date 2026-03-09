@@ -39,16 +39,20 @@ export default async function DocumentiPage({
     ? (rawTab === 'carica' ? 'carica' : 'lista')
     : 'lista';
 
-  // Fetch documents (RLS filters by role automatically)
+  // Fetch documents only for non-admin (collaboratore path); admin fetches lazily per-collaborator
   const currentYear = new Date().getFullYear();
-  let docQuery = supabase
-    .from('documents')
-    .select('*, collaborators(nome, cognome)')
-    .order('created_at', { ascending: false });
-  if (profile.member_status === 'uscente_con_compenso') {
-    docQuery = docQuery.lte('created_at', `${currentYear}-12-31T23:59:59.999Z`);
+  let documents: unknown[] = [];
+  if (!isAdmin) {
+    let docQuery = supabase
+      .from('documents')
+      .select('*, collaborators(nome, cognome)')
+      .order('created_at', { ascending: false });
+    if (profile.member_status === 'uscente_con_compenso') {
+      docQuery = docQuery.lte('created_at', `${currentYear}-12-31T23:59:59.999Z`);
+    }
+    const { data } = await docQuery;
+    documents = data ?? [];
   }
-  const { data: documents } = await docQuery;
 
   // Fetch collaborators list for admin upload form
   let collaborators: { id: string; nome: string; cognome: string; username: string | null; user_id: string; email: string }[] = [];
@@ -101,7 +105,8 @@ export default async function DocumentiPage({
       )}
 
       {tab === 'lista' && (
-        <DocumentList documents={documents ?? []} isAdmin={isAdmin} />
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <DocumentList documents={documents as any[]} isAdmin={isAdmin} />
       )}
       {canUpload && tab === 'carica' && (
         <DocumentUploadForm collaborators={collaborators} isAdmin={isAdmin} />

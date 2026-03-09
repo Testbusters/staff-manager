@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { sendEmail } from '@/lib/email';
 import { emailInvito } from '@/lib/email-templates';
 import { generateUsername, generateUniqueUsername } from '@/lib/username';
+import { generatePassword } from '@/lib/password';
 
 const schema = z.object({
   email: z.string().email(),
@@ -30,26 +31,6 @@ const schema = z.object({
   data_ingresso:       z.string().nullable().optional(),
   data_fine_contratto: z.string().nullable().optional(),
 });
-
-function generatePassword(): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lower = 'abcdefghjkmnpqrstuvwxyz';
-  const digits = '23456789';
-  const special = '!@#$%';
-  const rand = (chars: string) => chars[Math.floor(Math.random() * chars.length)];
-  const chars = [
-    rand(upper), rand(upper),
-    rand(lower), rand(lower), rand(lower),
-    rand(digits), rand(digits),
-    rand(special),
-    rand(upper), rand(lower),
-  ];
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [chars[i], chars[j]] = [chars[j], chars[i]];
-  }
-  return chars.join('');
-}
 
 
 export async function POST(request: Request) {

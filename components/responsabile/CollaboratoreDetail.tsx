@@ -14,6 +14,7 @@ import { FileText, Pencil } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
 import CollaboratorAvatar from '@/components/admin/CollaboratorAvatar';
+import ResetPasswordDialog from '@/components/collaboratori/ResetPasswordDialog';
 import {
   DOCUMENT_TYPE_LABELS,
   DOCUMENT_SIGN_STATUS_LABELS,
@@ -244,14 +245,19 @@ export default function CollaboratoreDetail({
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                onClick={openEditModal}
-                className="bg-brand hover:bg-brand/90 text-white shrink-0"
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Modifica profilo
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                {role === 'amministrazione' && (
+                  <ResetPasswordDialog collaboratorId={collab.id} />
+                )}
+                <Button
+                  size="sm"
+                  onClick={openEditModal}
+                  className="bg-brand hover:bg-brand/90 text-white"
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                  Modifica profilo
+                </Button>
+              </div>
             </div>
           </div>
         </div>
