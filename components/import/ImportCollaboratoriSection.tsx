@@ -13,9 +13,67 @@ import type { RunResult } from '@/app/api/import/collaboratori/run/route';
 
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${process.env.NEXT_PUBLIC_IMPORT_COLLABORATORI_SHEET_ID ?? '1NeVxbfQAl0z4OPAyihHISUfF7Edj1aNZ9tCwwXgMBz0'}/edit`;
 
-// ── Infobox modal ─────────────────────────────────────────────────────────────
+// ── Rules infobox (inline) ─────────────────────────────────────────────────────
 
-function ImportRulesModal({
+function ImportRulesPanel() {
+  return (
+    <aside className="rounded-xl border border-border bg-card p-4 space-y-4 text-sm sticky top-6">
+      <p className="font-medium text-foreground flex items-center gap-2">
+        <Info className="h-4 w-4 text-brand shrink-0" />
+        Regole di importazione
+      </p>
+
+      <div className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+        <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-amber-200">
+          <strong>Nessun contratto verrà generato.</strong> I contratti devono essere
+          caricati dal tab <strong>Contratti</strong>.
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium text-foreground">Requisiti foglio Google:</p>
+        <ul className="space-y-1 text-xs text-muted-foreground">
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Tab: <code className="bg-muted px-1 py-0.5 rounded ml-1">import_collaboratori</code>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Colonne A–D: nome · cognome · email · username
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Tutti i campi A–D obbligatori
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Email: formato valido e non già registrata
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Username: a-z, 0–9,{' '}
+            <code className="bg-muted px-1 py-0.5 rounded">_</code>
+            , 3–50 caratteri, non in uso
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Nessun duplicato email/username nel foglio
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Max 1000 righe per sessione
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+  );
+}
+
+// ── Confirmation modal (simplified) ──────────────────────────────────────────
+
+function ConfirmImportModal({
   open,
   validCount,
   onConfirm,
@@ -30,57 +88,17 @@ function ImportRulesModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5 text-brand" />
-            Regole di importazione collaboratori
-          </DialogTitle>
+          <DialogTitle>Conferma importazione</DialogTitle>
         </DialogHeader>
-
         <div className="space-y-4 pt-1 text-sm">
-          {/* Disclaimer principale */}
-          <div className="flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-            <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-            <p className="text-amber-200">
-              <strong>Nessun contratto verrà generato.</strong> Gli utenti importati completano
-              l&apos;onboarding autonomamente ma la firma del contratto non viene mai richiesta
-              tramite questa procedura. I contratti devono essere caricati separatamente dal
-              tab <strong>Contratti</strong> nella stessa sezione.
-            </p>
-          </div>
-
-          {/* Regole */}
-          <div className="space-y-2">
-            <p className="font-medium text-foreground">Requisiti del foglio Google:</p>
-            <ul className="space-y-1.5 text-muted-foreground">
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Tab denominato <code className="text-xs bg-muted px-1 py-0.5 rounded">import_collaboratori</code></li>
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Colonne in ordine: <code className="text-xs bg-muted px-1 py-0.5 rounded">nome · cognome · email · username · stato · note_errore</code></li>
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Tutti i campi obbligatori (nome, cognome, email, username) devono essere valorizzati</li>
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Email: formato valido e non già registrata nel sistema</li>
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Username: solo lettere minuscole, cifre e <code className="text-xs bg-muted px-1 py-0.5 rounded">_</code>, 3–50 caratteri, non già in uso</li>
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Nessun duplicato di email o username all&apos;interno dello stesso foglio</li>
-              <li className="flex items-start gap-2"><span className="text-brand mt-0.5">•</span>Massimo 1000 righe per sessione di import</li>
-            </ul>
-          </div>
-
-          {/* Password note */}
-          <div className="flex gap-3 rounded-lg border border-border bg-muted/50 p-3">
-            <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-            <p className="text-muted-foreground">
-              Le password temporanee generate vengono scritte nella{' '}
-              <strong className="text-foreground">colonna G</strong> del foglio Google al termine
-              dell&apos;import. Comunicale ai collaboratori tramite il foglio.
-            </p>
-          </div>
-
-          {/* Row count */}
-          <p className="text-foreground font-medium">
-            Righe valide da importare:{' '}
-            <span className="text-brand">{validCount}</span>
+          <p className="text-muted-foreground">
+            Stai per creare{' '}
+            <span className="text-foreground font-medium">{validCount} account</span>.{' '}
+            L&apos;operazione non può essere annullata.
           </p>
-
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onCancel} disabled={loading}>
               Annulla
             </Button>
@@ -90,7 +108,7 @@ function ImportRulesModal({
               disabled={loading}
             >
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {loading ? 'Importazione in corso…' : `Conferma e importa ${validCount} collaboratori`}
+              {loading ? 'Importazione in corso…' : `Importa ${validCount} collaboratori`}
             </Button>
           </div>
         </div>
@@ -105,8 +123,8 @@ function PreviewTable({ rows }: { rows: PreviewRow[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
-      <Table>
+    <div className="w-full rounded-xl border border-border overflow-x-auto">
+      <Table className="w-full">
         <TableHeader>
           <TableRow>
             <TableHead className="w-8">#</TableHead>
@@ -253,7 +271,7 @@ export default function ImportCollaboratoriSection() {
 
   return (
     <div className="space-y-5">
-      {/* Sheet link + disclaimer */}
+      {/* Sheet link card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
         <div className="space-y-0.5">
           <p className="text-sm font-medium text-foreground">Foglio Google di importazione</p>
@@ -273,59 +291,59 @@ export default function ImportCollaboratoriSection() {
         </a>
       </div>
 
-      {/* Disclaimer */}
-      <div className="flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-        <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-        <p className="text-sm text-amber-200">
-          <strong>Questa procedura non genera mai la richiesta di firma del contratto.</strong>{' '}
-          Gli utenti importati completano l&apos;onboarding in autonomia. I contratti devono essere
-          caricati tramite il tab <strong>Contratti</strong> nella stessa sezione.
-        </p>
-      </div>
+      {/* Two-column layout: left = actions + preview/result, right = rules infobox */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-6 items-start">
 
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <Button
-          onClick={handleLoadPreview}
-          disabled={previewLoading}
-          className="bg-brand hover:bg-brand/90 text-white"
-        >
-          {previewLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          {previewLoading ? 'Caricamento…' : 'Carica anteprima'}
-        </Button>
+        {/* Left column */}
+        <div className="min-w-0 space-y-4">
+          {/* Actions bar */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              onClick={handleLoadPreview}
+              disabled={previewLoading}
+              className="bg-brand hover:bg-brand/90 text-white"
+            >
+              {previewLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {previewLoading ? 'Caricamento…' : 'Carica anteprima'}
+            </Button>
 
-        {preview && !runResult && (
-          <Button
-            onClick={() => setModalOpen(true)}
-            disabled={!canImport || runLoading}
-            title={!canImport && preview.errorCount > 0 ? 'Correggi gli errori prima di importare.' : undefined}
-            variant="outline"
-          >
-            Importa collaboratori
-          </Button>
-        )}
+            {preview && !runResult && (
+              <Button
+                onClick={() => setModalOpen(true)}
+                disabled={!canImport || runLoading}
+                title={!canImport && preview.errorCount > 0 ? 'Correggi gli errori prima di importare.' : undefined}
+                variant="outline"
+              >
+                Importa collaboratori
+              </Button>
+            )}
 
-        {preview && (
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="text-emerald-400 font-medium">{preview.validCount} validi</span>
-            {preview.errorCount > 0 && <span className="text-destructive font-medium">{preview.errorCount} errori</span>}
-            {preview.alreadyImportedCount > 0 && <span>{preview.alreadyImportedCount} già importati</span>}
+            {preview && (
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span className="text-emerald-400 font-medium">{preview.validCount} validi</span>
+                {preview.errorCount > 0 && <span className="text-destructive font-medium">{preview.errorCount} errori</span>}
+                {preview.alreadyImportedCount > 0 && <span>{preview.alreadyImportedCount} già importati</span>}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Preview table */}
+          {preview && !runResult && (
+            preview.rows.length === 0
+              ? <EmptyState icon={Info} title="Nessuna riga nel foglio" description="Aggiungi collaboratori nel foglio Google e ricarica l'anteprima." />
+              : <PreviewTable rows={preview.rows} />
+          )}
+
+          {/* Run result */}
+          {runResult && <RunResultPanel result={runResult} />}
+        </div>
+
+        {/* Right column: rules infobox (always visible) */}
+        <ImportRulesPanel />
       </div>
-
-      {/* Preview table */}
-      {preview && !runResult && (
-        preview.rows.length === 0
-          ? <EmptyState icon={Info} title="Nessuna riga nel foglio" description="Aggiungi collaboratori nel foglio Google e ricarica l'anteprima." />
-          : <PreviewTable rows={preview.rows} />
-      )}
-
-      {/* Run result */}
-      {runResult && <RunResultPanel result={runResult} />}
 
       {/* Confirmation modal */}
-      <ImportRulesModal
+      <ConfirmImportModal
         open={modalOpen}
         validCount={preview?.validCount ?? 0}
         onConfirm={handleRunImport}

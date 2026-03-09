@@ -18,7 +18,7 @@ export default async function ImportPage() {
   if (profile.role !== 'amministrazione') redirect('/');
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Import</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
