@@ -237,8 +237,15 @@ After git push, before closing the session:
 - **C1–C3** (pure grep checks — no reasoning required): delegate to a **Haiku subagent** via the Agent tool. Pass the exact grep commands from `context-review.md` and the relevant file paths in the prompt. Collect results; apply any fix in the main session if needed.
 - Execute checks **C4 through C11** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
-- **Phase complete only when all 9 checks pass** — not when the review "seems thorough".
-- **Mandatory closing message** (after all C1–C9 pass, before `/compact`): post a summary to the user in this exact format:
+- **Phase complete only when all 11 checks pass** — not when the review "seems thorough".
+- **Final commit + push**: if any context file was modified during C1–C11 (CLAUDE.md, MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
+  ```
+  git add <modified context files>
+  git commit -m "chore(context): post-block context review fixes"
+  git push
+  ```
+  Skip if no context files were modified.
+- **Mandatory closing message** (after final commit+push or after confirming no fixes needed, before `/compact`): post a summary to the user in this exact format:
 
 ```
 **Block complete ✅ — [Block name]**
