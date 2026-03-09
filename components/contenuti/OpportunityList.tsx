@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Briefcase, CalendarDays, Paperclip } from 'lucide-react';
+import { Briefcase, CalendarDays, Paperclip, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Opportunity, OpportunityTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -12,6 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
   { value: 'LAVORO',     label: 'Lavoro' },
@@ -49,11 +56,13 @@ function OpportunityForm({
   communities,
   onSave,
   onCancel,
+  submitLabel,
 }: {
   initial?: Partial<FormData>;
   communities: Community[];
   onSave: (data: FormData) => Promise<void>;
   onCancel: () => void;
+  submitLabel?: string;
 }) {
   const [form, setForm] = useState<FormData>({
     titolo: initial?.titolo ?? '',
@@ -83,7 +92,7 @@ function OpportunityForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required className="col-span-2" />
         <div className="space-y-1">
@@ -125,14 +134,12 @@ function OpportunityForm({
           ))}
         </div>
       </div>
-      <div className="flex gap-2 pt-1">
-        <Button type="submit" disabled={loading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : 'Salva'}
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} size="sm">
-          Annulla
-        </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }
@@ -171,7 +178,10 @@ export default function OpportunityList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+
+  const editingItem = editingId ? opportunities.find((o) => o.id === editingId) : null;
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/opportunities', {
@@ -180,6 +190,7 @@ export default function OpportunityList({
       body: JSON.stringify({ ...data, community_ids: data.community_ids }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Opportunità pubblicata.');
     setShowForm(false);
     router.refresh();
   }
@@ -191,81 +202,124 @@ export default function OpportunityList({
       body: JSON.stringify({ ...data, community_ids: data.community_ids }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Opportunità aggiornata.');
     setEditingId(null);
     router.refresh();
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Eliminare questa opportunità?')) return;
-    await fetch(`/api/opportunities/${id}`, { method: 'DELETE' });
+  async function doDelete() {
+    if (!deleteTarget) return;
+    await fetch(`/api/opportunities/${deleteTarget}`, { method: 'DELETE' });
+    toast.success('Eliminata.');
+    setDeleteTarget(null);
     router.refresh();
   }
 
   return (
     <div className="space-y-4">
-      {canWrite && !showForm && (
-        <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-border hover:border-brand px-4 py-2 text-sm text-muted-foreground hover:text-link transition">
-          + Nuova opportunità
-        </button>
+      {/* Create Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuova opportunità</DialogTitle>
+          </DialogHeader>
+          <OpportunityForm
+            communities={communities}
+            onSave={handleCreate}
+            onCancel={() => setShowForm(false)}
+            submitLabel="Pubblica"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingId} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifica opportunità</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <OpportunityForm
+              initial={{
+                titolo: editingItem.titolo, tipo: editingItem.tipo, descrizione: editingItem.descrizione,
+                requisiti: editingItem.requisiti ?? '', scadenza_candidatura: editingItem.scadenza_candidatura ?? '',
+                link_candidatura: editingItem.link_candidatura ?? '', file_url: editingItem.file_url ?? '',
+                community_ids: editingItem.community_ids ?? [],
+              }}
+              communities={communities}
+              onSave={(data) => handleEdit(editingItem.id, data)}
+              onCancel={() => setEditingId(null)}
+              submitLabel="Aggiorna"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete AlertDialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina opportunità</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eliminare questa opportunità? L&apos;operazione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={doDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {canWrite && (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowForm(true)} className="bg-brand hover:bg-brand/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuova opportunità
+          </Button>
+        </div>
       )}
-      {showForm && (
-        <OpportunityForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
-      )}
-      {opportunities.length === 0 && !showForm && (
+
+      {opportunities.length === 0 && (
         <EmptyState icon={Briefcase} title="Nessuna opportunità disponibile" description="Non ci sono opportunità pubblicate al momento." />
       )}
       {opportunities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((o) => (
         <div key={o.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
-          {editingId === o.id ? (
-            <OpportunityForm
-              initial={{
-                titolo: o.titolo, tipo: o.tipo, descrizione: o.descrizione,
-                requisiti: o.requisiti ?? '', scadenza_candidatura: o.scadenza_candidatura ?? '',
-                link_candidatura: o.link_candidatura ?? '', file_url: o.file_url ?? '',
-                community_ids: o.community_ids ?? [],
-              }}
-              communities={communities}
-              onSave={(data) => handleEdit(o.id, data)}
-              onCancel={() => setEditingId(null)}
-            />
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
-                    {TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo}
-                  </span>
-                  <h3 className="text-sm font-semibold text-foreground">{o.titolo}</h3>
-                </div>
-                {canWrite && (
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(o.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                    <button onClick={() => handleDelete(o.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
-                  </div>
-                )}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
+                {TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo}
+              </span>
+              <h3 className="text-sm font-semibold text-foreground">{o.titolo}</h3>
+            </div>
+            {canWrite && (
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => setEditingId(o.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
+                <button onClick={() => setDeleteTarget(o.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
               </div>
-              <RichTextDisplay html={o.descrizione} className="line-clamp-3" />
-              {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
-              <div className="flex items-center gap-3 flex-wrap">
-                {o.scadenza_candidatura && (
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</span>
-                )}
-                {o.link_candidatura && (
-                  <a href={o.link_candidatura} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-link hover:text-link/80 underline transition">
-                    Candidati →
-                  </a>
-                )}
-                {o.file_url && (
-                  <a href={o.file_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                    <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
-                  </a>
-                )}
-              </div>
-            </>
-          )}
+            )}
+          </div>
+          <RichTextDisplay html={o.descrizione} className="line-clamp-3" />
+          {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
+          <div className="flex items-center gap-3 flex-wrap">
+            {o.scadenza_candidatura && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</span>
+            )}
+            {o.link_candidatura && (
+              <a href={o.link_candidatura} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-link hover:text-link/80 underline transition">
+                Candidati →
+              </a>
+            )}
+            {o.file_url && (
+              <a href={o.file_url} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
+                <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
+              </a>
+            )}
+          </div>
         </div>
       ))}
       <PaginationNav page={page} total={opportunities.length} onPage={setPage} />

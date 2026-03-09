@@ -294,10 +294,10 @@ export default function CreateUserForm() {
         <div>
           <p className={sectionTitle}>Durata contratto</p>
           <div>
-            <label className={labelCls}>Data fine contratto</label>
+            <label className={labelCls}>Data fine contratto <span className="text-red-500">*</span></label>
             <Input type="date" value={dataFineContratto}
               onChange={(e) => setDataFineContratto(e.target.value)}
-              disabled={loading} />
+              required disabled={loading} />
             <p className="text-[10px] text-muted-foreground mt-1">
               Usata per compilare automaticamente il template PDF del contratto.
             </p>
@@ -344,23 +344,23 @@ export default function CreateUserForm() {
         </div>
       )}
 
-      {/* Invito completo: anagrafica opzionale (pre-fill per l'onboarding) */}
+      {/* Invito completo: anagrafica richiesta (pre-fill per l'onboarding) */}
       {needsContract && mode === 'full' && (
         <div>
-          <p className={sectionTitle}>Dati personali <span className="font-normal text-muted-foreground normal-case">(opzionale — pre-compilazione onboarding)</span></p>
+          <p className={sectionTitle}>Dati personali</p>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Nome</label>
+                <label className={labelCls}>Nome <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  disabled={loading} />
+                  required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Cognome</label>
+                <label className={labelCls}>Cognome <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
-                  disabled={loading} />
+                  required disabled={loading} />
               </div>
             </div>
             <div>
@@ -380,77 +380,77 @@ export default function CreateUserForm() {
               <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
-              <label className={labelCls}>Codice fiscale</label>
+              <label className={labelCls}>Codice fiscale <span className="text-red-500">*</span></label>
               <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
                 onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                disabled={loading} maxLength={16} className="font-mono" />
+                required disabled={loading} maxLength={16} className="font-mono" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Data di nascita</label>
+                <label className={labelCls}>Data di nascita <span className="text-red-500">*</span></label>
                 <Input type="date" value={dataNascita}
                   onChange={(e) => setDataNascita(e.target.value)}
-                  disabled={loading} />
+                  required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Città di nascita</label>
+                <label className={labelCls}>Città di nascita <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="Roma" value={luogoNascita}
                   onChange={(e) => setLuogoNascita(e.target.value)}
-                  disabled={loading} />
+                  required disabled={loading} />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Provincia di nascita (sigla)</label>
+              <label className={labelCls}>Provincia di nascita (sigla) <span className="text-red-500">*</span></label>
               <Input type="text" placeholder="RM" value={provinciaNascita}
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
-                disabled={loading} maxLength={2} className="font-mono uppercase" />
+                required disabled={loading} maxLength={2} className="font-mono uppercase" />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className={labelCls}>Via/Piazza</label>
+                <label className={labelCls}>Via/Piazza <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="Via Roma" value={indirizzo}
                   onChange={(e) => setIndirizzo(e.target.value)}
-                  disabled={loading} />
+                  required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Civico</label>
+                <label className={labelCls}>Civico <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="1" value={civico}
                   onChange={(e) => setCivico(e.target.value)}
-                  disabled={loading} maxLength={10} />
+                  required disabled={loading} maxLength={10} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Comune di residenza</label>
+                <label className={labelCls}>Comune di residenza <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="Milano" value={comuneRes}
                   onChange={(e) => setComuneRes(e.target.value)}
-                  disabled={loading} />
+                  required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Provincia di residenza (sigla)</label>
+                <label className={labelCls}>Provincia di residenza (sigla) <span className="text-red-500">*</span></label>
                 <Input type="text" placeholder="MI" value={provinciaRes}
                   onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                  disabled={loading} maxLength={2} className="font-mono uppercase" />
+                  required disabled={loading} maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Telefono</label>
+              <label className={labelCls}>Telefono <span className="text-red-500">*</span></label>
               <Input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                disabled={loading} />
+                required disabled={loading} />
             </div>
             <div>
-              <label className={labelCls}>Intestatario del conto bancario</label>
+              <label className={labelCls}>Intestatario del conto bancario <span className="text-red-500">*</span></label>
               <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
                 onChange={(e) => setIntestatarioPagamento(e.target.value)}
-                disabled={loading} maxLength={100} />
+                required disabled={loading} maxLength={100} />
               <p className="text-[10px] text-muted-foreground mt-1">Nome e cognome dell&apos;intestatario del conto. Pre-compilato per l&apos;onboarding.</p>
             </div>
             <div>
-              <label className={labelCls}>Data di ingresso</label>
+              <label className={labelCls}>Data di ingresso <span className="text-red-500">*</span></label>
               <Input type="date" value={dataIngresso}
                 onChange={(e) => setDataIngresso(e.target.value)}
-                disabled={loading} />
+                required disabled={loading} />
             </div>
           </div>
         </div>
@@ -458,7 +458,16 @@ export default function CreateUserForm() {
 
       <Button
         type="submit"
-        disabled={loading || !email || (needsContract && (mode === 'quick' && (!nome.trim() || !cognome.trim())))}
+        disabled={
+          loading || !email ||
+          (needsContract && mode === 'quick' && (!nome.trim() || !cognome.trim() || !dataFineContratto)) ||
+          (needsContract && mode === 'full' && (
+            !nome.trim() || !cognome.trim() || !codiceFiscale.trim() || !dataNascita ||
+            !luogoNascita.trim() || !provinciaNascita.trim() || !indirizzo.trim() ||
+            !civico.trim() || !comuneRes.trim() || !provinciaRes.trim() ||
+            !telefono.trim() || !intestatarioPagamento.trim() || !dataIngresso || !dataFineContratto
+          ))
+        }
         className="w-full bg-brand hover:bg-brand/90 text-white"
       >
         {loading ? (

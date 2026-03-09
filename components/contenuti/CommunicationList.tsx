@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Bell, Pin, Paperclip, CalendarDays } from 'lucide-react';
+import { Bell, Pin, Paperclip, CalendarDays, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Communication, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -11,6 +11,14 @@ import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -30,11 +38,13 @@ function CommunicationForm({
   communities,
   onSave,
   onCancel,
+  submitLabel,
 }: {
   initial?: Partial<FormData>;
   communities: Community[];
   onSave: (data: FormData) => Promise<void>;
   onCancel: () => void;
+  submitLabel?: string;
 }) {
   const [form, setForm] = useState<FormData>({
     titolo: initial?.titolo ?? '',
@@ -64,7 +74,7 @@ function CommunicationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Contenuto *" />
       <Textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
@@ -101,16 +111,12 @@ function CommunicationForm({
         />
         Fissa in cima
       </label>
-      <div className="flex gap-2 pt-1">
-        <button type="submit" disabled={loading}
-          className="rounded-lg bg-brand hover:bg-brand/90 disabled:opacity-50 px-4 py-1.5 text-sm font-medium text-white transition">
-          {loading ? 'Salvataggio…' : 'Salva'}
-        </button>
-        <button type="button" onClick={onCancel}
-          className="rounded-lg border border-border bg-muted hover:bg-accent px-4 py-1.5 text-sm text-foreground transition">
-          Annulla
-        </button>
-      </div>
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
+        </Button>
+      </DialogFooter>
     </form>
   );
 }
@@ -153,7 +159,10 @@ export default function CommunicationList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+
+  const editingItem = editingId ? communications.find((c) => c.id === editingId) : null;
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/communications', {
@@ -169,6 +178,7 @@ export default function CommunicationList({
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Comunicazione pubblicata.');
     setShowForm(false);
     router.refresh();
   }
@@ -187,76 +197,119 @@ export default function CommunicationList({
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Comunicazione aggiornata.');
     setEditingId(null);
     router.refresh();
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Eliminare questa comunicazione?')) return;
-    await fetch(`/api/communications/${id}`, { method: 'DELETE' });
+  async function doDelete() {
+    if (!deleteTarget) return;
+    await fetch(`/api/communications/${deleteTarget}`, { method: 'DELETE' });
+    toast.success('Eliminata.');
+    setDeleteTarget(null);
     router.refresh();
   }
 
   return (
     <div className="space-y-4">
-      {canWrite && !showForm && (
-        <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-border hover:border-brand px-4 py-2 text-sm text-muted-foreground hover:text-link transition">
-          + Nuova comunicazione
-        </button>
+      {/* Create Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuova comunicazione</DialogTitle>
+          </DialogHeader>
+          <CommunicationForm
+            communities={communities}
+            onSave={handleCreate}
+            onCancel={() => setShowForm(false)}
+            submitLabel="Pubblica"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingId} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifica comunicazione</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <CommunicationForm
+              initial={{
+                titolo: editingItem.titolo, contenuto: editingItem.contenuto, pinned: editingItem.pinned,
+                community_ids: editingItem.community_ids ?? [], expires_at: editingItem.expires_at ?? '',
+                file_urls: (editingItem.file_urls ?? []).join('\n'),
+              }}
+              communities={communities}
+              onSave={(data) => handleEdit(editingItem.id, data)}
+              onCancel={() => setEditingId(null)}
+              submitLabel="Aggiorna"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete AlertDialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina comunicazione</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eliminare questa comunicazione? L&apos;operazione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={doDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {canWrite && (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowForm(true)} className="bg-brand hover:bg-brand/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuova comunicazione
+          </Button>
+        </div>
       )}
-      {showForm && (
-        <CommunicationForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
-      )}
-      {communications.length === 0 && !showForm && (
+
+      {communications.length === 0 && (
         <EmptyState icon={Bell} title="Nessuna comunicazione" description="Non ci sono comunicazioni pubblicate al momento." />
       )}
       {communications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((c) => (
         <div key={c.id} className={`rounded-xl border p-4 space-y-2 ${
           c.pinned ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20' : 'border-border bg-card'
         }`}>
-          {editingId === c.id ? (
-            <CommunicationForm
-              initial={{
-                titolo: c.titolo, contenuto: c.contenuto, pinned: c.pinned,
-                community_ids: c.community_ids ?? [], expires_at: c.expires_at ?? '',
-                file_urls: (c.file_urls ?? []).join('\n'),
-              }}
-              communities={communities}
-              onSave={(data) => handleEdit(c.id, data)}
-              onCancel={() => setEditingId(null)}
-            />
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  {c.pinned && <Pin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
-                  <h3 className="text-sm font-semibold text-foreground">{c.titolo}</h3>
-                </div>
-                {canWrite && (
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(c.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                    <button onClick={() => handleDelete(c.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
-                  </div>
-                )}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {c.pinned && <Pin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
+              <h3 className="text-sm font-semibold text-foreground">{c.titolo}</h3>
+            </div>
+            {canWrite && (
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => setEditingId(c.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
+                <button onClick={() => setDeleteTarget(c.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
               </div>
-              <RichTextDisplay html={c.contenuto} />
-              {c.file_urls && c.file_urls.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {c.file_urls.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                      <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato {i + 1}
-                    </a>
-                  ))}
-                </div>
-              )}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(c.published_at)}</span>
-                {c.expires_at && <span>· Scade: {formatDate(c.expires_at)}</span>}
-              </div>
-            </>
+            )}
+          </div>
+          <RichTextDisplay html={c.contenuto} />
+          {c.file_urls && c.file_urls.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {c.file_urls.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
+                  <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato {i + 1}
+                </a>
+              ))}
+            </div>
           )}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(c.published_at)}</span>
+            {c.expires_at && <span>· Scade: {formatDate(c.expires_at)}</span>}
+          </div>
         </div>
       ))}
       <PaginationNav page={page} total={communications.length} onPage={setPage} />

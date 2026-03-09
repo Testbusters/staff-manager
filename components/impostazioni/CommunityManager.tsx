@@ -2,9 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Community = { id: string; name: string; is_active: boolean };
 type Responsabile = { user_id: string; display_name: string; email: string; communities: { id: string; name: string }[]; can_publish_announcements: boolean };
@@ -21,19 +26,19 @@ export default function CommunityManager({
   // ── Create community ──────────────────────────────────────
   const [newName, setNewName] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!newName.trim()) return;
-    setCreateLoading(true); setCreateError(null);
+    setCreateLoading(true);
     const res = await fetch('/api/admin/communities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newName.trim() }),
     });
     setCreateLoading(false);
-    if (!res.ok) { const j = await res.json(); setCreateError(j.error ?? 'Errore.'); return; }
+    if (!res.ok) { const j = await res.json(); toast.error(j.error ?? 'Errore.', { duration: 5000 }); return; }
+    toast.success('Community creata.');
     setNewName('');
     router.refresh();
   }
@@ -46,28 +51,31 @@ export default function CommunityManager({
   async function handleRename(id: string) {
     if (!editName.trim()) return;
     setEditLoading(true);
-    await fetch(`/api/admin/communities/${id}`, {
+    const res = await fetch(`/api/admin/communities/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: editName.trim() }),
     });
     setEditLoading(false);
+    if (!res.ok) { const j = await res.json(); toast.error(j.error ?? 'Errore.', { duration: 5000 }); return; }
+    toast.success('Rinominata.');
     setEditingId(null);
     router.refresh();
   }
 
   // ── Toggle is_active ──────────────────────────────────────
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [confirmToggle, setConfirmToggle] = useState<{ id: string; name: string; active: boolean } | null>(null);
 
-  async function handleToggle(id: string, current: boolean) {
-    if (!window.confirm(current ? 'Disattivare questa community? Sarà nascosta da tutti i menu.' : 'Riattivare questa community?')) return;
+  async function doToggle(id: string, active: boolean) {
     setTogglingId(id);
     await fetch(`/api/admin/communities/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_active: !current }),
+      body: JSON.stringify({ is_active: !active }),
     });
     setTogglingId(null);
+    setConfirmToggle(null);
     router.refresh();
   }
 
@@ -111,6 +119,31 @@ export default function CommunityManager({
 
   return (
     <div className="space-y-8">
+      {/* ── Toggle AlertDialog ──────────────────────────────── */}
+      <AlertDialog open={!!confirmToggle} onOpenChange={(open) => { if (!open) setConfirmToggle(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmToggle?.active ? 'Disattiva community' : 'Riattiva community'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmToggle?.active
+                ? `Disattivare "${confirmToggle.name}"? Sarà nascosta da tutti i menu.`
+                : `Riattivare "${confirmToggle?.name}"?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmToggle && doToggle(confirmToggle.id, confirmToggle.active)}
+              className={confirmToggle?.active ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+            >
+              {confirmToggle?.active ? 'Disattiva' : 'Riattiva'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* ── Create community ────────────────────────────────── */}
       <div className="rounded-2xl bg-card border border-border">
         <div className="px-5 py-4 border-b border-border">
@@ -125,7 +158,6 @@ export default function CommunityManager({
               {createLoading ? 'Creazione…' : 'Crea'}
             </Button>
           </form>
-          {createError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{createError}</p>}
         </div>
       </div>
 
@@ -148,10 +180,9 @@ export default function CommunityManager({
                   <Button onClick={() => handleRename(c.id)} disabled={editLoading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
                     Salva
                   </Button>
-                  <button onClick={() => setEditingId(null)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition">
+                  <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
                     Annulla
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
@@ -161,15 +192,24 @@ export default function CommunityManager({
                   {!c.is_active && (
                     <span className="rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground">Inattiva</span>
                   )}
-                  <button onClick={() => { setEditingId(c.id); setEditName(c.name); }}
-                    className="text-xs text-muted-foreground hover:text-foreground transition">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setEditingId(c.id); setEditName(c.name); }}
+                  >
                     Rinomina
-                  </button>
-                  <button onClick={() => handleToggle(c.id, c.is_active)}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     disabled={togglingId === c.id}
-                    className={`text-xs transition ${c.is_active ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-400' : 'text-green-700 hover:text-green-500'}`}>
+                    onClick={() => setConfirmToggle({ id: c.id, name: c.name, active: c.is_active })}
+                    className={c.is_active
+                      ? 'text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                      : 'text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20'}
+                  >
                     {togglingId === c.id ? '…' : c.is_active ? 'Disattiva' : 'Riattiva'}
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
@@ -215,16 +255,14 @@ export default function CommunityManager({
                     <Button onClick={() => saveAssignment(resp.user_id)} disabled={assignLoading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
                       Salva
                     </Button>
-                    <button onClick={() => setEditingUserId(null)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition">
+                    <Button variant="ghost" size="sm" onClick={() => setEditingUserId(null)}>
                       Annulla
-                    </button>
+                    </Button>
                   </div>
                 ) : (
-                  <button onClick={() => startEditAssignment(resp)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition">
+                  <Button variant="outline" size="sm" onClick={() => startEditAssignment(resp)}>
                     Modifica
-                  </button>
+                  </Button>
                 )}
                 </div>
               </div>

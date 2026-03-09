@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Tag, Paperclip } from 'lucide-react';
+import { Tag, Paperclip, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Discount, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -11,6 +11,13 @@ import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -45,11 +52,13 @@ function DiscountForm({
   communities,
   onSave,
   onCancel,
+  submitLabel,
 }: {
   initial?: Partial<FormData>;
   communities: Community[];
   onSave: (data: FormData) => Promise<void>;
   onCancel: () => void;
+  submitLabel?: string;
 }) {
   const [form, setForm] = useState<FormData>({
     titolo: initial?.titolo ?? '',
@@ -80,7 +89,7 @@ function DiscountForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <Input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)" />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
@@ -117,14 +126,12 @@ function DiscountForm({
           ))}
         </div>
       </div>
-      <div className="flex gap-2 pt-1">
-        <Button type="submit" disabled={loading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : 'Salva'}
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} size="sm">
-          Annulla
-        </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }
@@ -171,7 +178,16 @@ export default function DiscountList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+
+  const editingItem = editingId ? discounts.find((d) => d.id === editingId) : null;
+  const active = discounts.filter(isActive);
+  const expired = discounts.filter((d) => !isActive(d));
+  const sorted = [...active, ...expired];
+  const pageItems = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageActive = pageItems.filter(isActive);
+  const pageExpired = pageItems.filter((d) => !isActive(d));
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/discounts', {
@@ -180,6 +196,7 @@ export default function DiscountList({
       body: JSON.stringify({ ...data, community_ids: data.community_ids, brand }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Sconto pubblicato.');
     setShowForm(false);
     router.refresh();
   }
@@ -191,35 +208,134 @@ export default function DiscountList({
       body: JSON.stringify({ ...data, community_ids: data.community_ids, brand }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Sconto aggiornato.');
     setEditingId(null);
     router.refresh();
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Eliminare questo sconto?')) return;
-    await fetch(`/api/discounts/${id}`, { method: 'DELETE' });
+  async function doDelete() {
+    if (!deleteTarget) return;
+    await fetch(`/api/discounts/${deleteTarget}`, { method: 'DELETE' });
+    toast.success('Eliminato.');
+    setDeleteTarget(null);
     router.refresh();
   }
 
-  const active = discounts.filter(isActive);
-  const expired = discounts.filter((d) => !isActive(d));
-  const sorted = [...active, ...expired];
-  const pageItems = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const pageActive = pageItems.filter(isActive);
-  const pageExpired = pageItems.filter((d) => !isActive(d));
+  function renderCard(d: Discount, expired: boolean) {
+    return (
+      <div key={d.id} className={`rounded-xl border p-4 space-y-2 ${expired ? 'border-border bg-card/50 opacity-70' : 'border-border bg-card'}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-semibold text-foreground">{d.titolo}</h3>
+            {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
+            {expiryBadge(d.valid_to)}
+          </div>
+          {canWrite && (
+            <div className="flex gap-2 shrink-0">
+              <button onClick={() => setEditingId(d.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
+              <button onClick={() => setDeleteTarget(d.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
+            </div>
+          )}
+        </div>
+        {d.descrizione && <RichTextDisplay html={d.descrizione} />}
+        <div className="flex items-center gap-3 flex-wrap">
+          {d.codice_sconto && (
+            <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-700 dark:text-yellow-300">
+              {d.codice_sconto}
+            </span>
+          )}
+          {d.link && (
+            <a href={d.link} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-link hover:text-link/80 underline transition">
+              Scopri →
+            </a>
+          )}
+          {d.file_url && (
+            <a href={d.file_url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
+              <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
+            </a>
+          )}
+          {(d.valid_from || d.valid_to) && (
+            <span className="text-xs text-muted-foreground">
+              {d.valid_from && `Dal ${formatDate(d.valid_from)}`}
+              {d.valid_from && d.valid_to && ' · '}
+              {d.valid_to && `Al ${formatDate(d.valid_to)}`}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {canWrite && !showForm && (
-        <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-border hover:border-brand px-4 py-2 text-sm text-muted-foreground hover:text-link transition">
-          + Nuovo sconto
-        </button>
+      {/* Create Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuovo sconto</DialogTitle>
+          </DialogHeader>
+          <DiscountForm
+            communities={communities}
+            onSave={handleCreate}
+            onCancel={() => setShowForm(false)}
+            submitLabel="Pubblica"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingId} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifica sconto</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <DiscountForm
+              initial={{
+                titolo: editingItem.titolo, descrizione: editingItem.descrizione ?? '', codice_sconto: editingItem.codice_sconto ?? '',
+                link: editingItem.link ?? '', valid_from: editingItem.valid_from ?? '', valid_to: editingItem.valid_to ?? '',
+                community_ids: editingItem.community_ids ?? [], fornitore: editingItem.fornitore ?? '',
+                logo_url: editingItem.logo_url ?? '', file_url: editingItem.file_url ?? '',
+              }}
+              communities={communities}
+              onSave={(data) => handleEdit(editingItem.id, data)}
+              onCancel={() => setEditingId(null)}
+              submitLabel="Aggiorna"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete AlertDialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina sconto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eliminare questo sconto? L&apos;operazione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={doDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {canWrite && (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowForm(true)} className="bg-brand hover:bg-brand/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuovo sconto
+          </Button>
+        </div>
       )}
-      {showForm && (
-        <DiscountForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
-      )}
-      {discounts.length === 0 && !showForm && (
+
+      {discounts.length === 0 && (
         <EmptyState icon={Tag} title="Nessuno sconto disponibile" description="Non ci sono sconti pubblicati al momento." />
       )}
       {pageActive.length > 0 && (
@@ -237,67 +353,4 @@ export default function DiscountList({
       <PaginationNav page={page} total={sorted.length} onPage={setPage} />
     </div>
   );
-
-  function renderCard(d: Discount, expired: boolean) {
-    return (
-      <div key={d.id} className={`rounded-xl border p-4 space-y-2 ${expired ? 'border-border bg-card/50 opacity-70' : 'border-border bg-card'}`}>
-        {editingId === d.id ? (
-          <DiscountForm
-            initial={{
-              titolo: d.titolo, descrizione: d.descrizione ?? '', codice_sconto: d.codice_sconto ?? '',
-              link: d.link ?? '', valid_from: d.valid_from ?? '', valid_to: d.valid_to ?? '',
-              community_ids: d.community_ids ?? [], fornitore: d.fornitore ?? '',
-              logo_url: d.logo_url ?? '', file_url: d.file_url ?? '',
-            }}
-            communities={communities}
-            onSave={(data) => handleEdit(d.id, data)}
-            onCancel={() => setEditingId(null)}
-          />
-        ) : (
-          <>
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-semibold text-foreground">{d.titolo}</h3>
-                {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
-                {expiryBadge(d.valid_to)}
-              </div>
-              {canWrite && (
-                <div className="flex gap-2 shrink-0">
-                  <button onClick={() => setEditingId(d.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                  <button onClick={() => handleDelete(d.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
-                </div>
-              )}
-            </div>
-            {d.descrizione && <RichTextDisplay html={d.descrizione} />}
-            <div className="flex items-center gap-3 flex-wrap">
-              {d.codice_sconto && (
-                <span className="rounded-md bg-muted border border-border px-2 py-0.5 text-xs font-mono text-yellow-700 dark:text-yellow-300">
-                  {d.codice_sconto}
-                </span>
-              )}
-              {d.link && (
-                <a href={d.link} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-link hover:text-link/80 underline transition">
-                  Scopri →
-                </a>
-              )}
-              {d.file_url && (
-                <a href={d.file_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted hover:bg-accent px-2 py-0.5 text-xs text-foreground transition">
-                  <Paperclip className="h-3.5 w-3.5 shrink-0" />Allegato
-                </a>
-              )}
-              {(d.valid_from || d.valid_to) && (
-                <span className="text-xs text-muted-foreground">
-                  {d.valid_from && `Dal ${formatDate(d.valid_from)}`}
-                  {d.valid_from && d.valid_to && ' · '}
-                  {d.valid_to && `Al ${formatDate(d.valid_to)}`}
-                </span>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
 }

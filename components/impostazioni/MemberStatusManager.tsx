@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type MemberStatus = 'attivo' | 'uscente_con_compenso' | 'uscente_senza_compenso';
@@ -24,10 +25,10 @@ const STATUS_LABELS: Record<MemberStatus, string> = {
   uscente_senza_compenso:   'Uscente (senza compenso)',
 };
 
-const STATUS_COLORS: Record<MemberStatus, string> = {
-  attivo:                   'text-green-700 dark:text-green-400',
-  uscente_con_compenso:     'text-yellow-600 dark:text-yellow-400 dark:text-yellow-400',
-  uscente_senza_compenso:   'text-muted-foreground',
+const STATUS_DOT: Record<MemberStatus, string> = {
+  attivo:                   'bg-green-500',
+  uscente_con_compenso:     'bg-yellow-500',
+  uscente_senza_compenso:   'bg-muted-foreground',
 };
 
 export default function MemberStatusManager({ members }: { members: Member[] }) {
@@ -37,6 +38,7 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
   const [dateValues, setDateValues] = useState<Record<string, string>>(
     Object.fromEntries(members.map((m) => [m.id, m.data_ingresso ?? ''])),
   );
+  const [dirtyDates, setDirtyDates] = useState<Set<string>>(new Set());
 
   async function handleStatusChange(id: string, newStatus: MemberStatus) {
     setLoadingStatusId(id);
@@ -52,7 +54,12 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
 
   async function handleDateSave(id: string, originalDate: string | null) {
     const value = dateValues[id] || null;
-    if (value === (originalDate ?? '')) return; // no change
+    if (value === (originalDate ?? '')) {
+      const next = new Set(dirtyDates);
+      next.delete(id);
+      setDirtyDates(next);
+      return;
+    }
     setLoadingDateId(id);
     const res = await fetch(`/api/admin/members/${id}/data-ingresso`, {
       method: 'PATCH',
@@ -61,6 +68,9 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
     });
     setLoadingDateId(null);
     if (!res.ok) { const j = await res.json(); toast.error(j.error ?? 'Errore.', { duration: 5000 }); return; }
+    const next = new Set(dirtyDates);
+    next.delete(id);
+    setDirtyDates(next);
     router.refresh();
   }
 
@@ -73,44 +83,74 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
         </p>
       </div>
 
-      <div className="divide-y divide-border">
-        {members.length === 0 && (
-          <p className="px-5 py-4 text-sm text-muted-foreground">Nessun collaboratore trovato.</p>
-        )}
-        {members.map((m) => (
-          <div key={m.id} className="px-5 py-3 space-y-2">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground truncate">{m.cognome} {m.nome}</p>
-                <p className={`text-xs ${STATUS_COLORS[m.member_status]}`}>
-                  {STATUS_LABELS[m.member_status]}
-                </p>
-              </div>
-              <Select value={m.member_status} onValueChange={(v) => handleStatusChange(m.id, v as MemberStatus)} disabled={loadingStatusId === m.id}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(Object.entries(STATUS_LABELS) as [MemberStatus, string][]).map(([val, label]) => (
-                    <SelectItem key={val} value={val}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {loadingStatusId === m.id && <span className="text-xs text-muted-foreground">…</span>}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">Data ingresso:</span>
-              <Input
-                type="date"
-                value={dateValues[m.id] ?? ''}
-                onChange={(e) => setDateValues((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                onBlur={() => handleDateSave(m.id, m.data_ingresso)}
-                disabled={loadingDateId === m.id}
-                className="h-auto py-1 px-2 text-xs"
-              />
-              {loadingDateId === m.id && <span className="text-xs text-muted-foreground">…</span>}
-            </div>
-          </div>
-        ))}
-      </div>
+      {members.length === 0 ? (
+        <p className="px-5 py-4 text-sm text-muted-foreground">Nessun collaboratore trovato.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-xs text-muted-foreground">
+                <th className="px-5 py-2.5 text-left font-medium">Nome</th>
+                <th className="px-5 py-2.5 text-left font-medium">Stato</th>
+                <th className="px-5 py-2.5 text-left font-medium">Data ingresso</th>
+                <th className="px-5 py-2.5 text-left font-medium w-20"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {members.map((m) => (
+                <tr key={m.id} className="hover:bg-muted/60 transition">
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${STATUS_DOT[m.member_status]}`} />
+                      <span className="text-foreground truncate max-w-[180px]">{m.cognome} {m.nome}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3">
+                    <Select
+                      value={m.member_status}
+                      onValueChange={(v) => handleStatusChange(m.id, v as MemberStatus)}
+                      disabled={loadingStatusId === m.id}
+                    >
+                      <SelectTrigger className="h-8 text-sm w-[200px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.entries(STATUS_LABELS) as [MemberStatus, string][]).map(([val, label]) => (
+                          <SelectItem key={val} value={val}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-5 py-3">
+                    <Input
+                      type="date"
+                      value={dateValues[m.id] ?? ''}
+                      onChange={(e) => {
+                        setDateValues((prev) => ({ ...prev, [m.id]: e.target.value }));
+                        const next = new Set(dirtyDates);
+                        next.add(m.id);
+                        setDirtyDates(next);
+                      }}
+                      disabled={loadingDateId === m.id}
+                      className="h-8 py-1 px-2 text-xs w-[140px]"
+                    />
+                  </td>
+                  <td className="px-5 py-3">
+                    {dirtyDates.has(m.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={loadingDateId === m.id}
+                        onClick={() => handleDateSave(m.id, m.data_ingresso)}
+                      >
+                        {loadingDateId === m.id ? '…' : 'Salva'}
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

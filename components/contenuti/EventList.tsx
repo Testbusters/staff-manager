@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, MapPin } from 'lucide-react';
+import { CalendarDays, MapPin, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { ContentEvent, EventTipo, Community } from '@/lib/types';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -12,6 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'WEBINAR',   label: 'Webinar' },
@@ -31,7 +38,6 @@ function formatDateRange(start: string | null, end: string | null): string {
   return end ? `${fmt(start)} → ${fmt(end)}` : fmt(start);
 }
 
-// datetime-local inputs require 'YYYY-MM-DDTHH:mm' format
 function toDatetimeLocal(iso: string | null): string {
   if (!iso) return '';
   return iso.slice(0, 16);
@@ -55,11 +61,13 @@ function EventForm({
   communities,
   onSave,
   onCancel,
+  submitLabel,
 }: {
   initial?: Partial<FormData>;
   communities: Community[];
   onSave: (data: FormData) => Promise<void>;
   onCancel: () => void;
+  submitLabel?: string;
 }) {
   const [form, setForm] = useState<FormData>({
     titolo: initial?.titolo ?? '',
@@ -90,7 +98,7 @@ function EventForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-2 gap-3">
@@ -137,14 +145,12 @@ function EventForm({
           ))}
         </div>
       </div>
-      <div className="flex gap-2 pt-1">
-        <Button type="submit" disabled={loading} size="sm" className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : 'Salva'}
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} size="sm">
-          Annulla
-        </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }
@@ -183,7 +189,10 @@ export default function EventList({
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+
+  const editingItem = editingId ? events.find((e) => e.id === editingId) : null;
 
   async function handleCreate(data: FormData) {
     const res = await fetch('/api/events', {
@@ -203,6 +212,7 @@ export default function EventList({
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Evento pubblicato.');
     setShowForm(false);
     router.refresh();
   }
@@ -225,86 +235,129 @@ export default function EventList({
       }),
     });
     if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Errore.'); }
+    toast.success('Evento aggiornato.');
     setEditingId(null);
     router.refresh();
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Eliminare questo evento?')) return;
-    await fetch(`/api/events/${id}`, { method: 'DELETE' });
+  async function doDelete() {
+    if (!deleteTarget) return;
+    await fetch(`/api/events/${deleteTarget}`, { method: 'DELETE' });
+    toast.success('Eliminato.');
+    setDeleteTarget(null);
     router.refresh();
   }
 
   return (
     <div className="space-y-4">
-      {canWrite && !showForm && (
-        <button onClick={() => setShowForm(true)}
-          className="rounded-lg border border-dashed border-border hover:border-brand px-4 py-2 text-sm text-muted-foreground hover:text-link transition">
-          + Nuovo evento
-        </button>
+      {/* Create Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuovo evento</DialogTitle>
+          </DialogHeader>
+          <EventForm
+            communities={communities}
+            onSave={handleCreate}
+            onCancel={() => setShowForm(false)}
+            submitLabel="Pubblica"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingId} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifica evento</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <EventForm
+              initial={{
+                titolo: editingItem.titolo,
+                descrizione: editingItem.descrizione ?? '',
+                start_datetime: toDatetimeLocal(editingItem.start_datetime),
+                end_datetime: toDatetimeLocal(editingItem.end_datetime),
+                location: editingItem.location ?? '',
+                luma_url: editingItem.luma_url ?? '',
+                luma_embed_url: editingItem.luma_embed_url ?? '',
+                community_ids: editingItem.community_ids ?? [],
+                tipo: editingItem.tipo ?? '',
+                file_url: editingItem.file_url ?? '',
+              }}
+              communities={communities}
+              onSave={(data) => handleEdit(editingItem.id, data)}
+              onCancel={() => setEditingId(null)}
+              submitLabel="Aggiorna"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete AlertDialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina evento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eliminare questo evento? L&apos;operazione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={doDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {canWrite && (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowForm(true)} className="bg-brand hover:bg-brand/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuovo evento
+          </Button>
+        </div>
       )}
-      {showForm && (
-        <EventForm communities={communities} onSave={handleCreate} onCancel={() => setShowForm(false)} />
-      )}
-      {events.length === 0 && !showForm && (
+
+      {events.length === 0 && (
         <EmptyState icon={CalendarDays} title="Nessun evento in programma" description="Non ci sono eventi pubblicati al momento." />
       )}
       {events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((ev) => (
         <div key={ev.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
-          {editingId === ev.id ? (
-            <EventForm
-              initial={{
-                titolo: ev.titolo,
-                descrizione: ev.descrizione ?? '',
-                start_datetime: toDatetimeLocal(ev.start_datetime),
-                end_datetime: toDatetimeLocal(ev.end_datetime),
-                location: ev.location ?? '',
-                luma_url: ev.luma_url ?? '',
-                luma_embed_url: ev.luma_embed_url ?? '',
-                community_ids: ev.community_ids ?? [],
-                tipo: ev.tipo ?? '',
-                file_url: ev.file_url ?? '',
-              }}
-              communities={communities}
-              onSave={(data) => handleEdit(ev.id, data)}
-              onCancel={() => setEditingId(null)}
-            />
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold text-foreground">{ev.titolo}</h3>
-                {canWrite && (
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditingId(ev.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                    <button onClick={() => handleDelete(ev.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
-                  </div>
-                )}
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">{ev.titolo}</h3>
+            {canWrite && (
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => setEditingId(ev.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
+                <button onClick={() => setDeleteTarget(ev.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
               </div>
-              {ev.descrizione && <RichTextDisplay html={ev.descrizione} />}
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                {(ev.start_datetime || ev.end_datetime) && (
-                  <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDateRange(ev.start_datetime, ev.end_datetime)}</span>
-                )}
-                {ev.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{ev.location}</span>}
-                {ev.luma_url && (
-                  <a href={ev.luma_url} target="_blank" rel="noopener noreferrer"
-                    className="text-link hover:text-link/80 underline transition">
-                    Pagina evento →
-                  </a>
-                )}
-              </div>
-              {ev.luma_embed_url && (
-                <div className="rounded-xl overflow-hidden border border-border mt-1">
-                  <iframe
-                    src={ev.luma_embed_url}
-                    className="w-full h-64 border-0"
-                    title={ev.titolo}
-                    loading="lazy"
-                    allow="fullscreen"
-                  />
-                </div>
-              )}
-            </>
+            )}
+          </div>
+          {ev.descrizione && <RichTextDisplay html={ev.descrizione} />}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            {(ev.start_datetime || ev.end_datetime) && (
+              <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDateRange(ev.start_datetime, ev.end_datetime)}</span>
+            )}
+            {ev.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{ev.location}</span>}
+            {ev.luma_url && (
+              <a href={ev.luma_url} target="_blank" rel="noopener noreferrer"
+                className="text-link hover:text-link/80 underline transition">
+                Pagina evento →
+              </a>
+            )}
+          </div>
+          {ev.luma_embed_url && (
+            <div className="rounded-xl overflow-hidden border border-border mt-1">
+              <iframe
+                src={ev.luma_embed_url}
+                className="w-full h-64 border-0"
+                title={ev.titolo}
+                loading="lazy"
+                allow="fullscreen"
+              />
+            </div>
           )}
         </div>
       ))}
