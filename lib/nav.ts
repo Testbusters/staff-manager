@@ -34,7 +34,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Coda lavoro',   href: '/coda',          iconName: 'Inbox' },
     { label: 'Collaboratori', href: '/collaboratori', iconName: 'UsersRound' },
     { label: 'Export',        href: '/export',        iconName: 'FileDown' },
-    { label: 'Import',        href: '/import',        iconName: 'FileUp', comingSoon: true },
+    { label: 'Import',        href: '/import',        iconName: 'FileUp' },
     { label: 'Documenti',     href: '/documenti',     iconName: 'Files' },
     { label: 'Ticket',        href: '/ticket',        iconName: 'LifeBuoy' },
     { label: 'Contenuti',     href: '/contenuti',     iconName: 'LayoutGrid' },
