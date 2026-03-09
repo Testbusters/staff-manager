@@ -11,7 +11,6 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 
 | ID | Title | Impact |
 |----|--------|---------|
-| SEC7 | Supabase PAT in plain text in MEMORY.md | CRITICAL |
 | TC5 | No RLS test for compensation_history leakage | HIGH |
 | B4 | Typo `data_compenso` vs `data_competenza` in transition route | HIGH |
 | SEC1 | Temporary password returned in plain text by the API | HIGH |
@@ -224,12 +223,6 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Files**: `lib/email.ts:3`, `.env.local.example`
 - **Impact**: LOW
 - **Fix**: Document in README: "Rotate RESEND_API_KEY every 90 days" + add note in `.env.local.example`.
-
-### SEC7 — Supabase Personal Access Token in plain text in MEMORY.md
-- **Problem**: `SUPABASE_ACCESS_TOKEN` (PAT with Management API access) is stored in plain text in the persistent memory file.
-- **Files**: `~/.claude/projects/.../memory/MEMORY.md`
-- **Impact**: CRITICAL
-- **Fix**: Revoke the token immediately in Supabase org settings → generate a new one → update MEMORY.md with a placeholder only (e.g. `sbp_...`).
 
 ---
 

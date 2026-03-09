@@ -9,10 +9,12 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 **Phase 0 — Session orientation** *(only at the start of each new session or after a context summary)*
 - Read `.claude/CLAUDE.local.md` to confirm active overrides for this session (it is auto-loaded, but an explicit read ensures its content is fully in context). If the file does not exist, continue.
 - Check `MEMORY.md` (project root): read the **Active plan** section (if present) to re-align on in-progress sessions, then **Lessons/Patterns** for patterns relevant to the current block. The auto-memory is injected automatically — no explicit read needed.
+- **Check `.claude/session/`**: if any `block-*.md` file exists, read it immediately — it means a requirements definition session was interrupted. Resume from the recorded state rather than starting over.
 - If context was compressed (summary): read `docs/implementation-checklist.md` to re-align on current state.
 - Do not re-read files already in the current context — use the already-acquired line reference.
 
 **Phase 1 — Requirements**
+- **Create session recovery file**: at the very start of Phase 1, create `.claude/session/block-[name].md` with the block name and an empty requirements skeleton. Update this file after every significant exchange during requirements definition (each AskUserQuestion answer, each design decision). This ensures the session can be resumed if the tab is accidentally closed. See `.claude/session/` for format reference.
 - Read `docs/implementation-checklist.md` to verify current state and block dependencies.
 - Read **only the relevant section** of `docs/requirements.md` for the current block — not the entire file.
 - Check `docs/refactoring-backlog.md`: if there are entries that intersect the current block, include them in the work plan or flag them explicitly.
@@ -35,10 +37,53 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 **Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or touching >5 files)*
 - Present a design outline: data flow, data structures involved, main trade-offs.
 - State any discarded alternatives and rationale.
-- **For blocks with new pages or complex UI patterns**: optionally invoke the `frontend-design` skill for a conceptual wireframe. Its output must be filtered through the MANDATORY RULES (tokens, components, accessibility) before use in Phase 2 — never adopt generated code directly.
 - For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
 - **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
 - *** STOP — wait for design confirmation before writing code. ***
+
+**Phase 1.6 — Visual & UX Design** *(MANDATORY for any block with UI/UX impact — cannot be skipped)*
+
+**Triggers — this phase is required when the block:**
+- Creates a new page route or full-page redesign
+- Introduces a new layout pattern, component hierarchy, or navigation structure
+- Changes the information architecture of an existing page (sections, tabs, panels)
+- Adds a complex interactive pattern (multi-step flow, bulk actions, split views)
+
+**When triggered, always execute in this order:**
+
+1. **ASCII wireframe** — invoke the `frontend-design` skill with an explicit ASCII wireframe request. The wireframe must show:
+   - Full page layout with named regions
+   - Column structure for tables/lists
+   - Action placement and grouping
+   - Empty states and loading states
+   - Mobile breakpoint if relevant
+
+2. **HTML standalone preview** *(optional, higher fidelity)* — after the ASCII wireframe is approved in rough terms, choose one of two paths:
+
+   **Path A — frontend-design → CodePen** (layout + visual tone)
+   - Invoke `frontend-design` asking for a **self-contained HTML file** (single file, inline Tailwind via CDN, no external dependencies)
+   - Copy the output → paste into **CodePen** (browser tab, already open alongside iTerm2)
+   - Iterate in CodePen; feed changes back as plain text corrections
+
+   **Path B — v0.dev → npx v0 add** (component fidelity, shadcn-native)
+   - Open v0.dev in browser (`open https://v0.dev` from terminal, or use the pinned browser tab)
+   - Prompt using the ASCII wireframe as input — v0.dev generates React + shadcn/ui + Tailwind natively
+   - Iterate in v0.dev's live preview using natural language
+   - Once approved, import directly into the project: `npx v0@latest add https://v0.dev/t/[id]`
+   - **After import**: adapt prop names, remove mock data, wire real API calls — never use generated code as-is
+
+   Both paths:
+   - The approved preview is the visual contract — Phase 2 must match its layout and component structure
+   - Generated code is **reference only** — rewrite in Phase 2 following project conventions and the real shadcn component set (exception: `npx v0 add` output may be used as starting point after review)
+
+3. **UX rationale** — for each layout decision, state explicitly:
+   - What mental model it maps to (inbox, pipeline, kanban, wizard…)
+   - Why competing alternatives were discarded
+   - The single most important UX improvement over the current state
+
+4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
+
+5. **STOP — present wireframe (+ CodePen link or description if HTML preview was used) + UX rationale + component map. Wait for explicit approval before proceeding to Phase 2. The approved wireframe/preview is the implementation contract — Phase 2 must match it.**
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
 - Use `EnterPlanMode` to present the complete approved plan in structured, locked form.
@@ -172,6 +217,7 @@ SELECT …;
 
 **Phase 8 — Block closure**
 Only after explicit confirmation:
+0. **Delete session recovery file**: remove `.claude/session/block-[name].md` if it exists — the block is complete, the file is no longer needed.
 1. Update `docs/implementation-checklist.md`: mark block ✅, add a Log row with date, files, test results, relevant notes.
 2. Update `CLAUDE.md` **only if** the block introduces non-obvious patterns, modifies RBAC, or adds a new coding convention. Do not update for simple file additions — Claude infers structure from code.
 2b. If the block touched collaborator profile fields, permissions, or edit flows: update `docs/profile-editing-contract.md` (field × entry point matrix). Mandatory per CLAUDE.md reference documents.
@@ -189,7 +235,7 @@ Only after explicit confirmation:
 **Phase 8.5 — Context file review + compact**
 After git push, before closing the session:
 - **C1–C3** (pure grep checks — no reasoning required): delegate to a **Haiku subagent** via the Agent tool. Pass the exact grep commands from `context-review.md` and the relevant file paths in the prompt. Collect results; apply any fix in the main session if needed.
-- Execute checks **C4 through C9** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
+- Execute checks **C4 through C11** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
 - **Phase complete only when all 9 checks pass** — not when the review "seems thorough".
 - **Mandatory closing message** (after all C1–C9 pass, before `/compact`): post a summary to the user in this exact format:
