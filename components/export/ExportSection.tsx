@@ -7,6 +7,7 @@ import type { ExportCollaboratorRow, ExportRunWithUrl } from '@/lib/export-utils
 import ExportPreviewTable from './ExportTable';
 import ExportHistoryTab from './ExportHistoryTab';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type Tab = 'anteprima' | 'storico';
 
@@ -19,26 +20,20 @@ export default function ExportSection({ rows, runs }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('anteprima');
   const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleExport = async () => {
     setExporting(true);
-    setExportError(null);
-    setSuccessMsg(null);
     try {
       const res = await fetch('/api/export/gsheet', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
-        setExportError(data.error ?? 'Errore durante l\'export');
+        toast.error(data.error ?? 'Errore durante l\'export.', { duration: 5000 });
         return;
       }
-      setSuccessMsg(
-        `Export completato: ${data.collaborator_count} collaboratori, ${data.item_count} voci.`,
-      );
+      toast.success(`Export completato: ${data.collaborator_count} collaboratori, ${data.item_count} voci.`);
       router.refresh();
     } catch {
-      setExportError('Errore di rete. Riprova.');
+      toast.error('Errore di rete. Riprova.', { duration: 5000 });
     } finally {
       setExporting(false);
     }
@@ -85,14 +80,6 @@ export default function ExportSection({ rows, runs }: Props) {
           </Button>
         )}
       </div>
-
-      {/* Feedback messages */}
-      {exportError && (
-        <p className="text-sm text-red-600 dark:text-red-400">{exportError}</p>
-      )}
-      {successMsg && (
-        <p className="text-sm text-green-600 dark:text-green-400">{successMsg}</p>
-      )}
 
       {/* Tab content */}
       {tab === 'anteprima' ? (

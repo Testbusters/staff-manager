@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -36,18 +37,16 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
   const [dateValues, setDateValues] = useState<Record<string, string>>(
     Object.fromEntries(members.map((m) => [m.id, m.data_ingresso ?? ''])),
   );
-  const [error, setError] = useState<string | null>(null);
 
   async function handleStatusChange(id: string, newStatus: MemberStatus) {
     setLoadingStatusId(id);
-    setError(null);
     const res = await fetch(`/api/admin/members/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ member_status: newStatus }),
     });
     setLoadingStatusId(null);
-    if (!res.ok) { const j = await res.json(); setError(j.error ?? 'Errore.'); return; }
+    if (!res.ok) { const j = await res.json(); toast.error(j.error ?? 'Errore.', { duration: 5000 }); return; }
     router.refresh();
   }
 
@@ -55,14 +54,13 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
     const value = dateValues[id] || null;
     if (value === (originalDate ?? '')) return; // no change
     setLoadingDateId(id);
-    setError(null);
     const res = await fetch(`/api/admin/members/${id}/data-ingresso`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data_ingresso: value }),
     });
     setLoadingDateId(null);
-    if (!res.ok) { const j = await res.json(); setError(j.error ?? 'Errore.'); return; }
+    if (!res.ok) { const j = await res.json(); toast.error(j.error ?? 'Errore.', { duration: 5000 }); return; }
     router.refresh();
   }
 
@@ -74,10 +72,6 @@ export default function MemberStatusManager({ members }: { members: Member[] }) 
           Gestisci lo stato di uscita e la data di ingresso dei collaboratori.
         </p>
       </div>
-
-      {error && (
-        <div className="mx-5 mt-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">{error}</div>
-      )}
 
       <div className="divide-y divide-border">
         {members.length === 0 && (

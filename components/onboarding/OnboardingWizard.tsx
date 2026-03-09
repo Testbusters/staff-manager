@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 type PrefillData = {
   nome: string | null;
@@ -68,7 +69,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   // Step tracking
   const [step, setStep]           = useState<1 | 2>(1);
   const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [contractGenerated, setContractGenerated] = useState(false);
 
@@ -81,7 +81,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
-    setError(null);
 
     const res = await fetch('/api/onboarding/complete', {
       method: 'POST',
@@ -109,7 +108,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? 'Errore durante il salvataggio');
+      toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 });
       return;
     }
 
@@ -207,10 +206,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                   Nessun tipo di rapporto associato al tuo account. Contatta l&apos;amministrazione.
                 </p>
               </div>
-            )}
-
-            {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
             )}
 
             {tipoContratto ? (
@@ -404,10 +399,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             </div>
           </div>
         </div>
-
-        {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">{error}</div>
-        )}
 
         <Button type="submit" disabled={!step1Valid} className="w-full bg-brand hover:bg-brand/90 text-white">
           Avanti — Genera contratto

@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import MassimaleCheckModal, { type MassimaleImpact } from './MassimaleCheckModal';
+import { toast } from 'sonner';
 
 type CompensationRow = {
   id: string;
@@ -197,7 +198,6 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
   const [rejectionNote, setRejectionNote]   = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
 
   // ── Sections ───────────────────────────────────────────────────
   const inAttesa  = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'IN_ATTESA'),  sortDir), [compensations, sortDir]);
@@ -246,12 +246,12 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
 
   async function doApprove(ids: string[]) {
     setLoading(true);
-    setError(null);
     try {
       const url  = ids.length === 1 ? `/api/compensations/${ids[0]}/transition` : '/api/compensations/bulk-approve';
       const body = ids.length === 1 ? { action: 'approve' } : { ids };
       const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
+      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
+      toast.success(ids.length === 1 ? 'Compenso approvato.' : `${ids.length} compensi approvati.`);
       setSelectedInAttesaIds(new Set());
       router.refresh();
     } finally { setLoading(false); }
@@ -260,14 +260,14 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
   async function doLiquidate(ids: string[]) {
     if (ids.length === 0) return;
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch('/api/compensations/bulk-liquidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
       });
-      if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
+      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
+      toast.success(ids.length === 1 ? 'Compenso liquidato.' : `${ids.length} compensi liquidati.`);
       setSelectedApprovatiIds(new Set());
       router.refresh();
     } finally { setLoading(false); }
@@ -291,14 +291,13 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
   async function handleReject() {
     if (!rejectTargetId || rejectionNote.trim().length === 0) return;
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/compensations/${rejectTargetId}/transition`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reject', note: rejectionNote }),
       });
-      if (!res.ok) { const d = await res.json(); setError(d.error ?? 'Errore'); return; }
+      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
       setRejectTargetId(null);
       setRejectionNote('');
       router.refresh();
@@ -309,8 +308,6 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
 
   return (
     <div className="space-y-3">
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
       {/* ── SECTION 1 — Da processare ──────────────────────────── */}
       <div className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
         <div className={`flex items-center gap-3 px-4 py-3 bg-amber-500/5 ${section1Open ? 'border-b border-border' : ''}`}>

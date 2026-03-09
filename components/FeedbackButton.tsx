@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const CATEGORIE = ['Bug', 'Suggerimento', 'Domanda', 'Altro'] as const;
 type Categoria = typeof CATEGORIE[number];
@@ -18,7 +19,6 @@ export default function FeedbackButton() {
   const [open, setOpen]         = useState(false);
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState(false);
-  const [error, setError]       = useState<string | null>(null);
   const [categoria, setCategoria] = useState<Categoria>('Bug');
   const [pagina, setPagina]     = useState(pathname);
   const [messaggio, setMessaggio] = useState('');
@@ -27,7 +27,6 @@ export default function FeedbackButton() {
   const openModal = () => {
     setPagina(pathname);
     setSuccess(false);
-    setError(null);
     setOpen(true);
   };
 
@@ -36,14 +35,12 @@ export default function FeedbackButton() {
     setCategoria('Bug');
     setMessaggio('');
     setFile(null);
-    setError(null);
     setSuccess(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     const fd = new FormData();
     fd.append('categoria', categoria);
@@ -56,7 +53,7 @@ export default function FeedbackButton() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? 'Errore durante l\'invio');
+      toast.error(data.error ?? 'Errore durante l\'invio.', { duration: 5000 });
       return;
     }
 
@@ -147,12 +144,6 @@ export default function FeedbackButton() {
                     </p>
                   )}
                 </div>
-
-                {error && (
-                  <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">
-                    {error}
-                  </div>
-                )}
 
                 <div className="flex gap-3 justify-end pt-1">
                   <Button type="button" variant="outline" onClick={closeModal} disabled={loading}>

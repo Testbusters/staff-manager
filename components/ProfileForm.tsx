@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 type Collaborator = {
   nome: string;
@@ -121,21 +122,14 @@ export default function ProfileForm({ collaborator, role, email, communities, al
     communities.map((c) => c.id),
   );
   const [communityLoading, setCommunityLoading] = useState(false);
-  const [communitySaved, setCommunitySaved]     = useState(false);
-  const [communityError, setCommunityError]     = useState<string | null>(null);
 
   const [loading, setLoading]           = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
-  const [saved, setSaved]               = useState(false);
-  const [error, setError]               = useState<string | null>(null);
-  const [avatarError, setAvatarError]   = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSaved(false);
 
     const emailTrimmed = emailVal.trim().toLowerCase();
     const res = await fetch('/api/profile', {
@@ -164,20 +158,18 @@ export default function ProfileForm({ collaborator, role, email, communities, al
 
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? 'Errore durante il salvataggio'); return; }
+    if (!res.ok) { toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
     if (data.emailChanged) {
       const supabase = createClient();
       await supabase.auth.refreshSession();
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    toast.success('Profilo salvato.');
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarLoading(true);
-    setAvatarError(null);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -185,19 +177,17 @@ export default function ProfileForm({ collaborator, role, email, communities, al
     const res = await fetch('/api/profile/avatar', { method: 'POST', body: formData });
     const data = await res.json();
     setAvatarLoading(false);
-    if (!res.ok) { setAvatarError(data.error ?? 'Errore caricamento foto'); return; }
+    if (!res.ok) { toast.error(data.error ?? 'Errore caricamento foto.', { duration: 5000 }); return; }
     setAvatarUrl(data.url);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSaveCommunities = async () => {
     if (selectedCommunityIds.length === 0) {
-      setCommunityError('Seleziona almeno una community');
+      toast.error('Seleziona almeno una community.', { duration: 5000 });
       return;
     }
     setCommunityLoading(true);
-    setCommunityError(null);
-    setCommunitySaved(false);
     const res = await fetch('/api/profile/communities', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -205,9 +195,8 @@ export default function ProfileForm({ collaborator, role, email, communities, al
     });
     const data = await res.json();
     setCommunityLoading(false);
-    if (!res.ok) { setCommunityError(data.error ?? 'Errore durante il salvataggio'); return; }
-    setCommunitySaved(true);
-    setTimeout(() => setCommunitySaved(false), 3000);
+    if (!res.ok) { toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
+    toast.success('Community salvate.');
   };
 
   const initials = collaborator
@@ -288,7 +277,6 @@ export default function ProfileForm({ collaborator, role, email, communities, al
               {avatarLoading ? 'Caricamento…' : avatarUrl ? 'Cambia foto' : 'Carica foto'}
             </Button>
             <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · max 2 MB</p>
-            {avatarError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{avatarError}</p>}
           </div>
         </div>
       </div>
@@ -608,16 +596,13 @@ export default function ProfileForm({ collaborator, role, email, communities, al
                 </label>
               ))}
             </div>
-            {communityError && (
-              <p className="text-xs text-red-600 dark:text-red-400">{communityError}</p>
-            )}
             <Button
               type="button"
               onClick={handleSaveCommunities}
               disabled={communityLoading || selectedCommunityIds.length === 0}
               className="bg-brand hover:bg-brand/90 text-white"
             >
-              {communityLoading ? 'Salvataggio…' : communitySaved ? <><Check className="h-4 w-4 mr-1" />Salvato</> : 'Salva community'}
+              {communityLoading ? 'Salvataggio…' : 'Salva community'}
             </Button>
           </div>
         </div>
@@ -640,12 +625,6 @@ export default function ProfileForm({ collaborator, role, email, communities, al
       </div>
 
 
-      {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">
-          {error}
-        </div>
-      )}
-
       <Button
         type="submit"
         disabled={loading}
@@ -659,8 +638,6 @@ export default function ProfileForm({ collaborator, role, email, communities, al
             </svg>
             Salvataggio…
           </>
-        ) : saved ? (
-          <><Check className="h-4 w-4 mr-1" />Salvato</>
         ) : (
           'Salva modifiche'
         )}

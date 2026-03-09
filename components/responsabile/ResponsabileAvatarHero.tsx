@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface Props {
   initialAvatarUrl: string | null;
@@ -20,20 +21,18 @@ export default function ResponsabileAvatarHero({
 }: Props) {
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState<string | null>(null);
   const fileInputRef              = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
-    setError(null);
     const formData = new FormData();
     formData.append('file', file);
     const res = await fetch('/api/profile/avatar', { method: 'POST', body: formData });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error ?? 'Errore caricamento foto'); return; }
+    if (!res.ok) { toast.error(data.error ?? 'Errore caricamento foto', { duration: 5000 }); return; }
     setAvatarUrl(data.url);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -77,7 +76,6 @@ export default function ResponsabileAvatarHero({
             </Button>
             <span className="text-xs text-muted-foreground">JPG, PNG o WebP · max 2 MB</span>
           </div>
-          {error && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>}
         </div>
       </div>
       <p className="shrink-0 pt-1 text-right text-sm text-muted-foreground">{todayStr}</p>

@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Wallet, Receipt, FileText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { toast } from 'sonner';
 import {
   COMPENSATION_STATUS_LABELS,
   EXPENSE_STATUS_LABELS,
@@ -120,19 +121,15 @@ export default function CollaboratoreDetail({
   const [loading, setLoading] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<RejectTarget | null>(null);
   const [rejectNote, setRejectNote] = useState('');
-  const [error, setError] = useState<string | null>(null);
 
   // ── Username inline edit ─────────────────────────────────────────────────
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameEdit, setUsernameEdit] = useState(collab.username ?? '');
   const [usernameSaving, setUsernameSaving] = useState(false);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   // ── Profile edit mode ─────────────────────────────────────────────────────
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileSaved, setProfileSaved] = useState(false);
   // Form fields
   const [fNome, setFNome]                       = useState(collab.nome ?? '');
   const [fCognome, setFCognome]                 = useState(collab.cognome ?? '');
@@ -170,15 +167,12 @@ export default function CollaboratoreDetail({
     setFMassimale(collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '');
     setFIntestatario(collab.intestatario_pagamento ?? '');
     setFUsername(collab.username ?? '');
-    setProfileError(null);
-    setProfileSaved(false);
     setEditingProfile(true);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileSaving(true);
-    setProfileError(null);
     const body: Record<string, unknown> = {
       nome:                fNome.trim() || undefined,
       cognome:             fCognome.trim() || undefined,
@@ -210,18 +204,17 @@ export default function CollaboratoreDetail({
     });
     setProfileSaving(false);
     if (res.ok) {
-      setProfileSaved(true);
+      toast.success('Profilo salvato.');
       setEditingProfile(false);
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
-      setProfileError(data.error ?? 'Errore durante il salvataggio');
+      toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 });
     }
   };
 
   const handleSaveUsername = async () => {
     setUsernameSaving(true);
-    setUsernameError(null);
     const res = await fetch(`/api/admin/collaboratori/${collab.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -233,7 +226,7 @@ export default function CollaboratoreDetail({
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
-      setUsernameError(data.error ?? 'Errore durante il salvataggio');
+      toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 });
     }
   };
 
@@ -243,7 +236,6 @@ export default function CollaboratoreDetail({
   // ── Approve ───────────────────────────────────────────────────────────────
   const handleApprove = async (type: 'comp' | 'exp', id: string) => {
     setLoading(id);
-    setError(null);
     const url =
       type === 'comp'
         ? `/api/compensations/${id}/transition`
@@ -258,25 +250,23 @@ export default function CollaboratoreDetail({
       router.refresh();
     } else {
       const body = await res.json().catch(() => ({}));
-      setError(body.error ?? 'Errore durante l\'approvazione.');
+      toast.error(body.error ?? 'Errore durante l\'approvazione.', { duration: 5000 });
     }
   };
 
   // ── Reject ────────────────────────────────────────────────────────────────
   const openReject = (type: 'comp' | 'exp', id: string) => {
     setRejectNote('');
-    setError(null);
     setRejectModal({ type, id });
   };
 
   const handleReject = async () => {
     if (!rejectModal) return;
     if (rejectNote.trim().length === 0) {
-      setError('La motivazione del rifiuto è obbligatoria.');
+      toast.error('La motivazione del rifiuto è obbligatoria.', { duration: 5000 });
       return;
     }
     setLoading(rejectModal.id);
-    setError(null);
     const url =
       rejectModal.type === 'comp'
         ? `/api/compensations/${rejectModal.id}/transition`
@@ -292,7 +282,7 @@ export default function CollaboratoreDetail({
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? 'Errore durante il rifiuto.');
+      toast.error(data.error ?? 'Errore durante il rifiuto.', { duration: 5000 });
     }
   };
 
@@ -337,7 +327,7 @@ export default function CollaboratoreDetail({
                   )}
                   <button
                     type="button"
-                    onClick={() => { setUsernameEdit(collab.username ?? ''); setEditingUsername(true); setUsernameError(null); }}
+                    onClick={() => { setUsernameEdit(collab.username ?? ''); setEditingUsername(true); }}
                     className="text-xs text-muted-foreground hover:text-foreground transition"
                   >
                     Modifica
@@ -361,12 +351,11 @@ export default function CollaboratoreDetail({
                     {usernameSaving ? '…' : 'Salva'}
                   </button>
                   <button
-                    onClick={() => { setEditingUsername(false); setUsernameError(null); }}
+                    onClick={() => { setEditingUsername(false); }}
                     className="px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition"
                   >
                     Annulla
                   </button>
-                  {usernameError && <span className="text-xs text-red-600 dark:text-red-400">{usernameError}</span>}
                 </div>
               )}
             </div>
@@ -509,16 +498,12 @@ export default function CollaboratoreDetail({
               </div>
             )}
 
-            {profileError && (
-              <p className="text-xs text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{profileError}</p>
-            )}
-
             <div className="flex gap-2 justify-end pt-1">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => { setEditingProfile(false); setProfileError(null); }}
+                onClick={() => { setEditingProfile(false); }}
               >
                 Annulla
               </Button>
@@ -727,13 +712,8 @@ export default function CollaboratoreDetail({
         )}
       </div>
 
-      {/* ── Global error ────────────────────────────────────────────────── */}
-      {error && !rejectModal && (
-        <p className="text-xs text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{error}</p>
-      )}
-
       {/* ── Reject modal ─────────────────────────────────────────────────── */}
-      <Dialog open={!!rejectModal} onOpenChange={(v) => { if (!v) { setRejectModal(null); setError(null); } }}>
+      <Dialog open={!!rejectModal} onOpenChange={(v) => { if (!v) { setRejectModal(null); } }}>
         <DialogContent className="max-w-[420px] bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold text-foreground">
@@ -754,15 +734,11 @@ export default function CollaboratoreDetail({
             />
           </div>
 
-          {error && (
-            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
-          )}
-
           <div className="flex gap-2 justify-end">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { setRejectModal(null); setError(null); }}
+              onClick={() => { setRejectModal(null); }}
             >
               Annulla
             </Button>
