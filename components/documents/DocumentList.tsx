@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { FileText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Document, DocumentType, DocumentMacroType } from '@/lib/types';
@@ -11,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
+import DocumentAdminModal from '@/components/documents/DocumentAdminModal';
 
 interface DocumentRow extends Document {
   collaborators?: { nome: string; cognome: string } | null;
@@ -27,6 +27,9 @@ function TypeBadge({ tipo }: { tipo: DocumentType | string }) {
   }
   if (tipo === 'CU') {
     return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/40">CU</span>;
+  }
+  if (tipo === 'RICEVUTA_PAGAMENTO') {
+    return <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700/40">Ricevuta</span>;
   }
   return <span className="text-muted-foreground text-xs">{tipo}</span>;
 }
@@ -45,28 +48,10 @@ function SignBadge({ stato }: { stato: string }) {
   );
 }
 
-const MACRO_ORDER: DocumentMacroType[] = ['CONTRATTO', 'CU'];
+const MACRO_ORDER: DocumentMacroType[] = ['CONTRATTO', 'CU', 'RICEVUTA'];
 
 export default function DocumentList({ documents, isAdmin }: Props) {
-  const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Eliminare definitivamente questo contratto? L\'azione è irreversibile.')) return;
-    setDeletingId(id);
-    setDeleteError(null);
-    try {
-      const res = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Errore eliminazione');
-      router.refresh();
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Errore imprevisto');
-    } finally {
-      setDeletingId(null);
-    }
-  };
+  const [modalDocId, setModalDocId] = useState<string | null>(null);
 
   // Group documents by macro type
   const grouped = new Map<DocumentMacroType, DocumentRow[]>();
@@ -89,12 +74,6 @@ export default function DocumentList({ documents, isAdmin }: Props) {
 
   return (
     <div className="space-y-6">
-      {deleteError && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-sm text-red-700 dark:text-red-400">
-          {deleteError}
-        </div>
-      )}
-
       {MACRO_ORDER.filter((macro) => grouped.has(macro)).map((macro) => {
         const docs = grouped.get(macro)!;
         return (
@@ -111,7 +90,7 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                     <TableHead>Collaboratore</TableHead>
                   )}
                   <TableHead>Titolo</TableHead>
-                  {macro === 'CONTRATTO' && (
+                  {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
                     <TableHead className="hidden sm:table-cell">Tipo</TableHead>
                   )}
                   <TableHead className="hidden md:table-cell">Anno</TableHead>
@@ -131,7 +110,7 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                       </TableCell>
                     )}
                     <TableCell className="text-foreground font-medium text-sm">{doc.titolo}</TableCell>
-                    {macro === 'CONTRATTO' && (
+                    {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
                       <TableCell className="hidden sm:table-cell">
                         <TypeBadge tipo={doc.tipo} />
                       </TableCell>
@@ -146,25 +125,23 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                       {new Date(doc.requested_at).toLocaleDateString('it-IT')}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        {isAdmin && macro === 'CONTRATTO' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(doc.id)}
-                            disabled={deletingId === doc.id}
-                            className="text-xs text-red-500 hover:text-red-400 disabled:opacity-40 h-auto p-0"
-                          >
-                            {deletingId === doc.id ? '…' : 'Elimina'}
-                          </Button>
-                        )}
+                      {isAdmin ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setModalDocId(doc.id)}
+                          className="text-xs h-auto py-1"
+                        >
+                          Dettaglio
+                        </Button>
+                      ) : (
                         <Link
                           href={`/documenti/${doc.id}`}
                           className="text-xs text-link hover:text-link/80"
                         >
                           Apri →
                         </Link>
-                      </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -174,6 +151,13 @@ export default function DocumentList({ documents, isAdmin }: Props) {
           </Card>
         );
       })}
+
+      {isAdmin && (
+        <DocumentAdminModal
+          docId={modalDocId}
+          onClose={() => setModalDocId(null)}
+        />
+      )}
     </div>
   );
 }

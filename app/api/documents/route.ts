@@ -63,9 +63,10 @@ export async function POST(request: Request) {
   const tipo = formData.get('tipo') as string | null;
   const titolo = formData.get('titolo') as string | null;
   const annoStr = formData.get('anno') as string | null;
-  const anno = annoStr ? parseInt(annoStr, 10) : null;
+  const parsedAnno = annoStr ? parseInt(annoStr, 10) : NaN;
+  const anno = !isNaN(parsedAnno) ? parsedAnno : new Date().getFullYear();
 
-  const validTipi = ['CONTRATTO_OCCASIONALE', 'CU'];
+  const validTipi = ['CONTRATTO_OCCASIONALE', 'CU', 'RICEVUTA_PAGAMENTO'];
   if (!file || !tipo || !titolo?.trim()) {
     return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });
   }
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
       id: docId,
       collaborator_id,
       tipo,
-      anno: anno && !isNaN(anno) ? anno : null,
+      anno,
       titolo: titolo.trim(),
       stato_firma,
       file_original_url: storagePath,

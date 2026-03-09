@@ -3,6 +3,13 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getDocumentUrls } from '@/lib/documents-storage';
 
+function getServiceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -62,10 +69,7 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const serviceClient = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const serviceClient = getServiceClient();
 
   const { data: doc } = await serviceClient
     .from('documents')
@@ -92,4 +96,87 @@ export async function DELETE(
   if (deleteErr) return NextResponse.json({ error: deleteErr.message }, { status: 500 });
 
   return NextResponse.json({ deleted: true });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('role, is_active')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
+  if (!['amministrazione'].includes(profile.role)) {
+    return NextResponse.json({ error: 'Accesso non autorizzato' }, { status: 403 });
+  }
+
+  const { id } = await params;
+  const serviceClient = getServiceClient();
+
+  const { data: existingDoc } = await serviceClient
+    .from('documents')
+    .select('id, stato_firma, file_original_url, collaborators(user_id)')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!existingDoc) return NextResponse.json({ error: 'Documento non trovato' }, { status: 404 });
+
+  const formData = await request.formData();
+  const file = formData.get('file') as File | null;
+  const markAsSigned = formData.get('mark_as_signed') === 'true';
+
+  if (!file) return NextResponse.json({ error: 'File obbligatorio' }, { status: 400 });
+
+  // Determine collaborator user_id for storage path
+  const collabData = Array.isArray(existingDoc.collaborators)
+    ? (existingDoc.collaborators[0] as { user_id: string } | undefined) ?? null
+    : (existingDoc.collaborators as { user_id: string } | null);
+  const pathUserId = collabData?.user_id ?? 'admin';
+
+  // Upload new file
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+  const newPath = `${pathUserId}/${id}-replace-${Date.now()}/${file.name}`;
+  const { error: uploadErr } = await serviceClient.storage
+    .from('documents')
+    .upload(newPath, fileBuffer, {
+      contentType: file.type || 'application/pdf',
+      upsert: false,
+    });
+
+  if (uploadErr) return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+
+  // Build update payload
+  const updatePayload: Record<string, unknown> = {
+    file_original_url: newPath,
+    file_original_name: file.name,
+  };
+
+  if (markAsSigned && existingDoc.stato_firma === 'DA_FIRMARE') {
+    updatePayload.stato_firma = 'FIRMATO';
+    updatePayload.signed_at = new Date().toISOString();
+  }
+
+  const { data: updatedDoc, error: updateErr } = await serviceClient
+    .from('documents')
+    .update(updatePayload)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+
+  // Best-effort: delete old file from storage
+  if (existingDoc.file_original_url) {
+    await serviceClient.storage.from('documents').remove([existingDoc.file_original_url]).catch(() => {});
+  }
+
+  return NextResponse.json({ document: updatedDoc });
 }

@@ -51,13 +51,26 @@ export default async function DocumentiPage({
   const { data: documents } = await docQuery;
 
   // Fetch collaborators list for admin upload form
-  const collaborators = isAdmin
-    ? await supabase
-        .from('collaborators')
-        .select('id, nome, cognome, user_id')
-        .order('cognome', { ascending: true })
-        .then((r) => r.data ?? [])
-    : [];
+  let collaborators: { id: string; nome: string; cognome: string; username: string | null; user_id: string; email: string }[] = [];
+  if (isAdmin) {
+    const collaboratorsRaw = await supabase
+      .from('collaborators')
+      .select('id, nome, cognome, username, user_id')
+      .order('cognome', { ascending: true })
+      .then((r) => r.data ?? []);
+
+    const userIds = collaboratorsRaw.map((c) => c.user_id).filter(Boolean) as string[];
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('user_id, email')
+      .in('user_id', userIds);
+
+    const emailMap = new Map(profiles?.map((p) => [p.user_id, p.email]) ?? []);
+    collaborators = collaboratorsRaw.map((c) => ({
+      ...c,
+      email: emailMap.get(c.user_id) ?? '',
+    }));
+  }
 
   const tabCls = (t: string) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
@@ -67,7 +80,7 @@ export default async function DocumentiPage({
     }`;
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Documenti</h1>
         <p className="text-sm text-muted-foreground mt-0.5">

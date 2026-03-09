@@ -1,188 +1,333 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, DocumentSignStatus } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { CheckCircle2, Circle } from 'lucide-react';
 
-interface Collaborator {
+interface CollaboratorOption {
   id: string;
   nome: string;
   cognome: string;
-  user_id: string;
+  username: string | null;
+  email: string;
 }
 
 interface Props {
-  collaborators: Collaborator[];
+  collaborators: CollaboratorOption[];
   isAdmin: boolean;
-  userCollaboratorId?: string;
+}
+
+const UPLOAD_TIPI: DocumentType[] = ['CONTRATTO_OCCASIONALE', 'CU', 'RICEVUTA_PAGAMENTO'];
+
+function StepIndicator({ steps, current }: { steps: string[]; current: number }) {
+  return (
+    <div className="flex items-center gap-1 mb-6">
+      {steps.map((label, i) => {
+        const idx = i + 1;
+        const done = idx < current;
+        const active = idx === current;
+        return (
+          <div key={label} className="flex items-center gap-1">
+            {i > 0 && <div className="h-px w-6 bg-border" />}
+            <div className={`flex items-center gap-1.5 ${active ? 'text-foreground' : done ? 'text-brand' : 'text-muted-foreground'}`}>
+              {done ? (
+                <CheckCircle2 className="w-4 h-4 text-brand" />
+              ) : (
+                <Circle className={`w-4 h-4 ${active ? 'text-brand' : 'text-muted-foreground/40'}`} />
+              )}
+              <span className={`text-xs font-medium ${active ? '' : 'hidden sm:inline'}`}>{label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   const router = useRouter();
+  const currentYear = new Date().getFullYear();
 
-  const [collaboratorId, setCollaboratorId] = useState('');
+  // Steps: admin = [1=collab, 2=metadata, 3=file]; collab = [2=metadata, 3=file] (starts at step 2)
+  const startStep = isAdmin ? 1 : 2;
+  const [step, setStep] = useState(startStep);
+
+  const [selectedCollab, setSelectedCollab] = useState<CollaboratorOption | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [tipo, setTipo] = useState<DocumentType | ''>('');
-  const [anno, setAnno] = useState('');
+  const [anno, setAnno] = useState(String(currentYear));
   const [titolo, setTitolo] = useState('');
   const [statoFirma, setStatoFirma] = useState<DocumentSignStatus>('NON_RICHIESTO');
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const isContratto = tipo.startsWith('CONTRATTO_');
-  const isValid = (isAdmin ? !!collaboratorId : true) && !!tipo && titolo.trim() && !!file;
+  const prevPreviewUrl = useRef<string | null>(null);
+
+  // Cleanup object URLs
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (f: File | null) => {
+    if (prevPreviewUrl.current) {
+      URL.revokeObjectURL(prevPreviewUrl.current);
+      prevPreviewUrl.current = null;
+    }
+    setFile(f);
+    if (f) {
+      const url = URL.createObjectURL(f);
+      setPreviewUrl(url);
+      prevPreviewUrl.current = url;
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const reset = () => {
+    setStep(startStep);
+    setSelectedCollab(null);
+    setSearchQuery('');
+    setTipo('');
+    setAnno(String(currentYear));
+    setTitolo('');
+    setStatoFirma('NON_RICHIESTO');
+    handleFileChange(null);
+  };
 
   const handleSubmit = async () => {
-    if (!isValid || !file) return;
-    setLoading(true);
-
+    if (!file) return;
+    setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('tipo', tipo);
       formData.append('titolo', titolo.trim());
-      if (anno) formData.append('anno', anno);
-
-      if (isAdmin) {
-        formData.append('collaborator_id', collaboratorId);
-        if (isContratto) formData.append('stato_firma', statoFirma);
+      formData.append('anno', anno || String(currentYear));
+      if (isAdmin && selectedCollab) {
+        formData.append('collaborator_id', selectedCollab.id);
+        if (tipo.startsWith('CONTRATTO_')) {
+          formData.append('stato_firma', statoFirma);
+        }
       }
-
-      const res = await fetch('/api/documents', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const res = await fetch('/api/documents', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Errore creazione documento');
-
-      toast.success('Documento caricato con successo.');
-      setCollaboratorId('');
-      setTipo('');
-      setAnno('');
-      setTitolo('');
-      setFile(null);
-      setStatoFirma('NON_RICHIESTO');
+      toast.success('Documento caricato.');
+      reset();
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  const stepLabels = isAdmin
+    ? ['Collaboratore', 'Dettagli', 'File']
+    : ['Dettagli', 'File'];
+
+  const filtered = collaborators.filter((c) => {
+    const q = searchQuery.toLowerCase();
+    return [c.nome, c.cognome, c.username ?? '', c.email].some((f) => f.toLowerCase().includes(q));
+  });
+
+  const isContratto = tipo.startsWith('CONTRATTO_');
+
   return (
     <Card>
-      <CardContent className="p-6 space-y-5">
-      <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
+      <CardContent className="p-6">
+        <h2 className="text-base font-semibold text-foreground mb-5">Carica documento</h2>
 
-      {/* Collaboratore — admin only */}
-      {isAdmin && (
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1.5">
-            Collaboratore <span className="text-red-500">*</span>
-          </label>
-          <Select value={collaboratorId || undefined} onValueChange={setCollaboratorId}>
-            <SelectTrigger><SelectValue placeholder="— Seleziona collaboratore —" /></SelectTrigger>
-            <SelectContent>
-              {collaborators.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.cognome} {c.nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+        <StepIndicator steps={stepLabels} current={isAdmin ? step : step - 1} />
 
-      {/* Tipo + Anno */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1.5">
-            Tipo <span className="text-red-500">*</span>
-          </label>
-          <Select value={tipo || undefined} onValueChange={(v) => { setTipo(v as DocumentType); setStatoFirma('NON_RICHIESTO'); }}>
-            <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CONTRATTO_OCCASIONALE">{DOCUMENT_TYPE_LABELS['CONTRATTO_OCCASIONALE']}</SelectItem>
-              <SelectItem value="CU">{DOCUMENT_TYPE_LABELS['CU']}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1.5">Anno</label>
-          <Input
-            type="number"
-            value={anno}
-            onChange={(e) => setAnno(e.target.value)}
-            placeholder="es. 2025"
-            min={2000}
-            max={2100}
-          />
-        </div>
-      </div>
-
-      {/* Titolo */}
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1.5">
-          Titolo <span className="text-red-500">*</span>
-        </label>
-        <Input
-          type="text"
-          value={titolo}
-          onChange={(e) => setTitolo(e.target.value)}
-          placeholder="es. Contratto collaborazione febbraio 2026"
-        />
-      </div>
-
-      {/* Stato firma — admin only, only for CONTRATTO */}
-      {isAdmin && isContratto && (
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1.5">Firma richiesta</label>
-          <div className="flex gap-4">
-            {(['DA_FIRMARE', 'NON_RICHIESTO'] as DocumentSignStatus[]).map((s) => (
-              <label key={s} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="stato_firma"
-                  value={s}
-                  checked={statoFirma === s}
-                  onChange={() => setStatoFirma(s)}
-                  className="accent-blue-600"
-                />
-                <span className="text-sm text-foreground">
-                  {s === 'DA_FIRMARE' ? 'Sì — richiedi firma' : 'No — solo informativo'}
-                </span>
+        {/* ── Step 1: Collaborator search (admin only) ── */}
+        {step === 1 && isAdmin && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1.5">
+                Cerca collaboratore <span className="text-red-500">*</span>
               </label>
-            ))}
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Nome, cognome, username o email"
+                autoFocus
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+              {filtered.length === 0 ? (
+                <p className="px-3 py-4 text-sm text-muted-foreground text-center">Nessun risultato</p>
+              ) : (
+                filtered.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCollab(c)}
+                    className={`w-full text-left px-3 py-2.5 transition hover:bg-muted/60 flex items-center justify-between gap-2 ${
+                      selectedCollab?.id === c.id ? 'bg-brand/10 dark:bg-brand/20' : ''
+                    }`}
+                  >
+                    <span className="text-sm text-foreground font-medium">{c.cognome} {c.nome}</span>
+                    <span className="text-xs text-muted-foreground truncate">{c.username ? `${c.username} · ` : ''}{c.email}</span>
+                  </button>
+                ))
+              )}
+            </div>
+            {selectedCollab && (
+              <p className="text-xs text-brand font-medium">
+                Selezionato: {selectedCollab.cognome} {selectedCollab.nome}
+              </p>
+            )}
+            <div className="flex items-center justify-between pt-2">
+              <Button variant="ghost" onClick={reset}>Annulla</Button>
+              <Button
+                onClick={() => setStep(2)}
+                disabled={!selectedCollab}
+                className="bg-brand hover:bg-brand/90 text-white"
+              >
+                Avanti →
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* File */}
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1.5">
-          File PDF <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
-        />
-        {file && <p className="mt-1 text-xs text-muted-foreground">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>}
-      </div>
+        {/* ── Step 2: Metadata ── */}
+        {step === 2 && (
+          <div className="space-y-4">
+            {/* Tipo + Anno */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1.5">
+                  Tipo <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={tipo || undefined}
+                  onValueChange={(v) => { setTipo(v as DocumentType); setStatoFirma('NON_RICHIESTO'); }}
+                >
+                  <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+                  <SelectContent>
+                    {UPLOAD_TIPI.map((t) => (
+                      <SelectItem key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1.5">Anno</label>
+                <Input
+                  type="number"
+                  value={anno}
+                  onChange={(e) => setAnno(e.target.value)}
+                  min={2000}
+                  max={2100}
+                />
+              </div>
+            </div>
 
-      <Button
-        onClick={handleSubmit}
-        disabled={!isValid || loading}
-        className="bg-brand hover:bg-brand/90 text-white"
-      >
-        {loading ? 'Caricamento…' : 'Carica documento'}
-      </Button>
+            {/* Titolo */}
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1.5">
+                Titolo <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                value={titolo}
+                onChange={(e) => setTitolo(e.target.value)}
+                placeholder="es. Contratto collaborazione febbraio 2026"
+              />
+            </div>
+
+            {/* Stato firma — admin only, CONTRATTO only */}
+            {isAdmin && isContratto && (
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1.5">Firma richiesta</label>
+                <div className="flex gap-4">
+                  {(['DA_FIRMARE', 'NON_RICHIESTO'] as DocumentSignStatus[]).map((s) => (
+                    <label key={s} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="stato_firma"
+                        value={s}
+                        checked={statoFirma === s}
+                        onChange={() => setStatoFirma(s)}
+                        className="accent-[var(--color-brand)]"
+                      />
+                      <span className="text-sm text-foreground">
+                        {s === 'DA_FIRMARE' ? 'Sì — richiedi firma' : 'No — solo informativo'}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              {isAdmin ? (
+                <Button variant="ghost" onClick={() => setStep(1)}>← Indietro</Button>
+              ) : (
+                <Button variant="ghost" onClick={reset}>Annulla</Button>
+              )}
+              <Button
+                onClick={() => setStep(3)}
+                disabled={!tipo || !titolo.trim()}
+                className="bg-brand hover:bg-brand/90 text-white"
+              >
+                Avanti →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: File + preview ── */}
+        {step === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1.5">
+                File PDF <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
+              />
+              {file && (
+                <p className="mt-1 text-xs text-muted-foreground">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>
+              )}
+            </div>
+
+            {previewUrl && (
+              <object
+                data={previewUrl}
+                type="application/pdf"
+                className="w-full h-64 rounded border border-border"
+              >
+                <p className="text-xs text-muted-foreground p-2">Anteprima non disponibile nel browser.</p>
+              </object>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              <Button variant="ghost" onClick={() => setStep(2)}>← Indietro</Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={!file || submitting}
+                className="bg-brand hover:bg-brand/90 text-white"
+              >
+                {submitting ? 'Caricamento…' : 'Carica documento'}
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
