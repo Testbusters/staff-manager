@@ -352,6 +352,9 @@ supabase/migrations/
   036_intestatario_pagamento.sql  → ADD COLUMN intestatario_pagamento on compensations
   037_discount_brand.sql          → ADD COLUMN brand TEXT on discounts
   038_export_runs.sql             → ADD COLUMN exported_at on compensations + expenses; CREATE TABLE export_runs (id, run_at, record_count, total_lordo, gsheet_url, xlsx_storage_path); CREATE exports storage bucket; RLS
+  039_digital_signature.sql       → RICEVUTA_PAGAMENTO tipo; receipt_document_id FK; data_fine_contratto on collaborators
+  040_skip_contract_flag.sql      → ADD COLUMN skip_contract_on_onboarding boolean on user_profiles
+  041_email_templates.sql         → CREATE TABLE email_templates (12 rows seeded) + email_layout_config; RLS admin-only
 
 __tests__/                         → 288 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)

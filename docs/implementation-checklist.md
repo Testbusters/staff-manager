@@ -2,13 +2,14 @@
 
 > Update this file at the end of every functional block (Phase 8 of the pipeline).
 > This is the source of truth for project status. Read before starting a new block.
-> Last updated 2026-03-09. All implemented blocks ✅. Documenti Admin Revision ✅ (2026-03-09). Next: bulk-import scripts preparation.
+> Last updated 2026-03-09. Email Template Management ✅ (2026-03-09). Next: WP bulk-import scripts.
 
 ---
 
 ## Log
 
 | Data | Blocco | Stato | Test | Note |
+| 2026-03-09 | Email Template Management | ✅ | tsc ✅, build ✅, vitest 288/288 ✅, e2e ⏸ | Migration 041: email_templates (12 rows seeded) + email_layout_config. lib/email-template-service.ts: getRenderedEmail() with DB fetch, {{marker}} substitution, 5min layout cache, hardcoded fallback. GET/PATCH /api/admin/email-templates, /[key], /api/admin/email-layout. EmailTemplateManager 3-panel UI (navigator/editor/preview iframe), EmailLayoutEditor 2-column form. Impostazioni: new "Template mail" tab, conditional max-w removal. All 11 email send routes updated (fire-and-forget preserved). |
 | 2026-03-09 | Documenti Admin Revision | ✅ | tsc ✅, build ✅, vitest 288/288 ✅, e2e ⏸ | RICEVUTA_PAGAMENTO added to list MACRO_ORDER, upload wizard, API validTipi. Admin redirect /documenti/[id] → /documenti. DocumentDeleteButton removed; delete action no longer exposed in UI. DocumentAdminModal: lazy fetch, file upload/replace, DA_FIRMARE→FIRMATO optional transition, CTA label adapts to file presence. PATCH /api/documents/[id]: file replacement + optional stato_firma update. DocumentUploadForm rewritten 3-step wizard (search-first collab, metadata with anno auto-fill, file+preview). Admin document list rewritten as 2-step wizard (lazy fetch per collab — no heavy query at mount). Collab banner: profile avatar with initials fallback. |
 | 2026-03-09 | Password Management + Skip Contract Flag | ✅ | tsc ✅, build ✅, vitest 288/288 ✅, e2e ⏸ | Migration 040: skip_contract_on_onboarding boolean on user_profiles. lib/password.ts: shared generatePassword() (extracted from create-user). POST /api/profile/password (collaboratore self-service). POST /api/admin/collaboratori/[id]/password (admin reset). PasswordChangeForm in /profilo Sicurezza section (collaboratore only). ResetPasswordDialog in CollaboratoreDetail header (admin only, auto-generates password). onboarding/complete: skips contract generation when flag=true, resets flag after completion. |
 | 2026-03-09 | Collaboratori UX Redesign | ✅ | tsc ✅, build ✅, e2e ⏸ | CodaReceiptButton → primary. Collaboratori lista: filtro solo ruolo collaboratore, search debounced (nome/cognome/username/email), layout colonne distribuite (nome·email·contratto·tel·community), count badge, avatar con foto profilo + fallback iniziali no-flash (CollaboratorAvatar client component). Collaboratori dettaglio: header redesign con avatar XL + status + @username + community, edit → Dialog modale (tutti i campi admin), compensi/rimborsi rimossi, documenti redesign full width. Server page: rimossi fetch inutilizzati. DB: zero migrazioni. |

@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 041 | `041_email_templates.sql` | 2026-03-09 | CREATE TABLE `email_templates` (12 rows seeded) + `email_layout_config` (1 row seeded); RLS admin-only |
 | 040 | `040_skip_contract_flag.sql` | 2026-03-09 | ADD COLUMN `skip_contract_on_onboarding` boolean NOT NULL DEFAULT false on `user_profiles` |
 | 001 | `001_schema.sql` | — | Initial full schema: compensations, expense_reimbursements, communities, collaborators, user_profiles, documents, tickets, announcements, benefits, resources, events |
 | 002 | `002_rls.sql` | — | Row Level Security policies on all tables; helper functions: `get_my_role()`, `is_active_user()`, `can_manage_community()`, `get_my_collaborator_id()` |
