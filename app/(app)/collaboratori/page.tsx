@@ -70,11 +70,12 @@ export default async function CollaboratoriPage({
     username: string | null;
     codice_fiscale: string | null;
     tipo_contratto: string | null;
+    telefono: string | null;
   };
 
   const { data: allCollabs } = await svc
     .from('collaborators')
-    .select('id, user_id, nome, cognome, email, username, codice_fiscale, tipo_contratto')
+    .select('id, user_id, nome, cognome, email, username, codice_fiscale, tipo_contratto, telefono')
     .in('user_id', collabUserIds);
 
   // ── Step 3: text search filter ────────────────────────────────────────────
@@ -167,7 +168,7 @@ export default async function CollaboratoriPage({
                 {/* Identity */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-sm font-semibold text-foreground">
                       {[c.nome, c.cognome].filter(Boolean).join(' ') || '—'}
                     </span>
                     {c.username && (
@@ -175,12 +176,24 @@ export default async function CollaboratoriPage({
                         @{c.username}
                       </span>
                     )}
+                    {c.tipo_contratto && (
+                      <span className="text-[10px] font-medium uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                        {c.tipo_contratto}
+                      </span>
+                    )}
                   </div>
-                  {c.email && (
-                    <span className="text-xs text-muted-foreground truncate block mt-0.5">
-                      {c.email}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                    {c.email && (
+                      <span className="text-xs text-muted-foreground truncate">
+                        {c.email}
+                      </span>
+                    )}
+                    {c.telefono && (
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {c.telefono}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Communities */}

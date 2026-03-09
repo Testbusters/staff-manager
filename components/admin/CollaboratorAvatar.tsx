@@ -37,37 +37,51 @@ export default function CollaboratorAvatar({
   cognome,
   size = 'sm',
 }: CollaboratorAvatarProps) {
+  // Start with image hidden; show only after successful load
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   const initials = getInitials(nome, cognome);
   const avatarBg = getAvatarColor(cognome ?? nome ?? '?');
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const avatarUrl = userId && supabaseUrl
-    ? `${supabaseUrl}/storage/v1/object/public/avatars/${userId}/avatar`
-    : null;
+  const avatarUrl =
+    userId && supabaseUrl
+      ? `${supabaseUrl}/storage/v1/object/public/avatars/${userId}/avatar`
+      : null;
 
   const showImg = avatarUrl && !imgError;
 
-  const sizeClass = size === 'lg'
-    ? 'h-14 w-14 text-lg font-bold'
-    : 'h-9 w-9 text-xs font-semibold';
+  const sizeClass =
+    size === 'lg'
+      ? 'h-14 w-14'
+      : 'h-9 w-9';
 
-  if (showImg) {
-    return (
-      <div className={`${sizeClass} rounded-full overflow-hidden shrink-0 ring-1 ring-border`}>
-        <img
-          src={avatarUrl}
-          alt={`${nome ?? ''} ${cognome ?? ''}`.trim()}
-          className="w-full h-full object-cover"
-          onError={() => setImgError(true)}
-        />
-      </div>
-    );
-  }
+  const textClass =
+    size === 'lg'
+      ? 'text-base font-bold'
+      : 'text-xs font-semibold';
 
   return (
-    <div className={`${sizeClass} rounded-full ${avatarBg} flex items-center justify-center shrink-0`}>
-      <span className="text-white">{initials}</span>
+    <div className={`${sizeClass} rounded-full shrink-0 relative`}>
+      {/* Always-visible initials layer */}
+      <div
+        className={`absolute inset-0 rounded-full ${avatarBg} flex items-center justify-center`}
+      >
+        <span className={`text-white ${textClass}`}>{initials}</span>
+      </div>
+
+      {/* Image layer — rendered invisibly until loaded, hides on error */}
+      {showImg && (
+        <img
+          src={avatarUrl}
+          alt=""
+          className={`absolute inset-0 w-full h-full rounded-full object-cover transition-opacity duration-150 ${
+            imgLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImgLoaded(true)}
+          onError={() => setImgError(true)}
+        />
+      )}
     </div>
   );
 }
