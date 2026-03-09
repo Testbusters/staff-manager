@@ -81,6 +81,7 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
   const doc = docData?.document;
   const collab = doc?.collaborators as { nome: string; cognome: string } | null | undefined;
   const isDaFirmare = doc?.stato_firma === 'DA_FIRMARE';
+  const hasExistingFile = !!docData?.originalUrl;
   const replaceEnabled = !!file && (!isDaFirmare || markSigned);
 
   return (
@@ -158,9 +159,11 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
               )}
             </div>
 
-            {/* Replace section */}
+            {/* Upload / replace section */}
             <div className="border-t border-border pt-4 space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">Sostituisci documento</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {hasExistingFile ? 'Sostituisci documento' : 'Carica documento'}
+              </p>
               <input
                 type="file"
                 accept=".pdf"
@@ -193,7 +196,9 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
                 disabled={!replaceEnabled || submitting}
                 className="bg-brand hover:bg-brand/90 text-white"
               >
-                {submitting ? 'Sostituzione…' : 'Sostituisci documento'}
+                {submitting
+                  ? (hasExistingFile ? 'Sostituzione…' : 'Caricamento…')
+                  : (hasExistingFile ? 'Sostituisci documento' : 'Carica documento')}
               </Button>
             </div>
           </div>

@@ -101,7 +101,11 @@ export default function DocumentList({ documents, isAdmin }: Props) {
               </TableHeader>
               <TableBody>
                 {docs.map((doc) => (
-                  <TableRow key={doc.id} className="hover:bg-muted/60">
+                  <TableRow
+                    key={doc.id}
+                    className={`hover:bg-muted/60 ${isAdmin ? 'cursor-pointer' : ''}`}
+                    onClick={isAdmin ? () => setModalDocId(doc.id) : undefined}
+                  >
                     {isAdmin && (
                       <TableCell className="text-foreground text-sm">
                         {doc.collaborators
@@ -124,25 +128,17 @@ export default function DocumentList({ documents, isAdmin }: Props) {
                     <TableCell className="text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
                       {new Date(doc.requested_at).toLocaleDateString('it-IT')}
                     </TableCell>
-                    <TableCell className="text-right">
-                      {isAdmin ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setModalDocId(doc.id)}
-                          className="text-xs h-auto py-1"
-                        >
-                          Dettaglio
-                        </Button>
-                      ) : (
+                    {!isAdmin && (
+                      <TableCell className="text-right">
                         <Link
                           href={`/documenti/${doc.id}`}
                           className="text-xs text-link hover:text-link/80"
                         >
                           Apri →
                         </Link>
-                      )}
-                    </TableCell>
+                      </TableCell>
+                    )}
+                    {isAdmin && <TableCell />}
                   </TableRow>
                 ))}
               </TableBody>
