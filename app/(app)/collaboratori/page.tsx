@@ -1,26 +1,19 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Users } from 'lucide-react';
+import { Users, ChevronRight } from 'lucide-react';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Role } from '@/lib/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-type Filter = 'all' | 'documenti' | 'stallo';
+import CollaboratoriSearchInput from '@/components/admin/CollaboratoriSearchInput';
+import CollaboratorAvatar from '@/components/admin/CollaboratorAvatar';
 
 const PAGE_SIZE = 20;
-
-const FILTER_LABELS: Record<Filter, string> = {
-  all: 'Tutti',
-  documenti: 'Doc da firmare',
-  stallo: 'Pagamenti in sospeso',
-};
 
 export default async function CollaboratoriPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -41,72 +34,78 @@ export default async function CollaboratoriPage({
   const role = profile?.role as Role;
   if (role !== 'amministrazione') redirect('/');
 
-  const { filter: filterParam, page: pageParam } = await searchParams;
-  const filter = (['all', 'documenti', 'stallo'].includes(filterParam ?? '') ? filterParam : 'all') as Filter;
+  const { q: queryParam, page: pageParam } = await searchParams;
+  const q = queryParam?.trim().toLowerCase() ?? '';
   const page = Math.max(1, parseInt(pageParam ?? '1', 10));
 
-  // ── Step 1: fetch all collaborator IDs ───────────────────────────────────
-  const { data: all } = await svc.from('collaborators').select('id');
-  const allCollaboratorIds: string[] = (all ?? []).map((c: { id: string }) => c.id);
+  // ── Step 1: fetch user_ids with role = 'collaboratore' ────────────────────
+  const { data: collabProfiles } = await svc
+    .from('user_profiles')
+    .select('user_id')
+    .eq('role', 'collaboratore');
 
-  // ── Step 2: apply filter ─────────────────────────────────────────────────────
-  let filteredIds = allCollaboratorIds;
+  const collabUserIds = (collabProfiles ?? []).map((p: { user_id: string }) => p.user_id);
 
-  if (allCollaboratorIds.length > 0) {
-    if (filter === 'documenti') {
-      const { data: docs } = await svc
-        .from('documents')
-        .select('collaborator_id')
-        .eq('stato_firma', 'DA_FIRMARE')
-        .in('collaborator_id', allCollaboratorIds);
-      const matched = new Set((docs ?? []).map((d: { collaborator_id: string }) => d.collaborator_id));
-      filteredIds = allCollaboratorIds.filter(id => matched.has(id));
-    } else if (filter === 'stallo') {
-      const [{ data: comp }, { data: exp }] = await Promise.all([
-        svc
-          .from('compensations')
-          .select('collaborator_id')
-          .neq('stato', 'LIQUIDATO')
-          .neq('stato', 'RIFIUTATO')
-          .in('collaborator_id', allCollaboratorIds),
-        svc
-          .from('expense_reimbursements')
-          .select('collaborator_id')
-          .neq('stato', 'LIQUIDATO')
-          .neq('stato', 'RIFIUTATO')
-          .in('collaborator_id', allCollaboratorIds),
-      ]);
-      const stallIds = new Set([
-        ...(comp ?? []).map((c: { collaborator_id: string }) => c.collaborator_id),
-        ...(exp ?? []).map((e: { collaborator_id: string }) => e.collaborator_id),
-      ]);
-      filteredIds = allCollaboratorIds.filter(id => stallIds.has(id));
-    }
+  if (collabUserIds.length === 0) {
+    return (
+      <div className="p-6">
+        <header className="mb-8">
+          <h1 className="text-xl font-semibold text-foreground">Collaboratori</h1>
+        </header>
+        <CollaboratoriSearchInput defaultValue={q} />
+        <div className="mt-8">
+          <EmptyState icon={Users} title="Nessun collaboratore presente." />
+        </div>
+      </div>
+    );
   }
 
-  const total = filteredIds.length;
+  // ── Step 2: fetch collaborators ───────────────────────────────────────────
+  type CollabRow = {
+    id: string;
+    user_id: string | null;
+    nome: string | null;
+    cognome: string | null;
+    email: string | null;
+    username: string | null;
+    codice_fiscale: string | null;
+    tipo_contratto: string | null;
+  };
+
+  const { data: allCollabs } = await svc
+    .from('collaborators')
+    .select('id, user_id, nome, cognome, email, username, codice_fiscale, tipo_contratto')
+    .in('user_id', collabUserIds);
+
+  // ── Step 3: text search filter ────────────────────────────────────────────
+  let filtered: CollabRow[] = ((allCollabs ?? []) as CollabRow[]).sort((a, b) =>
+    (a.cognome ?? '').localeCompare(b.cognome ?? '', 'it'),
+  );
+
+  if (q) {
+    filtered = filtered.filter((c) =>
+      [c.nome, c.cognome, c.username, c.email].some((val) =>
+        val?.toLowerCase().includes(q),
+      ),
+    );
+  }
+
+  // ── Step 4: paginate ──────────────────────────────────────────────────────
+  const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageIds = filteredIds.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  // ── Step 3: fetch page data ─────────────────────────────────────────────────
-  type CollabRow = { id: string; nome: string | null; cognome: string | null; codice_fiscale: string | null; telefono: string | null };
-  let collaborators: CollabRow[] = [];
+  // ── Step 5: fetch community data for page ─────────────────────────────────
+  const pageIds = pageItems.map((c) => c.id);
   let communityByCollab: Record<string, string[]> = {};
 
   if (pageIds.length > 0) {
-    const { data: collabData } = await svc
-      .from('collaborators')
-      .select('id, nome, cognome, codice_fiscale, telefono')
-      .in('id', pageIds);
-    collaborators = ((collabData ?? []) as CollabRow[]).sort((a, b) =>
-      (a.cognome ?? '').localeCompare(b.cognome ?? '', 'it')
-    );
-
     const { data: ccData } = await svc
       .from('collaborator_communities')
       .select('collaborator_id, community_id')
       .in('collaborator_id', pageIds);
+
     const communityIds = [...new Set((ccData ?? []).map((cc: { community_id: string }) => cc.community_id))];
     let nameById: Record<string, string> = {};
     if (communityIds.length > 0) {
@@ -114,7 +113,9 @@ export default async function CollaboratoriPage({
         .from('communities')
         .select('id, name')
         .in('id', communityIds);
-      nameById = Object.fromEntries((comm ?? []).map((c: { id: string; name: string }) => [c.id, c.name]));
+      nameById = Object.fromEntries(
+        (comm ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
+      );
     }
     for (const cc of (ccData ?? []) as { collaborator_id: string; community_id: string }[]) {
       if (!communityByCollab[cc.collaborator_id]) communityByCollab[cc.collaborator_id] = [];
@@ -122,68 +123,87 @@ export default async function CollaboratoriPage({
     }
   }
 
-  const subtitle = 'Tutti i collaboratori';
-
   return (
-    <div className="p-6 max-w-5xl">
-      <div className="mb-6">
+    <div className="p-6">
+      {/* Header */}
+      <header className="mb-6 flex items-center gap-3">
         <h1 className="text-xl font-semibold text-foreground">Collaboratori</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+        <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-2 rounded-full bg-brand/15 text-brand text-xs font-semibold tabular-nums">
+          {total}
+        </span>
+      </header>
+
+      {/* Search */}
+      <div className="mb-5">
+        <CollaboratoriSearchInput defaultValue={q} />
       </div>
 
-      {/* Filter chips */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {(['all', 'documenti', 'stallo'] as Filter[]).map((f) => (
-          <Link
-            key={f}
-            href={`/collaboratori?filter=${f}&page=1`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              filter === f
-                ? 'bg-brand text-white'
-                : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-accent'
-            }`}
-          >
-            {FILTER_LABELS[f]}
-          </Link>
-        ))}
-      </div>
-
-      {allCollaboratorIds.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          Nessun collaboratore presente.
-        </p>
-      ) : collaborators.length === 0 ? (
-        <EmptyState icon={Users} title="Nessun collaboratore trovato" description="Nessun risultato per il filtro selezionato." />
+      {/* List */}
+      {pageItems.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="Nessun collaboratore trovato"
+          description={q ? `Nessun risultato per "${queryParam}".` : undefined}
+        />
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {['Nome', 'Cognome', 'Codice fiscale', 'Telefono', 'Community', ''].map((h) => (
-                  <TableHead key={h}>{h}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {collaborators.map((c) => (
-                <TableRow key={c.id} className="hover:bg-muted/40">
-                  <TableCell className="text-foreground">{c.nome ?? '—'}</TableCell>
-                  <TableCell className="text-foreground font-medium">{c.cognome ?? '—'}</TableCell>
-                  <TableCell className="text-muted-foreground font-mono text-xs">{c.codice_fiscale ?? '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.telefono ?? '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{(communityByCollab[c.id] ?? []).join(', ') || '—'}</TableCell>
-                  <TableCell className="text-right">
-                    <Link
-                      href={`/collaboratori/${c.id}`}
-                      className="text-link hover:text-link/80 text-xs font-medium"
-                    >
-                      Dettaglio →
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden mb-4">
+          {pageItems.map((c) => {
+            const communities = communityByCollab[c.id] ?? [];
+
+            return (
+              <Link
+                key={c.id}
+                href={`/collaboratori/${c.id}`}
+                className="flex items-center gap-4 px-5 py-4 hover:bg-muted/40 transition cursor-pointer group"
+              >
+                {/* Avatar */}
+                <CollaboratorAvatar
+                  userId={c.user_id}
+                  nome={c.nome}
+                  cognome={c.cognome}
+                  size="sm"
+                />
+
+                {/* Identity */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-foreground">
+                      {[c.nome, c.cognome].filter(Boolean).join(' ') || '—'}
+                    </span>
+                    {c.username && (
+                      <span className="text-[11px] font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-700/30 px-1.5 py-0.5 rounded-full">
+                        @{c.username}
+                      </span>
+                    )}
+                  </div>
+                  {c.email && (
+                    <span className="text-xs text-muted-foreground truncate block mt-0.5">
+                      {c.email}
+                    </span>
+                  )}
+                </div>
+
+                {/* Communities */}
+                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                  {communities.length === 0 ? (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  ) : (
+                    communities.map((name) => (
+                      <span
+                        key={name}
+                        className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full"
+                      >
+                        {name}
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                {/* Arrow */}
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition shrink-0" />
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -196,7 +216,7 @@ export default async function CollaboratoriPage({
           <div className="flex gap-2">
             {safePage > 1 && (
               <Link
-                href={`/collaboratori?filter=${filter}&page=${safePage - 1}`}
+                href={`/collaboratori?${q ? `q=${encodeURIComponent(q)}&` : ''}page=${safePage - 1}`}
                 className="px-3 py-1.5 rounded-md text-xs bg-muted text-foreground hover:bg-accent transition"
               >
                 ← Precedente
@@ -204,7 +224,7 @@ export default async function CollaboratoriPage({
             )}
             {safePage < totalPages && (
               <Link
-                href={`/collaboratori?filter=${filter}&page=${safePage + 1}`}
+                href={`/collaboratori?${q ? `q=${encodeURIComponent(q)}&` : ''}page=${safePage + 1}`}
                 className="px-3 py-1.5 rounded-md text-xs bg-muted text-foreground hover:bg-accent transition"
               >
                 Successiva →

@@ -11,10 +11,9 @@ export default function CodaReceiptButton() {
   return (
     <>
       <Button
-        variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="shrink-0"
+        className="bg-brand hover:bg-brand/90 text-white shrink-0"
       >
         <FileText className="h-3.5 w-3.5 mr-1.5" />
         Genera ricevute

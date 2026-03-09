@@ -3,49 +3,24 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { canTransition } from '@/lib/compensation-transitions';
-import { canExpenseTransition } from '@/lib/expense-transitions';
-import StatusBadge from '@/components/compensation/StatusBadge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Wallet, Receipt, FileText } from 'lucide-react';
+import { FileText, Pencil } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
+import CollaboratorAvatar from '@/components/admin/CollaboratorAvatar';
 import {
-  COMPENSATION_STATUS_LABELS,
-  EXPENSE_STATUS_LABELS,
   DOCUMENT_TYPE_LABELS,
   DOCUMENT_SIGN_STATUS_LABELS,
-  type CompensationStatus,
-  type ExpenseStatus,
   type DocumentType,
   type DocumentSignStatus,
   type Role,
 } from '@/lib/types';
-
-interface CompensationRow {
-  id: string;
-  importo_lordo: number | null;
-  importo_netto: number | null;
-  stato: CompensationStatus;
-  community_name: string | null;
-  created_at: string;
-}
-
-interface ExpenseRow {
-  id: string;
-  categoria: string;
-  data_spesa: string;
-  importo: number;
-  stato: ExpenseStatus;
-  created_at: string;
-}
 
 interface DocumentRow {
   id: string;
@@ -80,10 +55,11 @@ interface CollabData {
 
 interface CollaboratoreDetailProps {
   collab: CollabData;
+  userId: string | null;
   memberStatus: string | null;
   communityNames: string[];
-  compensations: CompensationRow[];
-  expenses: ExpenseRow[];
+  compensations: unknown[];
+  expenses: unknown[];
   documents: DocumentRow[];
   role: Role;
   collabRole?: Role | null;
@@ -95,64 +71,55 @@ const MEMBER_STATUS_LABELS: Record<string, string> = {
   uscente_senza_compenso: 'Uscente senza compenso',
 };
 
+const MEMBER_STATUS_COLORS: Record<string, string> = {
+  attivo: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+  uscente_con_compenso: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+  uscente_senza_compenso: 'bg-muted text-muted-foreground border-border',
+};
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function displayAmount(comp: CompensationRow): string {
-  const amount = comp.importo_netto ?? comp.importo_lordo;
-  if (amount == null) return '—';
-  return amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
-}
-
-type RejectTarget = { type: 'comp' | 'exp'; id: string };
-
 export default function CollaboratoreDetail({
   collab,
   memberStatus,
+  userId,
   communityNames,
-  compensations,
-  expenses,
   documents,
   role,
   collabRole,
 }: CollaboratoreDetailProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState<string | null>(null);
-  const [rejectModal, setRejectModal] = useState<RejectTarget | null>(null);
-  const [rejectNote, setRejectNote] = useState('');
-
-  // ── Username inline edit ─────────────────────────────────────────────────
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [usernameEdit, setUsernameEdit] = useState(collab.username ?? '');
-  const [usernameSaving, setUsernameSaving] = useState(false);
-
-  // ── Profile edit mode ─────────────────────────────────────────────────────
-  const [editingProfile, setEditingProfile] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
-  // Form fields
-  const [fNome, setFNome]                       = useState(collab.nome ?? '');
-  const [fCognome, setFCognome]                 = useState(collab.cognome ?? '');
-  const [fCF, setFCF]                           = useState(collab.codice_fiscale ?? '');
-  const [fDataNascita, setFDataNascita]         = useState(collab.data_nascita ?? '');
-  const [fLuogoNascita, setFLuogoNascita]       = useState(collab.luogo_nascita ?? '');
+
+  const isResponsabileProfile = collabRole === 'responsabile_compensi';
+
+  // ── Form fields ───────────────────────────────────────────────────────────
+  const [fNome, setFNome]                         = useState(collab.nome ?? '');
+  const [fCognome, setFCognome]                   = useState(collab.cognome ?? '');
+  const [fUsername, setFUsername]                 = useState(collab.username ?? '');
+  const [fCF, setFCF]                             = useState(collab.codice_fiscale ?? '');
+  const [fDataNascita, setFDataNascita]           = useState(collab.data_nascita ?? '');
+  const [fLuogoNascita, setFLuogoNascita]         = useState(collab.luogo_nascita ?? '');
   const [fProvinciaNascita, setFProvinciaNascita] = useState(collab.provincia_nascita ?? '');
-  const [fComune, setFComune]                   = useState(collab.comune ?? '');
-  const [fProvinciaRes, setFProvinciaRes]       = useState(collab.provincia_residenza ?? '');
-  const [fIndirizzo, setFIndirizzo]             = useState(collab.indirizzo ?? '');
-  const [fCivico, setFCivico]                   = useState(collab.civico_residenza ?? '');
-  const [fTelefono, setFTelefono]               = useState(collab.telefono ?? '');
-  const [fTshirt, setFTshirt]                   = useState(collab.tshirt_size ?? '');
-  const [fSonoFiglio, setFSonoFiglio]           = useState(collab.sono_un_figlio_a_carico);
-  const [fMassimale, setFMassimale]             = useState<string>(
+  const [fComune, setFComune]                     = useState(collab.comune ?? '');
+  const [fProvinciaRes, setFProvinciaRes]         = useState(collab.provincia_residenza ?? '');
+  const [fIndirizzo, setFIndirizzo]               = useState(collab.indirizzo ?? '');
+  const [fCivico, setFCivico]                     = useState(collab.civico_residenza ?? '');
+  const [fTelefono, setFTelefono]                 = useState(collab.telefono ?? '');
+  const [fTshirt, setFTshirt]                     = useState(collab.tshirt_size ?? '');
+  const [fSonoFiglio, setFSonoFiglio]             = useState(collab.sono_un_figlio_a_carico);
+  const [fMassimale, setFMassimale]               = useState<string>(
     collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '',
   );
-  const [fIntestatario, setFIntestatario]       = useState(collab.intestatario_pagamento ?? '');
-  const [fUsername, setFUsername]               = useState(collab.username ?? '');
+  const [fIntestatario, setFIntestatario]         = useState(collab.intestatario_pagamento ?? '');
 
-  const openProfileEdit = () => {
+  const openEditModal = () => {
     setFNome(collab.nome ?? '');
     setFCognome(collab.cognome ?? '');
+    setFUsername(collab.username ?? '');
     setFCF(collab.codice_fiscale ?? '');
     setFDataNascita(collab.data_nascita ?? '');
     setFLuogoNascita(collab.luogo_nascita ?? '');
@@ -166,13 +133,13 @@ export default function CollaboratoreDetail({
     setFSonoFiglio(collab.sono_un_figlio_a_carico);
     setFMassimale(collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '');
     setFIntestatario(collab.intestatario_pagamento ?? '');
-    setFUsername(collab.username ?? '');
-    setEditingProfile(true);
+    setEditModalOpen(true);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileSaving(true);
+
     const body: Record<string, unknown> = {
       nome:                fNome.trim() || undefined,
       cognome:             fCognome.trim() || undefined,
@@ -182,19 +149,21 @@ export default function CollaboratoreDetail({
       civico_residenza:    fCivico.trim() || null,
       telefono:            fTelefono.trim() || null,
     };
+
     if (!isResponsabileProfile) {
-      body.codice_fiscale      = fCF.trim().toUpperCase() || null;
-      body.data_nascita        = fDataNascita || null;
-      body.luogo_nascita       = fLuogoNascita.trim() || null;
-      body.provincia_nascita   = fProvinciaNascita.trim().toUpperCase() || null;
-      body.tshirt_size         = fTshirt || null;
+      body.codice_fiscale          = fCF.trim().toUpperCase() || null;
+      body.data_nascita            = fDataNascita || null;
+      body.luogo_nascita           = fLuogoNascita.trim() || null;
+      body.provincia_nascita       = fProvinciaNascita.trim().toUpperCase() || null;
+      body.tshirt_size             = fTshirt || null;
       body.sono_un_figlio_a_carico = fSonoFiglio;
       body.importo_lordo_massimale = fMassimale !== '' ? parseFloat(fMassimale) : null;
     }
-    // Admin-only payment field
+
     if (role === 'amministrazione') {
       body.intestatario_pagamento = fIntestatario.trim() || null;
     }
+
     if (fUsername.trim().length >= 3) body.username = fUsername.trim();
 
     const res = await fetch(`/api/admin/collaboratori/${collab.id}/profile`, {
@@ -202,10 +171,12 @@ export default function CollaboratoreDetail({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+
     setProfileSaving(false);
+
     if (res.ok) {
       toast.success('Profilo salvato.');
-      setEditingProfile(false);
+      setEditModalOpen(false);
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
@@ -213,203 +184,229 @@ export default function CollaboratoreDetail({
     }
   };
 
-  const handleSaveUsername = async () => {
-    setUsernameSaving(true);
-    const res = await fetch(`/api/admin/collaboratori/${collab.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: usernameEdit.trim() }),
-    });
-    setUsernameSaving(false);
-    if (res.ok) {
-      setEditingUsername(false);
-      router.refresh();
-    } else {
-      const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 });
-    }
-  };
+  const fullName = [collab.nome, collab.cognome].filter(Boolean).join(' ') || 'Collaboratore';
 
-  const canAct = role === 'responsabile_compensi' || role === 'amministrazione';
-  const isResponsabileProfile = collabRole === 'responsabile_compensi';
-
-  // ── Approve ───────────────────────────────────────────────────────────────
-  const handleApprove = async (type: 'comp' | 'exp', id: string) => {
-    setLoading(id);
-    const url =
-      type === 'comp'
-        ? `/api/compensations/${id}/transition`
-        : `/api/expenses/${id}/transition`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'approve' }),
-    });
-    setLoading(null);
-    if (res.ok) {
-      router.refresh();
-    } else {
-      const body = await res.json().catch(() => ({}));
-      toast.error(body.error ?? 'Errore durante l\'approvazione.', { duration: 5000 });
-    }
-  };
-
-  // ── Reject ────────────────────────────────────────────────────────────────
-  const openReject = (type: 'comp' | 'exp', id: string) => {
-    setRejectNote('');
-    setRejectModal({ type, id });
-  };
-
-  const handleReject = async () => {
-    if (!rejectModal) return;
-    if (rejectNote.trim().length === 0) {
-      toast.error('La motivazione del rifiuto è obbligatoria.', { duration: 5000 });
-      return;
-    }
-    setLoading(rejectModal.id);
-    const url =
-      rejectModal.type === 'comp'
-        ? `/api/compensations/${rejectModal.id}/transition`
-        : `/api/expenses/${rejectModal.id}/transition`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'reject', note: rejectNote.trim() }),
-    });
-    setLoading(null);
-    if (res.ok) {
-      setRejectModal(null);
-      router.refresh();
-    } else {
-      const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? 'Errore durante il rifiuto.', { duration: 5000 });
-    }
-  };
-
-  // ── Sections ──────────────────────────────────────────────────────────────
-  const sectionTitle = (title: string, count: number) => (
-    <div className="flex items-center gap-2 mb-3">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{count}</span>
-    </div>
-  );
-
+  // ── Profile fields for read-only display ─────────────────────────────────
+  const profileFields: [string, string | null | undefined][] = [
+    ['Codice fiscale', collab.codice_fiscale],
+    ['Tipo contratto', collab.tipo_contratto],
+    ['Email', collab.email],
+    ['Telefono', collab.telefono],
+    ['Data di nascita', collab.data_nascita ? formatDate(collab.data_nascita) : null],
+    ['Luogo di nascita', collab.luogo_nascita],
+    ['Comune di residenza', collab.comune],
+    ['Provincia residenza', collab.provincia_residenza],
+    ['Indirizzo', collab.indirizzo ? `${collab.indirizzo}${collab.civico_residenza ? ` ${collab.civico_residenza}` : ''}` : null],
+    ['Taglia t-shirt', collab.tshirt_size],
+    ['Data ingresso', collab.data_ingresso ? formatDate(collab.data_ingresso) : null],
+    ...(role === 'amministrazione' ? [['Intestatario conto', collab.intestatario_pagamento] as [string, string | null]] : []),
+  ];
 
   return (
-    <div className="p-6 max-w-4xl space-y-8">
+    <div className="p-6 space-y-6">
       {/* Back */}
-      <Link href="/collaboratori" className="text-xs text-muted-foreground hover:text-foreground transition">
+      <Link href="/collaboratori" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition">
         ← Torna alla lista
       </Link>
 
-      {/* ── Anagrafica ──────────────────────────────────────────────────── */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">
-              {[collab.nome, collab.cognome].filter(Boolean).join(' ') || 'Collaboratore'}
-            </h1>
-            {memberStatus && (
-              <span className="text-xs text-muted-foreground mt-0.5 block">
-                {MEMBER_STATUS_LABELS[memberStatus] ?? memberStatus}
-              </span>
-            )}
-            {/* Username badge + inline edit */}
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-              {!editingUsername ? (
-                <>
-                  {collab.username ? (
-                    <span className="text-xs font-mono bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/40 px-2 py-0.5 rounded-full">
+      {/* ── Identity card ────────────────────────────────────────────────── */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="flex items-start gap-5">
+          {/* Avatar */}
+          <CollaboratorAvatar
+            userId={userId}
+            nome={collab.nome}
+            cognome={collab.cognome}
+            size="lg"
+          />
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">{fullName}</h1>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  {memberStatus && (
+                    <span className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full border ${MEMBER_STATUS_COLORS[memberStatus] ?? 'bg-muted text-muted-foreground border-border'}`}>
+                      {MEMBER_STATUS_LABELS[memberStatus] ?? memberStatus}
+                    </span>
+                  )}
+                  {collab.username && (
+                    <span className="text-[11px] font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-700/30 px-2 py-0.5 rounded-full">
                       @{collab.username}
                     </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground italic">Username non impostato</span>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => { setUsernameEdit(collab.username ?? ''); setEditingUsername(true); }}
-                    className="text-xs text-muted-foreground hover:text-foreground transition"
-                  >
-                    Modifica
-                  </button>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Input
-                    type="text"
-                    value={usernameEdit}
-                    onChange={(e) => setUsernameEdit(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    maxLength={50}
-                    placeholder="username"
-                    className="font-mono w-40"
-                  />
-                  <button
-                    onClick={handleSaveUsername}
-                    disabled={usernameSaving || usernameEdit.trim().length < 3}
-                    className="px-2.5 py-1 rounded text-xs font-medium bg-brand hover:bg-brand/90 text-white transition disabled:opacity-50"
-                  >
-                    {usernameSaving ? '…' : 'Salva'}
-                  </button>
-                  <button
-                    onClick={() => { setEditingUsername(false); }}
-                    className="px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition"
-                  >
-                    Annulla
-                  </button>
+                  {communityNames.map((n) => (
+                    <span key={n} className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                      {n}
+                    </span>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              <Button
+                size="sm"
+                onClick={openEditModal}
+                className="bg-brand hover:bg-brand/90 text-white shrink-0"
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Modifica profilo
+              </Button>
             </div>
           </div>
-          {communityNames.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap justify-end">
-              {communityNames.map((n) => (
-                <span key={n} className="text-xs bg-muted text-foreground px-2 py-0.5 rounded-full">{n}</span>
-              ))}
+        </div>
+      </div>
+
+      {/* ── Profile data ─────────────────────────────────────────────────── */}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h2 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-4">
+          Anagrafica
+        </h2>
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
+          {profileFields.map(([label, value]) =>
+            value ? (
+              <div key={label}>
+                <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
+                  {label}
+                </dt>
+                <dd className="text-foreground text-sm">{value}</dd>
+              </div>
+            ) : null,
+          )}
+          {!isResponsabileProfile && (
+            <div>
+              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
+                Fiscalmente a carico
+              </dt>
+              <dd className="text-foreground text-sm">
+                {collab.sono_un_figlio_a_carico ? 'Sì' : 'No'}
+              </dd>
             </div>
           )}
-        </div>
-
-        {/* Profile edit toggle */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Anagrafica</span>
-          {!editingProfile && (
-            <button
-              type="button"
-              onClick={openProfileEdit}
-              className="text-xs text-link hover:text-link/80 transition"
-            >
-              Modifica profilo
-            </button>
+          {!isResponsabileProfile && collab.importo_lordo_massimale != null && (
+            <div>
+              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
+                Massimale lordo annuo
+              </dt>
+              <dd className="text-foreground text-sm">
+                {collab.importo_lordo_massimale.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+              </dd>
+            </div>
           )}
+        </dl>
+      </div>
+
+      {/* ── Documenti ────────────────────────────────────────────────────── */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground">Documenti</h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              {documents.length}
+            </span>
+          </div>
         </div>
 
-        {editingProfile ? (
-          /* ── Edit form ───────────────────────────────────────────────── */
-          <form onSubmit={handleSaveProfile} className="space-y-3">
+        {documents.length === 0 ? (
+          <div className="px-5 py-8">
+            <EmptyState icon={FileText} title="Nessun documento." />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {['Titolo', 'Tipo', 'Firma', 'Data', ''].map((h) => (
+                  <TableHead key={h}>{h}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documents.map((doc) => (
+                <TableRow key={doc.id} className="hover:bg-muted/30">
+                  <TableCell className="text-foreground text-sm font-medium">{doc.titolo}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        doc.stato_firma === 'DA_FIRMARE'
+                          ? 'border-amber-500 text-amber-400'
+                          : doc.stato_firma === 'FIRMATO'
+                            ? 'border-emerald-500 text-emerald-400'
+                            : undefined
+                      }
+                    >
+                      {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma] ?? doc.stato_firma}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{formatDate(doc.created_at)}</TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/documenti/${doc.id}`} className="text-xs text-link hover:text-link/80">
+                      Vedi →
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {/* ── Edit profile modal ────────────────────────────────────────────── */}
+      <Dialog open={editModalOpen} onOpenChange={(v) => { if (!v) setEditModalOpen(false); }}>
+        <DialogContent className="max-w-lg bg-card border-border max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="pr-10">
+            <DialogTitle className="text-base font-semibold text-foreground">
+              Modifica profilo
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveProfile} className="space-y-4 pt-1">
+            {/* Nome + Cognome */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Nome</label>
-                <Input type="text" value={fNome} onChange={(e) => setFNome(e.target.value)} />
+                <Input value={fNome} onChange={(e) => setFNome(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Cognome</label>
-                <Input type="text" value={fCognome} onChange={(e) => setFCognome(e.target.value)} />
+                <Input value={fCognome} onChange={(e) => setFCognome(e.target.value)} />
               </div>
             </div>
+
+            {/* Username */}
             <div>
               <label className="block text-[11px] text-muted-foreground mb-1">Username</label>
-              <Input type="text" value={fUsername}
+              <Input
+                value={fUsername}
                 onChange={(e) => setFUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                maxLength={50} placeholder="username" className="font-mono" />
+                maxLength={50}
+                placeholder="username"
+                className="font-mono"
+              />
             </div>
+
+            {/* Telefono */}
+            <div>
+              <label className="block text-[11px] text-muted-foreground mb-1">Telefono</label>
+              <Input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)} />
+            </div>
+
+            {/* Collaboratore-only fields */}
             {!isResponsabileProfile && (
               <>
                 <div>
                   <label className="block text-[11px] text-muted-foreground mb-1">Codice fiscale</label>
-                  <Input type="text" value={fCF}
+                  <Input
+                    value={fCF}
                     onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                    maxLength={16} className="font-mono" />
+                    maxLength={16}
+                    className="font-mono"
+                  />
                 </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] text-muted-foreground mb-1">Data di nascita</label>
@@ -417,49 +414,59 @@ export default function CollaboratoreDetail({
                   </div>
                   <div>
                     <label className="block text-[11px] text-muted-foreground mb-1">Città di nascita</label>
-                    <Input type="text" value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)} />
+                    <Input value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)} />
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-[11px] text-muted-foreground mb-1">Provincia di nascita</label>
-                  <Input type="text" value={fProvinciaNascita}
+                  <Input
+                    value={fProvinciaNascita}
                     onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
-                    maxLength={2} className="font-mono uppercase" />
+                    maxLength={2}
+                    className="font-mono uppercase w-24"
+                  />
                 </div>
               </>
             )}
+
+            {/* Residenza */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Comune di residenza</label>
-                <Input type="text" value={fComune} onChange={(e) => setFComune(e.target.value)} />
+                <Input value={fComune} onChange={(e) => setFComune(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Provincia residenza</label>
-                <Input type="text" value={fProvinciaRes}
+                <Input
+                  value={fProvinciaRes}
                   onChange={(e) => setFProvinciaRes(e.target.value.toUpperCase())}
-                  maxLength={2} className="font-mono uppercase" />
+                  maxLength={2}
+                  className="font-mono uppercase w-24"
+                />
               </div>
             </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
                 <label className="block text-[11px] text-muted-foreground mb-1">Indirizzo</label>
-                <Input type="text" value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)} />
+                <Input value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] text-muted-foreground mb-1">Civico</label>
-                <Input type="text" value={fCivico} onChange={(e) => setFCivico(e.target.value)} maxLength={10} />
+                <Input value={fCivico} onChange={(e) => setFCivico(e.target.value)} maxLength={10} />
               </div>
             </div>
-            <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Telefono</label>
-              <Input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)} />
-            </div>
+
+            {/* Collaboratore-only extra fields */}
             {!isResponsabileProfile && (
               <>
                 <div>
                   <label className="block text-[11px] text-muted-foreground mb-1">Taglia t-shirt</label>
                   <Select value={fTshirt || undefined} onValueChange={setFTshirt}>
-                    <SelectTrigger><SelectValue placeholder="— Non specificata —" /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue placeholder="— Non specificata —" />
+                    </SelectTrigger>
                     <SelectContent>
                       {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((s) => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
@@ -467,43 +474,57 @@ export default function CollaboratoreDetail({
                     </SelectContent>
                   </Select>
                 </div>
+
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <Checkbox
+                    checked={fSonoFiglio}
+                    onCheckedChange={(v) => setFSonoFiglio(!!v)}
+                  />
+                  <span className="text-sm text-foreground">Fiscalmente a carico</span>
+                </label>
+
                 <div>
-                  <label className="flex items-center gap-2.5 cursor-pointer">
-                    <Checkbox
-                      checked={fSonoFiglio}
-                      onCheckedChange={(v) => setFSonoFiglio(!!v)}
-                    />
-                    <span className="text-sm text-foreground">Fiscalmente a carico</span>
+                  <label className="block text-[11px] text-muted-foreground mb-1">
+                    Massimale lordo annuo (max €5.000)
                   </label>
-                </div>
-                <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">Massimale lordo annuo (max €5.000)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
-                    <Input type="number" min={1} max={5000} step={1} value={fMassimale}
+                    <Input
+                      type="number"
+                      min={1}
+                      max={5000}
+                      step={1}
+                      value={fMassimale}
                       onChange={(e) => setFMassimale(e.target.value)}
-                      className="pl-7" />
+                      className="pl-7"
+                    />
                   </div>
                 </div>
               </>
             )}
 
-            {/* Intestatario pagamento — admin only */}
+            {/* Admin-only */}
             {role === 'amministrazione' && (
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Intestatario del conto bancario</label>
-                <Input type="text" placeholder="Mario Rossi" value={fIntestatario}
+                <label className="block text-[11px] text-muted-foreground mb-1">
+                  Intestatario del conto bancario
+                </label>
+                <Input
+                  placeholder="Mario Rossi"
+                  value={fIntestatario}
                   onChange={(e) => setFIntestatario(e.target.value)}
-                  maxLength={100} />
+                  maxLength={100}
+                />
               </div>
             )}
 
-            <div className="flex gap-2 justify-end pt-1">
+            {/* Actions */}
+            <div className="flex gap-2 justify-end pt-2 border-t border-border">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => { setEditingProfile(false); }}
+                onClick={() => setEditModalOpen(false)}
               >
                 Annulla
               </Button>
@@ -517,240 +538,6 @@ export default function CollaboratoreDetail({
               </Button>
             </div>
           </form>
-        ) : (
-          /* ── Read-only dl grid ──────────────────────────────────────── */
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-            {[
-              ['Codice fiscale', collab.codice_fiscale],
-              ['Telefono', collab.telefono],
-              ['Email', collab.email],
-              ['Tipo contratto', collab.tipo_contratto],
-              ['Data ingresso', collab.data_ingresso ? formatDate(collab.data_ingresso) : null],
-              ['Luogo nascita', collab.luogo_nascita],
-              ['Comune residenza', collab.comune],
-              ['Indirizzo', collab.indirizzo],
-              ...(role === 'amministrazione' ? [['Intestatario conto', collab.intestatario_pagamento]] : []),
-            ].map(([label, value]) =>
-              value ? (
-                <div key={label as string}>
-                  <dt className="text-[11px] text-muted-foreground uppercase tracking-wide mb-0.5">{label}</dt>
-                  <dd className="text-foreground font-mono text-xs">{value}</dd>
-                </div>
-              ) : null
-            )}
-          </dl>
-        )}
-      </div>
-
-      {/* ── Compensi ────────────────────────────────────────────────────── */}
-      <div>
-        {sectionTitle('Compensi', compensations.length)}
-        {compensations.length === 0 ? (
-          <EmptyState icon={Wallet} title="Nessun compenso." />
-        ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {['Stato', 'Importo', 'Community', 'Data', ''].map((h) => (
-                    <TableHead key={h}>{h}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {compensations.map((comp) => {
-                  const canApprove = canAct && canTransition(role, comp.stato, 'approve').ok;
-                  const canReject = canAct && canTransition(role, comp.stato, 'reject').ok;
-                  return (
-                    <TableRow key={comp.id} className="hover:bg-muted/30">
-                      <TableCell>
-                        <StatusBadge stato={comp.stato} />
-                      </TableCell>
-                      <TableCell className="text-foreground font-medium text-xs">{displayAmount(comp)}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{comp.community_name ?? '—'}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{formatDate(comp.created_at)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 justify-end">
-                          {canApprove && (
-                            <button
-                              onClick={() => handleApprove('comp', comp.id)}
-                              disabled={loading === comp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 hover:bg-green-600 dark:bg-green-800 dark:hover:bg-green-700 text-white transition disabled:opacity-50"
-                            >
-                              {loading === comp.id ? '…' : 'Approva'}
-                            </button>
-                          )}
-                          {canReject && (
-                            <button
-                              onClick={() => openReject('comp', comp.id)}
-                              disabled={loading === comp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-red-700 hover:bg-red-600 dark:bg-red-800 dark:hover:bg-red-700 text-white transition disabled:opacity-50"
-                            >
-                              Rifiuta
-                            </button>
-                          )}
-                          {!canApprove && !canReject && (
-                            <Link href={`/compensi/${comp.id}`} className="text-xs text-link hover:text-link/80">
-                              Vedi →
-                            </Link>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-
-      {/* ── Rimborsi ────────────────────────────────────────────────────── */}
-      <div>
-        {sectionTitle('Rimborsi', expenses.length)}
-        {expenses.length === 0 ? (
-          <EmptyState icon={Receipt} title="Nessun rimborso." />
-        ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {['Stato', 'Categoria', 'Data spesa', 'Importo', ''].map((h) => (
-                    <TableHead key={h}>{h}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenses.map((exp) => {
-                  const canApprove = canAct && canExpenseTransition(role, exp.stato, 'approve').ok;
-                  const canReject = canAct && canExpenseTransition(role, exp.stato, 'reject').ok;
-                  return (
-                    <TableRow key={exp.id} className="hover:bg-muted/30">
-                      <TableCell>
-                        <StatusBadge stato={exp.stato} />
-                      </TableCell>
-                      <TableCell className="text-foreground text-xs">{exp.categoria}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{formatDate(exp.data_spesa)}</TableCell>
-                      <TableCell className="text-foreground font-medium text-xs">
-                        {exp.importo.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 justify-end">
-                          {canApprove && (
-                            <button
-                              onClick={() => handleApprove('exp', exp.id)}
-                              disabled={loading === exp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-green-700 hover:bg-green-600 dark:bg-green-800 dark:hover:bg-green-700 text-white transition disabled:opacity-50"
-                            >
-                              {loading === exp.id ? '…' : 'Approva'}
-                            </button>
-                          )}
-                          {canReject && (
-                            <button
-                              onClick={() => openReject('exp', exp.id)}
-                              disabled={loading === exp.id}
-                              className="px-2.5 py-1 rounded text-xs font-medium bg-red-700 hover:bg-red-600 dark:bg-red-800 dark:hover:bg-red-700 text-white transition disabled:opacity-50"
-                            >
-                              Rifiuta
-                            </button>
-                          )}
-                          {!canApprove && !canReject && (
-                            <Link href={`/rimborsi/${exp.id}`} className="text-xs text-link hover:text-link/80">
-                              Vedi →
-                            </Link>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-
-      {/* ── Documenti ───────────────────────────────────────────────────── */}
-      <div>
-        {sectionTitle('Documenti', documents.length)}
-        {documents.length === 0 ? (
-          <EmptyState icon={FileText} title="Nessun documento." />
-        ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {['Titolo', 'Tipo', 'Firma', 'Data', ''].map((h) => (
-                    <TableHead key={h}>{h}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {documents.map((doc) => (
-                  <TableRow key={doc.id} className="hover:bg-muted/30">
-                    <TableCell className="text-foreground text-xs">{doc.titolo}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={doc.stato_firma === 'FIRMATO' ? 'outline' : doc.stato_firma === 'DA_FIRMARE' ? 'outline' : 'secondary'}
-                        className={doc.stato_firma === 'DA_FIRMARE' ? 'border-amber-500 text-amber-700 dark:border-amber-600 dark:text-amber-400' : doc.stato_firma === 'FIRMATO' ? 'border-green-500 text-green-700 dark:border-green-600 dark:text-green-400' : undefined}
-                      >
-                        {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma] ?? doc.stato_firma}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{formatDate(doc.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <Link href={`/documenti/${doc.id}`} className="text-xs text-link hover:text-link/80">
-                        Vedi →
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-
-      {/* ── Reject modal ─────────────────────────────────────────────────── */}
-      <Dialog open={!!rejectModal} onOpenChange={(v) => { if (!v) { setRejectModal(null); } }}>
-        <DialogContent className="max-w-[420px] bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-semibold text-foreground">
-              Rifiuta {rejectModal?.type === 'comp' ? 'compenso' : 'rimborso'}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">
-              Motivazione del rifiuto <span className="text-red-500">*</span>
-            </label>
-            <Textarea
-              value={rejectNote}
-              onChange={(e) => setRejectNote(e.target.value)}
-              rows={3}
-              className="resize-none"
-              placeholder="Descrivi il motivo del rifiuto…"
-            />
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => { setRejectModal(null); }}
-            >
-              Annulla
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleReject}
-              disabled={!!loading || rejectNote.trim().length === 0}
-            >
-              {loading ? 'Invio…' : 'Rifiuta'}
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

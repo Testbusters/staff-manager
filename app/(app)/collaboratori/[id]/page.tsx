@@ -2,7 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import CollaboratoreDetail from '@/components/responsabile/CollaboratoreDetail';
-import type { Role, CompensationStatus, ExpenseStatus, DocumentType, DocumentSignStatus } from '@/lib/types';
+import type { Role, DocumentType, DocumentSignStatus } from '@/lib/types';
 
 export default async function CollaboratoreDetailPage({
   params,
@@ -53,17 +53,6 @@ export default async function CollaboratoreDetailPage({
       .in('id', communityIds);
     communityNames = (commData ?? []).map((c: { name: string }) => c.name);
   }
-  const communityById: Record<string, string> = {};
-  if (communityIds.length > 0) {
-    const { data: commData } = await svc
-      .from('communities')
-      .select('id, name')
-      .in('id', communityIds);
-    for (const c of (commData ?? []) as { id: string; name: string }[]) {
-      communityById[c.id] = c.name;
-    }
-  }
-
   // ── Fetch member_status + role from user_profiles ───────────────────────
   const { data: upData } = await svc
     .from('user_profiles')
@@ -72,43 +61,6 @@ export default async function CollaboratoreDetailPage({
     .maybeSingle();
   const memberStatus = upData?.member_status ?? null;
   const collabRole = (upData?.role ?? null) as Role | null;
-
-  // ── Fetch compensations ──────────────────────────────────────────────────
-  const { data: rawComp } = await svc
-    .from('compensations')
-    .select('id, importo_lordo, importo_netto, stato, community_id, created_at')
-    .eq('collaborator_id', id)
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  const compensations = (rawComp ?? []).map((c: {
-    id: string;
-    importo_lordo: number | null;
-    importo_netto: number | null;
-    stato: CompensationStatus;
-    community_id: string | null;
-    created_at: string;
-  }) => ({
-    ...c,
-    community_name: c.community_id ? (communityById[c.community_id] ?? null) : null,
-  }));
-
-  // ── Fetch expenses ───────────────────────────────────────────────────────
-  const { data: rawExp } = await svc
-    .from('expense_reimbursements')
-    .select('id, categoria, data_spesa, importo, stato, created_at')
-    .eq('collaborator_id', id)
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  const expenses = (rawExp ?? []) as {
-    id: string;
-    categoria: string;
-    data_spesa: string;
-    importo: number;
-    stato: ExpenseStatus;
-    created_at: string;
-  }[];
 
   // ── Fetch documents ──────────────────────────────────────────────────────
   const { data: rawDocs } = await svc
@@ -128,6 +80,7 @@ export default async function CollaboratoreDetailPage({
 
   return (
     <CollaboratoreDetail
+      userId={collab.user_id ?? null}
       collab={{
         id: collab.id,
         nome: collab.nome,
@@ -152,8 +105,8 @@ export default async function CollaboratoreDetailPage({
       }}
       memberStatus={memberStatus}
       communityNames={communityNames}
-      compensations={compensations}
-      expenses={expenses}
+      compensations={[]}
+      expenses={[]}
       documents={documents}
       role={role}
       collabRole={collabRole}
