@@ -137,6 +137,7 @@ app/
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
     coda/page.tsx                → Admin: full lifecycle queue — all stati (IN_ATTESA/APPROVATO/RIFIUTATO/LIQUIDATO), stats strip, sub-filter pills, approve/reject/liquidate per row + bulk (?tab=compensi|rimborsi)
     export/page.tsx              → Admin: export approved records to Google Sheet + XLSX download + run history (?tab=anteprima|storico)
+    import/page.tsx              → Admin: bulk import scaffold — 3 tabs (Collaboratori/Contratti/CU) + Anteprima/Storico sub-tabs + GSheet URL input (Round 1: UI only)
     documenti/page.tsx           → Admin: 3 tabs (list/upload/cu-batch). Collaboratore: redirect → /profilo?tab=documenti. Responsabile: redirect → /
     eventi/page.tsx              → Collaboratore: events list (read-only, ordered by start_datetime ASC, upcoming/past sections)
     eventi/[id]/page.tsx         → Event detail: tipo, datetime, location + Maps link, Google Calendar link, descrizione, luma embed
