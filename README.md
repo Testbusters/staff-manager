@@ -353,7 +353,7 @@ supabase/migrations/
   037_discount_brand.sql          → ADD COLUMN brand TEXT on discounts
   038_export_runs.sql             → ADD COLUMN exported_at on compensations + expenses; CREATE TABLE export_runs (id, run_at, record_count, total_lordo, gsheet_url, xlsx_storage_path); CREATE exports storage bucket; RLS
 
-__tests__/                         → 264 tests total (vitest)
+__tests__/                         → 288 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
   expense-transitions.test.ts      → State machine unit tests for reimbursements
   export-utils.test.ts             → Unit tests for groupToCollaboratorRows, toGSheetRow, buildHistoryXLSXWorkbook (18 cases)
