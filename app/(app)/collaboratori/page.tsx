@@ -165,10 +165,10 @@ export default async function CollaboratoriPage({
                   size="sm"
                 />
 
-                {/* Identity */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground">
+                {/* Nome + username */}
+                <div className="w-52 shrink-0 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-semibold text-foreground leading-tight">
                       {[c.nome, c.cognome].filter(Boolean).join(' ') || '—'}
                     </span>
                     {c.username && (
@@ -176,30 +176,38 @@ export default async function CollaboratoriPage({
                         @{c.username}
                       </span>
                     )}
-                    {c.tipo_contratto && (
-                      <span className="text-[10px] font-medium uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
-                        {c.tipo_contratto}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                    {c.email && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        {c.email}
-                      </span>
-                    )}
-                    {c.telefono && (
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {c.telefono}
-                      </span>
-                    )}
                   </div>
                 </div>
 
+                {/* Email */}
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs text-muted-foreground truncate block">
+                    {c.email ?? '—'}
+                  </span>
+                </div>
+
+                {/* Tipo contratto */}
+                <div className="w-28 shrink-0 hidden md:block">
+                  {c.tipo_contratto ? (
+                    <span className="text-[10px] font-medium uppercase tracking-wide bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                      {c.tipo_contratto}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/40">—</span>
+                  )}
+                </div>
+
+                {/* Telefono */}
+                <div className="w-36 shrink-0 hidden lg:block">
+                  <span className="text-xs text-muted-foreground">
+                    {c.telefono ?? '—'}
+                  </span>
+                </div>
+
                 {/* Communities */}
-                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                <div className="hidden sm:flex items-center justify-end gap-1.5 w-44 shrink-0">
                   {communities.length === 0 ? (
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground/40">—</span>
                   ) : (
                     communities.map((name) => (
                       <span
