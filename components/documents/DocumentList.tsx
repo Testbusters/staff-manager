@@ -25,6 +25,31 @@ interface CollaboratorOption {
   cognome: string;
   username: string | null;
   email: string;
+  user_id: string;
+}
+
+function CollabAvatar({ collab }: { collab: CollaboratorOption }) {
+  const initials = `${collab.nome[0] ?? ''}${collab.cognome[0] ?? ''}`.toUpperCase();
+  const avatarUrl = collab.user_id
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${collab.user_id}/avatar`
+    : null;
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (avatarUrl && !imgFailed) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={`${collab.nome} ${collab.cognome}`}
+        onError={() => setImgFailed(true)}
+        className="shrink-0 w-10 h-10 rounded-full object-cover"
+      />
+    );
+  }
+  return (
+    <div className="shrink-0 w-10 h-10 rounded-full bg-brand/15 dark:bg-brand/20 flex items-center justify-center">
+      <span className="text-sm font-semibold text-brand">{initials}</span>
+    </div>
+  );
 }
 
 interface Props {
@@ -263,18 +288,13 @@ function AdminDocumentList({ collaborators }: { collaborators: CollaboratorOptio
   }
 
   // ── Step 2: Show documents for selected collaborator ──
-  const initials = `${selectedCollab.nome[0] ?? ''}${selectedCollab.cognome[0] ?? ''}`.toUpperCase();
-
   return (
     <div className="space-y-4">
       {/* Collaborator banner */}
       <Card>
         <CardContent className="px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            {/* Avatar initials */}
-            <div className="shrink-0 w-10 h-10 rounded-full bg-brand/15 dark:bg-brand/20 flex items-center justify-center">
-              <span className="text-sm font-semibold text-brand">{initials}</span>
-            </div>
+            <CollabAvatar collab={selectedCollab} />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground leading-tight">
                 {selectedCollab.cognome} {selectedCollab.nome}
