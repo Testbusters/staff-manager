@@ -263,28 +263,43 @@ function AdminDocumentList({ collaborators }: { collaborators: CollaboratorOptio
   }
 
   // ── Step 2: Show documents for selected collaborator ──
+  const initials = `${selectedCollab.nome[0] ?? ''}${selectedCollab.cognome[0] ?? ''}`.toUpperCase();
+
   return (
     <div className="space-y-4">
-      {/* Collaborator header + back */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs text-muted-foreground mb-0.5">Documenti di</p>
-          <p className="text-base font-semibold text-foreground">
-            {selectedCollab.cognome} {selectedCollab.nome}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {selectedCollab.email}{selectedCollab.username ? ` · ${selectedCollab.username}` : ''}
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => { setSelectedCollab(null); setSearchQuery(''); setDocuments([]); }}
-          className="shrink-0"
-        >
-          ← Cambia collaboratore
-        </Button>
-      </div>
+      {/* Collaborator banner */}
+      <Card>
+        <CardContent className="px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar initials */}
+            <div className="shrink-0 w-10 h-10 rounded-full bg-brand/15 dark:bg-brand/20 flex items-center justify-center">
+              <span className="text-sm font-semibold text-brand">{initials}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground leading-tight">
+                {selectedCollab.cognome} {selectedCollab.nome}
+              </p>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className="text-xs text-muted-foreground truncate">{selectedCollab.email}</span>
+                {selectedCollab.username && (
+                  <>
+                    <span className="text-xs text-muted-foreground/40">·</span>
+                    <span className="text-xs text-muted-foreground font-mono">{selectedCollab.username}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setSelectedCollab(null); setSearchQuery(''); setDocuments([]); }}
+            className="shrink-0 text-xs"
+          >
+            ← Cambia
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Hint */}
       <p className="text-xs text-muted-foreground">
