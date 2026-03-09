@@ -10,7 +10,7 @@ import {
   getResponsabiliForUser,
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
-import { emailNuovoTicket, emailRispostaTicket } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 
 const BUCKET = 'tickets';
 
@@ -163,12 +163,13 @@ export async function POST(
         .eq('user_id', ticket.creator_user_id)
         .single();
       if (creatorEmail) {
-        const { subject, html } = emailRispostaTicket({
+        getRenderedEmail('E9', {
           nome: creatorCollab?.nome ?? '',
           oggetto: ticket.oggetto,
           data: new Date().toLocaleDateString('it-IT'),
-        });
-        sendEmail(creatorEmail, subject, html).catch(() => {});
+        }).then(({ subject, html }) => {
+          sendEmail(creatorEmail, subject, html).catch(() => {});
+        }).catch(() => {});
       }
     }
   } else {
@@ -190,14 +191,15 @@ export async function POST(
             .eq('user_id', user.id)
             .single();
           const nomeColl = collabRec ? `${collabRec.nome} ${collabRec.cognome}`.trim() : '';
-          const { subject, html } = emailNuovoTicket({
+          getRenderedEmail('E7', {
             nomeResponsabile: resp.nome,
             nomeCollaboratore: nomeColl,
             oggetto: ticket.oggetto,
             categoria: '',
             data: new Date().toLocaleDateString('it-IT'),
-          });
-          sendEmail(resp.email, subject, html).catch(() => {});
+          }).then(({ subject, html }) => {
+            sendEmail(resp.email!, subject, html).catch(() => {});
+          }).catch(() => {});
         }
       }
     }

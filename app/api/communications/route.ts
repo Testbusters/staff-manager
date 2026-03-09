@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
-import { emailNuovaComunicazione } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -75,8 +75,9 @@ export async function POST(request: Request) {
       const today = new Date().toLocaleDateString('it-IT');
       for (const c of collaboratori) {
         if (c.email) {
-          const { subject, html } = emailNuovaComunicazione({ nome: c.nome, titolo: titolo.trim(), data: today, contenuto: contenuto.trim() });
-          sendEmail(c.email, subject, html).catch(() => {});
+          getRenderedEmail('E10', { nome: c.nome, titolo: titolo.trim(), data: today }).then(({ subject, html }) => {
+            sendEmail(c.email!, subject, html).catch(() => {});
+          }).catch(() => {});
         }
       }
     }

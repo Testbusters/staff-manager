@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
-import { emailDocumentoDaFirmare } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -179,12 +179,13 @@ export async function POST(request: Request) {
       const { data: authUser } = await serviceClient.auth.admin.getUserById(collab.user_id);
       const email = authUser?.user?.email;
       if (email) {
-        const { subject, html } = emailDocumentoDaFirmare({
+        getRenderedEmail('E5', {
           nome: collab.nome ?? '',
           titoloDocumento: titolo.trim(),
           data: new Date().toLocaleDateString('it-IT'),
-        });
-        sendEmail(email, subject, html).catch(() => {});
+        }).then(({ subject, html }) => {
+          sendEmail(email, subject, html).catch(() => {});
+        }).catch(() => {});
       }
     }
   }

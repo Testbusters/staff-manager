@@ -7,8 +7,9 @@ import CommunityManager from '@/components/impostazioni/CommunityManager';
 import MemberStatusManager from '@/components/impostazioni/MemberStatusManager';
 import ContractTemplateManager from '@/components/impostazioni/ContractTemplateManager';
 import NotificationSettingsManager from '@/components/impostazioni/NotificationSettingsManager';
+import EmailTemplateManager from '@/components/impostazioni/EmailTemplateManager';
 
-type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche';
+type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail';
 
 export default async function ImpostazioniPage({
   searchParams,
@@ -34,12 +35,32 @@ export default async function ImpostazioniPage({
     : tab === 'collaboratori' ? 'collaboratori'
     : tab === 'contratti' ? 'contratti'
     : tab === 'notifiche' ? 'notifiche'
+    : tab === 'template_mail' ? 'template_mail'
     : 'utenti';
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  // Fetch email templates for the template_mail tab
+  const emailTemplates = activeTab === 'template_mail'
+    ? await serviceClient
+        .from('email_templates')
+        .select('*')
+        .order('event_group')
+        .order('key')
+        .then((r) => r.data ?? [])
+    : [];
+
+  const emailLayoutConfig = activeTab === 'template_mail'
+    ? await serviceClient
+        .from('email_layout_config')
+        .select('*')
+        .limit(1)
+        .single()
+        .then((r) => r.data ?? null)
+    : null;
 
   // Fetch notification settings for the notifiche tab
   const notificationSettings = activeTab === 'notifiche'
@@ -142,7 +163,7 @@ export default async function ImpostazioniPage({
     }`;
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className={activeTab === 'template_mail' ? 'p-6' : 'p-6 max-w-3xl'}>
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Impostazioni</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Gestione utenti, community e stato collaboratori.</p>
@@ -155,6 +176,7 @@ export default async function ImpostazioniPage({
         <Link href="?tab=collaboratori" className={tabCls('collaboratori')}>Collaboratori</Link>
         <Link href="?tab=contratti" className={tabCls('contratti')}>Contratti</Link>
         <Link href="?tab=notifiche" className={tabCls('notifiche')}>Notifiche</Link>
+        <Link href="?tab=template_mail" className={tabCls('template_mail')}>Template mail</Link>
       </div>
 
       {activeTab === 'utenti' && (
@@ -208,6 +230,23 @@ export default async function ImpostazioniPage({
               }[]}
             />
           </div>
+        </div>
+      )}
+
+      {activeTab === 'template_mail' && emailLayoutConfig && (
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-foreground">Template mail</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Modifica il contenuto delle email transazionali e il layout comune.
+            </p>
+          </div>
+          <EmailTemplateManager
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialTemplates={emailTemplates as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialLayout={emailLayoutConfig as any}
+          />
         </div>
       )}
     </div>

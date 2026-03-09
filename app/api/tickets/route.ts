@@ -8,7 +8,7 @@ import {
   getResponsabiliForUser,
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
-import { emailNuovoTicket } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -142,14 +142,15 @@ export async function POST(request: Request) {
           svc.from('notifications').insert(buildTicketCreatedNotification(resp.user_id, ticket.id, oggetto.trim())).then(() => {});
         }
         if (setting?.email_enabled && resp.email) {
-          const { subject, html } = emailNuovoTicket({
+          getRenderedEmail('E7', {
             nomeResponsabile: resp.nome,
             nomeCollaboratore: nomeColl,
             oggetto: oggetto.trim(),
             categoria: categoria.trim(),
             data: dataFormatted,
-          });
-          sendEmail(resp.email, subject, html).catch(() => {});
+          }).then(({ subject, html }) => {
+            sendEmail(resp.email!, subject, html).catch(() => {});
+          }).catch(() => {});
         }
       }
     }

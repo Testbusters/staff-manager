@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
-import { emailNuovoEvento } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 
 const WRITE_ROLES = ['amministrazione'];
 
@@ -103,8 +103,9 @@ export async function POST(request: Request) {
       const today = new Date().toLocaleDateString('it-IT');
       for (const c of collaboratori) {
         if (c.email) {
-          const { subject, html } = emailNuovoEvento({ nome: c.nome, titolo: titolo.trim(), data: today, descrizione: descrizione?.trim() });
-          sendEmail(c.email, subject, html).catch(() => {});
+          getRenderedEmail('E11', { nome: c.nome, titolo: titolo.trim(), data: today }).then(({ subject, html }) => {
+            sendEmail(c.email!, subject, html).catch(() => {});
+          }).catch(() => {});
         }
       }
     }

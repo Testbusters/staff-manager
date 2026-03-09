@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { sendEmail } from '@/lib/email';
-import { emailInvito } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 import { generateUsername, generateUniqueUsername } from '@/lib/username';
 import { generatePassword } from '@/lib/password';
 
@@ -171,8 +171,9 @@ export async function POST(request: Request) {
   }
 
   // 5. Send invitation email (fire-and-forget — never blocks the response)
-  const { subject, html } = emailInvito({ email, password, ruolo: role });
-  sendEmail(email, subject, html).catch(() => {});
+  getRenderedEmail('E8', { email, password, ruolo: role }).then(({ subject, html }) => {
+    sendEmail(email, subject, html).catch(() => {});
+  }).catch(() => {});
 
   return NextResponse.json({ email, password });
 }

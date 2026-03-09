@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { CONTRACT_TEMPLATE_DOCUMENT_TYPE, type ContractTemplateType } from '@/lib/types';
 import { buildContractVars, generateDocumentFromTemplate } from '@/lib/document-generation';
-import { emailDocumentoDaFirmare } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 import { sendEmail } from '@/lib/email';
 
 const schema = z.object({
@@ -167,13 +167,14 @@ export async function POST(request: Request) {
 
           // Send E5 notification email (fire-and-forget)
           if (user.email && d.nome) {
-            const { subject, html } = emailDocumentoDaFirmare({
+            getRenderedEmail('E5', {
               nome: d.nome,
               titoloDocumento: titolo,
               data: new Date().toLocaleDateString('it-IT'),
               link: `/documenti/${docId}`,
-            });
-            sendEmail(user.email, subject, html).catch(() => {});
+            }).then(({ subject, html }) => {
+              sendEmail(user.email!, subject, html).catch(() => {});
+            }).catch(() => {});
           }
         }
       }

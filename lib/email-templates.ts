@@ -11,7 +11,7 @@ const APP_URL = process.env.APP_URL ?? 'http://localhost:3000';
 const BRAND_COLOR = '#E8320A';
 
 // ── Shared layout ────────────────────────────────────────────
-function layout(bodyContent: string): string {
+export function layout(bodyContent: string): string {
   return `<!DOCTYPE html>
 <html lang="it">
 <head>

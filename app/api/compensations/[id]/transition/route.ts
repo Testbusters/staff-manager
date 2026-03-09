@@ -18,11 +18,7 @@ import {
   getResponsabiliForCommunity,
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
-import {
-  emailApprovato,
-  emailRifiutato,
-  emailPagato,
-} from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 
 const transitionSchema = z.object({
   action: z.enum([
@@ -179,22 +175,21 @@ export async function POST(
         const dataFormatted = comp.data_competenza
           ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
           : '';
-        const baseParams = {
-          nome: collabInfo.nome,
-          tipo: 'Compenso' as const,
-          importo: comp.importo_lordo ?? 0,
-          data: dataFormatted,
+        const emailKeyMap: Record<string, string> = {
+          approve: 'E2',
+          reject: 'E3',
+          mark_liquidated: 'E4',
         };
-        let emailPayload: { subject: string; html: string } | null = null;
-        if (action === 'approve') {
-          emailPayload = emailApprovato(baseParams);
-        } else if (action === 'reject') {
-          emailPayload = emailRifiutato(baseParams);
-        } else if (action === 'mark_liquidated') {
-          emailPayload = emailPagato({ nome: collabInfo.nome, tipo: 'Compenso', importo: comp.importo_lordo ?? 0, dataPagamento: dataFormatted });
-        }
-        if (emailPayload) {
-          sendEmail(collabInfo.email, emailPayload.subject, emailPayload.html).catch(() => {});
+        const emailKey = emailKeyMap[action];
+        if (emailKey) {
+          getRenderedEmail(emailKey, {
+            nome: collabInfo.nome,
+            tipo: 'Compenso',
+            importo: (comp.importo_lordo ?? 0).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' }),
+            data: dataFormatted,
+          }).then((payload) => {
+            sendEmail(collabInfo.email!, payload.subject, payload.html).catch(() => {});
+          }).catch(() => {});
         }
       }
     }

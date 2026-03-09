@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { buildReceiptVars, generateDocumentFromTemplate } from '@/lib/document-generation';
-import { emailDocumentoDaFirmare } from '@/lib/email-templates';
+import { getRenderedEmail } from '@/lib/email-template-service';
 import { sendEmail } from '@/lib/email';
 import { getNotificationSettings } from '@/lib/notification-helpers';
 
@@ -81,13 +81,14 @@ async function generateReceiptForCollab(
     const { data: authUser } = await svc.auth.admin.getUserById(collab.user_id);
     const email = authUser?.user?.email;
     if (email && collab.nome) {
-      const { subject, html } = emailDocumentoDaFirmare({
+      getRenderedEmail('E5', {
         nome: collab.nome,
         titoloDocumento: titolo,
         data: new Date().toLocaleDateString('it-IT'),
         link: `/documenti/${docId}`,
-      });
-      sendEmail(email, subject, html).catch(() => {});
+      }).then(({ subject, html }) => {
+        sendEmail(email, subject, html).catch(() => {});
+      }).catch(() => {});
     }
   }
 
