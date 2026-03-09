@@ -34,9 +34,7 @@ Each check has a specific, verifiable pass/fail condition.
 
 **What**: every DB field name mentioned in CLAUDE.md must exist in the current schema.
 **Run**: `ls supabase/migrations/ | tail -1` to identify the latest migration, then read it to confirm any field referenced in CLAUDE.md is current.
-**Specific risk pattern**: field renames across blocks. Check explicitly:
-- `grep -n "ha_figli_a_carico" CLAUDE.md` → must return 0 (renamed to `sono_un_figlio_a_carico` in Block 3)
-- After each block that renames a DB column: immediately update every mention in CLAUDE.md.
+**Specific risk pattern**: field renames across blocks. After each block that renames a DB column: immediately update every mention in CLAUDE.md.
 
 **Pass**: all field names in CLAUDE.md match the current schema.
 **Fail**: update the field name and add the rename to Known Patterns if non-obvious.

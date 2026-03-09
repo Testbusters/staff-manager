@@ -36,23 +36,27 @@ export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
 // ── Document ─────────────────────────────────────────────────
 export type DocumentType =
   | 'CONTRATTO_OCCASIONALE'
-  | 'CU';
+  | 'CU'
+  | 'RICEVUTA_PAGAMENTO';
 export type DocumentSignStatus = 'DA_FIRMARE' | 'FIRMATO' | 'NON_RICHIESTO';
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   CONTRATTO_OCCASIONALE: 'Contratto prestazione occasionale',
   CU:                    'Certificazione Unica',
+  RICEVUTA_PAGAMENTO:    'Ricevuta di pagamento',
 };
 
 // ── Contract template ─────────────────────────────────────────
-export type ContractTemplateType = 'OCCASIONALE';
+export type ContractTemplateType = 'OCCASIONALE' | 'RICEVUTA_PAGAMENTO';
 
 export const CONTRACT_TEMPLATE_LABELS: Record<ContractTemplateType, string> = {
-  OCCASIONALE: 'Prestazione occasionale',
+  OCCASIONALE:         'Contratto occasionale',
+  RICEVUTA_PAGAMENTO:  'Ricevuta di pagamento',
 };
 
 export const CONTRACT_TEMPLATE_DOCUMENT_TYPE: Record<ContractTemplateType, DocumentType> = {
-  OCCASIONALE: 'CONTRATTO_OCCASIONALE',
+  OCCASIONALE:        'CONTRATTO_OCCASIONALE',
+  RICEVUTA_PAGAMENTO: 'RICEVUTA_PAGAMENTO',
 };
 
 export interface ContractTemplate {
@@ -64,16 +68,18 @@ export interface ContractTemplate {
   uploaded_at: string;
 }
 
-export type DocumentMacroType = 'CONTRATTO' | 'CU';
+export type DocumentMacroType = 'CONTRATTO' | 'CU' | 'RICEVUTA';
 
 export const DOCUMENT_MACRO_TYPE: Record<DocumentType, DocumentMacroType> = {
   CONTRATTO_OCCASIONALE: 'CONTRATTO',
   CU:                    'CU',
+  RICEVUTA_PAGAMENTO:    'RICEVUTA',
 };
 
 export const DOCUMENT_MACRO_TYPE_LABELS: Record<DocumentMacroType, string> = {
   CONTRATTO: 'Contratto',
   CU:        'Certificazione Unica',
+  RICEVUTA:  'Ricevute',
 };
 
 export const DOCUMENT_SIGN_STATUS_LABELS: Record<DocumentSignStatus, string> = {
@@ -280,6 +286,7 @@ export interface Collaborator {
   tshirt_size: string | null;
   foto_profilo_url: string | null;
   data_ingresso: string | null;
+  data_fine_contratto: string | null;
   sono_un_figlio_a_carico: boolean;
   importo_lordo_massimale: number | null;
   figli_dettaglio: Record<string, unknown> | null;
@@ -305,6 +312,7 @@ export interface Compensation {
   liquidated_by: string | null;
   payment_reference: string | null;
   info_specifiche: string | null;
+  receipt_document_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -370,8 +378,20 @@ export interface Expense {
   liquidated_at: string | null;
   liquidated_by: string | null;
   payment_reference: string | null;
+  receipt_document_id?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ReceiptPreviewItem {
+  collaborator_id: string;
+  nome: string;
+  cognome: string;
+  lordo_compensi: number;
+  lordo_rimborsi: number;
+  totale_lordo: number;
+  ritenuta: number;
+  netto: number;
 }
 
 export interface ExpenseAttachment {

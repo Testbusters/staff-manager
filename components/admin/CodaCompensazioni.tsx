@@ -181,7 +181,7 @@ function ArchiveTable({
   );
 }
 
-export default function CodaCompensazioni({ compensations }: { compensations: CompensationRow[] }) {
+export default function CodaCompensazioni({ compensations, hasReceiptTemplate }: { compensations: CompensationRow[]; hasReceiptTemplate?: boolean }) {
   const router = useRouter();
   const [sortDir, setSortDir] = useState<SortDir>(null);
 
@@ -197,6 +197,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote]   = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
+  const [liquidateTarget, setLiquidateTarget] = useState<CompensationRow | null>(null);
   const [loading, setLoading] = useState(false);
 
   // ── Sections ───────────────────────────────────────────────────
@@ -257,7 +258,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
     } finally { setLoading(false); }
   }
 
-  async function doLiquidate(ids: string[]) {
+  async function doLiquidate(ids: string[], generateReceipt = false, compensationId?: string) {
     if (ids.length === 0) return;
     setLoading(true);
     try {
@@ -269,6 +270,17 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
       if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
       toast.success(ids.length === 1 ? 'Compenso liquidato.' : `${ids.length} compensi liquidati.`);
       setSelectedApprovatiIds(new Set());
+      setLiquidateTarget(null);
+
+      // Best-effort receipt generation for single item
+      if (generateReceipt && compensationId) {
+        await fetch('/api/documents/generate-receipts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'single', compensation_id: compensationId }),
+        }).catch(() => {});
+      }
+
       router.refresh();
     } finally { setLoading(false); }
   }
@@ -523,7 +535,7 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
                           <Button
                             size="sm" variant="ghost"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                            onClick={() => doLiquidate([comp.id])}
+                            onClick={() => setLiquidateTarget(comp)}
                             disabled={loading}
                             aria-label="Liquida"
                           >
@@ -645,6 +657,48 @@ export default function CodaCompensazioni({ compensations }: { compensations: Co
               disabled={loading || rejectionNote.trim().length === 0}
             >
               Conferma rifiuto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Single liquidate confirmation dialog ─────────────────── */}
+      <Dialog open={liquidateTarget !== null} onOpenChange={(open) => { if (!open) setLiquidateTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conferma liquidazione</DialogTitle>
+            <DialogDescription>
+              Stai per liquidare il compenso di <strong>{liquidateTarget?.collabName}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          {liquidateTarget && (
+            <div className="space-y-3">
+              <div className="rounded-lg bg-muted border border-border px-4 py-3 space-y-1.5 text-sm">
+                {liquidateTarget.nome_servizio_ruolo && (
+                  <p className="text-muted-foreground">{liquidateTarget.nome_servizio_ruolo}</p>
+                )}
+                <p className="font-semibold text-foreground">
+                  Importo lordo: {liquidateTarget.importo_lordo != null ? `€\u202f${liquidateTarget.importo_lordo.toFixed(2)}` : '—'}
+                </p>
+              </div>
+              {hasReceiptTemplate && (
+                <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 px-3 py-2 text-xs text-blue-800 dark:text-blue-200">
+                  Verrà generata una ricevuta di pagamento per {liquidateTarget.collabName}.
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setLiquidateTarget(null)}>Annulla</Button>
+            <Button
+              className="bg-brand hover:bg-brand/90 text-white"
+              disabled={loading}
+              onClick={() => {
+                if (!liquidateTarget) return;
+                doLiquidate([liquidateTarget.id], !!hasReceiptTemplate, liquidateTarget.id);
+              }}
+            >
+              Conferma liquidazione
             </Button>
           </DialogFooter>
         </DialogContent>

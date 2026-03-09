@@ -1,8 +1,7 @@
 /**
- * Unit tests for Block 10:
- * - validTipi now only allows CONTRATTO_OCCASIONALE and CU
- * - DocumentType / DocumentMacroType no longer include RICEVUTA_PAGAMENTO
- * - DOCUMENT_MACRO_TYPE mapping is consistent
+ * Unit tests for Block 10 (updated in Digital Signature block):
+ * - validTipi covers CONTRATTO_OCCASIONALE, CU, and RICEVUTA_PAGAMENTO
+ * - DOCUMENT_MACRO_TYPE mapping includes RICEVUTA
  */
 import { describe, it, expect } from 'vitest';
 import {
@@ -38,12 +37,12 @@ describe('documents validTipi', () => {
 });
 
 describe('DocumentType labels', () => {
-  it('has exactly 2 entries', () => {
-    expect(Object.keys(DOCUMENT_TYPE_LABELS).length).toBe(2);
+  it('has exactly 3 entries', () => {
+    expect(Object.keys(DOCUMENT_TYPE_LABELS).length).toBe(3);
   });
 
-  it('does not include RICEVUTA_PAGAMENTO', () => {
-    expect('RICEVUTA_PAGAMENTO' in DOCUMENT_TYPE_LABELS).toBe(false);
+  it('includes RICEVUTA_PAGAMENTO', () => {
+    expect('RICEVUTA_PAGAMENTO' in DOCUMENT_TYPE_LABELS).toBe(true);
   });
 });
 
@@ -56,11 +55,15 @@ describe('DocumentMacroType', () => {
     expect(DOCUMENT_MACRO_TYPE['CU']).toBe('CU');
   });
 
-  it('has exactly 2 macro labels', () => {
-    expect(Object.keys(DOCUMENT_MACRO_TYPE_LABELS).length).toBe(2);
+  it('maps RICEVUTA_PAGAMENTO → RICEVUTA', () => {
+    expect(DOCUMENT_MACRO_TYPE['RICEVUTA_PAGAMENTO']).toBe('RICEVUTA');
   });
 
-  it('does not have RICEVUTA_PAGAMENTO macro label', () => {
-    expect('RICEVUTA_PAGAMENTO' in DOCUMENT_MACRO_TYPE_LABELS).toBe(false);
+  it('has exactly 3 macro labels', () => {
+    expect(Object.keys(DOCUMENT_MACRO_TYPE_LABELS).length).toBe(3);
+  });
+
+  it('has RICEVUTA macro label', () => {
+    expect('RICEVUTA' in DOCUMENT_MACRO_TYPE_LABELS).toBe(true);
   });
 });

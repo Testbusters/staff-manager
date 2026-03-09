@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CodaCompensazioni from '@/components/admin/CodaCompensazioni';
 import CodaRimborsi from '@/components/admin/CodaRimborsi';
+import CodaReceiptButton from '@/components/admin/CodaReceiptButton';
 
 export default async function CodaPage({
   searchParams,
@@ -32,7 +33,7 @@ export default async function CodaPage({
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const [compsRes, expsRes] = await Promise.all([
+  const [compsRes, expsRes, receiptTemplateRes] = await Promise.all([
     svc
       .from('compensations')
       .select('id, collaborator_id, importo_lordo, importo_netto, data_competenza, nome_servizio_ruolo, stato, rejection_note, created_at')
@@ -43,7 +44,14 @@ export default async function CodaPage({
       .select('id, collaborator_id, importo, categoria, data_spesa, stato, rejection_note, created_at')
       .in('stato', ['IN_ATTESA', 'APPROVATO', 'RIFIUTATO', 'LIQUIDATO'])
       .order('created_at', { ascending: true }),
+    svc
+      .from('contract_templates')
+      .select('tipo')
+      .eq('tipo', 'RICEVUTA_PAGAMENTO')
+      .maybeSingle(),
   ]);
+
+  const hasReceiptTemplate = !!receiptTemplateRes.data;
 
   // Two-step collaborator join (no PostgREST embedded join)
   const allCollabIds = [
@@ -87,11 +95,14 @@ export default async function CodaPage({
 
   return (
     <div className="p-6 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-foreground">Coda lavoro</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Gestione compensi e rimborsi — approvazione, rifiuto e liquidazione.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Coda lavoro</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Gestione compensi e rimborsi — approvazione, rifiuto e liquidazione.
+          </p>
+        </div>
+        <CodaReceiptButton />
       </div>
 
       {/* Tab bar */}
@@ -111,10 +122,10 @@ export default async function CodaPage({
       </div>
 
       {activeTab === 'compensi' && (
-        <CodaCompensazioni compensations={compensations} />
+        <CodaCompensazioni compensations={compensations} hasReceiptTemplate={hasReceiptTemplate} />
       )}
       {activeTab === 'rimborsi' && (
-        <CodaRimborsi expenses={expenses} />
+        <CodaRimborsi expenses={expenses} hasReceiptTemplate={hasReceiptTemplate} />
       )}
     </div>
   );

@@ -4,6 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { CONTRACT_TEMPLATE_DOCUMENT_TYPE, type ContractTemplateType } from '@/lib/types';
+import { buildContractVars, generateDocumentFromTemplate } from '@/lib/document-generation';
+import { emailDocumentoDaFirmare } from '@/lib/email-templates';
+import { sendEmail } from '@/lib/email';
 
 const schema = z.object({
   nome:                z.string().min(1).max(100),
@@ -23,32 +26,6 @@ const schema = z.object({
   sono_un_figlio_a_carico:   z.boolean(),
 });
 
-function formatDate(isoDate: string | null | undefined): string {
-  if (!isoDate) return '';
-  try { return new Date(isoDate).toLocaleDateString('it-IT'); } catch { return isoDate ?? ''; }
-}
-
-async function generateContract(
-  templateBuffer: Buffer,
-  vars: Record<string, string>,
-): Promise<Buffer | null> {
-  try {
-    const [PizZip, { default: Docxtemplater }] = await Promise.all([
-      import('pizzip').then((m) => m.default),
-      import('docxtemplater'),
-    ]);
-    const zip = new PizZip(templateBuffer);
-    const doc = new Docxtemplater(zip, {
-      paragraphLoop: true,
-      linebreaks: true,
-      nullGetter: () => '',
-    });
-    doc.render(vars);
-    return doc.getZip().generate({ type: 'nodebuffer', compression: 'DEFLATE' }) as Buffer;
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -136,85 +113,72 @@ export async function POST(request: Request) {
     tipoContratto = newCollab.tipo_contratto;
   }
 
-  // Generate contract (best-effort — failure does not block onboarding completion)
+  // Generate contract PDF (best-effort — failure does not block onboarding completion)
   let documentId: string | null = null;
   let downloadUrl: string | null = null;
 
   if (tipoContratto) {
-    const tipo = tipoContratto as ContractTemplateType;
+    try {
+      const tipo = tipoContratto as ContractTemplateType;
+      const collabForVars = {
+        nome: d.nome,
+        cognome: d.cognome,
+        codice_fiscale: d.codice_fiscale.toUpperCase(),
+        data_nascita: d.data_nascita,
+        luogo_nascita: d.luogo_nascita,
+        comune: d.comune,
+        indirizzo: d.indirizzo,
+        civico_residenza: d.civico_residenza,
+        data_fine_contratto: existingCollab ? (existingCollab as { data_fine_contratto?: string | null }).data_fine_contratto ?? null : null,
+      };
+      const vars = buildContractVars(collabForVars);
+      const pdfBuffer = await generateDocumentFromTemplate(admin, tipo, vars);
 
-    const { data: tplRow } = await admin
-      .from('contract_templates')
-      .select('file_url')
-      .eq('tipo', tipo)
-      .maybeSingle();
+      if (pdfBuffer) {
+        const docId = crypto.randomUUID();
+        const anno = new Date().getFullYear();
+        const fileName = `contratto_occasionale_${anno}.pdf`;
+        const storagePath = `${user.id}/${docId}/${fileName}`;
 
-    if (tplRow) {
-      const { data: templateBlob } = await admin.storage
-        .from('contracts')
-        .download(tplRow.file_url);
+        const { error: uploadErr } = await admin.storage
+          .from('documents')
+          .upload(storagePath, pdfBuffer, { contentType: 'application/pdf', upsert: false });
 
-      const templateBuffer = templateBlob
-        ? Buffer.from(await templateBlob.arrayBuffer())
-        : null;
+        if (!uploadErr) {
+          const docTipo = CONTRACT_TEMPLATE_DOCUMENT_TYPE[tipo];
+          const titolo = `Contratto ${anno}`;
+          await admin.from('documents').insert({
+            id:                 docId,
+            collaborator_id:    collaboratorId,
+            community_id:       null,
+            tipo:               docTipo,
+            titolo,
+            anno,
+            file_original_url:  storagePath,
+            file_original_name: fileName,
+            stato_firma:        'DA_FIRMARE',
+          });
+          documentId = docId;
 
-      if (templateBuffer) {
-        const BLANK = '_______________';
-        const vars: Record<string, string> = {
-          nome:            d.nome,
-          cognome:         d.cognome,
-          codice_fiscale:  d.codice_fiscale.toUpperCase(),
-          data_nascita:    formatDate(d.data_nascita),
-          luogo_nascita:   d.luogo_nascita,
-          comune:          d.comune,
-          indirizzo:       d.indirizzo,
-          email:           user.email ?? '',
-          telefono:        d.telefono,
-          iban:            d.iban,
-          compenso_lordo:  BLANK,
-          data_inizio:     BLANK,
-          data_fine:       BLANK,
-          numero_rate:     BLANK,
-          importo_rata:    BLANK,
-        };
-
-        const generated = await generateContract(templateBuffer, vars);
-        if (generated) {
-          const docId = crypto.randomUUID();
-          const anno = new Date().getFullYear();
-          const fileName = `contratto_${tipo.toLowerCase()}_${anno}.docx`;
-          const storagePath = `${user.id}/${docId}/${fileName}`;
-
-          const { error: uploadErr } = await admin.storage
+          const { data: signedData } = await admin.storage
             .from('documents')
-            .upload(storagePath, generated, {
-              contentType:
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-              upsert: false,
-            });
+            .createSignedUrl(storagePath, 3600);
+          downloadUrl = signedData?.signedUrl ?? null;
 
-          if (!uploadErr) {
-            const docTipo = CONTRACT_TEMPLATE_DOCUMENT_TYPE[tipo];
-            await admin.from('documents').insert({
-              id:                 docId,
-              collaborator_id:    collaboratorId,
-              community_id:       null,
-              tipo:               docTipo,
-              titolo:             `Contratto ${anno}`,
-              anno,
-              file_original_url:  storagePath,
-              file_original_name: fileName,
-              stato_firma:        'DA_FIRMARE',
+          // Send E5 notification email (fire-and-forget)
+          if (user.email && d.nome) {
+            const { subject, html } = emailDocumentoDaFirmare({
+              nome: d.nome,
+              titoloDocumento: titolo,
+              data: new Date().toLocaleDateString('it-IT'),
+              link: `/documenti/${docId}`,
             });
-            documentId = docId;
-
-            const { data: signedData } = await admin.storage
-              .from('documents')
-              .createSignedUrl(storagePath, 3600);
-            downloadUrl = signedData?.signedUrl ?? null;
+            sendEmail(user.email, subject, html).catch(() => {});
           }
         }
       }
+    } catch {
+      // Best-effort — contract generation failure never blocks onboarding
     }
   }
 

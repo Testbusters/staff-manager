@@ -180,7 +180,7 @@ function ArchiveTable({
   );
 }
 
-export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
+export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expenses: ExpenseRow[]; hasReceiptTemplate?: boolean }) {
   const router = useRouter();
   const [sortDir, setSortDir] = useState<SortDir>(null);
 
@@ -196,6 +196,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote]   = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
+  const [liquidateTarget, setLiquidateTarget] = useState<ExpenseRow | null>(null);
   const [loading, setLoading] = useState(false);
 
   // ── Sections ───────────────────────────────────────────────────
@@ -256,7 +257,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
     } finally { setLoading(false); }
   }
 
-  async function doLiquidate(ids: string[]) {
+  async function doLiquidate(ids: string[], generateReceipt = false, expenseId?: string) {
     if (ids.length === 0) return;
     setLoading(true);
     try {
@@ -268,6 +269,17 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
       if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
       toast.success(ids.length === 1 ? 'Rimborso liquidato.' : `${ids.length} rimborsi liquidati.`);
       setSelectedApprovatiIds(new Set());
+      setLiquidateTarget(null);
+
+      // Best-effort receipt generation for single item
+      if (generateReceipt && expenseId) {
+        fetch('/api/documents/generate-receipts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'single', expense_id: expenseId }),
+        }).catch(() => {});
+      }
+
       router.refresh();
     } finally { setLoading(false); }
   }
@@ -522,7 +534,7 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
                           <Button
                             size="sm" variant="ghost"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                            onClick={() => doLiquidate([exp.id])}
+                            onClick={() => setLiquidateTarget(exp)}
                             disabled={loading}
                             aria-label="Liquida"
                           >
@@ -644,6 +656,55 @@ export default function CodaRimborsi({ expenses }: { expenses: ExpenseRow[] }) {
               disabled={loading || rejectionNote.trim().length === 0}
             >
               Conferma rifiuto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Liquidate confirm dialog ─────────────────────────────── */}
+      <Dialog open={liquidateTarget !== null} onOpenChange={(open) => { if (!open) setLiquidateTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conferma liquidazione</DialogTitle>
+            <DialogDescription>
+              Stai per liquidare il rimborso di{' '}
+              <span className="font-medium text-foreground">{liquidateTarget?.collabName}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          {liquidateTarget && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm space-y-1">
+                {liquidateTarget.categoria && (
+                  <p><span className="text-muted-foreground">Categoria:</span> {liquidateTarget.categoria}</p>
+                )}
+                {liquidateTarget.data_spesa && (
+                  <p><span className="text-muted-foreground">Data:</span> {new Date(liquidateTarget.data_spesa).toLocaleDateString('it-IT')}</p>
+                )}
+                <p><span className="text-muted-foreground">Importo:</span> <span className="font-medium">{liquidateTarget.importo != null ? `€\u202f${liquidateTarget.importo.toFixed(2)}` : '—'}</span></p>
+              </div>
+              {hasReceiptTemplate && (
+                <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 px-4 py-3">
+                  <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Ricevuta di pagamento</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                    Una ricevuta verrà generata automaticamente e inviata al collaboratore.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setLiquidateTarget(null)} disabled={loading}>Annulla</Button>
+            <Button
+              className="bg-brand hover:bg-brand/90 text-white"
+              disabled={loading}
+              onClick={() => {
+                if (!liquidateTarget) return;
+                const target = liquidateTarget;
+                setLiquidateTarget(null);
+                doLiquidate([target.id], !!hasReceiptTemplate, target.id);
+              }}
+            >
+              Conferma liquidazione
             </Button>
           </DialogFooter>
         </DialogContent>

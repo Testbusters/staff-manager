@@ -117,6 +117,7 @@ export default async function DocumentDetailPage({
         <DocumentSignFlow
           document={doc as Document}
           originalUrl={originalUrl}
+          precompiledUrl={originalUrl}
           firmatoUrl={firmatoUrl}
           canSign={canSign}
         />

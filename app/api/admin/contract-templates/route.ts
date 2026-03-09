@@ -53,14 +53,15 @@ export async function POST(request: Request) {
   const tipo = formData.get('tipo') as string;
   const file = formData.get('file') as File | null;
 
-  if (!tipo || tipo !== 'OCCASIONALE') {
+  const VALID_TIPOS = ['OCCASIONALE', 'RICEVUTA_PAGAMENTO'];
+  if (!tipo || !VALID_TIPOS.includes(tipo)) {
     return NextResponse.json({ error: 'Tipo non valido' }, { status: 400 });
   }
   if (!file) return NextResponse.json({ error: 'File mancante' }, { status: 400 });
 
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext !== 'docx') {
-    return NextResponse.json({ error: 'Solo file .docx supportati' }, { status: 400 });
+  const mimeType = file.type;
+  if (mimeType !== 'application/pdf') {
+    return NextResponse.json({ error: 'Solo file PDF supportati' }, { status: 400 });
   }
 
   const admin = createClient(
@@ -68,13 +69,13 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const storagePath = `templates/${tipo.toLowerCase()}.docx`;
+  const storagePath = `templates/${tipo.toLowerCase()}.pdf`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await admin.storage
     .from('contracts')
     .upload(storagePath, buffer, {
-      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      contentType: 'application/pdf',
       upsert: true,
     });
 
