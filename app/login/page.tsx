@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import AppLogo from '@/components/ui/AppLogo';
 
 const TEST_USERS = [
   { role: 'Collaboratore',                    email: 'collaboratore_test@test.com' },
@@ -58,9 +58,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo / Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand mb-4">
-            <Users className="h-5 w-5 text-white" />
-          </div>
+          <AppLogo className="w-14 h-14 mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-foreground">Staff Manager</h1>
           <p className="text-sm text-muted-foreground mt-1">Accedi alla tua area personale</p>
         </div>

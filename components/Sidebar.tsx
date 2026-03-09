@@ -21,6 +21,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   LifeBuoy, LayoutGrid, SlidersHorizontal, MessageSquarePlus,
 };
 import NotificationBell from '@/components/NotificationBell';
+import AppLogo from '@/components/ui/AppLogo';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -68,9 +69,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
     <aside className="flex h-screen w-56 flex-col bg-sidebar border-r border-sidebar-border flex-shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-sidebar-border">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand flex-shrink-0">
-          <Users className="h-5 w-5 text-white" />
-        </div>
+        <AppLogo className="w-8 h-8 flex-shrink-0" />
         <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
         <NotificationBell />
       </div>
