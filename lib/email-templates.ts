@@ -82,9 +82,9 @@ function highlight(rows: { label: string; value: string }[]): string {
   </table>`;
 }
 
-function ctaButton(label: string): string {
+function ctaButton(label: string, href?: string): string {
   return `<div style="text-align:center;margin:28px 0 8px;">
-    <a href="${APP_URL}"
+    <a href="${href ?? APP_URL}"
        style="display:inline-block;background:${BRAND_COLOR};color:#ffffff;text-decoration:none;
               font-size:14px;font-weight:600;padding:12px 32px;border-radius:8px;letter-spacing:0.02em;">
       ${label}
@@ -209,6 +209,7 @@ export function emailDocumentoDaFirmare(p: {
   nome: string;
   titoloDocumento: string;
   data: string;
+  link?: string;
 }): { subject: string; html: string } {
   const body = `
     ${greeting(p.nome)}
@@ -217,8 +218,8 @@ export function emailDocumentoDaFirmare(p: {
       { label: 'Documento', value: p.titoloDocumento },
       { label: 'Caricato il', value: p.data },
     ])}
-    ${bodyText('Accedi all\'app, scarica il documento, firmalo e carica la versione firmata.')}
-    ${ctaButton('Firma il documento')}
+    ${bodyText('Accedi all\'app, visualizza il documento e apporvi la tua firma digitale o carica la versione firmata.')}
+    ${ctaButton('Apri documento', p.link ? `${APP_URL}${p.link}` : undefined)}
   `;
   return {
     subject: 'Hai un nuovo documento da firmare',

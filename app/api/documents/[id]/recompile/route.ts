@@ -1,0 +1,105 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { buildContractVars, buildReceiptVars, generateDocumentFromTemplate } from '@/lib/document-generation';
+import type { ContractTemplateType } from '@/lib/types';
+
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('role, is_active, member_status')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
+  if (!['collaboratore', 'responsabile_compensi'].includes(profile.role)) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+  }
+  if (profile.member_status === 'uscente_senza_compenso') {
+    return NextResponse.json({ error: 'Non puoi ricompilare in questo stato' }, { status: 403 });
+  }
+
+  const { id } = await params;
+
+  const { data: doc, error: fetchError } = await supabase
+    .from('documents')
+    .select('id, stato_firma, collaborator_id, tipo, file_original_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !doc) return NextResponse.json({ error: 'Documento non trovato' }, { status: 404 });
+  if (doc.stato_firma !== 'DA_FIRMARE') {
+    return NextResponse.json({ error: 'Il documento non è in stato DA_FIRMARE' }, { status: 400 });
+  }
+
+  const svc = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // Fetch full collaborator data
+  const { data: collab } = await svc
+    .from('collaborators')
+    .select('nome, cognome, codice_fiscale, data_nascita, luogo_nascita, comune, indirizzo, civico_residenza, data_fine_contratto')
+    .eq('id', doc.collaborator_id)
+    .single();
+
+  if (!collab) return NextResponse.json({ error: 'Collaboratore non trovato' }, { status: 404 });
+
+  // Map document tipo to template type
+  const templateType: ContractTemplateType | null =
+    doc.tipo === 'CONTRATTO_OCCASIONALE' ? 'OCCASIONALE'
+    : doc.tipo === 'RICEVUTA_PAGAMENTO' ? 'RICEVUTA_PAGAMENTO'
+    : null;
+
+  if (!templateType) {
+    return NextResponse.json({ error: 'Tipo documento non supportato per ricompilazione' }, { status: 400 });
+  }
+
+  let vars: Record<string, string>;
+
+  if (templateType === 'RICEVUTA_PAGAMENTO') {
+    // For receipts, aggregate the collaborator's LIQUIDATO items without a receipt
+    const [compsRes, expsRes] = await Promise.all([
+      svc.from('compensations').select('importo_lordo, ritenuta_acconto').eq('collaborator_id', doc.collaborator_id).eq('stato', 'LIQUIDATO').is('receipt_document_id', null),
+      svc.from('expense_reimbursements').select('importo').eq('collaborator_id', doc.collaborator_id).eq('stato', 'LIQUIDATO').is('receipt_document_id', null),
+    ]);
+    const lordoCompensi = (compsRes.data ?? []).reduce((s, c) => s + (c.importo_lordo ?? 0), 0);
+    const lordoRimborsi = (expsRes.data ?? []).reduce((s, e) => s + (e.importo ?? 0), 0);
+    const totaleLordo = lordoCompensi + lordoRimborsi;
+    const ritenuta = lordoCompensi * 0.2; // 20% withholding on compensi only
+    const netto = totaleLordo - ritenuta;
+    vars = buildReceiptVars(collab, { lordo_compensi: lordoCompensi, lordo_rimborsi: lordoRimborsi, totale_lordo: totaleLordo, ritenuta, netto });
+  } else {
+    vars = buildContractVars(collab);
+  }
+
+  const pdfBuffer = await generateDocumentFromTemplate(svc, templateType, vars);
+  if (!pdfBuffer) {
+    return NextResponse.json({ error: 'Impossibile generare il documento. Verifica che il template sia caricato.' }, { status: 500 });
+  }
+
+  // Overwrite file_original_url with new content
+  const { error: uploadErr } = await svc.storage
+    .from('documents')
+    .upload(doc.file_original_url, pdfBuffer, { contentType: 'application/pdf', upsert: true });
+
+  if (uploadErr) {
+    return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+  }
+
+  // Return a fresh signed URL (1h TTL)
+  const { data: signedData } = await svc.storage
+    .from('documents')
+    .createSignedUrl(doc.file_original_url, 3600);
+
+  return NextResponse.json({ signedUrl: signedData?.signedUrl ?? null });
+}

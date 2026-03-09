@@ -55,6 +55,7 @@ export default function CreateUserForm() {
   const [telefono, setTelefono]       = useState('');
   const [intestatarioPagamento, setIntestatarioPagamento] = useState('');
   const [dataIngresso, setDataIngresso] = useState('');
+  const [dataFineContratto, setDataFineContratto] = useState('');
 
   // Tipo rapporto: always OCCASIONALE
 
@@ -133,6 +134,7 @@ export default function CreateUserForm() {
         telefono:            telefono.trim() || null,
         intestatario_pagamento: intestatarioPagamento.trim() || null,
         data_ingresso:       dataIngresso || null,
+        data_fine_contratto: dataFineContratto || null,
       });
     }
 
@@ -154,7 +156,7 @@ export default function CreateUserForm() {
     setNome(''); setCognome(''); setUsername(''); setUsernameManuallySet(false);
     setCodiceFiscale(''); setDataNascita('');
     setLuogoNascita(''); setProvinciaNascita(''); setComuneRes(''); setPrvinciaRes('');
-    setIndirizzo(''); setCivico(''); setTelefono(''); setIntestatarioPagamento(''); setDataIngresso('');
+    setIndirizzo(''); setCivico(''); setTelefono(''); setIntestatarioPagamento(''); setDataIngresso(''); setDataFineContratto('');
   };
 
   if (credentials) {
@@ -283,6 +285,22 @@ export default function CreateUserForm() {
               )}
             </div>
             <span className="text-xs text-muted-foreground ml-4">Tipo fisso</span>
+          </div>
+        </div>
+      )}
+
+      {/* Data fine contratto — in both modes */}
+      {needsContract && (
+        <div>
+          <p className={sectionTitle}>Durata contratto</p>
+          <div>
+            <label className={labelCls}>Data fine contratto</label>
+            <Input type="date" value={dataFineContratto}
+              onChange={(e) => setDataFineContratto(e.target.value)}
+              disabled={loading} />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Usata per compilare automaticamente il template PDF del contratto.
+            </p>
           </div>
         </div>
       )}

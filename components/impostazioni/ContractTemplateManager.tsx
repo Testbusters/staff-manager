@@ -13,32 +13,45 @@ type Template = {
 
 type Props = { templates: Template[] };
 
-const PLACEHOLDERS = [
-  { key: '{nome}',           desc: 'Nome collaboratore' },
-  { key: '{cognome}',        desc: 'Cognome collaboratore' },
-  { key: '{codice_fiscale}', desc: 'Codice fiscale' },
-  { key: '{data_nascita}',   desc: 'Data di nascita' },
-  { key: '{luogo_nascita}',  desc: 'Luogo di nascita' },
-  { key: '{comune}',         desc: 'Comune di residenza' },
-  { key: '{indirizzo}',      desc: 'Via e numero civico' },
-  { key: '{email}',          desc: 'Email collaboratore' },
-  { key: '{telefono}',       desc: 'Telefono collaboratore' },
-  { key: '{iban}',           desc: 'IBAN' },
-  { key: '{compenso_lordo}', desc: 'Compenso lordo (€)' },
-  { key: '{data_inizio}',    desc: 'Data inizio contratto' },
-  { key: '{data_fine}',      desc: 'Data fine contratto' },
-  { key: '{numero_rate}',    desc: 'Numero di rate' },
-  { key: '{importo_rata}',   desc: 'Importo rata (€)' },
+const CONTRATTO_MARKERS = [
+  { key: '{nome}',                desc: 'Nome collaboratore' },
+  { key: '{cognome}',             desc: 'Cognome collaboratore' },
+  { key: '{codice_fiscale}',      desc: 'Codice fiscale' },
+  { key: '{data_nascita}',        desc: 'Data di nascita' },
+  { key: '{citta_nascita}',       desc: 'Città di nascita (luogo_nascita)' },
+  { key: '{città_residenza}',     desc: 'Città di residenza (comune)' },
+  { key: '{indirizzo_residenza}', desc: 'Via / Piazza' },
+  { key: '{civico_residenza}',    desc: 'Numero civico' },
+  { key: '{data_fine_contratto}', desc: 'Data fine contratto' },
+  { key: '{data_corrente}',       desc: 'Data di oggi (DD/MM/AAAA)' },
+  { key: '{firma}',               desc: 'Firma collaboratore (PNG)' },
+];
+
+const RICEVUTA_MARKERS = [
+  { key: '{nome}',                                desc: 'Nome collaboratore' },
+  { key: '{cognome}',                             desc: 'Cognome collaboratore' },
+  { key: '{codice_fiscale}',                      desc: 'Codice fiscale' },
+  { key: '{data_nascita}',                        desc: 'Data di nascita' },
+  { key: '{citta_residenza}',                     desc: 'Città di residenza (comune)' },
+  { key: '{indirizzo_residenza}',                 desc: 'Via / Piazza' },
+  { key: '{totale_lordo_liquidato}',              desc: 'Totale lordo liquidato (€)' },
+  { key: '{totale_ritenuta_acconto_liquidato}',   desc: 'Ritenuta d\'acconto (20%)' },
+  { key: '{totale_netto_liquidato}',              desc: 'Netto liquidato (€)' },
+  { key: '{citta_residenza_collaboratore}',       desc: 'Città per luogo di firma (comune)' },
+  { key: '{data_corrente}',                       desc: 'Data di oggi (DD/MM/AAAA)' },
+  { key: '{firma_collaboratore}',                 desc: 'Firma collaboratore (PNG)' },
 ];
 
 const sectionCls = 'rounded-2xl bg-card border border-border';
 const sectionHeader = 'px-5 py-4 border-b border-border';
 
+const TEMPLATE_TIPOS: ContractTemplateType[] = ['OCCASIONALE', 'RICEVUTA_PAGAMENTO'];
+
 export default function ContractTemplateManager({ templates: initial }: Props) {
   const [templates, setTemplates] = useState<Template[]>(initial);
   const [uploading, setUploading] = useState<ContractTemplateType | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showPlaceholders, setShowPlaceholders] = useState(false);
+  const [showMarkers, setShowMarkers] = useState(false);
 
   const templateMap = Object.fromEntries(templates.map((t) => [t.tipo, t]));
 
@@ -58,7 +71,6 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
       return;
     }
 
-    // Refresh template list
     const refreshRes = await fetch('/api/admin/contract-templates');
     const refreshData = await refreshRes.json();
     setTemplates(refreshData.templates ?? []);
@@ -66,21 +78,21 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Templates */}
+      {/* Template slots */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Template contratti</h2>
+          <h2 className="text-sm font-medium text-foreground">Template documenti</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Carica un file .docx per ogni tipologia. Il template viene sostituito ad ogni caricamento.
+            Carica un file PDF per ogni tipo. Ogni caricamento sostituisce il template precedente.
+            Solo file PDF.
           </p>
         </div>
-        <div className="p-5">
-          {(() => {
-            const tipo: ContractTemplateType = 'OCCASIONALE';
+        <div className="p-5 space-y-3">
+          {TEMPLATE_TIPOS.map((tipo) => {
             const tpl = templateMap[tipo];
             const isUploading = uploading === tipo;
             return (
-              <div className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
+              <div key={tipo} className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS[tipo]}</p>
                   {tpl ? (
@@ -102,7 +114,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                   {isUploading ? 'Caricamento…' : tpl ? 'Sostituisci' : 'Carica'}
                   <input
                     type="file"
-                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    accept="application/pdf"
                     className="hidden"
                     disabled={isUploading}
                     onChange={(e) => {
@@ -114,7 +126,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                 </label>
               </div>
             );
-          })()}
+          })}
           {error && (
             <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">
               {error}
@@ -123,41 +135,66 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
         </div>
       </div>
 
-      {/* Placeholders reference */}
+      {/* Markers reference — collapsible */}
       <div className={sectionCls}>
         <Button
           type="button"
           variant="ghost"
-          onClick={() => setShowPlaceholders((v) => !v)}
+          onClick={() => setShowMarkers((v) => !v)}
           className="w-full flex items-center justify-between px-5 py-4 text-left h-auto rounded-none"
         >
           <div>
-            <h2 className="text-sm font-medium text-foreground">Segnaposto disponibili</h2>
+            <h2 className="text-sm font-medium text-foreground">Marcatori disponibili</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Inserisci questi segnaposto nel .docx — verranno sostituiti automaticamente.
+              Inserisci questi marcatori nel PDF template — verranno sostituiti automaticamente.
             </p>
           </div>
           <svg
-            className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ml-4 ${showPlaceholders ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ml-4 ${showMarkers ? 'rotate-180' : ''}`}
             fill="none" viewBox="0 0 24 24" stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </Button>
-        {showPlaceholders && (
-          <div className="border-t border-border px-5 pb-5">
-            <div className="mt-4 grid grid-cols-1 gap-1.5">
-              {PLACEHOLDERS.map(({ key, desc }) => (
-                <div key={key} className="flex items-center gap-3 text-xs">
-                  <code className="rounded bg-muted border border-border px-2 py-0.5 text-blue-700 dark:text-blue-300 font-mono flex-shrink-0">
-                    {key}
-                  </code>
-                  <span className="text-muted-foreground">{desc}</span>
-                </div>
-              ))}
+
+        {showMarkers && (
+          <div className="border-t border-border px-5 pb-5 space-y-6">
+            {/* Contratto section */}
+            <div className="mt-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Contratto occasionale
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {CONTRATTO_MARKERS.map(({ key, desc }) => (
+                  <div key={key} className="flex items-center gap-3 text-xs">
+                    <code className="rounded bg-muted border border-border px-2 py-0.5 text-blue-700 dark:text-blue-300 font-mono flex-shrink-0">
+                      {key}
+                    </code>
+                    <span className="text-muted-foreground">{desc}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              Sintassi: segnaposto tra singole graffe. Es.: <code className="text-muted-foreground">&#123;nome&#125;</code>
+
+            {/* Ricevuta section */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Ricevuta di pagamento
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {RICEVUTA_MARKERS.map(({ key, desc }) => (
+                  <div key={key} className="flex items-center gap-3 text-xs">
+                    <code className="rounded bg-muted border border-border px-2 py-0.5 text-blue-700 dark:text-blue-300 font-mono flex-shrink-0">
+                      {key}
+                    </code>
+                    <span className="text-muted-foreground">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Sintassi: testo visibile tra graffe singole nel PDF. Es.: <code className="text-muted-foreground">&#123;nome&#125;</code>
             </p>
           </div>
         )}
