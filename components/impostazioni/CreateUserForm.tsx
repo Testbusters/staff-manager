@@ -236,7 +236,7 @@ export default function CreateUserForm() {
         <p className={sectionTitle}>Accesso</p>
         <div className="space-y-3">
           <div>
-            <label className={labelCls}>Email</label>
+            <label className={labelCls}>Email <span className="text-red-500">*</span></label>
             <Input type="email" placeholder="nome@email.com" value={email}
               onChange={(e) => setEmail(e.target.value)}
               required disabled={loading} autoComplete="off" />
@@ -325,7 +325,7 @@ export default function CreateUserForm() {
               </div>
             </div>
             <div>
-              <label className={labelCls}>Username</label>
+              <label className={labelCls}>Username <span className="text-red-500">*</span></label>
               <Input
                 type="text"
                 placeholder="mario_rossi"
@@ -364,7 +364,7 @@ export default function CreateUserForm() {
               </div>
             </div>
             <div>
-              <label className={labelCls}>Username</label>
+              <label className={labelCls}>Username <span className="text-red-500">*</span></label>
               <Input
                 type="text"
                 placeholder="mario_rossi"
@@ -460,9 +460,9 @@ export default function CreateUserForm() {
         type="submit"
         disabled={
           loading || !email ||
-          (needsContract && mode === 'quick' && (!nome.trim() || !cognome.trim() || !dataFineContratto)) ||
+          (needsContract && mode === 'quick' && (!nome.trim() || !cognome.trim() || !username.trim() || !dataFineContratto)) ||
           (needsContract && mode === 'full' && (
-            !nome.trim() || !cognome.trim() || !codiceFiscale.trim() || !dataNascita ||
+            !nome.trim() || !cognome.trim() || !username.trim() || !codiceFiscale.trim() || !dataNascita ||
             !luogoNascita.trim() || !provinciaNascita.trim() || !indirizzo.trim() ||
             !civico.trim() || !comuneRes.trim() || !provinciaRes.trim() ||
             !telefono.trim() || !intestatarioPagamento.trim() || !dataIngresso || !dataFineContratto

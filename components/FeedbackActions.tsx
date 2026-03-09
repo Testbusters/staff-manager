@@ -58,12 +58,6 @@ export default function FeedbackActions({ id, stato, selected, onSelect }: Props
       </AlertDialog>
 
       <div className="flex items-center gap-2 shrink-0">
-        {onSelect !== undefined && (
-          <Checkbox
-            checked={selected ?? false}
-            onCheckedChange={(v) => onSelect(!!v)}
-          />
-        )}
         {stato === 'nuovo' && (
           <button
             onClick={handleComplete}
@@ -80,6 +74,12 @@ export default function FeedbackActions({ id, stato, selected, onSelect }: Props
         >
           Rimuovi
         </button>
+        {onSelect !== undefined && (
+          <Checkbox
+            checked={selected ?? false}
+            onCheckedChange={(v) => onSelect(!!v)}
+          />
+        )}
       </div>
     </>
   );

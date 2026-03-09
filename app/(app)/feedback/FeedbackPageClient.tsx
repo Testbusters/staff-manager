@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import FeedbackActions from '@/components/FeedbackActions';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -99,6 +100,22 @@ export default function FeedbackPageClient({ feedback }: { feedback: FeedbackRow
     });
   }
 
+  function toggleSelectAll(items: FeedbackRow[], checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      items.forEach((item) => checked ? next.add(item.id) : next.delete(item.id));
+      return next;
+    });
+  }
+
+  function allSelected(items: FeedbackRow[]) {
+    return items.length > 0 && items.every((item) => selected.has(item.id));
+  }
+
+  function someSelected(items: FeedbackRow[]) {
+    return items.some((item) => selected.has(item.id));
+  }
+
   async function handleBulkComplete() {
     await Promise.all(
       [...selected].map((id) => fetch(`/api/feedback/${id}`, { method: 'PATCH' })),
@@ -173,6 +190,16 @@ export default function FeedbackPageClient({ feedback }: { feedback: FeedbackRow
           <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800/40 text-yellow-700 dark:text-yellow-400 font-medium">
             {nuovi.length}
           </span>
+          {nuovi.length > 0 && (
+            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+              <Checkbox
+                checked={allSelected(nuovi)}
+                data-state={someSelected(nuovi) && !allSelected(nuovi) ? 'indeterminate' : undefined}
+                onCheckedChange={(v) => toggleSelectAll(nuovi, !!v)}
+              />
+              Seleziona tutti
+            </label>
+          )}
         </div>
 
         {nuovi.length === 0 ? (
@@ -203,6 +230,15 @@ export default function FeedbackPageClient({ feedback }: { feedback: FeedbackRow
           <span className="text-xs px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground font-medium">
             {completati.length}
           </span>
+          {completati.length > 0 && (
+            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+              <Checkbox
+                checked={allSelected(completati)}
+                onCheckedChange={(v) => toggleSelectAll(completati, !!v)}
+              />
+              Seleziona tutti
+            </label>
+          )}
         </div>
 
         {completati.length === 0 ? (
