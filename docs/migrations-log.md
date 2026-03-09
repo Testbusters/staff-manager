@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 040 | `040_skip_contract_flag.sql` | 2026-03-09 | ADD COLUMN `skip_contract_on_onboarding` boolean NOT NULL DEFAULT false on `user_profiles` |
 | 001 | `001_schema.sql` | — | Initial full schema: compensations, expense_reimbursements, communities, collaborators, user_profiles, documents, tickets, announcements, benefits, resources, events |
 | 002 | `002_rls.sql` | — | Row Level Security policies on all tables; helper functions: `get_my_role()`, `is_active_user()`, `can_manage_community()`, `get_my_collaborator_id()` |
 | 003 | `003_must_change_password.sql` | — | ADD COLUMN `must_change_password` boolean DEFAULT false on `user_profiles` |
