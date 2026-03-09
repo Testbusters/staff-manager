@@ -331,36 +331,6 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         </div>
       </section>
 
-      {/* ── Quick actions ── */}
-      <section>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/coda"
-            className="rounded-xl bg-brand hover:bg-brand/90 px-4 py-2 text-sm font-medium text-white transition"
-          >
-            Vai alla coda
-          </Link>
-          <Link
-            href="/export"
-            className="rounded-xl bg-accent hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition"
-          >
-            Export pagamenti
-          </Link>
-          <Link
-            href="/documenti"
-            className="rounded-xl bg-accent hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition"
-          >
-            Carica documento
-          </Link>
-          <Link
-            href="/impostazioni"
-            className="rounded-xl bg-accent hover:bg-muted px-4 py-2 text-sm font-medium text-foreground transition"
-          >
-            Crea utente
-          </Link>
-        </div>
-      </section>
-
       {/* ── Community columns ── */}
       {communityCards.length > 0 && (
         <section>
