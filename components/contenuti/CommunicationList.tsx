@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Bell, Pin, Paperclip, CalendarDays } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -44,7 +45,6 @@ function CommunicationForm({
     file_urls: initial?.file_urls ?? '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -55,18 +55,16 @@ function CommunicationForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titolo.trim() || !form.contenuto.trim()) {
-      setError('Titolo e contenuto sono obbligatori.');
+      toast.error('Titolo e contenuto sono obbligatori.', { duration: 5000 });
       return;
     }
     setLoading(true);
-    setError(null);
     try { await onSave(form); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Errore.'); setLoading(false); }
+    catch (err) { toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 }); setLoading(false); }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
-      {error && <p className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">{error}</p>}
       <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Contenuto *" />
       <Textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"

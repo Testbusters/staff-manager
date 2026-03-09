@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 interface ExpenseActionPanelProps {
   expenseId: string;
@@ -20,7 +21,6 @@ interface ExpenseActionPanelProps {
 export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseActionPanelProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   // Reject modal state
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -32,7 +32,6 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
 
   const perform = async (action: ExpenseAction, extra?: Record<string, unknown>) => {
     setLoading(action);
-    setError(null);
 
     const res = await fetch(`/api/expenses/${expenseId}/transition`, {
       method: 'POST',
@@ -44,7 +43,7 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
     setLoading(null);
 
     if (!res.ok) {
-      setError(data.error ?? 'Errore durante la transizione');
+      toast.error(data.error ?? 'Errore durante la transizione', { duration: 5000 });
       return;
     }
 
@@ -79,12 +78,6 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
         <CardContent className="p-4 space-y-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Azioni</p>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
-
           <div className="flex flex-wrap gap-2">
             {actions.map((a) => (
               <Button
@@ -102,7 +95,7 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
       </Card>
 
       {/* Reject modal */}
-      <Dialog open={showRejectModal} onOpenChange={(v) => { if (!v) { setShowRejectModal(false); setRejectNote(''); setError(null); } }}>
+      <Dialog open={showRejectModal} onOpenChange={(v) => { if (!v) { setShowRejectModal(false); setRejectNote(''); } }}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">Rifiuta rimborso</DialogTitle>
@@ -121,16 +114,10 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
             />
           </div>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
-
           <div className="flex gap-3 justify-end">
             <Button
               variant="outline"
-              onClick={() => { setShowRejectModal(false); setRejectNote(''); setError(null); }}
+              onClick={() => { setShowRejectModal(false); setRejectNote(''); }}
             >
               Annulla
             </Button>
@@ -150,7 +137,7 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
       </Dialog>
 
       {/* Mark liquidated modal */}
-      <Dialog open={showLiquidatedModal} onOpenChange={(v) => { if (!v) { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); } }}>
+      <Dialog open={showLiquidatedModal} onOpenChange={(v) => { if (!v) { setShowLiquidatedModal(false); setPaymentReference(''); } }}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">Segna come liquidato</DialogTitle>
@@ -169,16 +156,10 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
             />
           </div>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
-
           <div className="flex gap-3 justify-end">
             <Button
               variant="outline"
-              onClick={() => { setShowLiquidatedModal(false); setPaymentReference(''); setError(null); }}
+              onClick={() => { setShowLiquidatedModal(false); setPaymentReference(''); }}
             >
               Annulla
             </Button>

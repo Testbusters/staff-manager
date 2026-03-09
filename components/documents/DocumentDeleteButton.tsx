@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface Props {
   documentId: string;
@@ -10,28 +11,23 @@ interface Props {
 export default function DocumentDeleteButton({ documentId }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!confirm('Eliminare definitivamente questo contratto? L\'azione è irreversibile.')) return;
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/documents/${documentId}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Errore eliminazione');
       router.push('/documenti');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore imprevisto');
+      toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
       setLoading(false);
     }
   };
 
   return (
     <div>
-      {error && (
-        <p className="mb-2 text-xs text-red-600 dark:text-red-400">{error}</p>
-      )}
       <button
         onClick={handleDelete}
         disabled={loading}

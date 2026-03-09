@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 type Setting = {
   id: string;
@@ -78,7 +79,6 @@ export default function NotificationSettingsManager({
 }) {
   const [settings, setSettings] = useState<Setting[]>(initialSettings);
   const [saving, setSaving] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleToggle = useCallback(async (
     setting: Setting,
@@ -87,7 +87,6 @@ export default function NotificationSettingsManager({
   ) => {
     const key = `${setting.event_key}:${field}`;
     setSaving(key);
-    setError(null);
 
     // Optimistic update
     setSettings(prev =>
@@ -118,19 +117,13 @@ export default function NotificationSettingsManager({
             : s,
         ),
       );
-      setError('Errore nel salvataggio. Riprova.');
+      toast.error('Errore nel salvataggio. Riprova.', { duration: 5000 });
     }
     setSaving(null);
   }, []);
 
   return (
     <div className="space-y-8">
-      {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
-      )}
-
       {SECTIONS.map(section => {
         const sectionSettings = settings.filter(s =>
           section.keys.includes(s.event_key),

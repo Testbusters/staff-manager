@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface FormData {
   categoria: ExpenseCategory | '';
@@ -52,7 +53,6 @@ export default function ExpenseForm() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const set = (field: keyof FormData, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
@@ -77,7 +77,6 @@ export default function ExpenseForm() {
 
   const handleSubmit = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       // 1. Create expense (always INVIATO)
@@ -126,8 +125,9 @@ export default function ExpenseForm() {
         }
 
         if (uploadFailed.length > 0) {
-          setError(
-            `Rimborso salvato, ma ${uploadFailed.length} allegato/i non caricato/i:\n${uploadFailed.join('\n')}`,
+          toast.error(
+            `Rimborso salvato, ma ${uploadFailed.length} allegato/i non caricato/i: ${uploadFailed.join(', ')}`,
+            { duration: 5000 },
           );
           setLoading(false);
           router.push(`/rimborsi/${expenseId}`);
@@ -137,7 +137,7 @@ export default function ExpenseForm() {
 
       router.push('/rimborsi');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore imprevisto');
+      toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
       setLoading(false);
     }
   };
@@ -323,12 +323,6 @@ export default function ExpenseForm() {
               </div>
             )}
           </dl>
-
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400 whitespace-pre-line">
-              {error}
-            </div>
-          )}
 
           <div className="flex justify-between pt-1">
             <Button type="button" variant="ghost" onClick={() => setStep(2)} disabled={loading}>

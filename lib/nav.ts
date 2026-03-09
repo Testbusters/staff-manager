@@ -30,15 +30,15 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   responsabile_servizi_individuali: [],
 
   amministrazione: [
-    { label: 'Dashboard',     href: '/',              iconName: 'Home' },
-    { label: 'Coda lavoro',   href: '/coda',          iconName: 'Zap' },
-    { label: 'Collaboratori', href: '/collaboratori', iconName: 'Users' },
-    { label: 'Export',        href: '/export',        iconName: 'BarChart3' },
-    { label: 'Documenti',     href: '/documenti',     iconName: 'FileText' },
-    { label: 'Ticket',        href: '/ticket',        iconName: 'Ticket' },
-    { label: 'Contenuti',     href: '/contenuti',     iconName: 'ClipboardList' },
-    { label: 'Impostazioni',  href: '/impostazioni',  iconName: 'Settings' },
-    { label: 'Feedback',      href: '/feedback',      iconName: 'MessageSquare' },
+    { label: 'Dashboard',     href: '/',              iconName: 'LayoutDashboard' },
+    { label: 'Coda lavoro',   href: '/coda',          iconName: 'Inbox' },
+    { label: 'Collaboratori', href: '/collaboratori', iconName: 'UsersRound' },
+    { label: 'Export',        href: '/export',        iconName: 'FileDown' },
+    { label: 'Documenti',     href: '/documenti',     iconName: 'Files' },
+    { label: 'Ticket',        href: '/ticket',        iconName: 'LifeBuoy' },
+    { label: 'Contenuti',     href: '/contenuti',     iconName: 'LayoutGrid' },
+    { label: 'Impostazioni',  href: '/impostazioni',  iconName: 'SlidersHorizontal' },
+    { label: 'Feedback',      href: '/feedback',      iconName: 'MessageSquarePlus' },
   ],
 
 };

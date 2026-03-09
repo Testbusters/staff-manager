@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
 import TicketStatusBadge from './TicketStatusBadge';
@@ -22,13 +23,11 @@ export default function TicketStatusInline({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const nextStati = STATUS_TRANSITIONS[currentStato] ?? [];
 
   async function handleChange(newStato: TicketStatus) {
     setLoading(true);
-    setError(null);
     const res = await fetch(`/api/tickets/${ticketId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -36,7 +35,7 @@ export default function TicketStatusInline({
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? 'Errore');
+      toast.error(data.error ?? 'Errore', { duration: 5000 });
     }
     setLoading(false);
     router.refresh();
@@ -57,7 +56,6 @@ export default function TicketStatusInline({
           {loading ? '…' : `→ ${TICKET_STATUS_LABELS[s]}`}
         </Button>
       ))}
-      {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
     </div>
   );
 }

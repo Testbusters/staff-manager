@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import TicketStatusBadge from './TicketStatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type TicketMessage = {
   id: string;
@@ -45,7 +46,6 @@ export default function TicketDetailModal({
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   async function fetchTicket() {
@@ -67,7 +67,6 @@ export default function TicketDetailModal({
     e.preventDefault();
     if (!reply.trim()) return;
     setSending(true);
-    setSendError(null);
 
     const fd = new FormData();
     fd.append('message', reply.trim());
@@ -76,7 +75,7 @@ export default function TicketDetailModal({
 
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setSendError(d.error ?? 'Errore invio');
+      toast.error(d.error ?? 'Errore invio', { duration: 5000 });
       return;
     }
     setReply('');
@@ -147,9 +146,6 @@ export default function TicketDetailModal({
         {/* Reply form */}
         {!loading && !isClosed && (
           <form onSubmit={handleReply} className="border-t border-border px-4 py-3 flex-shrink-0">
-            {sendError && (
-              <p className="text-xs text-red-600 dark:text-red-400 mb-2">{sendError}</p>
-            )}
             <div className="flex gap-2">
               <Textarea
                 value={reply}

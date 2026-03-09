@@ -250,8 +250,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 ## Theme system — Technical notes
 
 The project supports light/dark mode via `next-themes` (ThemeProvider in `app/layout.tsx`).
-- Default: `light`. Toggle in Sidebar for every role.
-- Login page: always light (via `useEffect(() => setTheme('light'), [setTheme])`).
+- Default: `dark`. Toggle in Sidebar for every role.
+- Login page: always dark (via `useEffect(() => setTheme('dark'), [setTheme])`).
 - Persistence: `user_profiles.theme_preference` (migration 035). Synced via `ThemeSync.tsx` on mount.
 - Toggle API: `PATCH /api/profile/theme` (fire-and-forget, `{ theme: 'light' | 'dark' }`).
 - `suppressHydrationWarning` required on `<html>` and on elements reading `resolvedTheme`.

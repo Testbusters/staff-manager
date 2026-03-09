@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 interface Collaborator {
   id: string;
@@ -32,8 +33,6 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   const [statoFirma, setStatoFirma] = useState<DocumentSignStatus>('NON_RICHIESTO');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const isContratto = tipo.startsWith('CONTRATTO_');
   const isValid = (isAdmin ? !!collaboratorId : true) && !!tipo && titolo.trim() && !!file;
@@ -41,8 +40,6 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   const handleSubmit = async () => {
     if (!isValid || !file) return;
     setLoading(true);
-    setError(null);
-    setSuccess(false);
 
     try {
       const formData = new FormData();
@@ -64,7 +61,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Errore creazione documento');
 
-      setSuccess(true);
+      toast.success('Documento caricato con successo.');
       setCollaboratorId('');
       setTipo('');
       setAnno('');
@@ -73,7 +70,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       setStatoFirma('NON_RICHIESTO');
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore imprevisto');
+      toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -83,18 +80,6 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
     <Card>
       <CardContent className="p-6 space-y-5">
       <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
-
-      {success && (
-        <div className="rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/40 px-3 py-2 text-sm text-green-700 dark:text-green-400">
-          Documento caricato con successo.
-        </div>
-      )}
-
-      {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-sm text-red-700 dark:text-red-400">
-          {error}
-        </div>
-      )}
 
       {/* Collaboratore — admin only */}
       {isAdmin && (

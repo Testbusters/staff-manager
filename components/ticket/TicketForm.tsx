@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function TicketForm() {
   const router = useRouter();
@@ -16,16 +17,14 @@ export default function TicketForm() {
   const [priority, setPriority] = useState<TicketPriority>('NORMALE');
   const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!categoria || !oggetto.trim()) {
-      setError('Riferimento e oggetto sono obbligatori.');
+      toast.error('Riferimento e oggetto sono obbligatori.', { duration: 5000 });
       return;
     }
     setLoading(true);
-    setError(null);
 
     const res = await fetch('/api/tickets', {
       method: 'POST',
@@ -40,7 +39,7 @@ export default function TicketForm() {
 
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error ?? 'Errore durante la creazione del ticket.');
+      toast.error(data.error ?? 'Errore durante la creazione del ticket.', { duration: 5000 });
       setLoading(false);
       return;
     }
@@ -50,12 +49,6 @@ export default function TicketForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
-      )}
-
       {/* Riferimento */}
       <div className="space-y-1.5">
         <label htmlFor="categoria" className="block text-sm font-medium text-foreground">

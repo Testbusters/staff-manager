@@ -5,6 +5,7 @@ import FeedbackButton from '@/components/FeedbackButton';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeSync } from '@/components/ThemeSync';
 import { SessionGuard } from '@/components/SessionGuard';
+import { Toaster } from '@/components/ui/sonner';
 import { NAV_BY_ROLE } from '@/lib/nav';
 import type { Role } from '@/lib/types';
 
@@ -46,6 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           userEmail={user.email ?? ''}
           userName={userName}
           avatarUrl={collaborator?.foto_profilo_url ?? null}
+          role={role}
         />
         <TooltipProvider delayDuration={300}>
           <main className="flex-1 overflow-y-auto">
@@ -54,6 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </TooltipProvider>
         <FeedbackButton />
       </div>
+      <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
     </>
   );
 }

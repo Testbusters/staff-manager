@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { TicketStatus } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function TicketMessageForm({
   ticketId,
@@ -19,16 +20,14 @@ export default function TicketMessageForm({
   const [message, setMessage] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!message.trim()) {
-      setError('Inserisci un messaggio.');
+      toast.error('Inserisci un messaggio.', { duration: 5000 });
       return;
     }
     setSending(true);
-    setError(null);
 
     const fd = new FormData();
     fd.append('message', message.trim());
@@ -42,7 +41,7 @@ export default function TicketMessageForm({
 
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error ?? 'Errore durante l\'invio del messaggio.');
+      toast.error(data.error ?? "Errore durante l'invio del messaggio.", { duration: 5000 });
       setSending(false);
       return;
     }
@@ -58,12 +57,6 @@ export default function TicketMessageForm({
 
   return (
     <form onSubmit={handleSend} className="space-y-3">
-        {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-            {error}
-          </div>
-        )}
-
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}

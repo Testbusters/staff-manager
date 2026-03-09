@@ -5,17 +5,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
   Home, User, Wallet, GraduationCap, School, CalendarDays,
-  Megaphone, Gift, Zap, Users, BarChart3, FileText,
-  Ticket, ClipboardList, Settings, MessageSquare,
+  Megaphone, Gift, Users, ShieldCheck,
+  LayoutDashboard, Inbox, UsersRound, FileDown, Files,
+  LifeBuoy, LayoutGrid, SlidersHorizontal, MessageSquarePlus,
   type LucideIcon,
 } from 'lucide-react';
+import type { Role } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Home, User, Wallet, GraduationCap, School, CalendarDays,
-  Megaphone, Gift, Zap, Users, BarChart3, FileText,
-  Ticket, ClipboardList, Settings, MessageSquare,
+  Megaphone, Gift, Users,
+  LayoutDashboard, Inbox, UsersRound, FileDown, Files,
+  LifeBuoy, LayoutGrid, SlidersHorizontal, MessageSquarePlus,
 };
 import NotificationBell from '@/components/NotificationBell';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -37,9 +40,10 @@ interface SidebarProps {
   userEmail: string;
   userName: string;
   avatarUrl?: string | null;
+  role?: Role;
 }
 
-export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: SidebarProps) {
+export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -112,9 +116,12 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl }: Si
       <div className="px-3 py-4 border-t border-sidebar-border">
         <div className="flex items-center gap-2.5 mb-2">
           <Avatar className="w-7 h-7 shrink-0">
-            <AvatarImage src={avatarUrl ?? undefined} alt="" />
-            <AvatarFallback className="bg-sidebar-accent text-xs text-sidebar-accent-foreground">
-              {userName.charAt(0).toUpperCase()}
+            {role !== 'amministrazione' && <AvatarImage src={avatarUrl ?? undefined} alt="" />}
+            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
+              {role === 'amministrazione'
+                ? <ShieldCheck className="h-3.5 w-3.5" />
+                : <span className="text-xs">{userName.charAt(0).toUpperCase()}</span>
+              }
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">

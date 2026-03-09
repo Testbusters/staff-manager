@@ -5,26 +5,25 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) {
-      setError('La password deve essere di almeno 8 caratteri');
+      toast.error('La password deve essere di almeno 8 caratteri', { duration: 5000 });
       return;
     }
     if (password !== confirm) {
-      setError('Le password non coincidono');
+      toast.error('Le password non coincidono', { duration: 5000 });
       return;
     }
     setLoading(true);
-    setError(null);
 
     // Single server-side call: updates password + clears must_change_password atomically
     // (avoids race condition from client-side updateUser invalidating the session cookie)
@@ -37,7 +36,7 @@ export default function ChangePasswordPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Errore durante l'aggiornamento della password.");
+      toast.error(data.error ?? "Errore durante l'aggiornamento della password.", { duration: 5000 });
       setLoading(false);
       return;
     }
@@ -105,12 +104,6 @@ export default function ChangePasswordPage() {
                 autoComplete="new-password"
               />
             </div>
-
-            {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">
-                {error}
-              </div>
-            )}
 
             <Button
               type="submit"

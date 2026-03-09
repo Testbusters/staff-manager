@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import type { Compensation } from '@/lib/types';
 
 type Competenza = { key: string; label: string };
@@ -39,7 +40,6 @@ export default function CompensationEditModal({
 
   const [competenze, setCompetenze] = useState<Competenza[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Populate form when modal opens
   useEffect(() => {
@@ -49,7 +49,6 @@ export default function CompensationEditModal({
       setNomeServizioRuolo(compensation.nome_servizio_ruolo ?? '');
       setCompetenza(compensation.competenza ?? '');
       setInfoSpecifiche(compensation.info_specifiche ?? '');
-      setError(null);
       // Derive rate from original values
       const lordo = compensation.importo_lordo ?? 0;
       const ritenuta = compensation.ritenuta_acconto ?? 0;
@@ -70,13 +69,11 @@ export default function CompensationEditModal({
   const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
   function handleClose() {
-    setError(null);
     onClose();
   }
 
   async function handleSave() {
     setLoading(true);
-    setError(null);
 
     const res = await fetch(`/api/compensations/${compensation.id}/edit`, {
       method: 'PATCH',
@@ -95,7 +92,7 @@ export default function CompensationEditModal({
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? 'Errore durante il salvataggio');
+      toast.error(data.error ?? 'Errore durante il salvataggio', { duration: 5000 });
       return;
     }
 
@@ -204,12 +201,6 @@ export default function CompensationEditModal({
               placeholder="Note aggiuntive (opzionale)"
             />
           </div>
-
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-xs text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
 
           <div className="flex gap-3 justify-end pt-1">
             <Button

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 interface BatchDetail {
   success: string[];
@@ -27,7 +28,6 @@ export default function CUBatchUpload() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [anno, setAnno] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BatchResponse | null>(null);
 
   const isValid = zipFile && csvFile && anno && parseInt(anno) >= 2000;
@@ -35,7 +35,6 @@ export default function CUBatchUpload() {
   const handleSubmit = async () => {
     if (!isValid || !zipFile || !csvFile) return;
     setLoading(true);
-    setError(null);
     setResult(null);
 
     try {
@@ -55,7 +54,7 @@ export default function CUBatchUpload() {
       setResult(data as BatchResponse);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore imprevisto');
+      toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -72,12 +71,6 @@ export default function CUBatchUpload() {
           Tutti i PDF devono essere CU dello stesso anno fiscale.
         </p>
       </div>
-
-      {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 px-3 py-2 text-sm text-red-700 dark:text-red-400">
-          {error}
-        </div>
-      )}
 
       {/* Anno */}
       <div>

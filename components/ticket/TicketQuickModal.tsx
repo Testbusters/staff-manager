@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function TicketQuickModal() {
   const router = useRouter();
@@ -18,7 +19,6 @@ export default function TicketQuickModal() {
   const [oggetto, setOggetto] = useState('');
   const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function handleClose() {
     setOpen(false);
@@ -26,17 +26,15 @@ export default function TicketQuickModal() {
     setPriority('NORMALE');
     setOggetto('');
     setMessaggio('');
-    setError(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!categoria || !oggetto.trim()) {
-      setError('Riferimento e oggetto sono obbligatori.');
+      toast.error('Riferimento e oggetto sono obbligatori.', { duration: 5000 });
       return;
     }
     setLoading(true);
-    setError(null);
 
     const res = await fetch('/api/tickets', {
       method: 'POST',
@@ -51,7 +49,7 @@ export default function TicketQuickModal() {
 
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error ?? 'Errore durante la creazione del ticket.');
+      toast.error(data.error ?? 'Errore durante la creazione del ticket.', { duration: 5000 });
       setLoading(false);
       return;
     }
@@ -70,12 +68,6 @@ export default function TicketQuickModal() {
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">Apri un ticket</DialogTitle>
           </DialogHeader>
-
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
