@@ -106,7 +106,7 @@ export default async function DocumentiPage({
 
       {tab === 'lista' && (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <DocumentList documents={documents as any[]} isAdmin={isAdmin} />
+        <DocumentList documents={documents as any[]} isAdmin={isAdmin} collaborators={collaborators} />
       )}
       {canUpload && tab === 'carica' && (
         <DocumentUploadForm collaborators={collaborators} isAdmin={isAdmin} />

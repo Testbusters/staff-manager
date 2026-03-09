@@ -1,25 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { FileText, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Document, DocumentType, DocumentMacroType } from '@/lib/types';
 import { DOCUMENT_SIGN_STATUS_LABELS, DOCUMENT_MACRO_TYPE, DOCUMENT_MACRO_TYPE_LABELS } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import DocumentAdminModal from '@/components/documents/DocumentAdminModal';
 
 interface DocumentRow extends Document {
   collaborators?: { nome: string; cognome: string } | null;
 }
 
+interface CollaboratorOption {
+  id: string;
+  nome: string;
+  cognome: string;
+  username: string | null;
+  email: string;
+}
+
 interface Props {
   documents: DocumentRow[];
   isAdmin: boolean;
+  collaborators?: CollaboratorOption[];
 }
+
+// ── Shared sub-components ────────────────────────────────────────
 
 function TypeBadge({ tipo }: { tipo: DocumentType | string }) {
   if (tipo === 'CONTRATTO_OCCASIONALE') {
@@ -50,10 +64,17 @@ function SignBadge({ stato }: { stato: string }) {
 
 const MACRO_ORDER: DocumentMacroType[] = ['CONTRATTO', 'CU', 'RICEVUTA'];
 
-export default function DocumentList({ documents, isAdmin }: Props) {
-  const [modalDocId, setModalDocId] = useState<string | null>(null);
+// ── Grouped document table ────────────────────────────────────────
 
-  // Group documents by macro type
+function DocumentGroups({
+  documents,
+  isAdmin,
+  onRowClick,
+}: {
+  documents: DocumentRow[];
+  isAdmin: boolean;
+  onRowClick?: (id: string) => void;
+}) {
   const grouped = new Map<DocumentMacroType, DocumentRow[]>();
   for (const doc of documents) {
     const macro = DOCUMENT_MACRO_TYPE[doc.tipo as DocumentType] ?? ('CU' as DocumentMacroType);
@@ -65,8 +86,8 @@ export default function DocumentList({ documents, isAdmin }: Props) {
   if (documents.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center">
-          <EmptyState icon={FileText} title="Nessun documento disponibile" description="Non sono presenti documenti per questo collaboratore." />
+        <CardContent className="p-8">
+          <EmptyState icon={FileText} title="Nessun documento" description="Questo collaboratore non ha ancora documenti." />
         </CardContent>
       </Card>
     );
@@ -79,81 +100,233 @@ export default function DocumentList({ documents, isAdmin }: Props) {
         return (
           <Card key={macro}>
             <CardContent className="overflow-hidden p-0">
-            <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{DOCUMENT_MACRO_TYPE_LABELS[macro]}</h3>
-              <span className="text-xs text-muted-foreground tabular-nums">({docs.length})</span>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {isAdmin && (
-                    <TableHead>Collaboratore</TableHead>
-                  )}
-                  <TableHead>Titolo</TableHead>
-                  {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
-                    <TableHead className="hidden sm:table-cell">Tipo</TableHead>
-                  )}
-                  <TableHead className="hidden md:table-cell">Anno</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead className="hidden lg:table-cell">Data</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {docs.map((doc) => (
-                  <TableRow
-                    key={doc.id}
-                    className={`hover:bg-muted/60 ${isAdmin ? 'cursor-pointer' : ''}`}
-                    onClick={isAdmin ? () => setModalDocId(doc.id) : undefined}
-                  >
-                    {isAdmin && (
-                      <TableCell className="text-foreground text-sm">
-                        {doc.collaborators
-                          ? `${doc.collaborators.nome} ${doc.collaborators.cognome}`
-                          : '—'}
-                      </TableCell>
-                    )}
-                    <TableCell className="text-foreground font-medium text-sm">{doc.titolo}</TableCell>
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">{DOCUMENT_MACRO_TYPE_LABELS[macro]}</h3>
+                <span className="text-xs text-muted-foreground tabular-nums">({docs.length})</span>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {isAdmin && <TableHead>Collaboratore</TableHead>}
+                    <TableHead>Titolo</TableHead>
                     {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
-                      <TableCell className="hidden sm:table-cell">
-                        <TypeBadge tipo={doc.tipo} />
-                      </TableCell>
+                      <TableHead className="hidden sm:table-cell">Tipo</TableHead>
                     )}
-                    <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
-                      {doc.anno ?? '—'}
-                    </TableCell>
-                    <TableCell>
-                      <SignBadge stato={doc.stato_firma} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
-                      {new Date(doc.requested_at).toLocaleDateString('it-IT')}
-                    </TableCell>
-                    {!isAdmin && (
-                      <TableCell className="text-right">
-                        <Link
-                          href={`/documenti/${doc.id}`}
-                          className="text-xs text-link hover:text-link/80"
-                        >
-                          Apri →
-                        </Link>
-                      </TableCell>
-                    )}
-                    {isAdmin && <TableCell />}
+                    <TableHead className="hidden md:table-cell">Anno</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="hidden lg:table-cell">Data</TableHead>
+                    {!isAdmin && <TableHead />}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {docs.map((doc) => (
+                    <TableRow
+                      key={doc.id}
+                      className={`hover:bg-muted/60 ${isAdmin ? 'cursor-pointer' : ''}`}
+                      onClick={isAdmin && onRowClick ? () => onRowClick(doc.id) : undefined}
+                    >
+                      {isAdmin && (
+                        <TableCell className="text-foreground text-sm">
+                          {doc.collaborators
+                            ? `${doc.collaborators.nome} ${doc.collaborators.cognome}`
+                            : '—'}
+                        </TableCell>
+                      )}
+                      <TableCell className="text-foreground font-medium text-sm">{doc.titolo}</TableCell>
+                      {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
+                        <TableCell className="hidden sm:table-cell">
+                          <TypeBadge tipo={doc.tipo} />
+                        </TableCell>
+                      )}
+                      <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
+                        {doc.anno ?? '—'}
+                      </TableCell>
+                      <TableCell>
+                        <SignBadge stato={doc.stato_firma} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
+                        {new Date(doc.requested_at).toLocaleDateString('it-IT')}
+                      </TableCell>
+                      {!isAdmin && (
+                        <TableCell className="text-right">
+                          <Link href={`/documenti/${doc.id}`} className="text-xs text-link hover:text-link/80">
+                            Apri →
+                          </Link>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         );
       })}
-
-      {isAdmin && (
-        <DocumentAdminModal
-          docId={modalDocId}
-          onClose={() => setModalDocId(null)}
-        />
-      )}
     </div>
   );
+}
+
+// ── Admin 2-step wizard ───────────────────────────────────────────
+
+function AdminDocumentList({ collaborators }: { collaborators: CollaboratorOption[] }) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCollab, setSelectedCollab] = useState<CollaboratorOption | null>(null);
+  const [documents, setDocuments] = useState<DocumentRow[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [modalDocId, setModalDocId] = useState<string | null>(null);
+
+  const filtered = searchQuery.trim()
+    ? collaborators.filter((c) => {
+        const q = searchQuery.toLowerCase();
+        return [c.nome, c.cognome, c.username ?? '', c.email].some((f) => f.toLowerCase().includes(q));
+      })
+    : [];
+
+  const selectCollab = async (c: CollaboratorOption) => {
+    setSelectedCollab(c);
+    setLoadingDocs(true);
+    try {
+      const res = await fetch(`/api/documents?collaborator_id=${c.id}`);
+      const data = await res.json();
+      setDocuments(data.documents ?? []);
+    } catch {
+      setDocuments([]);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setModalDocId(null);
+    // Reset to step 1 and refresh
+    setSelectedCollab(null);
+    setSearchQuery('');
+    setDocuments([]);
+    router.refresh();
+  };
+
+  // ── Step 1: Search collaborator ──
+  if (!selectedCollab) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <p className="text-sm font-medium text-foreground mb-0.5">Seleziona un collaboratore</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Cerca per nome, cognome, username o email per visualizzare i documenti associati.
+              </p>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Nome, cognome, username o email…"
+                  className="pl-9"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {filtered.length > 0 && (
+              <div className="max-h-72 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+                {filtered.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => selectCollab(c)}
+                    className="w-full text-left px-3 py-3 transition hover:bg-muted/60 space-y-0.5"
+                  >
+                    <p className="text-sm text-foreground font-medium">{c.cognome} {c.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.email}{c.username ? ` · ${c.username}` : ''}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {searchQuery.trim() && filtered.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-2">Nessun collaboratore trovato.</p>
+            )}
+
+            {!searchQuery.trim() && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Digita almeno una lettera per avviare la ricerca.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Step 2: Show documents for selected collaborator ──
+  return (
+    <div className="space-y-4">
+      {/* Collaborator header + back */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs text-muted-foreground mb-0.5">Documenti di</p>
+          <p className="text-base font-semibold text-foreground">
+            {selectedCollab.cognome} {selectedCollab.nome}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {selectedCollab.email}{selectedCollab.username ? ` · ${selectedCollab.username}` : ''}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { setSelectedCollab(null); setSearchQuery(''); setDocuments([]); }}
+          className="shrink-0"
+        >
+          ← Cambia collaboratore
+        </Button>
+      </div>
+
+      {/* Hint */}
+      <p className="text-xs text-muted-foreground">
+        Clicca su un documento per aprirlo, modificarlo o sostituire il file.
+      </p>
+
+      {loadingDocs ? (
+        <div className="space-y-3">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      ) : (
+        <DocumentGroups
+          documents={documents}
+          isAdmin
+          onRowClick={setModalDocId}
+        />
+      )}
+
+      <DocumentAdminModal docId={modalDocId} onClose={handleModalClose} />
+    </div>
+  );
+}
+
+// ── Main export ───────────────────────────────────────────────────
+
+export default function DocumentList({ documents, isAdmin, collaborators = [] }: Props) {
+  if (isAdmin) {
+    return <AdminDocumentList collaborators={collaborators} />;
+  }
+
+  // Collaboratore path: flat list passed from server
+  if (documents.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <EmptyState icon={FileText} title="Nessun documento disponibile" description="Non sono presenti documenti per questo collaboratore." />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <DocumentGroups documents={documents} isAdmin={false} />;
 }
