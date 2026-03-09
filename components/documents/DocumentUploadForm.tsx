@@ -136,10 +136,12 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
     ? ['Collaboratore', 'Dettagli', 'File']
     : ['Dettagli', 'File'];
 
-  const filtered = collaborators.filter((c) => {
-    const q = searchQuery.toLowerCase();
-    return [c.nome, c.cognome, c.username ?? '', c.email].some((f) => f.toLowerCase().includes(q));
-  });
+  const filtered = searchQuery.trim()
+    ? collaborators.filter((c) => {
+        const q = searchQuery.toLowerCase();
+        return [c.nome, c.cognome, c.username ?? '', c.email].some((f) => f.toLowerCase().includes(q));
+      })
+    : [];
 
   const isContratto = tipo.startsWith('CONTRATTO_');
 
@@ -164,39 +166,28 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
                 autoFocus
               />
             </div>
-            <div className="max-h-60 overflow-y-auto rounded-lg border border-border divide-y divide-border">
-              {filtered.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-muted-foreground text-center">Nessun risultato</p>
-              ) : (
-                filtered.map((c) => (
+            {filtered.length > 0 && (
+              <div className="max-h-60 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+                {filtered.map((c) => (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setSelectedCollab(c)}
-                    className={`w-full text-left px-3 py-2.5 transition hover:bg-muted/60 flex items-center justify-between gap-2 ${
-                      selectedCollab?.id === c.id ? 'bg-brand/10 dark:bg-brand/20' : ''
-                    }`}
+                    onClick={() => { setSelectedCollab(c); setStep(2); }}
+                    className="w-full text-left px-3 py-3 transition hover:bg-muted/60 space-y-0.5"
                   >
-                    <span className="text-sm text-foreground font-medium">{c.cognome} {c.nome}</span>
-                    <span className="text-xs text-muted-foreground truncate">{c.username ? `${c.username} · ` : ''}{c.email}</span>
+                    <p className="text-sm text-foreground font-medium">{c.cognome} {c.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.email}{c.username ? ` · ${c.username}` : ''}
+                    </p>
                   </button>
-                ))
-              )}
-            </div>
-            {selectedCollab && (
-              <p className="text-xs text-brand font-medium">
-                Selezionato: {selectedCollab.cognome} {selectedCollab.nome}
-              </p>
+                ))}
+              </div>
+            )}
+            {searchQuery.trim() && filtered.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-3">Nessun risultato</p>
             )}
             <div className="flex items-center justify-between pt-2">
               <Button variant="ghost" onClick={reset}>Annulla</Button>
-              <Button
-                onClick={() => setStep(2)}
-                disabled={!selectedCollab}
-                className="bg-brand hover:bg-brand/90 text-white"
-              >
-                Avanti →
-              </Button>
             </div>
           </div>
         )}
