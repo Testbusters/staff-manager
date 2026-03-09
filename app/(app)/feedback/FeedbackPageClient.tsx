@@ -35,51 +35,55 @@ function FeedbackCard({
   onSelect: (checked: boolean) => void;
 }) {
   return (
-    <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
-              CATEGORIA_COLORS[item.categoria] ?? CATEGORIA_COLORS.Altro
-            }`}
-          >
-            {item.categoria}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {ROLE_LABELS[item.role] ?? item.role}
-          </span>
-          {item.pagina && (
-            <span className="text-xs text-muted-foreground font-mono">{item.pagina}</span>
+    <div className={`rounded-2xl bg-card border p-5 space-y-3 transition ${selected ? 'border-brand/60 bg-brand/5' : 'border-border'}`}>
+      <div className="flex items-start gap-3">
+        <Checkbox
+          checked={selected}
+          onCheckedChange={(v) => onSelect(!!v)}
+          className="mt-0.5 shrink-0"
+        />
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                  CATEGORIA_COLORS[item.categoria] ?? CATEGORIA_COLORS.Altro
+                }`}
+              >
+                {item.categoria}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {ROLE_LABELS[item.role] ?? item.role}
+              </span>
+              {item.pagina && (
+                <span className="text-xs text-muted-foreground font-mono">{item.pagina}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-xs text-muted-foreground">
+                {new Date(item.created_at).toLocaleString('it-IT', {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })}
+              </span>
+              <FeedbackActions id={item.id} stato={item.stato} />
+            </div>
+          </div>
+
+          <p className="text-sm text-foreground whitespace-pre-wrap">{item.messaggio}</p>
+
+          {item.screenshot_url && (
+            <a
+              href={item.screenshot_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-link hover:text-link/80 transition"
+            >
+              🖼 Visualizza screenshot
+            </a>
           )}
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-muted-foreground">
-            {new Date(item.created_at).toLocaleString('it-IT', {
-              dateStyle: 'short',
-              timeStyle: 'short',
-            })}
-          </span>
-          <FeedbackActions
-            id={item.id}
-            stato={item.stato}
-            selected={selected}
-            onSelect={onSelect}
-          />
-        </div>
       </div>
-
-      <p className="text-sm text-foreground whitespace-pre-wrap">{item.messaggio}</p>
-
-      {item.screenshot_url && (
-        <a
-          href={item.screenshot_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-link hover:text-link/80 transition"
-        >
-          🖼 Visualizza screenshot
-        </a>
-      )}
     </div>
   );
 }
@@ -191,14 +195,14 @@ export default function FeedbackPageClient({ feedback }: { feedback: FeedbackRow
             {nuovi.length}
           </span>
           {nuovi.length > 0 && (
-            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-              <Checkbox
-                checked={allSelected(nuovi)}
-                data-state={someSelected(nuovi) && !allSelected(nuovi) ? 'indeterminate' : undefined}
-                onCheckedChange={(v) => toggleSelectAll(nuovi, !!v)}
-              />
-              Seleziona tutti
-            </label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              onClick={() => toggleSelectAll(nuovi, !allSelected(nuovi))}
+            >
+              {allSelected(nuovi) ? 'Deseleziona tutti' : 'Seleziona tutti'}
+            </Button>
           )}
         </div>
 
@@ -231,13 +235,14 @@ export default function FeedbackPageClient({ feedback }: { feedback: FeedbackRow
             {completati.length}
           </span>
           {completati.length > 0 && (
-            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-              <Checkbox
-                checked={allSelected(completati)}
-                onCheckedChange={(v) => toggleSelectAll(completati, !!v)}
-              />
-              Seleziona tutti
-            </label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              onClick={() => toggleSelectAll(completati, !allSelected(completati))}
+            >
+              {allSelected(completati) ? 'Deseleziona tutti' : 'Seleziona tutti'}
+            </Button>
           )}
         </div>
 

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -11,11 +10,9 @@ import {
 interface Props {
   id: string;
   stato: string;
-  selected?: boolean;
-  onSelect?: (checked: boolean) => void;
 }
 
-export default function FeedbackActions({ id, stato, selected, onSelect }: Props) {
+export default function FeedbackActions({ id, stato }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState<'complete' | 'delete' | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -74,12 +71,7 @@ export default function FeedbackActions({ id, stato, selected, onSelect }: Props
         >
           Rimuovi
         </button>
-        {onSelect !== undefined && (
-          <Checkbox
-            checked={selected ?? false}
-            onCheckedChange={(v) => onSelect(!!v)}
-          />
-        )}
+
       </div>
     </>
   );
