@@ -13,6 +13,16 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error(error);
+    // Report to monitoring
+    fetch('/api/errors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: error.message,
+        stack:   error.stack,
+        url:     typeof window !== 'undefined' ? window.location.href : null,
+      }),
+    }).catch(() => {});
   }, [error]);
 
   return (

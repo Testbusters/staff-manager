@@ -62,6 +62,38 @@ type EmailDeliveryData = {
   page_size: number;
 };
 
+type SupabaseLogEntry = {
+  id?: string;
+  timestamp?: string;
+  event_message?: string;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+type TopQuery = {
+  query: string;
+  calls: number;
+  total_ms: number;
+  mean_ms: number;
+  rows_total: number;
+};
+
+type TableStat = {
+  table_name: string;
+  seq_scan: number;
+  idx_scan: number;
+  n_live_tup: number;
+  n_dead_tup: number;
+};
+
+type AppError = {
+  id: string;
+  created_at: string;
+  message: string;
+  stack: string | null;
+  url: string | null;
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string) {
@@ -510,6 +542,294 @@ function EmailDelivery({
   );
 }
 
+// ── Section: LogSistema (Supabase Logs) ───────────────────────────────────────
+
+type LogService = 'api' | 'auth' | 'database';
+
+function LogSistema({
+  logs,
+  loading,
+  service,
+  onServiceChange,
+}: {
+  logs: SupabaseLogEntry[];
+  loading: boolean;
+  service: LogService;
+  onServiceChange: (s: LogService) => void;
+}) {
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const total = logs.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paged = logs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const services: { label: string; value: LogService }[] = [
+    { label: 'API', value: 'api' },
+    { label: 'Auth', value: 'auth' },
+    { label: 'Database', value: 'database' },
+  ];
+
+  return (
+    <div className="rounded-2xl bg-card border border-border">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-medium text-foreground">Log Supabase</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Ultimi 100 log per servizio dal progetto Supabase.</p>
+        </div>
+        <div className="flex gap-1">
+          {services.map((s) => (
+            <button
+              key={s.value}
+              onClick={() => { onServiceChange(s.value); setPage(1); }}
+              className={`rounded px-3 py-1 text-xs font-medium transition ${
+                service === s.value
+                  ? 'bg-brand text-white'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        {loading ? (
+          <div className="p-5 space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+          </div>
+        ) : total === 0 ? (
+          <p className="p-5 text-sm text-muted-foreground text-center">Nessun log disponibile per questo servizio.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>Messaggio</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paged.map((log, i) => {
+                const ts = String(log.timestamp ?? log.event_message ?? '');
+                const msg = String(log.event_message ?? JSON.stringify(log));
+                return (
+                  <TableRow key={log.id ?? i}>
+                    <TableCell className="text-xs whitespace-nowrap font-mono w-40">{ts.slice(0, 19).replace('T', ' ')}</TableCell>
+                    <TableCell className="text-xs font-mono break-all max-w-xl">{msg.slice(0, 300)}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-border text-xs text-muted-foreground">
+          <span>{total} log</span>
+          <div className="flex gap-1">
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Pagina precedente" className="rounded px-2 py-1 bg-muted hover:bg-accent disabled:opacity-40">‹</button>
+            <span className="px-2 py-1">{page}/{totalPages}</span>
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Pagina successiva" className="rounded px-2 py-1 bg-muted hover:bg-accent disabled:opacity-40">›</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Section: DBPerformance ────────────────────────────────────────────────────
+
+function DBPerformance({
+  topQueries,
+  tableStats,
+  loading,
+  onReset,
+  resetting,
+}: {
+  topQueries: TopQuery[];
+  tableStats: TableStat[];
+  loading: boolean;
+  onReset: () => void;
+  resetting: boolean;
+}) {
+  const [tab, setTab] = useState<'queries' | 'tables'>('queries');
+
+  return (
+    <div className="rounded-2xl bg-card border border-border">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-medium text-foreground">Performance DB</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Top query per tempo totale di esecuzione · statistiche tabelle.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <button onClick={() => setTab('queries')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'queries' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Query</button>
+            <button onClick={() => setTab('tables')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'tables' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Tabelle</button>
+          </div>
+          <Button variant="outline" size="sm" onClick={onReset} disabled={resetting} className="text-xs">
+            {resetting ? 'Reset…' : 'Reset stats'}
+          </Button>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        {loading ? (
+          <div className="p-5 space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+          </div>
+        ) : tab === 'queries' ? (
+          topQueries.length === 0 ? (
+            <p className="p-5 text-sm text-muted-foreground text-center">Nessun dato. Esegui alcune query e ricarica.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Query</TableHead>
+                  <TableHead className="text-right">Chiamate</TableHead>
+                  <TableHead className="text-right">Totale ms</TableHead>
+                  <TableHead className="text-right">Media ms</TableHead>
+                  <TableHead className="text-right">Righe</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topQueries.map((q, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="text-xs font-mono max-w-sm truncate" title={q.query}>{q.query}</TableCell>
+                    <TableCell className="text-right text-xs">{q.calls.toLocaleString('it-IT')}</TableCell>
+                    <TableCell className="text-right text-xs font-mono">{q.total_ms.toLocaleString('it-IT')}</TableCell>
+                    <TableCell className="text-right text-xs font-mono">{q.mean_ms.toLocaleString('it-IT')}</TableCell>
+                    <TableCell className="text-right text-xs">{q.rows_total.toLocaleString('it-IT')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )
+        ) : (
+          tableStats.length === 0 ? (
+            <p className="p-5 text-sm text-muted-foreground text-center">Nessun dato tabelle.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tabella</TableHead>
+                  <TableHead className="text-right">Seq scan</TableHead>
+                  <TableHead className="text-right">Idx scan</TableHead>
+                  <TableHead className="text-right">Righe vive</TableHead>
+                  <TableHead className="text-right">Dead tuples</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tableStats.map((t, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="text-xs font-mono">{t.table_name}</TableCell>
+                    <TableCell className="text-right text-xs">{t.seq_scan.toLocaleString('it-IT')}</TableCell>
+                    <TableCell className="text-right text-xs">{(t.idx_scan ?? 0).toLocaleString('it-IT')}</TableCell>
+                    <TableCell className="text-right text-xs">{t.n_live_tup.toLocaleString('it-IT')}</TableCell>
+                    <TableCell className={`text-right text-xs ${t.n_dead_tup > 1000 ? 'text-amber-500 font-medium' : ''}`}>{t.n_dead_tup.toLocaleString('it-IT')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Section: AppErrors ────────────────────────────────────────────────────────
+
+function AppErrorsSection({ errors, loading }: { errors: AppError[]; loading: boolean }) {
+  const [selected, setSelected] = useState<AppError | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const total = errors.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paged = errors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const last24h = errors.filter(
+    (e) => new Date(e.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000,
+  ).length;
+
+  return (
+    <div className="rounded-2xl bg-card border border-border">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-medium text-foreground">Errori applicazione</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Errori catturati da <code className="text-xs">error.tsx</code> · ultimi 50.</p>
+        </div>
+        {last24h > 0 && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+            <span className="font-bold">{last24h}</span> nelle ultime 24h
+          </span>
+        )}
+      </div>
+      <div className="overflow-x-auto">
+        {loading ? (
+          <div className="p-5 space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+          </div>
+        ) : total === 0 ? (
+          <p className="p-5 text-sm text-muted-foreground text-center">Nessun errore registrato.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Messaggio</TableHead>
+                <TableHead>URL</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paged.map((e) => (
+                <TableRow key={e.id}>
+                  <TableCell className="text-xs whitespace-nowrap">{fmtDate(e.created_at)}</TableCell>
+                  <TableCell className="text-xs max-w-xs truncate font-mono">{e.message}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-xs truncate">{e.url ?? '—'}</TableCell>
+                  <TableCell>
+                    {!!e.stack && (
+                      <button onClick={() => setSelected(e)} className="text-xs text-link hover:text-link/80">
+                        Stack
+                      </button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-border text-xs text-muted-foreground">
+          <span>{total} errori</span>
+          <div className="flex gap-1">
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Pagina precedente" className="rounded px-2 py-1 bg-muted hover:bg-accent disabled:opacity-40">‹</button>
+            <span className="px-2 py-1">{page}/{totalPages}</span>
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Pagina successiva" className="rounded px-2 py-1 bg-muted hover:bg-accent disabled:opacity-40">›</button>
+          </div>
+        </div>
+      )}
+
+      <Sheet open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Stack trace</SheetTitle>
+          </SheetHeader>
+          {selected && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-mono font-medium text-red-500 break-all">{selected.message}</p>
+              {selected.url && <p className="text-xs text-muted-foreground break-all">{selected.url}</p>}
+              <p className="text-xs text-muted-foreground">{fmtDate(selected.created_at)}</p>
+              <pre className="text-xs bg-muted rounded p-3 overflow-x-auto whitespace-pre-wrap break-all">
+                {selected.stack}
+              </pre>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MonitoraggioSection() {
@@ -518,6 +838,14 @@ export default function MonitoraggioSection() {
   const [accessEvents, setAccessEvents] = useState<AccessEvent[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [emailData, setEmailData] = useState<EmailDeliveryData | null>(null);
+  // New sections
+  const [supabaseLogs, setSupabaseLogs] = useState<SupabaseLogEntry[]>([]);
+  const [topQueries, setTopQueries] = useState<TopQuery[]>([]);
+  const [tableStats, setTableStats] = useState<TableStat[]>([]);
+  const [appErrors, setAppErrors] = useState<AppError[]>([]);
+  const [logService, setLogService] = useState<LogService>('api');
+  const [resetting, setResetting] = useState(false);
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(60);
   const [accessDays, setAccessDays] = useState<AccessDays>(7);
@@ -525,21 +853,36 @@ export default function MonitoraggioSection() {
 
   const accessDaysRef = useRef(accessDays);
   const emailPageRef = useRef(emailPage);
+  const logServiceRef = useRef(logService);
   accessDaysRef.current = accessDays;
   emailPageRef.current = emailPage;
+  logServiceRef.current = logService;
 
-  const fetchAll = async (days = accessDaysRef.current, ePage = emailPageRef.current) => {
-    const [statsRes, accessRes, opsRes, emailRes] = await Promise.allSettled([
+  const fetchAll = async (
+    days = accessDaysRef.current,
+    ePage = emailPageRef.current,
+    svc = logServiceRef.current,
+  ) => {
+    const [statsRes, accessRes, opsRes, emailRes, logsRes, dbRes, errorsRes] = await Promise.allSettled([
       fetch('/api/admin/monitoring/stats').then((r) => r.json()),
       fetch(`/api/admin/monitoring/access-log?days=${days}`).then((r) => r.json()),
       fetch('/api/admin/monitoring/operations').then((r) => r.json()),
       fetch(`/api/admin/monitoring/email-delivery?page=${ePage}`).then((r) => r.json()),
+      fetch(`/api/admin/monitoring/supabase-logs?service=${svc}`).then((r) => r.json()),
+      fetch('/api/admin/monitoring/db-stats').then((r) => r.json()),
+      fetch('/api/admin/monitoring/app-errors').then((r) => r.json()),
     ]);
 
     if (statsRes.status === 'fulfilled' && !statsRes.value.error) setStats(statsRes.value);
     if (accessRes.status === 'fulfilled' && !accessRes.value.error) setAccessEvents(accessRes.value.events ?? []);
     if (opsRes.status === 'fulfilled' && !opsRes.value.error) setOperations(opsRes.value.operations ?? []);
     if (emailRes.status === 'fulfilled' && !emailRes.value.error) setEmailData(emailRes.value);
+    if (logsRes.status === 'fulfilled' && !logsRes.value.error) setSupabaseLogs(logsRes.value.logs ?? []);
+    if (dbRes.status === 'fulfilled' && !dbRes.value.error) {
+      setTopQueries(dbRes.value.top_queries ?? []);
+      setTableStats(dbRes.value.table_stats ?? []);
+    }
+    if (errorsRes.status === 'fulfilled' && !errorsRes.value.error) setAppErrors(errorsRes.value.errors ?? []);
     setLastUpdated(new Date());
     setCountdown(60);
     setLoading(false);
@@ -568,13 +911,28 @@ export default function MonitoraggioSection() {
   const handleAccessDaysChange = (d: AccessDays) => {
     setAccessDays(d);
     setLoading(true);
-    fetchAll(d, emailPageRef.current);
+    fetchAll(d, emailPageRef.current, logServiceRef.current);
   };
 
   // Re-fetch when email page changes
   const handleEmailPageChange = (p: number) => {
     setEmailPage(p);
-    fetchAll(accessDaysRef.current, p);
+    fetchAll(accessDaysRef.current, p, logServiceRef.current);
+  };
+
+  // Re-fetch when log service changes
+  const handleLogServiceChange = (s: LogService) => {
+    setLogService(s);
+    setLoading(true);
+    fetchAll(accessDaysRef.current, emailPageRef.current, s);
+  };
+
+  // Reset pg_stat_statements
+  const handleResetStats = async () => {
+    setResetting(true);
+    await fetch('/api/admin/monitoring/db-stats', { method: 'POST' }).catch(() => {});
+    await fetchAll();
+    setResetting(false);
   };
 
   return (
@@ -605,6 +963,20 @@ export default function MonitoraggioSection() {
         page={emailPage}
         onPageChange={handleEmailPageChange}
       />
+      <LogSistema
+        logs={supabaseLogs}
+        loading={loading}
+        service={logService}
+        onServiceChange={handleLogServiceChange}
+      />
+      <DBPerformance
+        topQueries={topQueries}
+        tableStats={tableStats}
+        loading={loading}
+        onReset={handleResetStats}
+        resetting={resetting}
+      />
+      <AppErrorsSection errors={appErrors} loading={loading} />
     </div>
   );
 }
