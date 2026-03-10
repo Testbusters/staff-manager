@@ -409,14 +409,21 @@ function LogOperazioni({
           </SheetHeader>
           {selected && (
             <div className="mt-4 space-y-4">
-              <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-xs">
-                <div className="text-muted-foreground">Tipo</div><div>{selected.tipo}</div>
-                <div className="text-muted-foreground">Data</div><div>{fmtDate(selected.created_at)}</div>
-                <div className="text-muted-foreground">Eseguita da</div><div>{selected.executed_by_email || '—'}</div>
-                <div className="text-muted-foreground">Importati</div><div className="text-emerald-600 dark:text-emerald-400 font-medium">{selected.imported}</div>
-                <div className="text-muted-foreground">Saltati</div><div>{selected.skipped}</div>
-                <div className="text-muted-foreground">Errori</div><div className="text-red-500 font-medium">{selected.errors}</div>
-                <div className="text-muted-foreground">Durata</div><div className="font-mono">{fmtDuration(selected.duration_ms)}</div>
+              <div className="space-y-2 text-xs">
+                {([
+                  ['Tipo', selected.tipo, ''],
+                  ['Data', fmtDate(selected.created_at), ''],
+                  ['Eseguita da', selected.executed_by_email || '—', ''],
+                  ['Importati', selected.imported, 'text-emerald-600 dark:text-emerald-400 font-medium'],
+                  ['Saltati', selected.skipped, ''],
+                  ['Errori', selected.errors, 'text-red-500 font-medium'],
+                  ['Durata', fmtDuration(selected.duration_ms), 'font-mono'],
+                ] as [string, string | number, string][]).map(([label, value, cls]) => (
+                  <div key={label} className="flex gap-4">
+                    <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
+                    <span className={cls}>{value}</span>
+                  </div>
+                ))}
               </div>
               {Array.isArray(selected.detail_json) && (selected.detail_json as Record<string, unknown>[]).length > 0 && (
                 <div>
