@@ -124,7 +124,7 @@ app/
     page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, CollabOpenTicketsSection, PaymentOverview, bar chart) + responsabile_compensi (4 KPI cards, DashboardPendingItems comp/rimborso modals, DashboardTicketSection full-row links) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
     layout.tsx                   → Protected layout (auth guard + Sidebar)
     profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | blue CTA "Nuovo rimborso" + DocumentUploadForm + DocumentList)
-    impostazioni/page.tsx        → Settings: 5-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event)
+    impostazioni/page.tsx        → Settings: 7-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event), Template mail (email template editor), Monitoraggio (system health dashboard)
     compensi/page.tsx            → Collaboratore: unified Compensi e Rimborsi page (PaymentOverview + CompensationList + ExpenseList + TicketQuickModal)
     compensi/nuova/page.tsx      → (removed in Block 7)
     compensi/[id]/page.tsx       → Compensation detail + timeline + actions
@@ -188,6 +188,15 @@ app/
     expenses/[id]/attachments/route.ts → POST (register uploaded file)
     export/gsheet/route.ts       → POST full export flow: fetch APPROVATO→aggregate→GSheet push→stamp exported_at→XLS upload→record run (admin only)
     export/history/route.ts      → GET last 50 export runs + signed XLSX download URLs (admin only)
+    admin/monitoring/stats/route.ts → GET 5 system counters in parallel (admin only)
+    admin/monitoring/access-log/route.ts → GET recent auth events via get_recent_auth_events RPC (admin only, ?days=1|7|30)
+    admin/monitoring/operations/route.ts → GET unified import_runs + export_runs history (admin only)
+    admin/monitoring/email-delivery/route.ts → GET email events summary + paginated list (admin only, ?page=)
+    admin/monitoring/supabase-logs/route.ts → GET Supabase Management API logs proxy (admin only, ?service=api|auth|database)
+    admin/monitoring/db-stats/route.ts → GET top queries + table stats via pg_stat_statements RPCs; POST reset stats (admin only)
+    admin/monitoring/app-errors/route.ts → GET last 50 app_errors (admin only)
+    errors/route.ts              → POST capture client-side errors into app_errors table (public, best-effort, service role)
+    webhooks/resend/route.ts     → POST Resend webhook receiver: HMAC-SHA256 Svix-format signature verification → INSERT email_events
     documents/route.ts           → GET (list, RLS-filtered) + POST (create; collab/resp forces NON_RICHIESTO; enforces 1 CONTRATTO per collaboratore)
     documents/[id]/route.ts      → GET (detail + signed URL) + DELETE (admin only, CONTRATTO only, hard-deletes storage + DB)
     documents/[id]/sign/route.ts → POST (collab/resp uploads signed PDF; requires confirmed=true in FormData)
@@ -226,6 +235,7 @@ components/
     MemberStatusManager.tsx       → Collaborator list with member_status dropdown + data_ingresso inline edit
     ContractTemplateManager.tsx   → Admin: upload/replace .docx template for OCCASIONALE + placeholders reference
     NotificationSettingsManager.tsx → Admin: toggle grid for in-app + email per event×role (15 rows, optimistic updates)
+    MonitoraggioSection.tsx       → Admin: 7-section monitoring dashboard ('use client', auto-refresh 60s, SectionAccordion): StatoSistema (5 pills), LogAccessi (auth events from get_recent_auth_events RPC), LogOperazioni (import_runs + export_runs unified), EmailDelivery (webhook events), LogSistema (Supabase Management API logs), AppErrors (app_errors table), DBPerformance (pg_stat_statements)
   Sidebar.tsx                    → Role-based navigation sidebar (hosts NotificationBell); renders comingSoon items as non-clickable span with "Presto" badge
   NotificationBell.tsx           → Bell icon + unread badge + dropdown (30s polling, mark-read single on click, mark-all button, dismiss ×, TYPE_BADGE colored chips per entity type, relative time, message truncation, link to /notifiche)
   FeedbackButton.tsx             → Fixed bottom-right floating button (all app pages): opens modal form (categoria/pagina/messaggio/screenshot upload), POST to /api/feedback, success toast
@@ -362,6 +372,7 @@ supabase/migrations/
   042_approved_lordo_ytd.sql      → ADD COLUMN approved_lordo_ytd + approved_year on collaborators; backfill from APPROVATO compensations+expenses
   043_monitoring.sql              → CREATE TABLE import_runs + email_events (admin RLS); ADD export_runs.duration_ms; CREATE FUNCTION get_recent_auth_events()
   044_single_community.sql        → ADD UNIQUE CONSTRAINT collaborator_communities_collaborator_id_key (1 collaborator = 1 community)
+  045_monitoring_ext.sql          → CREATE TABLE app_errors (admin RLS); CREATE FUNCTION get_top_queries/get_table_stats/reset_query_stats (SECURITY DEFINER, extensions.pg_stat_statements)
 
 __tests__/                         → 288 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
