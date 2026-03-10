@@ -29,7 +29,7 @@ function ImportRulesPanel() {
         <ul className="space-y-1 text-xs text-muted-foreground">
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
-            Tab: <code className="bg-muted px-1 py-0.5 rounded ml-1">import_collaboratori</code>
+            Tab: <code className="bg-muted px-1 py-0.5 rounded ml-1">import_collaboratori_tb</code>
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
@@ -296,7 +296,7 @@ export default function ImportCollaboratoriSection() {
         <div className="space-y-0.5">
           <p className="text-sm font-medium text-foreground">Foglio Google di importazione</p>
           <p className="text-xs text-muted-foreground">
-            Tab richiesto: <code className="bg-muted px-1 py-0.5 rounded text-xs">import_collaboratori</code>
+            Tab richiesto: <code className="bg-muted px-1 py-0.5 rounded text-xs">import_collaboratori_tb</code>
             {' · '}Colonne A–I (vedi regole)
           </p>
         </div>

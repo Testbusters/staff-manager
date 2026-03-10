@@ -75,7 +75,7 @@ async function getToken(): Promise<string> {
 
 function getSheetConfig() {
   const id  = process.env.IMPORT_COLLABORATORI_SHEET_ID;
-  const tab = process.env.IMPORT_COLLABORATORI_SHEET_TAB ?? 'import_collaboratori';
+  const tab = process.env.IMPORT_COLLABORATORI_SHEET_TAB ?? 'import_collaboratori_tb';
   if (!id) throw new Error('IMPORT_COLLABORATORI_SHEET_ID not set');
   return { id, tab };
 }
