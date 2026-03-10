@@ -408,7 +408,7 @@ function LogOperazioni({
             <SheetTitle>Dettaglio operazione</SheetTitle>
           </SheetHeader>
           {selected && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-4 px-4">
               <div className="space-y-2 text-xs">
                 {([
                   ['Tipo', selected.tipo, ''],
@@ -832,7 +832,7 @@ function AppErrorsSection({ errors, loading }: { errors: AppError[]; loading: bo
             <SheetTitle>Stack trace</SheetTitle>
           </SheetHeader>
           {selected && (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 px-4">
               <p className="text-xs font-mono font-medium text-red-500 break-all">{selected.message}</p>
               {selected.url && <p className="text-xs text-muted-foreground break-all">{selected.url}</p>}
               <p className="text-xs text-muted-foreground">{fmtDate(selected.created_at)}</p>
