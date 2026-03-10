@@ -137,7 +137,7 @@ app/
     collaboratori/[id]/page.tsx  → Collaborator detail: anagrafica + compensi/rimborsi/documenti + inline pre-approva/integrazioni
     coda/page.tsx                → Admin: full lifecycle queue — all stati (IN_ATTESA/APPROVATO/RIFIUTATO/LIQUIDATO), stats strip, sub-filter pills, approve/reject/liquidate per row + bulk (?tab=compensi|rimborsi)
     export/page.tsx              → Admin: export approved records to Google Sheet + XLSX download + run history (?tab=anteprima|storico)
-    import/page.tsx              → Admin: bulk import scaffold — 3 tabs (Collaboratori/Contratti/CU) + Anteprima/Storico sub-tabs + GSheet URL input (Round 1: UI only)
+    import/page.tsx              → Admin: bulk import — 3 tabs (Collaboratori: full pipeline ✅ | Contratti: coming soon | CU: full pipeline ✅)
     documenti/page.tsx           → Admin: 3 tabs (list/upload/cu-batch). Collaboratore: redirect → /profilo?tab=documenti. Responsabile: redirect → /
     eventi/page.tsx              → Collaboratore: events list (read-only, ordered by start_datetime ASC, upcoming/past sections)
     eventi/[id]/page.tsx         → Event detail: tipo, datetime, location + Maps link, Google Calendar link, descrizione, luma embed
@@ -313,6 +313,9 @@ lib/
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
   email-templates.ts             → 12 branded HTML templates E1–E12 (Testbusters logo + legal footer; APP_URL env controls all CTA links; E9=ticket reply, E10=nuova comunicazione, E11=nuovo evento, E12=nuovo contenuto)
   google-sheets.ts               → Google Sheets API wrapper: fetchPendingRows (TO_PROCESS rows), markRowsProcessed (writeback), writeExportRows (append to GOOGLE_SHEET_EXPORT_ID)
+  import-sheet.ts                → GSheet helper for Collaboratori import (getImportSheetRows, writeImportResults — col E/F/G)
+  cu-import-sheet.ts             → GSheet helper for CU import (getImportCURows skips PROCESSED, writeCUImportResults — col C/D)
+  google-drive.ts                → Drive helper: buildFolderMap(folderId) + downloadFile(fileId); retry on 429/503; supportsAllDrives
 
 supabase/migrations/
   001_schema.sql                 → Full schema (compensations, expense_reimbursements, communities, documents, etc.)
