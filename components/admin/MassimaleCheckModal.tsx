@@ -16,6 +16,7 @@ export type MassimaleImpact = {
   collaboratorId: string;
   collabName: string;
   massimale: number;
+  already_approved: number;
   totale: number;
   eccedenza: number;
   items: Array<{
@@ -51,7 +52,7 @@ function ImpactCard({ impact, entityType }: { impact: MassimaleImpact; entityTyp
         <span className="flex-1 font-medium text-sm text-foreground">{impact.collabName}</span>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span>Massimale: <span className="text-foreground">€{impact.massimale.toFixed(2)}</span></span>
-          <span>Totale: <span className="text-foreground">€{impact.totale.toFixed(2)}</span></span>
+          <span>Questi: <span className="text-foreground">€{impact.totale.toFixed(2)}</span></span>
           <span className="font-bold text-amber-600 dark:text-amber-400">
             +€{impact.eccedenza.toFixed(2)}
           </span>
@@ -60,6 +61,12 @@ function ImpactCard({ impact, entityType }: { impact: MassimaleImpact; entityTyp
 
       {expanded && (
         <div className="border-t border-amber-500/20 px-4 py-2 space-y-1">
+          {impact.already_approved > 0 && (
+            <div className="flex items-center justify-between py-1 text-xs text-muted-foreground border-b border-amber-500/10 mb-1">
+              <span>Già approvato (anno corrente)</span>
+              <span className="font-medium">€{impact.already_approved.toFixed(2)}</span>
+            </div>
+          )}
           {impact.items.map((item) => (
             <div key={item.id} className="flex items-center justify-between py-1 text-xs">
               <span className="text-muted-foreground">

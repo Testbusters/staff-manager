@@ -62,35 +62,6 @@ function sortByDate(rows: ExpenseRow[], dir: SortDir): ExpenseRow[] {
   });
 }
 
-function checkMassimale(items: ExpenseRow[]): MassimaleImpact[] {
-  const byCollab = new Map<string, ExpenseRow[]>();
-  for (const e of items) {
-    if (!byCollab.has(e.collaborator_id)) byCollab.set(e.collaborator_id, []);
-    byCollab.get(e.collaborator_id)!.push(e);
-  }
-  const impacts: MassimaleImpact[] = [];
-  for (const [, exps] of byCollab) {
-    const first = exps[0];
-    if (!first.massimale) continue;
-    const totale = exps.reduce((s, e) => s + (e.importo ?? 0), 0);
-    if (totale > first.massimale) {
-      impacts.push({
-        collaboratorId: first.collaborator_id,
-        collabName: first.collabName,
-        massimale: first.massimale,
-        totale,
-        eccedenza: totale - first.massimale,
-        items: exps.map((e) => ({
-          id: e.id,
-          importo: e.importo ?? 0,
-          label: e.categoria,
-          date: e.data_spesa,
-        })),
-      });
-    }
-  }
-  return impacts;
-}
 
 function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => void }) {
   const Icon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
@@ -197,6 +168,8 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
   const [rejectionNote, setRejectionNote]   = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
   const [liquidateTarget, setLiquidateTarget] = useState<ExpenseRow | null>(null);
+  const [bulkReceiptItems, setBulkReceiptItems] = useState<Array<{ id: string; collabName: string; importo: number }> | null>(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ── Sections ───────────────────────────────────────────────────
@@ -247,13 +220,44 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
   async function doApprove(ids: string[]) {
     setLoading(true);
     try {
-      const url  = ids.length === 1 ? `/api/expenses/${ids[0]}/transition` : '/api/expenses/bulk-approve';
-      const body = ids.length === 1 ? { action: 'approve' } : { ids };
-      const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
-      toast.success(ids.length === 1 ? 'Rimborso approvato.' : `${ids.length} rimborsi approvati.`);
-      setSelectedInAttesaIds(new Set());
-      router.refresh();
+      if (ids.length > 1) {
+        const toastId = toast.loading('Elaborazione approvazioni…');
+        const res = await fetch('/api/expenses/bulk-approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        toast.dismiss(toastId);
+        const data = await res.json();
+        if (!res.ok) { toast.error(data.error ?? 'Errore.', { duration: 5000 }); return; }
+        if ((data.approved?.length ?? 0) > 0) {
+          toast.success(`${data.approved.length} rimborsi approvati.`);
+          setSelectedInAttesaIds(new Set());
+          router.refresh();
+        }
+        if ((data.blocked?.length ?? 0) > 0) {
+          toast.error(`${data.blocked.length} collaborator${data.blocked.length > 1 ? 'i bloccati' : 'e bloccata'} per massimale`, { duration: 6000 });
+          setMassimaleWarning(data.blocked);
+        }
+        if (!data.approved?.length && !data.blocked?.length) {
+          toast.error('Nessun rimborso approvato.', { duration: 5000 });
+        }
+      } else {
+        const res = await fetch(`/api/expenses/${ids[0]}/transition`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'approve' }),
+        });
+        const d = await res.json();
+        if (!res.ok) {
+          toast.error(d.error ?? 'Errore.', { duration: 5000 });
+          if (d.blocked?.length > 0) setMassimaleWarning(d.blocked);
+          return;
+        }
+        toast.success('Rimborso approvato.');
+        setSelectedInAttesaIds(new Set());
+        router.refresh();
+      }
     } finally { setLoading(false); }
   }
 
@@ -267,35 +271,66 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
         body: JSON.stringify({ ids }),
       });
       if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
-      toast.success(ids.length === 1 ? 'Rimborso liquidato.' : `${ids.length} rimborsi liquidati.`);
       setSelectedApprovatiIds(new Set());
       setLiquidateTarget(null);
 
-      // Best-effort receipt generation for single item
-      if (generateReceipt && expenseId) {
-        fetch('/api/documents/generate-receipts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'single', expense_id: expenseId }),
-        }).catch(() => {});
+      if (ids.length > 1 && hasReceiptTemplate) {
+        const items = ids
+          .map((id) => {
+            const exp = approvati.find((e) => e.id === id);
+            return exp ? { id, collabName: exp.collabName, importo: exp.importo ?? 0 } : null;
+          })
+          .filter((x): x is { id: string; collabName: string; importo: number } => x !== null);
+        if (items.length > 0) {
+          setBulkReceiptItems(items);
+          toast.success(`${ids.length} rimborsi liquidati.`, {
+            action: { label: `Genera ricevute (${items.length})`, onClick: () => setReceiptModalOpen(true) },
+            duration: 8000,
+          });
+        } else {
+          toast.success(`${ids.length} rimborsi liquidati.`);
+        }
+      } else {
+        toast.success(ids.length === 1 ? 'Rimborso liquidato.' : `${ids.length} rimborsi liquidati.`);
+        if (generateReceipt && expenseId) {
+          fetch('/api/documents/generate-receipts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'single', expense_id: expenseId }),
+          }).catch(() => {});
+        }
       }
 
       router.refresh();
     } finally { setLoading(false); }
   }
 
+  async function handleGenerateBulkReceipts() {
+    if (!bulkReceiptItems) return;
+    setReceiptModalOpen(false);
+    const toastId = toast.loading('Generazione ricevute in corso…');
+    try {
+      await fetch('/api/documents/generate-receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'bulk' }),
+      });
+      toast.dismiss(toastId);
+      toast.success('Ricevute generate.');
+    } catch {
+      toast.dismiss(toastId);
+      toast.error('Errore durante la generazione delle ricevute.');
+    } finally {
+      setBulkReceiptItems(null);
+    }
+  }
+
   function handleApproveSingle(id: string) {
-    const exp = expenses.find((e) => e.id === id)!;
-    const impacts = checkMassimale([exp]);
-    if (impacts.length > 0) { setMassimaleWarning(impacts); return; }
     doApprove([id]);
   }
 
   function handleApproveSelected() {
     if (selectedInAttesaIds.size === 0) return;
-    const selected = inAttesa.filter((e) => selectedInAttesaIds.has(e.id));
-    const impacts  = checkMassimale(selected);
-    if (impacts.length > 0) { setMassimaleWarning(impacts); return; }
     doApprove([...selectedInAttesaIds]);
   }
 
@@ -705,6 +740,40 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
               }}
             >
               Conferma liquidazione
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Bulk receipt confirmation dialog ─────────────────── */}
+      <Dialog open={receiptModalOpen} onOpenChange={(open) => { if (!open) setReceiptModalOpen(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Genera ricevute di pagamento</DialogTitle>
+            <DialogDescription>
+              Verranno generate le ricevute per i {bulkReceiptItems?.length ?? 0} rimborsi liquidati.
+            </DialogDescription>
+          </DialogHeader>
+          {bulkReceiptItems && (
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {bulkReceiptItems.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
+                  <span className="text-foreground">{item.collabName}</span>
+                  <span className="text-muted-foreground tabular-nums">€{item.importo.toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
+                <span>Totale</span>
+                <span className="tabular-nums">€{bulkReceiptItems.reduce((s, i) => s + i.importo, 0).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setReceiptModalOpen(false); setBulkReceiptItems(null); }}>
+              Annulla
+            </Button>
+            <Button className="bg-brand hover:bg-brand/90 text-white" onClick={handleGenerateBulkReceipts}>
+              Genera
             </Button>
           </DialogFooter>
         </DialogContent>

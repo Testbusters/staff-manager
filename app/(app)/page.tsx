@@ -862,7 +862,7 @@ export default async function DashboardPage() {
   // Fetch collaborator record
   const { data: collaborator } = await supabase
     .from('collaborators')
-    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale, foto_profilo_url, data_ingresso')
+    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale, approved_lordo_ytd, approved_year, foto_profilo_url, data_ingresso')
     .eq('user_id', user.id)
     .single();
 
@@ -990,7 +990,7 @@ export default async function DashboardPage() {
     inAttesa: expenseInAttesa,
   } = groupExpByYear(expenses ?? []);
   const massimale = collaborator?.importo_lordo_massimale ?? null;
-  const paidCurrentYear = compensPaidByYear.find((y) => y.year === currentYear)?.lordo ?? 0;
+  const paidCurrentYear = (collaborator?.approved_year === currentYear ? (collaborator?.approved_lordo_ytd ?? 0) : 0);
 
   // Bar chart — ultimi 6 mesi
   const barData = buildBarData(compensations ?? [], expenses ?? []);

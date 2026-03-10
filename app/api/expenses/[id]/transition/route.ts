@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { canExpenseTransition, applyExpenseTransition } from '@/lib/expense-transitions';
+import { getYtd, isOverMassimale } from '@/lib/massimale';
 import type { ExpenseAction } from '@/lib/expense-transitions';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role, ExpenseStatus } from '@/lib/types';
@@ -74,6 +75,38 @@ export async function POST(
 
   const newStato = applyExpenseTransition(action as ExpenseAction);
 
+  // Massimale check + collaborator data (for ytd update after approve)
+  let approveCollab: { id: string; nome: string | null; cognome: string | null; importo_lordo_massimale: number | null; approved_lordo_ytd: number; approved_year: number } | null = null;
+  if (action === 'approve') {
+    const svcCheck = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: collab } = await svcCheck
+      .from('collaborators')
+      .select('id, nome, cognome, importo_lordo_massimale, approved_lordo_ytd, approved_year')
+      .eq('id', expense.collaborator_id)
+      .single();
+    if (collab && isOverMassimale(getYtd(collab), expense.importo ?? 0, collab.importo_lordo_massimale)) {
+      const ytd = getYtd(collab);
+      const massimale = collab.importo_lordo_massimale!;
+      const eccedenza = ytd + (expense.importo ?? 0) - massimale;
+      return NextResponse.json({
+        error: `Massimale superato: +€${eccedenza.toFixed(2)} di eccedenza`,
+        blocked: [{
+          collaboratorId: expense.collaborator_id,
+          collabName: `${collab.nome ?? ''} ${collab.cognome ?? ''}`.trim(),
+          massimale,
+          already_approved: ytd,
+          totale: expense.importo ?? 0,
+          eccedenza,
+          items: [{ id, importo: expense.importo ?? 0, label: null, date: expense.data_spesa ?? null }],
+        }],
+      }, { status: 422 });
+    }
+    approveCollab = collab;
+  }
+
   const updatePayload: Record<string, unknown> = { stato: newStato };
 
   if (action === 'approve') {
@@ -101,6 +134,16 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Update approved_lordo_ytd counter on approve
+  if (action === 'approve' && approveCollab) {
+    const year = new Date().getFullYear();
+    const currentYtd = getYtd(approveCollab);
+    await serviceClient.from('collaborators').update({
+      approved_lordo_ytd: currentYtd + (expense.importo ?? 0),
+      approved_year: year,
+    }).eq('id', expense.collaborator_id);
   }
 
   const { error: historyError } = await serviceClient

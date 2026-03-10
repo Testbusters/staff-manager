@@ -63,35 +63,6 @@ function sortByDate(rows: CompensationRow[], dir: SortDir): CompensationRow[] {
   });
 }
 
-function checkMassimale(items: CompensationRow[]): MassimaleImpact[] {
-  const byCollab = new Map<string, CompensationRow[]>();
-  for (const c of items) {
-    if (!byCollab.has(c.collaborator_id)) byCollab.set(c.collaborator_id, []);
-    byCollab.get(c.collaborator_id)!.push(c);
-  }
-  const impacts: MassimaleImpact[] = [];
-  for (const [, comps] of byCollab) {
-    const first = comps[0];
-    if (!first.massimale) continue;
-    const totale = comps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0);
-    if (totale > first.massimale) {
-      impacts.push({
-        collaboratorId: first.collaborator_id,
-        collabName: first.collabName,
-        massimale: first.massimale,
-        totale,
-        eccedenza: totale - first.massimale,
-        items: comps.map((c) => ({
-          id: c.id,
-          importo: c.importo_lordo ?? 0,
-          label: c.nome_servizio_ruolo,
-          date: c.data_competenza,
-        })),
-      });
-    }
-  }
-  return impacts;
-}
 
 function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => void }) {
   const Icon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
@@ -198,6 +169,8 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
   const [rejectionNote, setRejectionNote]   = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
   const [liquidateTarget, setLiquidateTarget] = useState<CompensationRow | null>(null);
+  const [bulkReceiptItems, setBulkReceiptItems] = useState<Array<{ id: string; collabName: string; importo: number }> | null>(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ── Sections ───────────────────────────────────────────────────
@@ -248,13 +221,44 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
   async function doApprove(ids: string[]) {
     setLoading(true);
     try {
-      const url  = ids.length === 1 ? `/api/compensations/${ids[0]}/transition` : '/api/compensations/bulk-approve';
-      const body = ids.length === 1 ? { action: 'approve' } : { ids };
-      const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
-      toast.success(ids.length === 1 ? 'Compenso approvato.' : `${ids.length} compensi approvati.`);
-      setSelectedInAttesaIds(new Set());
-      router.refresh();
+      if (ids.length > 1) {
+        const toastId = toast.loading('Elaborazione approvazioni…');
+        const res = await fetch('/api/compensations/bulk-approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        toast.dismiss(toastId);
+        const data = await res.json();
+        if (!res.ok) { toast.error(data.error ?? 'Errore.', { duration: 5000 }); return; }
+        if ((data.approved?.length ?? 0) > 0) {
+          toast.success(`${data.approved.length} compensi approvati.`);
+          setSelectedInAttesaIds(new Set());
+          router.refresh();
+        }
+        if ((data.blocked?.length ?? 0) > 0) {
+          toast.error(`${data.blocked.length} collaborator${data.blocked.length > 1 ? 'i bloccati' : 'e bloccata'} per massimale`, { duration: 6000 });
+          setMassimaleWarning(data.blocked);
+        }
+        if (!data.approved?.length && !data.blocked?.length) {
+          toast.error('Nessun compenso approvato.', { duration: 5000 });
+        }
+      } else {
+        const res = await fetch(`/api/compensations/${ids[0]}/transition`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'approve' }),
+        });
+        const d = await res.json();
+        if (!res.ok) {
+          toast.error(d.error ?? 'Errore.', { duration: 5000 });
+          if (d.blocked?.length > 0) setMassimaleWarning(d.blocked);
+          return;
+        }
+        toast.success('Compenso approvato.');
+        setSelectedInAttesaIds(new Set());
+        router.refresh();
+      }
     } finally { setLoading(false); }
   }
 
@@ -268,35 +272,66 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
         body: JSON.stringify({ ids }),
       });
       if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
-      toast.success(ids.length === 1 ? 'Compenso liquidato.' : `${ids.length} compensi liquidati.`);
       setSelectedApprovatiIds(new Set());
       setLiquidateTarget(null);
 
-      // Best-effort receipt generation for single item
-      if (generateReceipt && compensationId) {
-        await fetch('/api/documents/generate-receipts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'single', compensation_id: compensationId }),
-        }).catch(() => {});
+      if (ids.length > 1 && hasReceiptTemplate) {
+        const items = ids
+          .map((id) => {
+            const comp = approvati.find((c) => c.id === id);
+            return comp ? { id, collabName: comp.collabName, importo: comp.importo_lordo ?? 0 } : null;
+          })
+          .filter((x): x is { id: string; collabName: string; importo: number } => x !== null);
+        if (items.length > 0) {
+          setBulkReceiptItems(items);
+          toast.success(`${ids.length} compensi liquidati.`, {
+            action: { label: `Genera ricevute (${items.length})`, onClick: () => setReceiptModalOpen(true) },
+            duration: 8000,
+          });
+        } else {
+          toast.success(`${ids.length} compensi liquidati.`);
+        }
+      } else {
+        toast.success(ids.length === 1 ? 'Compenso liquidato.' : `${ids.length} compensi liquidati.`);
+        if (generateReceipt && compensationId) {
+          await fetch('/api/documents/generate-receipts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'single', compensation_id: compensationId }),
+          }).catch(() => {});
+        }
       }
 
       router.refresh();
     } finally { setLoading(false); }
   }
 
+  async function handleGenerateBulkReceipts() {
+    if (!bulkReceiptItems) return;
+    setReceiptModalOpen(false);
+    const toastId = toast.loading('Generazione ricevute in corso…');
+    try {
+      await fetch('/api/documents/generate-receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'bulk' }),
+      });
+      toast.dismiss(toastId);
+      toast.success('Ricevute generate.');
+    } catch {
+      toast.dismiss(toastId);
+      toast.error('Errore durante la generazione delle ricevute.');
+    } finally {
+      setBulkReceiptItems(null);
+    }
+  }
+
   function handleApproveSingle(id: string) {
-    const comp = compensations.find((c) => c.id === id)!;
-    const impacts = checkMassimale([comp]);
-    if (impacts.length > 0) { setMassimaleWarning(impacts); return; }
     doApprove([id]);
   }
 
   function handleApproveSelected() {
     if (selectedInAttesaIds.size === 0) return;
-    const selected = inAttesa.filter((c) => selectedInAttesaIds.has(c.id));
-    const impacts  = checkMassimale(selected);
-    if (impacts.length > 0) { setMassimaleWarning(impacts); return; }
     doApprove([...selectedInAttesaIds]);
   }
 
@@ -699,6 +734,40 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               }}
             >
               Conferma liquidazione
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Bulk receipt confirmation dialog ─────────────────── */}
+      <Dialog open={receiptModalOpen} onOpenChange={(open) => { if (!open) setReceiptModalOpen(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Genera ricevute di pagamento</DialogTitle>
+            <DialogDescription>
+              Verranno generate le ricevute per i {bulkReceiptItems?.length ?? 0} compensi liquidati.
+            </DialogDescription>
+          </DialogHeader>
+          {bulkReceiptItems && (
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {bulkReceiptItems.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
+                  <span className="text-foreground">{item.collabName}</span>
+                  <span className="text-muted-foreground tabular-nums">€{item.importo.toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
+                <span>Totale</span>
+                <span className="tabular-nums">€{bulkReceiptItems.reduce((s, i) => s + i.importo, 0).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setReceiptModalOpen(false); setBulkReceiptItems(null); }}>
+              Annulla
+            </Button>
+            <Button className="bg-brand hover:bg-brand/90 text-white" onClick={handleGenerateBulkReceipts}>
+              Genera
             </Button>
           </DialogFooter>
         </DialogContent>

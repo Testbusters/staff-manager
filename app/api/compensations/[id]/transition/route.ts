@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { canTransition, applyTransition } from '@/lib/compensation-transitions';
+import { getYtd, isOverMassimale } from '@/lib/massimale';
 import type { CompensationAction } from '@/lib/compensation-transitions';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role, CompensationStatus } from '@/lib/types';
@@ -79,6 +80,38 @@ export async function POST(
 
   const newStato = applyTransition(action as CompensationAction);
 
+  // Massimale check + collaborator data (for ytd update after approve)
+  let approveCollab: { id: string; nome: string | null; cognome: string | null; importo_lordo_massimale: number | null; approved_lordo_ytd: number; approved_year: number } | null = null;
+  if (action === 'approve') {
+    const svcCheck = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: collab } = await svcCheck
+      .from('collaborators')
+      .select('id, nome, cognome, importo_lordo_massimale, approved_lordo_ytd, approved_year')
+      .eq('id', comp.collaborator_id)
+      .single();
+    if (collab && isOverMassimale(getYtd(collab), comp.importo_lordo ?? 0, collab.importo_lordo_massimale)) {
+      const ytd = getYtd(collab);
+      const massimale = collab.importo_lordo_massimale!;
+      const eccedenza = ytd + (comp.importo_lordo ?? 0) - massimale;
+      return NextResponse.json({
+        error: `Massimale superato: +€${eccedenza.toFixed(2)} di eccedenza`,
+        blocked: [{
+          collaboratorId: comp.collaborator_id,
+          collabName: `${collab.nome ?? ''} ${collab.cognome ?? ''}`.trim(),
+          massimale,
+          already_approved: ytd,
+          totale: comp.importo_lordo ?? 0,
+          eccedenza,
+          items: [{ id, importo: comp.importo_lordo ?? 0, label: null, date: comp.data_competenza ?? null }],
+        }],
+      }, { status: 422 });
+    }
+    approveCollab = collab;
+  }
+
   // Build update payload
   const updatePayload: Record<string, unknown> = { stato: newStato };
 
@@ -109,6 +142,16 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Update approved_lordo_ytd counter on approve
+  if (action === 'approve' && approveCollab) {
+    const year = new Date().getFullYear();
+    const currentYtd = getYtd(approveCollab);
+    await serviceClient.from('collaborators').update({
+      approved_lordo_ytd: currentYtd + (comp.importo_lordo ?? 0),
+      approved_year: year,
+    }).eq('id', comp.collaborator_id);
   }
 
   // Insert history entry
