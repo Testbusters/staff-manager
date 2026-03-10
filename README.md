@@ -221,7 +221,7 @@ components/
   onboarding/
     OnboardingWizard.tsx         → 2-step client wizard: anagrafica (all fields required) + contract generation + download
   impostazioni/
-    CreateUserForm.tsx            → Create user form with dual-mode toggle: "Invito rapido" (email + nome + cognome + tipo_contratto required) and "Invito completo" (full optional anagrafica pre-fill)
+    CreateUserForm.tsx            → Create user form with dual-mode toggle: "Invito rapido" (email + nome + cognome + username + data_ingresso required) and "Invito completo" (full anagrafica pre-fill)
     CommunityManager.tsx          → Community CRUD (create/rename/toggle active) + responsabile→community assignment
     MemberStatusManager.tsx       → Collaborator list with member_status dropdown + data_ingresso inline edit
     ContractTemplateManager.tsx   → Admin: upload/replace .docx template for OCCASIONALE + placeholders reference
@@ -313,7 +313,7 @@ lib/
   email.ts                       → Resend transactional email wrapper (fire-and-forget, from noreply@testbusters.it)
   email-templates.ts             → 12 branded HTML templates E1–E12 (Testbusters logo + legal footer; APP_URL env controls all CTA links; E9=ticket reply, E10=nuova comunicazione, E11=nuovo evento, E12=nuovo contenuto)
   google-sheets.ts               → Google Sheets API wrapper: fetchPendingRows (TO_PROCESS rows), markRowsProcessed (writeback), writeExportRows (append to GOOGLE_SHEET_EXPORT_ID)
-  import-sheet.ts                → GSheet helper for Collaboratori import (getImportSheetRows, writeImportResults — col E/F/G)
+  import-sheet.ts                → GSheet helper for Collaboratori import (getImportSheetRows skips PROCESSED rows, writeImportResults — A–I layout: A–D=data, E=stato, F=community, G=data_ingresso, H=password, I=note_errore)
   cu-import-sheet.ts             → GSheet helper for CU import (getImportCURows skips PROCESSED, writeCUImportResults — col C/D)
   google-drive.ts                → Drive helper: buildFolderMap(folderId) + downloadFile(fileId); retry on 429/503; supportsAllDrives
 
@@ -359,6 +359,9 @@ supabase/migrations/
   039_digital_signature.sql       → RICEVUTA_PAGAMENTO tipo; receipt_document_id FK; data_fine_contratto on collaborators
   040_skip_contract_flag.sql      → ADD COLUMN skip_contract_on_onboarding boolean on user_profiles
   041_email_templates.sql         → CREATE TABLE email_templates (12 rows seeded) + email_layout_config; RLS admin-only
+  042_approved_lordo_ytd.sql      → ADD COLUMN approved_lordo_ytd + approved_year on collaborators; backfill from APPROVATO compensations+expenses
+  043_monitoring.sql              → CREATE TABLE import_runs + email_events (admin RLS); ADD export_runs.duration_ms; CREATE FUNCTION get_recent_auth_events()
+  044_single_community.sql        → ADD UNIQUE CONSTRAINT collaborator_communities_collaborator_id_key (1 collaborator = 1 community)
 
 __tests__/                         → 288 tests total (vitest)
   compensation-transitions.test.ts → State machine unit tests for compensations (22 cases)
@@ -416,7 +419,7 @@ next.config.ts
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Run unit tests (252 cases) + Playwright e2e
+npm test           # Run unit tests (288 cases) + Playwright e2e
 npm run build      # Production build (TypeScript check included)
 ```
 
