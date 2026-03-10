@@ -5,27 +5,31 @@ import { cookies } from 'next/headers';
 import { getImportSheetRows } from '@/lib/import-sheet';
 
 export interface PreviewRow {
-  rowIndex: number;
-  nome: string;
-  cognome: string;
-  email: string;
-  username: string;
-  stato: string; // current stato in sheet
-  errors: string[];
+  rowIndex:      number;
+  nome:          string;
+  cognome:       string;
+  email:         string;
+  username:      string;
+  community:     string;
+  data_ingresso: string;
+  stato:         string; // current stato in sheet
+  errors:        string[];
 }
 
 export interface PreviewResponse {
-  rows: PreviewRow[];
-  validCount: number;
-  errorCount: number;
-  alreadyImportedCount: number;
+  rows:                 PreviewRow[];
+  validCount:           number;
+  errorCount:           number;
+  alreadyProcessedCount: number;
 }
 
 const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-z0-9_]{3,50}$/;
 const MAX_ROWS    = 1000;
+const VALID_COMMUNITIES = new Set(['testbusters', 'peer4med']);
 
 export async function POST(request: Request) {
+  void request;
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
   }
 
   if (rawRows.length === 0) {
-    return NextResponse.json<PreviewResponse>({ rows: [], validCount: 0, errorCount: 0, alreadyImportedCount: 0 });
+    return NextResponse.json<PreviewResponse>({ rows: [], validCount: 0, errorCount: 0, alreadyProcessedCount: 0 });
   }
 
   if (rawRows.length > MAX_ROWS) {
@@ -91,16 +95,14 @@ export async function POST(request: Request) {
   const batchUsernames = new Map<string, number>(); // username → first rowIndex
 
   const rows: PreviewRow[] = rawRows.map((r) => {
-    const nome     = r.nome.trim();
-    const cognome  = r.cognome.trim();
-    const email    = r.email.trim().toLowerCase();
-    const username = r.username.trim().toLowerCase();
-    const stato    = r.stato.trim();
+    const nome          = r.nome.trim();
+    const cognome       = r.cognome.trim();
+    const email         = r.email.trim().toLowerCase();
+    const username      = r.username.trim().toLowerCase();
+    const community     = r.community.trim().toLowerCase();
+    const data_ingresso = r.data_ingresso.trim();
+    const stato         = r.stato.trim();
     const errors: string[] = [];
-
-    if (stato === 'IMPORTED') {
-      return { rowIndex: r.rowIndex, nome, cognome, email, username, stato, errors };
-    }
 
     if (!nome)    errors.push('nome mancante');
     if (!cognome) errors.push('cognome mancante');
@@ -125,18 +127,28 @@ export async function POST(request: Request) {
       errors.push(`username duplicato nel foglio (riga ${batchUsernames.get(username)})`);
     }
 
+    if (!community) {
+      errors.push('community mancante');
+    } else if (!VALID_COMMUNITIES.has(community)) {
+      errors.push(`community non valida (valori accettati: testbusters, peer4med)`);
+    }
+
+    if (!data_ingresso) {
+      errors.push('data_ingresso mancante');
+    } else if (isNaN(Date.parse(data_ingresso))) {
+      errors.push('data_ingresso non valida (formato atteso: YYYY-MM-DD)');
+    }
+
     if (errors.length === 0) {
       batchEmails.set(email, r.rowIndex);
       batchUsernames.set(username, r.rowIndex);
     }
 
-    return { rowIndex: r.rowIndex, nome, cognome, email, username, stato, errors };
+    return { rowIndex: r.rowIndex, nome, cognome, email, username, community, data_ingresso, stato, errors };
   });
 
-  const alreadyImportedCount = rows.filter(r => r.stato === 'IMPORTED').length;
-  const toProcess            = rows.filter(r => r.stato !== 'IMPORTED');
-  const validCount           = toProcess.filter(r => r.errors.length === 0).length;
-  const errorCount           = toProcess.filter(r => r.errors.length > 0).length;
+  const validCount    = rows.filter(r => r.errors.length === 0).length;
+  const errorCount    = rows.filter(r => r.errors.length > 0).length;
 
-  return NextResponse.json<PreviewResponse>({ rows, validCount, errorCount, alreadyImportedCount });
+  return NextResponse.json<PreviewResponse>({ rows, validCount, errorCount, alreadyProcessedCount: 0 });
 }

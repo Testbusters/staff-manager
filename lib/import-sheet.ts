@@ -4,17 +4,37 @@
  * Sheet ID and tab name are read from env vars:
  *   IMPORT_COLLABORATORI_SHEET_ID
  *   IMPORT_COLLABORATORI_SHEET_TAB  (default: import_collaboratori)
+ *
+ * Column layout (A–I):
+ *   A = nome
+ *   B = cognome
+ *   C = email
+ *   D = username
+ *   E = stato (TO_PROCESS / PROCESSED / ERROR — written by run)
+ *   F = community (testbusters | peer4med)
+ *   G = data_ingresso (ISO date, e.g. 2025-01-01)
+ *   H = password (written by run on PROCESSED rows)
+ *   I = note_errore (written by run on ERROR rows)
  */
 
 import { webcrypto } from 'crypto';
 
 export interface ImportSheetRow {
-  rowIndex: number;
-  nome:     string;
-  cognome:  string;
-  email:    string;
-  username: string;
-  stato:    string;
+  rowIndex:      number;
+  nome:          string;
+  cognome:       string;
+  email:         string;
+  username:      string;
+  stato:         string;
+  community:     string;
+  data_ingresso: string;
+}
+
+export interface SheetUpdate {
+  rowIndex:    number;
+  stato:       'PROCESSED' | 'ERROR';
+  password?:   string;   // col H — set on PROCESSED rows
+  noteErrore?: string;   // col I — set on ERROR rows
 }
 
 function pemToDer(pem: string): Buffer {
@@ -62,12 +82,13 @@ function getSheetConfig() {
 
 /**
  * Fetches all data rows (excluding header) from the import sheet.
+ * Skips rows where stato (col E) = 'PROCESSED'.
  */
 export async function getImportSheetRows(): Promise<ImportSheetRow[]> {
   const { id, tab } = getSheetConfig();
   const token = await getToken();
 
-  const range = encodeURIComponent(`${tab}!A:F`);
+  const range = encodeURIComponent(`${tab}!A:H`);
   const res   = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}`,
     { headers: { Authorization: `Bearer ${token}` } });
   const data  = await res.json() as { values?: string[][]; error?: { message: string } };
@@ -75,36 +96,43 @@ export async function getImportSheetRows(): Promise<ImportSheetRow[]> {
   if (data.error) throw new Error(data.error.message);
 
   const allRows = data.values ?? [];
-  // Skip header row (index 0)
-  return allRows.slice(1).map((row, i) => ({
-    rowIndex: i + 2, // 1-based sheet row
-    nome:     row[0] ?? '',
-    cognome:  row[1] ?? '',
-    email:    row[2] ?? '',
-    username: row[3] ?? '',
-    stato:    row[4] ?? '',
-  }));
+  // Skip header row (index 0); skip rows with stato = PROCESSED
+  return allRows.slice(1)
+    .map((row, i) => ({
+      rowIndex:      i + 2, // 1-based sheet row
+      nome:          row[0] ?? '',
+      cognome:       row[1] ?? '',
+      email:         row[2] ?? '',
+      username:      row[3] ?? '',
+      stato:         row[4] ?? '',
+      community:     row[5] ?? '',
+      data_ingresso: row[6] ?? '',
+    }))
+    .filter(r => r.stato.trim().toUpperCase() !== 'PROCESSED');
 }
 
 /**
  * Writes import results back to the sheet.
- * Col E = stato (IMPORTED | ERROR)
- * Col F = note_errore
- * Col G = password_temp (only on IMPORTED rows)
+ * Col E = stato (PROCESSED | ERROR)
+ * Col H = password (only on PROCESSED rows)
+ * Col I = note_errore (only on ERROR rows)
  */
-export async function writeImportResults(
-  updates: { rowIndex: number; status: 'IMPORTED' | 'ERROR'; note: string; password: string }[],
-): Promise<void> {
+export async function writeImportResults(updates: SheetUpdate[]): Promise<void> {
   if (updates.length === 0) return;
 
   const { id, tab } = getSheetConfig();
   const token = await getToken();
 
-  const data = updates.flatMap(u => [
-    { range: `${tab}!E${u.rowIndex}`, values: [[u.status]] },
-    { range: `${tab}!F${u.rowIndex}`, values: [[u.note]] },
-    { range: `${tab}!G${u.rowIndex}`, values: [[u.password]] },
-  ]);
+  const data: { range: string; values: string[][] }[] = [];
+  for (const u of updates) {
+    data.push({ range: `${tab}!E${u.rowIndex}`, values: [[u.stato]] });
+    if (u.stato === 'PROCESSED' && u.password) {
+      data.push({ range: `${tab}!H${u.rowIndex}`, values: [[u.password]] });
+    }
+    if (u.stato === 'ERROR' && u.noteErrore) {
+      data.push({ range: `${tab}!I${u.rowIndex}`, values: [[u.noteErrore]] });
+    }
+  }
 
   const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${id}/values:batchUpdate`,

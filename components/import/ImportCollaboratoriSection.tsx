@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ExternalLink, AlertTriangle, Info, CheckCircle2, XCircle, Loader2, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -23,14 +24,6 @@ function ImportRulesPanel() {
         Regole di importazione
       </p>
 
-      <div className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-        <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-        <p className="text-xs text-amber-200">
-          <strong>Nessun contratto verrà generato.</strong> I contratti devono essere
-          caricati dal tab <strong>Contratti</strong>.
-        </p>
-      </div>
-
       <div className="space-y-1.5">
         <p className="text-xs font-medium text-foreground">Requisiti foglio Google:</p>
         <ul className="space-y-1 text-xs text-muted-foreground">
@@ -40,11 +33,23 @@ function ImportRulesPanel() {
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
-            Colonne A–D: nome · cognome · email · username
+            <span><strong>A</strong> nome · <strong>B</strong> cognome · <strong>C</strong> email · <strong>D</strong> username</span>
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
-            Tutti i campi A–D obbligatori
+            <span><strong>E</strong> stato (scritto dall&apos;import) · <strong>F</strong> community · <strong>G</strong> data_ingresso</span>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            <span><strong>H</strong> password (scritto dall&apos;import) · <strong>I</strong> note_errore</span>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Community F: <code className="bg-muted px-1 py-0.5 rounded">testbusters</code> o <code className="bg-muted px-1 py-0.5 rounded">peer4med</code>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="text-brand mt-0.5 shrink-0">•</span>
+            Data ingresso G: formato <code className="bg-muted px-1 py-0.5 rounded">YYYY-MM-DD</code>
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
@@ -71,17 +76,19 @@ function ImportRulesPanel() {
   );
 }
 
-// ── Confirmation modal (simplified) ──────────────────────────────────────────
+// ── Confirmation modal ────────────────────────────────────────────────────────
 
 function ConfirmImportModal({
   open,
   validCount,
+  generateContract,
   onConfirm,
   onCancel,
   loading,
 }: {
   open: boolean;
   validCount: number;
+  generateContract: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   loading: boolean;
@@ -98,6 +105,14 @@ function ConfirmImportModal({
             <span className="text-foreground font-medium">{validCount} account</span>.{' '}
             L&apos;operazione non può essere annullata.
           </p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground rounded-lg border border-border bg-muted/40 px-3 py-2">
+            <span className="text-foreground font-medium">Contratto:</span>
+            {generateContract ? (
+              <span className="text-emerald-400">Sì — verrà richiesta la firma durante l&apos;onboarding</span>
+            ) : (
+              <span>No — onboarding senza contratto</span>
+            )}
+          </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onCancel} disabled={loading}>
               Annulla
@@ -132,13 +147,14 @@ function PreviewTable({ rows }: { rows: PreviewRow[] }) {
             <TableHead>Cognome</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Username</TableHead>
+            <TableHead>Community</TableHead>
+            <TableHead>Data ingresso</TableHead>
             <TableHead>Stato</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((r) => {
-            const isImported = r.stato === 'IMPORTED';
-            const hasErrors  = r.errors.length > 0;
+            const hasErrors = r.errors.length > 0;
             return (
               <TableRow key={r.rowIndex} className={hasErrors ? 'bg-destructive/5' : ''}>
                 <TableCell className="text-muted-foreground text-xs">{r.rowIndex}</TableCell>
@@ -146,12 +162,10 @@ function PreviewTable({ rows }: { rows: PreviewRow[] }) {
                 <TableCell>{r.cognome || <span className="text-destructive text-xs">—</span>}</TableCell>
                 <TableCell className="font-mono text-xs">{r.email || <span className="text-destructive text-xs">—</span>}</TableCell>
                 <TableCell className="font-mono text-xs">{r.username || <span className="text-destructive text-xs">—</span>}</TableCell>
+                <TableCell className="text-xs">{r.community || <span className="text-destructive text-xs">—</span>}</TableCell>
+                <TableCell className="font-mono text-xs">{r.data_ingresso || <span className="text-destructive text-xs">—</span>}</TableCell>
                 <TableCell>
-                  {isImported ? (
-                    <Badge variant="outline" className="text-xs bg-muted text-muted-foreground border-border gap-1">
-                      <SkipForward className="h-3 w-3" /> Già importato
-                    </Badge>
-                  ) : hasErrors ? (
+                  {hasErrors ? (
                     <div className="space-y-0.5">
                       {r.errors.map((e, i) => (
                         <p key={i} className="text-xs text-destructive flex items-center gap-1">
@@ -208,10 +222,11 @@ function RunResultPanel({ result }: { result: RunResult }) {
           <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
           <p className="text-sm text-muted-foreground">
             Le password temporanee sono disponibili nella{' '}
-            <strong className="text-foreground">colonna G</strong> del{' '}
+            <strong className="text-foreground">colonna H</strong> del{' '}
             <a href={SHEET_URL} target="_blank" rel="noreferrer" className="text-link hover:text-link/80 underline-offset-4 underline">
               foglio Google
             </a>.
+            Un&apos;email di invito è stata inviata a ciascun collaboratore.
           </p>
         </div>
       )}
@@ -227,6 +242,7 @@ export default function ImportCollaboratoriSection() {
   const [modalOpen, setModalOpen]           = useState(false);
   const [runLoading, setRunLoading]         = useState(false);
   const [runResult, setRunResult]           = useState<RunResult | null>(null);
+  const [generateContract, setGenerateContract] = useState(false);
 
   const canImport = preview !== null && preview.validCount > 0 && preview.errorCount === 0;
 
@@ -248,7 +264,11 @@ export default function ImportCollaboratoriSection() {
 
   const handleRunImport = async () => {
     setRunLoading(true);
-    const res  = await fetch('/api/import/collaboratori/run', { method: 'POST' });
+    const res  = await fetch('/api/import/collaboratori/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skipContract: !generateContract }),
+    });
     const data = await res.json();
     setRunLoading(false);
     setModalOpen(false);
@@ -277,7 +297,7 @@ export default function ImportCollaboratoriSection() {
           <p className="text-sm font-medium text-foreground">Foglio Google di importazione</p>
           <p className="text-xs text-muted-foreground">
             Tab richiesto: <code className="bg-muted px-1 py-0.5 rounded text-xs">import_collaboratori</code>
-            {' · '}Colonne A–D: nome, cognome, email, username
+            {' · '}Colonne A–I (vedi regole)
           </p>
         </div>
         <a
@@ -296,6 +316,21 @@ export default function ImportCollaboratoriSection() {
 
         {/* Left column */}
         <div className="min-w-0 space-y-4">
+          {/* Contract toggle */}
+          <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/40">
+            <Checkbox
+              id="genera-contratto"
+              checked={generateContract}
+              onCheckedChange={(v) => setGenerateContract(v === true)}
+            />
+            <label htmlFor="genera-contratto" className="cursor-pointer space-y-0.5">
+              <span className="text-sm font-medium text-foreground">Genera contratto e richiedi firma</span>
+              <span className="text-xs text-muted-foreground block">
+                Se disabilitato, i collaboratori non riceveranno un contratto da firmare durante l&apos;onboarding
+              </span>
+            </label>
+          </div>
+
           {/* Actions bar */}
           <div className="flex items-center gap-3 flex-wrap">
             <Button
@@ -322,7 +357,6 @@ export default function ImportCollaboratoriSection() {
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <span className="text-emerald-400 font-medium">{preview.validCount} validi</span>
                 {preview.errorCount > 0 && <span className="text-destructive font-medium">{preview.errorCount} errori</span>}
-                {preview.alreadyImportedCount > 0 && <span>{preview.alreadyImportedCount} già importati</span>}
               </div>
             )}
           </div>
@@ -346,6 +380,7 @@ export default function ImportCollaboratoriSection() {
       <ConfirmImportModal
         open={modalOpen}
         validCount={preview?.validCount ?? 0}
+        generateContract={generateContract}
         onConfirm={handleRunImport}
         onCancel={() => setModalOpen(false)}
         loading={runLoading}

@@ -28,7 +28,7 @@ const schema = z.object({
   civico_residenza:    z.string().max(20).nullable().optional(),
   telefono:            z.string().max(20).nullable().optional(),
   intestatario_pagamento: z.string().max(100).nullable().optional(),
-  data_ingresso:       z.string().nullable().optional(),
+  data_ingresso:       z.string().min(1, 'Obbligatoria').optional(),
   data_fine_contratto: z.string().nullable().optional(),
 });
 

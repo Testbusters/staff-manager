@@ -305,7 +305,7 @@ export default function CreateUserForm() {
         </div>
       )}
 
-      {/* Invito rapido: nome + cognome required */}
+      {/* Invito rapido: nome + cognome + data_ingresso required */}
       {needsContract && mode === 'quick' && (
         <div>
           <p className={sectionTitle}>Dati personali</p>
@@ -339,6 +339,12 @@ export default function CreateUserForm() {
                 className="font-mono"
               />
               <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
+            </div>
+            <div>
+              <label className={labelCls}>Data di ingresso <span className="text-red-500">*</span></label>
+              <Input type="date" value={dataIngresso}
+                onChange={(e) => setDataIngresso(e.target.value)}
+                required disabled={loading} />
             </div>
           </div>
         </div>
@@ -460,7 +466,7 @@ export default function CreateUserForm() {
         type="submit"
         disabled={
           loading || !email ||
-          (needsContract && mode === 'quick' && (!nome.trim() || !cognome.trim() || !username.trim() || !dataFineContratto)) ||
+          (needsContract && mode === 'quick' && (!nome.trim() || !cognome.trim() || !username.trim() || !dataIngresso || !dataFineContratto)) ||
           (needsContract && mode === 'full' && (
             !nome.trim() || !cognome.trim() || !username.trim() || !codiceFiscale.trim() || !dataNascita ||
             !luogoNascita.trim() || !provinciaNascita.trim() || !indirizzo.trim() ||

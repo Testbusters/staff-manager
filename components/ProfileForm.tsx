@@ -117,9 +117,9 @@ export default function ProfileForm({ collaborator, role, email, communities, al
   // Avatar
   const [avatarUrl, setAvatarUrl] = useState(collaborator?.foto_profilo_url ?? '');
 
-  // Communities (collaboratore self-edit)
-  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>(
-    communities.map((c) => c.id),
+  // Communities (collaboratore self-edit — single community)
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string>(
+    communities[0]?.id ?? '',
   );
   const [communityLoading, setCommunityLoading] = useState(false);
 
@@ -183,15 +183,15 @@ export default function ProfileForm({ collaborator, role, email, communities, al
   };
 
   const handleSaveCommunities = async () => {
-    if (selectedCommunityIds.length === 0) {
-      toast.error('Seleziona almeno una community.', { duration: 5000 });
+    if (!selectedCommunityId) {
+      toast.error('Seleziona una community.', { duration: 5000 });
       return;
     }
     setCommunityLoading(true);
     const res = await fetch('/api/profile/communities', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ community_ids: selectedCommunityIds }),
+      body: JSON.stringify({ community_ids: [selectedCommunityId] }),
     });
     const data = await res.json();
     setCommunityLoading(false);
@@ -580,26 +580,24 @@ export default function ProfileForm({ collaborator, role, email, communities, al
             <h2 className="text-sm font-medium text-foreground">Community</h2>
           </div>
           <div className="p-5 space-y-4">
-            <div className="space-y-2">
-              {allCommunities.map((c) => (
-                <label key={c.id} className="flex items-center gap-3 rounded-lg bg-muted/60 border border-border px-3 py-2.5 cursor-pointer hover:bg-muted/80 transition">
-                  <Checkbox
-                    checked={selectedCommunityIds.includes(c.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedCommunityIds((prev) =>
-                        checked ? [...prev, c.id] : prev.filter((id) => id !== c.id),
-                      );
-                    }}
-                    disabled={communityLoading}
-                  />
-                  <span className="text-sm text-foreground">{c.name}</span>
-                </label>
-              ))}
-            </div>
+            <Select
+              value={selectedCommunityId}
+              onValueChange={setSelectedCommunityId}
+              disabled={communityLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="— Seleziona community —" />
+              </SelectTrigger>
+              <SelectContent>
+                {allCommunities.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               type="button"
               onClick={handleSaveCommunities}
-              disabled={communityLoading || selectedCommunityIds.length === 0}
+              disabled={communityLoading || !selectedCommunityId}
               className="bg-brand hover:bg-brand/90 text-white"
             >
               {communityLoading ? 'Salvataggio…' : 'Salva community'}

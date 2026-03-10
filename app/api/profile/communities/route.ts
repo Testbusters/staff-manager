@@ -30,6 +30,9 @@ export async function PATCH(request: Request) {
   if (!Array.isArray(community_ids) || community_ids.length === 0) {
     return NextResponse.json({ error: 'Seleziona almeno una community' }, { status: 400 });
   }
+  if (community_ids.length > 1) {
+    return NextResponse.json({ error: 'Un collaboratore può appartenere a una sola community' }, { status: 400 });
+  }
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

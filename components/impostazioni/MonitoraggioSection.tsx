@@ -86,11 +86,11 @@ const ACCESS_EVENT_LABELS: Record<string, string> = {
 };
 
 const EMAIL_EVENT_LABELS: Record<string, string> = {
-  'email.delivered': 'Consegnata',
-  'email.bounced': 'Rimbalzata',
-  'email.opened': 'Aperta',
-  'email.clicked': 'Click',
-  'email.complained': 'Spam',
+  ['email.delivered']: 'Consegnata',
+  ['email.bounced']: 'Rimbalzata',
+  ['email.opened']: 'Aperta',
+  ['email.clicked']: 'Click',
+  ['email.complained']: 'Spam',
 };
 
 // ── Section: StatoSistema ─────────────────────────────────────────────────────
@@ -414,13 +414,11 @@ function EmailDelivery({
   const totalPages = data ? Math.ceil(data.total / data.page_size) : 1;
 
   const EVENT_COLORS: Record<string, string> = {
-    /* eslint-disable @typescript-eslint/naming-convention */
-    'email.delivered': 'text-emerald-600 border-emerald-300 dark:text-emerald-400',
-    'email.bounced': 'text-red-500 border-red-300',
-    'email.opened': 'text-blue-600 border-blue-300 dark:text-blue-400',
-    'email.clicked': 'text-purple-600 border-purple-300 dark:text-purple-400',
-    'email.complained': 'text-orange-600 border-orange-300 dark:text-orange-400',
-    /* eslint-enable @typescript-eslint/naming-convention */
+    ['email.delivered']: 'text-emerald-600 border-emerald-300 dark:text-emerald-400',
+    ['email.bounced']: 'text-red-500 border-red-300',
+    ['email.opened']: 'text-blue-600 border-blue-300 dark:text-blue-400',
+    ['email.clicked']: 'text-purple-600 border-purple-300 dark:text-purple-400',
+    ['email.complained']: 'text-orange-600 border-orange-300 dark:text-orange-400',
   };
 
   return (
