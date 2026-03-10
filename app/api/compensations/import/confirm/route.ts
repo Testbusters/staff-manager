@@ -10,11 +10,22 @@ const VALID_COMPETENZE = ['corsi', 'produzione_materiale', 'sb', 'extra'];
 
 function parseDate(raw: string): string | null {
   if (!raw) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return null;
-  const [, d, mo, y] = m;
-  return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  let isoDate: string;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    isoDate = raw;
+  } else {
+    const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    const [, d, mo, y] = m;
+    isoDate = `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  // Validate that the date is a real calendar date (e.g. 2025-11-31 is invalid)
+  const [y, mo, d] = isoDate.split('-').map(Number);
+  const date = new Date(y, mo - 1, d);
+  if (date.getFullYear() !== y || date.getMonth() + 1 !== mo || date.getDate() !== d) {
+    return null;
+  }
+  return isoDate;
 }
 
 function parseImporto(raw: string): number | null {

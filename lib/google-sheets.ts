@@ -114,7 +114,7 @@ export interface SheetRow {
  */
 export async function fetchPendingRows(): Promise<SheetRow[]> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
-  const tabName = process.env.GOOGLE_SHEET_TAB_NAME ?? 'Sheet1';
+  const tabName = process.env.GOOGLE_SHEET_TAB_NAME ?? 'compensation_import';
   if (!sheetId) throw new Error('GOOGLE_SHEET_ID not set');
 
   const auth = await buildAuth();
@@ -176,7 +176,7 @@ export async function markRowsProcessed(rowNumbers: number[]): Promise<void> {
   if (rowNumbers.length === 0) return;
 
   const sheetId = process.env.GOOGLE_SHEET_ID;
-  const tabName = process.env.GOOGLE_SHEET_TAB_NAME ?? 'Sheet1';
+  const tabName = process.env.GOOGLE_SHEET_TAB_NAME ?? 'compensation_import';
   if (!sheetId) throw new Error('GOOGLE_SHEET_ID not set');
 
   const auth = await buildAuth();
