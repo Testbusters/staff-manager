@@ -126,35 +126,6 @@ export default async function ImpostazioniPage({
       })()
     : [];
 
-  const members = activeTab === 'collaboratori'
-    ? await (async () => {
-        const { data: collabs } = await serviceClient
-          .from('collaborators')
-          .select('id, user_id, nome, cognome, data_ingresso')
-          .order('cognome', { ascending: true })
-          .order('nome', { ascending: true });
-        if (!collabs || collabs.length === 0) return [];
-        const userIds = collabs.map((c) => c.user_id);
-        const { data: profiles } = await serviceClient
-          .from('user_profiles')
-          .select('user_id, member_status, is_active')
-          .in('user_id', userIds);
-        const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p]));
-        return collabs.map((c) => {
-          const p = profileMap[c.user_id];
-          return {
-            id: c.id,
-            user_id: c.user_id,
-            nome: c.nome,
-            cognome: c.cognome,
-            member_status: (p?.member_status ?? 'attivo') as 'attivo' | 'uscente_con_compenso' | 'uscente_senza_compenso',
-            is_active: p?.is_active ?? true,
-            data_ingresso: c.data_ingresso ?? null,
-          };
-        });
-      })()
-    : [];
-
   const tabCls = (t: Tab) =>
     `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
       activeTab === t
@@ -201,7 +172,7 @@ export default async function ImpostazioniPage({
       )}
 
       {activeTab === 'collaboratori' && (
-        <MemberStatusManager members={members} />
+        <MemberStatusManager />
       )}
 
       {activeTab === 'contratti' && (
