@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 045 | `045_monitoring_ext.sql` | 2026-03-10 | CREATE TABLE `app_errors` (admin RLS); CREATE FUNCTION `get_top_queries()` / `get_table_stats()` / `reset_query_stats()` (SECURITY DEFINER, pg_stat_statements in extensions schema) |
 | 044 | `044_single_community.sql` | 2026-03-10 | ADD UNIQUE CONSTRAINT `collaborator_communities_collaborator_id_key` on `collaborator_communities.collaborator_id`; deduplicate existing rows (keep first by id) before adding constraint |
 | 043 | `043_monitoring.sql` | 2026-03-10 | CREATE TABLE `import_runs` (admin RLS) + `email_events` (admin RLS); ADD COLUMN `export_runs.duration_ms`; CREATE FUNCTION `get_recent_auth_events(days int)` (SECURITY DEFINER, reads auth.audit_log_entries) |
 | 042 | `042_approved_lordo_ytd.sql` | 2026-03-10 | ADD COLUMN `approved_lordo_ytd decimal(10,2) NOT NULL DEFAULT 0` + `approved_year INT NOT NULL DEFAULT EXTRACT(YEAR FROM CURRENT_DATE)` on collaborators; backfill from APPROVATO compensations+expenses for current year |
