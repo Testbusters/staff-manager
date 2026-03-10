@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Users, FileText, Receipt } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
 import ImportCollaboratoriSection from './ImportCollaboratoriSection';
+import ImportCUSection from './ImportCUSection';
 
 type ImportType = 'collaboratori' | 'contratti' | 'cu';
 
@@ -41,14 +41,14 @@ export default function ImportSection() {
       </div>
 
       {/* Content area */}
-      {activeType === 'collaboratori' ? (
-        <ImportCollaboratoriSection />
-      ) : (
-        <EmptyState
-          icon={activeType === 'contratti' ? FileText : Receipt}
-          title="Funzione non ancora disponibile"
-          description="Questa sezione è in fase di sviluppo."
-        />
+      {activeType === 'collaboratori' && <ImportCollaboratoriSection />}
+      {activeType === 'cu' && <ImportCUSection />}
+      {activeType === 'contratti' && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <FileText className="h-10 w-10 text-muted-foreground mb-3" />
+          <p className="text-sm font-medium text-foreground">Funzione non ancora disponibile</p>
+          <p className="text-xs text-muted-foreground mt-1">Questa sezione è in fase di sviluppo.</p>
+        </div>
       )}
     </div>
   );
