@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -125,6 +126,44 @@ const EMAIL_EVENT_LABELS: Record<string, string> = {
   ['email.complained']: 'Spam',
 };
 
+// ── Accordion wrapper ─────────────────────────────────────────────────────────
+
+function SectionAccordion({
+  title,
+  description,
+  controls,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  description: string;
+  controls?: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl bg-card border border-border">
+      <div className="px-5 py-4 border-b border-border flex items-center gap-3">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex-1 flex items-center justify-between text-left min-w-0 gap-2"
+        >
+          <div className="min-w-0">
+            <h2 className="text-sm font-medium text-foreground">{title}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+          </div>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+        {controls && <div className="shrink-0 flex items-center gap-1">{controls}</div>}
+      </div>
+      {open && <div>{children}</div>}
+    </div>
+  );
+}
+
 // ── Section: StatoSistema ─────────────────────────────────────────────────────
 
 const PILLS = [
@@ -137,11 +176,7 @@ const PILLS = [
 
 function StatoSistema({ stats, loading }: { stats: Stats | null; loading: boolean }) {
   return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border">
-        <h2 className="text-sm font-medium text-foreground">Stato sistema</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Contatori in tempo reale sulle entità in attesa.</p>
-      </div>
+    <SectionAccordion title="Stato sistema" description="Contatori in tempo reale sulle entità in attesa.">
       <div className="p-5 flex flex-wrap gap-3">
         {PILLS.map((pill) => {
           const count = stats?.[pill.key] ?? 0;
@@ -168,7 +203,7 @@ function StatoSistema({ stats, loading }: { stats: Stats | null; loading: boolea
           );
         })}
       </div>
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -199,29 +234,26 @@ function LogAccessi({
     { label: '30 gg', value: 30 },
   ];
 
+  const controls = (
+    <div className="flex gap-1">
+      {dayOptions.map((o) => (
+        <button
+          key={o.value}
+          onClick={() => { onDaysChange(o.value); setPage(1); }}
+          className={`rounded px-3 py-1 text-xs font-medium transition ${
+            days === o.value
+              ? 'bg-brand text-white'
+              : 'bg-muted text-muted-foreground hover:bg-accent'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-sm font-medium text-foreground">Log accessi</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Autenticazioni recenti dal log di Supabase Auth.</p>
-        </div>
-        <div className="flex gap-1">
-          {dayOptions.map((o) => (
-            <button
-              key={o.value}
-              onClick={() => { onDaysChange(o.value); setPage(1); }}
-              className={`rounded px-3 py-1 text-xs font-medium transition ${
-                days === o.value
-                  ? 'bg-brand text-white'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
-              }`}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <SectionAccordion title="Log accessi" description="Autenticazioni recenti dal log di Supabase Auth." controls={controls}>
       <div className="overflow-x-auto">
         {loading ? (
           <div className="p-5 space-y-2">
@@ -278,7 +310,7 @@ function LogAccessi({
           </div>
         </div>
       )}
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -299,11 +331,7 @@ function LogOperazioni({
   const paged = operations.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border">
-        <h2 className="text-sm font-medium text-foreground">Log operazioni</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Storico import e export con dettaglio righe.</p>
-      </div>
+    <SectionAccordion title="Log operazioni" description="Storico import e export con dettaglio righe.">
       <div className="overflow-x-auto">
         {loading ? (
           <div className="p-5 space-y-2">
@@ -426,7 +454,7 @@ function LogOperazioni({
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -454,12 +482,7 @@ function EmailDelivery({
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border">
-        <h2 className="text-sm font-medium text-foreground">Consegna email</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Eventi email degli ultimi 30 giorni ricevuti tramite webhook Resend.</p>
-      </div>
-
+    <SectionAccordion title="Consegna email" description="Eventi email degli ultimi 30 giorni.">
       {/* Summary strip */}
       {loading ? (
         <div className="px-5 py-3 flex gap-3">
@@ -485,9 +508,7 @@ function EmailDelivery({
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : !data || data.events.length === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground text-center">
-            Nessun evento email. Configura il webhook Resend su <code className="text-xs">/api/webhooks/resend</code>.
-          </p>
+          <p className="p-5 text-sm text-muted-foreground text-center">Nessun evento email registrato.</p>
         ) : (
           <Table>
             <TableHeader>
@@ -538,7 +559,7 @@ function EmailDelivery({
           </div>
         </div>
       )}
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -569,29 +590,26 @@ function LogSistema({
     { label: 'Database', value: 'database' },
   ];
 
+  const controls = (
+    <div className="flex gap-1">
+      {services.map((s) => (
+        <button
+          key={s.value}
+          onClick={() => { onServiceChange(s.value); setPage(1); }}
+          className={`rounded px-3 py-1 text-xs font-medium transition ${
+            service === s.value
+              ? 'bg-brand text-white'
+              : 'bg-muted text-muted-foreground hover:bg-accent'
+          }`}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-sm font-medium text-foreground">Log Supabase</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Ultimi 100 log per servizio dal progetto Supabase.</p>
-        </div>
-        <div className="flex gap-1">
-          {services.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => { onServiceChange(s.value); setPage(1); }}
-              className={`rounded px-3 py-1 text-xs font-medium transition ${
-                service === s.value
-                  ? 'bg-brand text-white'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <SectionAccordion title="Log Supabase" description="Ultimi 100 log per servizio dal progetto Supabase." controls={controls}>
       <div className="overflow-x-auto">
         {loading ? (
           <div className="p-5 space-y-2">
@@ -632,7 +650,7 @@ function LogSistema({
           </div>
         </div>
       )}
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -653,23 +671,20 @@ function DBPerformance({
 }) {
   const [tab, setTab] = useState<'queries' | 'tables'>('queries');
 
-  return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-sm font-medium text-foreground">Performance DB</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Top query per tempo totale di esecuzione · statistiche tabelle.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <button onClick={() => setTab('queries')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'queries' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Query</button>
-            <button onClick={() => setTab('tables')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'tables' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Tabelle</button>
-          </div>
-          <Button variant="outline" size="sm" onClick={onReset} disabled={resetting} className="text-xs">
-            {resetting ? 'Reset…' : 'Reset stats'}
-          </Button>
-        </div>
+  const controls = (
+    <div className="flex items-center gap-2">
+      <div className="flex gap-1">
+        <button onClick={() => setTab('queries')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'queries' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Query</button>
+        <button onClick={() => setTab('tables')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'tables' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Tabelle</button>
       </div>
+      <Button variant="outline" size="sm" onClick={onReset} disabled={resetting} className="text-xs">
+        {resetting ? 'Reset…' : 'Reset stats'}
+      </Button>
+    </div>
+  );
+
+  return (
+    <SectionAccordion title="Performance DB" description="Top query per tempo totale di esecuzione · statistiche tabelle." controls={controls}>
       <div className="overflow-x-auto">
         {loading ? (
           <div className="p-5 space-y-2">
@@ -731,7 +746,7 @@ function DBPerformance({
           )
         )}
       </div>
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -749,19 +764,14 @@ function AppErrorsSection({ errors, loading }: { errors: AppError[]; loading: bo
     (e) => new Date(e.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000,
   ).length;
 
+  const errorBadge = last24h > 0 ? (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+      <span className="font-bold">{last24h}</span> nelle ultime 24h
+    </span>
+  ) : undefined;
+
   return (
-    <div className="rounded-2xl bg-card border border-border">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-sm font-medium text-foreground">Errori applicazione</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Errori catturati da <code className="text-xs">error.tsx</code> · ultimi 50.</p>
-        </div>
-        {last24h > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
-            <span className="font-bold">{last24h}</span> nelle ultime 24h
-          </span>
-        )}
-      </div>
+    <SectionAccordion title="Errori applicazione" description="Errori catturati da error.tsx · ultimi 50." controls={errorBadge}>
       <div className="overflow-x-auto">
         {loading ? (
           <div className="p-5 space-y-2">
@@ -826,7 +836,7 @@ function AppErrorsSection({ errors, loading }: { errors: AppError[]; loading: bo
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </SectionAccordion>
   );
 }
 
@@ -969,6 +979,7 @@ export default function MonitoraggioSection() {
         service={logService}
         onServiceChange={handleLogServiceChange}
       />
+      <AppErrorsSection errors={appErrors} loading={loading} />
       <DBPerformance
         topQueries={topQueries}
         tableStats={tableStats}
@@ -976,7 +987,6 @@ export default function MonitoraggioSection() {
         onReset={handleResetStats}
         resetting={resetting}
       />
-      <AppErrorsSection errors={appErrors} loading={loading} />
     </div>
   );
 }
