@@ -111,6 +111,7 @@ export async function POST() {
   }
 
   // ── Process in batches ───────────────────────────────────────────────────────
+  const runStartTime = Date.now();
   const details: CURunDetail[] = [...invalidDetails];
   const sheetUpdates: { rowIndex: number; stato: 'PROCESSED' | 'SKIP' | 'ERROR'; note: string }[] = [
     ...invalidDetails.map(d => ({
@@ -218,10 +219,24 @@ export async function POST() {
     // Non-blocking — import result does not depend on writeback
   }
 
-  return NextResponse.json<CURunResult>({
-    imported: details.filter(d => d.status === 'imported').length,
-    skipped:  details.filter(d => d.status === 'skip').length,
-    errors:   details.filter(d => d.status === 'error').length,
-    details,
-  });
+  const imported = details.filter(d => d.status === 'imported').length;
+  const skipped  = details.filter(d => d.status === 'skip').length;
+  const errors   = details.filter(d => d.status === 'error').length;
+
+  // ── Record import run (non-blocking) ─────────────────────────────────────────
+  try {
+    await svc.from('import_runs').insert({
+      tipo:        'cu',
+      executed_by: user.id,
+      imported,
+      skipped,
+      errors,
+      detail_json: details,
+      duration_ms: Date.now() - runStartTime,
+    });
+  } catch {
+    // Non-blocking — don't fail the import if tracking insert fails
+  }
+
+  return NextResponse.json<CURunResult>({ imported, skipped, errors, details });
 }

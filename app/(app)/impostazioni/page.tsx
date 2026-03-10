@@ -8,8 +8,9 @@ import MemberStatusManager from '@/components/impostazioni/MemberStatusManager';
 import ContractTemplateManager from '@/components/impostazioni/ContractTemplateManager';
 import NotificationSettingsManager from '@/components/impostazioni/NotificationSettingsManager';
 import EmailTemplateManager from '@/components/impostazioni/EmailTemplateManager';
+import MonitoraggioSection from '@/components/impostazioni/MonitoraggioSection';
 
-type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail';
+type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail' | 'monitoraggio';
 
 export default async function ImpostazioniPage({
   searchParams,
@@ -36,6 +37,7 @@ export default async function ImpostazioniPage({
     : tab === 'contratti' ? 'contratti'
     : tab === 'notifiche' ? 'notifiche'
     : tab === 'template_mail' ? 'template_mail'
+    : tab === 'monitoraggio' ? 'monitoraggio'
     : 'utenti';
 
   const serviceClient = createServiceClient(
@@ -133,8 +135,10 @@ export default async function ImpostazioniPage({
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
+  const wideTab = activeTab === 'template_mail' || activeTab === 'monitoraggio';
+
   return (
-    <div className={activeTab === 'template_mail' ? 'p-6' : 'p-6 max-w-3xl'}>
+    <div className={wideTab ? 'p-6' : 'p-6 max-w-3xl'}>
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Impostazioni</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -150,6 +154,7 @@ export default async function ImpostazioniPage({
         <Link href="?tab=contratti" className={tabCls('contratti')}>Contratti</Link>
         <Link href="?tab=notifiche" className={tabCls('notifiche')}>Notifiche</Link>
         <Link href="?tab=template_mail" className={tabCls('template_mail')}>Template mail</Link>
+        <Link href="?tab=monitoraggio" className={tabCls('monitoraggio')}>Monitoraggio</Link>
       </div>
 
       {activeTab === 'utenti' && (
@@ -204,6 +209,10 @@ export default async function ImpostazioniPage({
             />
           </div>
         </div>
+      )}
+
+      {activeTab === 'monitoraggio' && (
+        <MonitoraggioSection />
       )}
 
       {activeTab === 'template_mail' && emailLayoutConfig && (

@@ -31,6 +31,8 @@ export async function POST() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  const exportStartTime = Date.now();
+
   // Step 1: fetch compensations and expenses (two separate queries — no PostgREST embedded join)
   const { data: rawComps, error: compErr } = await svc
     .from('compensations')
@@ -137,6 +139,7 @@ export async function POST() {
       compensation_count: allCompIds.length,
       expense_count: allExpIds.length,
       storage_path: uploadErr ? null : storagePath,
+      duration_ms: Date.now() - exportStartTime,
     })
     .select('id')
     .single();
