@@ -409,7 +409,7 @@ function LogOperazioni({
           </SheetHeader>
           {selected && (
             <div className="mt-4 space-y-4">
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-xs">
                 <div className="text-muted-foreground">Tipo</div><div>{selected.tipo}</div>
                 <div className="text-muted-foreground">Data</div><div>{fmtDate(selected.created_at)}</div>
                 <div className="text-muted-foreground">Eseguita da</div><div>{selected.executed_by_email || '—'}</div>
