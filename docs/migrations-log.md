@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 042 | `042_approved_lordo_ytd.sql` | 2026-03-10 | ADD COLUMN `approved_lordo_ytd decimal(10,2) NOT NULL DEFAULT 0` + `approved_year INT NOT NULL DEFAULT EXTRACT(YEAR FROM CURRENT_DATE)` on collaborators; backfill from APPROVATO compensations+expenses for current year |
 | 041 | `041_email_templates.sql` | 2026-03-09 | CREATE TABLE `email_templates` (12 rows seeded) + `email_layout_config` (1 row seeded); RLS admin-only |
 | 040 | `040_skip_contract_flag.sql` | 2026-03-09 | ADD COLUMN `skip_contract_on_onboarding` boolean NOT NULL DEFAULT false on `user_profiles` |
 | 001 | `001_schema.sql` | — | Initial full schema: compensations, expense_reimbursements, communities, collaborators, user_profiles, documents, tickets, announcements, benefits, resources, events |
