@@ -30,10 +30,24 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
   const offset = (page - 1) * limit;
 
-  // Step 1: query collaborators with optional search
+  // Step 1: get all user_ids with role='collaboratore' to exclude admins/responsabili
+  const { data: collabProfiles, error: profilesError } = await svc
+    .from('user_profiles')
+    .select('user_id, member_status, is_active')
+    .eq('role', 'collaboratore');
+
+  if (profilesError) return NextResponse.json({ error: profilesError.message }, { status: 500 });
+
+  const collabUserIds = (collabProfiles ?? []).map((p) => p.user_id);
+  if (collabUserIds.length === 0) {
+    return NextResponse.json({ members: [], total: 0, page, limit });
+  }
+
+  // Step 2: query collaborators scoped to collaboratore role, with optional search + pagination
   let query = svc
     .from('collaborators')
     .select('id, user_id, nome, cognome, email, username, data_ingresso', { count: 'exact' })
+    .in('user_id', collabUserIds)
     .order('cognome', { ascending: true })
     .order('nome', { ascending: true })
     .range(offset, offset + limit - 1);
@@ -49,14 +63,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ members: [], total: count ?? 0, page, limit });
   }
 
-  // Step 2: fetch profiles for returned user IDs only
+  // Build profile lookup from step 1 data (already fetched, no extra query needed)
   const userIds = collabs.map((c) => c.user_id);
-  const { data: profiles } = await svc
-    .from('user_profiles')
-    .select('user_id, member_status, is_active')
-    .in('user_id', userIds);
-
-  const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p]));
+  const profileMap = Object.fromEntries(
+    (collabProfiles ?? [])
+      .filter((p) => userIds.includes(p.user_id))
+      .map((p) => [p.user_id, p])
+  );
 
   const members = collabs.map((c) => {
     const p = profileMap[c.user_id];

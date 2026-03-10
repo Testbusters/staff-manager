@@ -137,7 +137,9 @@ export default async function ImpostazioniPage({
     <div className={activeTab === 'template_mail' ? 'p-6' : 'p-6 max-w-3xl'}>
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Impostazioni</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Gestione utenti, community e stato collaboratori.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Crea utenti · gestisci community e responsabili · configura stato e data ingresso collaboratori · carica template contratti · imposta notifiche e template email.
+        </p>
       </div>
 
       {/* Tab bar */}

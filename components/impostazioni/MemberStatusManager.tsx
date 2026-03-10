@@ -55,17 +55,11 @@ type EditState = {
   data_ingresso: string | null;
 };
 
-const STATUS_LABELS: Record<MemberStatus, string> = {
-  attivo: 'Attivo',
-  uscente_con_compenso: 'Uscente (con compenso)',
-  uscente_senza_compenso: 'Uscente (senza compenso)',
-};
-
-const STATUS_DOT: Record<MemberStatus, string> = {
-  attivo: 'bg-green-500',
-  uscente_con_compenso: 'bg-yellow-500',
-  uscente_senza_compenso: 'bg-muted-foreground',
-};
+// Only used in the modal dropdown — 'attivo' is the neutral/clear state, not an explicit choice
+const EXIT_MODE_OPTIONS: { value: MemberStatus; label: string }[] = [
+  { value: 'uscente_con_compenso', label: 'Uscente (con compenso)' },
+  { value: 'uscente_senza_compenso', label: 'Uscente (senza compenso)' },
+];
 
 const DOWNGRADE_MESSAGES: Partial<Record<MemberStatus, string>> = {
   uscente_con_compenso:
@@ -84,6 +78,12 @@ function isDowngrade(from: MemberStatus, to: MemberStatus) {
   return ORDER[to] > ORDER[from];
 }
 
+function formatDate(iso: string | null): string {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 const LIMIT = 20;
 
 export default function MemberStatusManager() {
@@ -96,7 +96,12 @@ export default function MemberStatusManager() {
   const [editState, setEditState] = useState<EditState | null>(null);
   const [pendingStatus, setPendingStatus] = useState<MemberStatus | null>(null);
   const [saving, setSaving] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Prevents double-fetch: page effect must skip when q-debounce already triggered a page reset
+  const suppressPageEffect = useRef(false);
+  // Skips the initial synchronous page effect run (initial load handled by q effect)
+  const isMounted = useRef(false);
 
   const fetchMembers = useCallback(async (query: string, pg: number) => {
     setLoading(true);
@@ -114,22 +119,26 @@ export default function MemberStatusManager() {
     }
   }, []);
 
-  // Debounced search
+  // Debounced search — also handles initial load (fires once on mount after 300ms)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
+      // If currently past page 1, the setPage(1) below will trigger the page effect;
+      // suppress it to avoid a duplicate fetch.
+      if (page !== 1) suppressPageEffect.current = true;
       setPage(1);
       fetchMembers(q, 1);
     }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, fetchMembers]);
 
-  // Page change — immediate fetch
+  // Pagination — fires only on genuine user-driven page changes
   useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return; }
+    if (suppressPageEffect.current) { suppressPageEffect.current = false; return; }
     fetchMembers(q, page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   function openModal(member: MemberRow) {
@@ -210,12 +219,14 @@ export default function MemberStatusManager() {
 
         {/* Results */}
         {loading ? (
-          <div className="px-5 py-3 space-y-3">
+          <div className="px-5 py-4 space-y-3">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-center gap-3">
-                <Skeleton className="h-2 w-2 rounded-full" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-24 ml-auto" />
+              <div key={i} className="grid grid-cols-[180px_220px_100px_110px_180px] gap-4 items-center">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-32 rounded-full" />
               </div>
             ))}
           </div>
@@ -225,12 +236,14 @@ export default function MemberStatusManager() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-auto text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
-                  <th className="px-5 py-2.5 text-left font-medium">Nome</th>
-                  <th className="px-5 py-2.5 text-left font-medium">Email</th>
-                  <th className="px-5 py-2.5 text-left font-medium">Stato</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[180px]">Nome</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[220px]">Email</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[100px]">Accesso</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[110px]">Data ingresso</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[180px]">Modalità uscita</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -239,15 +252,40 @@ export default function MemberStatusManager() {
                     key={m.id}
                     className="hover:bg-muted/60 transition cursor-pointer"
                     onClick={() => openModal(m)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openModal(m); }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`h-2 w-2 rounded-full shrink-0 ${STATUS_DOT[m.member_status]}`} />
-                        <span className="text-foreground truncate max-w-[180px]">{m.cognome} {m.nome}</span>
-                      </div>
+                      <span className="text-foreground block truncate">{m.cognome} {m.nome}</span>
                     </td>
-                    <td className="px-5 py-3 text-muted-foreground truncate max-w-[200px]">{m.email}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{STATUS_LABELS[m.member_status]}</td>
+                    <td className="px-5 py-3 text-muted-foreground">{m.email}</td>
+                    <td className="px-5 py-3">
+                      {m.is_active ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Attivo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                          Disattivato
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground tabular-nums">
+                      {formatDate(m.data_ingresso)}
+                    </td>
+                    <td className="px-5 py-3">
+                      {m.member_status === 'uscente_con_compenso' && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                          Uscente (con compenso)
+                        </span>
+                      )}
+                      {m.member_status === 'uscente_senza_compenso' && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                          Uscente (senza compenso)
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -294,8 +332,8 @@ export default function MemberStatusManager() {
 
       {/* Edit Dialog */}
       <Dialog open={selected !== null} onOpenChange={(open) => { if (!open) closeModal(); }}>
-        <DialogContent className="sm:max-w-md" showCloseButton={false}>
-          <DialogHeader className="pr-10">
+        <DialogContent className="w-full max-w-md">
+          <DialogHeader>
             <DialogTitle>
               {selected?.cognome} {selected?.nome}
             </DialogTitle>
@@ -303,11 +341,11 @@ export default function MemberStatusManager() {
           </DialogHeader>
 
           {editState && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <Separator />
 
               {/* Account active toggle */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-foreground">
                     Account {editState.is_active ? 'attivo' : 'disattivato'}
@@ -326,9 +364,12 @@ export default function MemberStatusManager() {
 
               <Separator />
 
-              {/* Member status */}
-              <div className="space-y-1.5">
-                <p className="text-sm font-medium text-foreground">Stato collaborazione</p>
+              {/* Exit mode */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Modalità uscita</p>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Lascia vuoto se il collaboratore è ancora attivo.
+                </p>
                 <Select
                   value={editState.member_status}
                   onValueChange={(v) => handleStatusChange(v as MemberStatus)}
@@ -337,8 +378,9 @@ export default function MemberStatusManager() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.entries(STATUS_LABELS) as [MemberStatus, string][]).map(([val, label]) => (
-                      <SelectItem key={val} value={val}>{label}</SelectItem>
+                    <SelectItem value="attivo">Nessuna uscita programmata</SelectItem>
+                    {EXIT_MODE_OPTIONS.map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -347,7 +389,7 @@ export default function MemberStatusManager() {
               <Separator />
 
               {/* Data ingresso */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">Data ingresso</p>
                 <Input
                   type="date"
@@ -389,7 +431,12 @@ export default function MemberStatusManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPendingStatus(null)}>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDowngrade}>Conferma</AlertDialogAction>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmDowngrade}
+            >
+              Conferma
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
