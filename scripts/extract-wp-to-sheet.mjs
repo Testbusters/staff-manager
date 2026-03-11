@@ -2,8 +2,13 @@
  * Script 0 — Extract collaboratori from WordPress and write to import sheet
  *
  * Fetches all users with role=collaboratore_tb from WordPress REST API,
- * maps them to (nome, cognome, email, username, stato=TO_PROCESS) and
- * appends them to the import sheet (skipping rows that already exist by email).
+ * maps them to the A–I column layout and appends to the import sheet
+ * (skipping rows that already exist by email).
+ *
+ * Community is resolved from a separate mapping sheet (tabs TB + P4M).
+ * data_ingresso is taken from WP registered_date (truncated to YYYY-MM-DD).
+ * Usernames not found in either community tab → community left empty,
+ * note written in col I (note_errore) for manual fixing.
  *
  * Usage:
  *   node scripts/extract-wp-to-sheet.mjs
@@ -26,8 +31,12 @@ const WP_USER   = 'marco.guillermaz@testbusters.it';
 const WP_PASS   = '0pkf YR1S ZReS VOOz dT05 y7zo';
 const WP_AUTH   = 'Basic ' + Buffer.from(`${WP_USER}:${WP_PASS}`).toString('base64');
 
-const SHEET_ID  = '1NeVxbfQAl0z4OPAyihHISUfF7Edj1aNZ9tCwwXgMBz0';
-const TAB       = 'import_collaboratori';
+// Import sheet (destination)
+const IMPORT_SHEET_ID = '1NeVxbfQAl0z4OPAyihHISUfF7Edj1aNZ9tCwwXgMBz0';
+const IMPORT_TAB      = 'import_collaboratori';
+
+// Community mapping sheet (source of truth for TB / P4M split)
+const COMMUNITY_SHEET_ID = '1IH9JJTy0zA14DzNXiP7CV9L-NB-_lCEv_-Zn-NHDj-0';
 
 // ── Google Sheets auth ────────────────────────────────────────────────────────
 
@@ -63,19 +72,19 @@ async function getGoogleToken() {
   return j.access_token;
 }
 
-async function sheetsGet(token, range) {
+async function sheetsGet(token, sheetId, range) {
   const r = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   const j = await r.json();
-  if (j.error) throw new Error('Sheets GET: ' + JSON.stringify(j.error));
+  if (j.error) throw new Error(`Sheets GET (${sheetId} ${range}): ` + JSON.stringify(j.error));
   return j.values ?? [];
 }
 
-async function sheetsAppend(token, range, values) {
+async function sheetsAppend(token, sheetId, range, values) {
   const r = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
     {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -85,6 +94,31 @@ async function sheetsAppend(token, range, values) {
   const j = await r.json();
   if (j.error) throw new Error('Sheets append: ' + JSON.stringify(j.error));
   return j;
+}
+
+// ── Community mapping ─────────────────────────────────────────────────────────
+
+async function buildCommunityMap(token) {
+  // Tab TB → 'testbusters', Tab P4M → 'peer4med'
+  // Each tab has usernames in col A (first row may be a header — skip if non-username-like)
+  // Usernames are in col C (index 2): post_title | anno-scolastico | user | data
+  const [tbRows, p4mRows] = await Promise.all([
+    sheetsGet(token, COMMUNITY_SHEET_ID, 'TB!A:C'),
+    sheetsGet(token, COMMUNITY_SHEET_ID, 'P4M!A:C'),
+  ]);
+
+  const map = new Map(); // username (lowercase) → community string
+
+  for (const row of tbRows) {
+    const u = (row[2] ?? '').trim().toLowerCase();
+    if (u && u !== 'user') map.set(u, 'testbusters');
+  }
+  for (const row of p4mRows) {
+    const u = (row[2] ?? '').trim().toLowerCase();
+    if (u && u !== 'user') map.set(u, 'peer4med');
+  }
+
+  return map;
 }
 
 // ── WordPress fetch (all pages) ───────────────────────────────────────────────
@@ -124,8 +158,12 @@ function splitName(displayName) {
 console.log('Authenticating with Google Sheets…');
 const gToken = await getGoogleToken();
 
-console.log('Reading existing sheet rows to detect duplicates…');
-const existing = await sheetsGet(gToken, `${TAB}!A:F`);
+console.log('Reading community mapping sheet (TB + P4M tabs)…');
+const communityMap = await buildCommunityMap(gToken);
+console.log(`  ${communityMap.size} usernames mapped (TB: ${[...communityMap.values()].filter(v => v === 'testbusters').length}, P4M: ${[...communityMap.values()].filter(v => v === 'peer4med').length})`);
+
+console.log('\nReading existing import sheet rows to detect duplicates…');
+const existing = await sheetsGet(gToken, IMPORT_SHEET_ID, `${IMPORT_TAB}!A:C`);
 // Col C (index 2) = email
 const existingEmails = new Set(
   existing.slice(1).map(r => (r[2] ?? '').trim().toLowerCase()).filter(Boolean),
@@ -136,12 +174,15 @@ console.log('\nFetching WordPress collaboratori…');
 const wpUsers = await fetchAllWpCollaboratori();
 console.log(`  Total fetched: ${wpUsers.length}`);
 
-// Map WP users → sheet rows
+// Map WP users → sheet rows [A–I]
+// A=nome B=cognome C=email D=username E=stato F=community G=data_ingresso H=password I=note_errore
 const rows = [];
+const unmappedUsernames = [];
 let skippedCount = 0;
+
 for (const u of wpUsers) {
   const email    = (u.email ?? '').trim().toLowerCase();
-  const username = (u.username ?? '').trim().toLowerCase();
+  const username = (u.username ?? u.slug ?? '').trim().toLowerCase();
   const { nome, cognome } = splitName(u.name);
 
   if (!email || !username || !nome) {
@@ -155,25 +196,36 @@ for (const u of wpUsers) {
     continue;
   }
 
-  rows.push([nome, cognome, email, username, 'TO_PROCESS', '']);
+  const community    = communityMap.get(username) ?? '';
+  const dataIngresso = u.registered_date ? u.registered_date.slice(0, 10) : '';
+  const noteErrore   = community ? '' : 'community non trovata — impostare manualmente (testbusters o peer4med)';
+
+  if (!community) unmappedUsernames.push(username);
+
+  rows.push([nome, cognome, email, username, 'TO_PROCESS', community, dataIngresso, '', noteErrore]);
   existingEmails.add(email); // prevent intra-batch dupes
 }
 
 console.log(`\n  ${rows.length} new rows to write, ${skippedCount} skipped (already in sheet or missing data)`);
+if (unmappedUsernames.length > 0) {
+  console.log(`  ⚠️  ${unmappedUsernames.length} users without community mapping (col I = note):`);
+  unmappedUsernames.forEach(u => console.log(`    - ${u}`));
+}
 
 if (rows.length === 0) {
   console.log('Nothing to write.');
   process.exit(0);
 }
 
-console.log(`\nWriting ${rows.length} rows to sheet…`);
-// Write in batches of 200 to avoid payload limits
+console.log(`\nWriting ${rows.length} rows to import sheet…`);
 const BATCH = 200;
 for (let i = 0; i < rows.length; i += BATCH) {
   const batch = rows.slice(i, i + BATCH);
-  await sheetsAppend(gToken, `${TAB}!A:F`, batch);
+  await sheetsAppend(gToken, IMPORT_SHEET_ID, `${IMPORT_TAB}!A:I`, batch);
   console.log(`  Written rows ${i + 1}–${Math.min(i + BATCH, rows.length)}`);
 }
 
 console.log(`\nDone. ${rows.length} collaboratori written to sheet.`);
-console.log(`Next step: node scripts/validate-collaboratori.mjs`);
+if (unmappedUsernames.length > 0) {
+  console.log(`⚠️  ${unmappedUsernames.length} records require manual community setting (see col I in the sheet).`);
+}
