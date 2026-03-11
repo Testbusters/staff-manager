@@ -170,12 +170,12 @@ export default async function ComunicazioniPage({
               key={c.id}
               href={`/comunicazioni/${c.id}`}
               className={`block rounded-xl border p-4 hover:bg-muted/60 transition group ${
-                c.pinned ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20' : 'border-border bg-card'
+                c.pinned ? 'border-brand/30 bg-brand/5' : 'border-border bg-card'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  {c.pinned && <Pin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />}
+                  {c.pinned && <Pin className="h-3.5 w-3.5 text-brand flex-shrink-0" />}
                   <h3 className="text-sm font-semibold text-foreground truncate">
                     {c.titolo}
                   </h3>

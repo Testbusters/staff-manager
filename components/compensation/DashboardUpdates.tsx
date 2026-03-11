@@ -146,7 +146,7 @@ export default function DashboardUpdates({
             <Link
               key={doc.id}
               href={`/documenti/${doc.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/60 transition group"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground truncate">
@@ -167,7 +167,7 @@ export default function DashboardUpdates({
             <Link
               key={ev.id}
               href={`/eventi/${ev.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/60 transition group"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground truncate">{ev.titolo}</p>
@@ -190,7 +190,7 @@ export default function DashboardUpdates({
             <Link
               key={item.id}
               href={item.kind === 'comm' ? `/comunicazioni/${item.id}` : `/risorse/${item.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/60 transition group"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground truncate">{item.titolo}</p>
@@ -209,7 +209,7 @@ export default function DashboardUpdates({
             <Link
               key={item.id}
               href={item.kind === 'opp' ? `/opportunita/${item.id}` : `/sconti/${item.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition group"
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/60 transition group"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground truncate">{item.titolo}</p>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import TicketStatusBadge from './TicketStatusBadge';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_PRIORITY_LABELS } from '@/lib/types';
@@ -22,7 +23,7 @@ const CATEGORIA_BADGE: Record<string, string> = {
 const PRIORITY_DOT: Record<string, string> = {
   ALTA:    'bg-red-500 dark:bg-red-400',
   NORMALE: 'bg-yellow-500 dark:bg-yellow-400',
-  BASSA:   'bg-gray-500 dark:bg-gray-400',
+  BASSA:   'bg-muted-foreground/40',
 };
 
 export type TicketRecord = {
@@ -77,7 +78,7 @@ export default function TicketRecordRow({ ticket }: { ticket: TicketRecord }) {
         {lastReply}
       </div>
 
-      <span className="shrink-0 text-xs text-muted-foreground">→</span>
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
     </Link>
   );
 }

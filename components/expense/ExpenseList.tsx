@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Receipt } from 'lucide-react';
+import { Receipt, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Expense, ExpenseStatus, Role } from '@/lib/types';
@@ -120,7 +120,7 @@ export default function ExpenseList({
             >
               {/* Left: category + meta */}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">{e.categoria}</p>
+                <p className="text-sm font-semibold text-foreground truncate max-w-[120px]">{e.categoria}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span>Spesa: {formatDate(e.data_spesa)}</span>
                   <span className="text-muted-foreground">·</span>
@@ -136,9 +136,7 @@ export default function ExpenseList({
                   </span>
                   <StatusBadge stato={e.stato} />
                 </div>
-                <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
             </Link>
           ))}

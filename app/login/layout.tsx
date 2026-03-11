@@ -10,7 +10,7 @@ export default function LoginLayout({ children }: { children: ReactNode }) {
   return (
     <>
       {children}
-      <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+      <Toaster position="bottom-right" richColors toastOptions={{ duration: 3000 }} />
     </>
   );
 }

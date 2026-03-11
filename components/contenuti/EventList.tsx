@@ -13,6 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -161,19 +168,29 @@ function PaginationNav({ page, total, onPage }: { page: number; total: number; o
   const totalPages = Math.ceil(total / PAGE_SIZE);
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center justify-between pt-4 border-t border-border">
-      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
-      <div className="flex gap-2">
-        {page > 1
-          ? <button onClick={() => onPage(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</button>
-          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
-        }
-        {page < totalPages
-          ? <button onClick={() => onPage(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</button>
-          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
-        }
-      </div>
-    </div>
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={() => onPage(Math.max(1, page - 1))}
+            aria-disabled={page <= 1}
+            className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+          />
+        </PaginationItem>
+        <PaginationItem>
+          <span className="text-xs text-muted-foreground px-2">
+            {page} / {totalPages}
+          </span>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext
+            onClick={() => onPage(page + 1)}
+            aria-disabled={page >= totalPages}
+            className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }
 
@@ -335,7 +352,7 @@ export default function EventList({
               </div>
             )}
           </div>
-          {ev.descrizione && <RichTextDisplay html={ev.descrizione} />}
+          {ev.descrizione && <div className="line-clamp-3 overflow-hidden"><RichTextDisplay html={ev.descrizione} /></div>}
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {(ev.start_datetime || ev.end_datetime) && (
               <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDateRange(ev.start_datetime, ev.end_datetime)}</span>

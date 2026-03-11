@@ -15,7 +15,7 @@ const STATUS_CONFIG: Record<CompensationStatus, { variant: BadgeVariant; classNa
   IN_ATTESA: { variant: 'outline', className: 'border-amber-500 text-amber-700 dark:border-amber-600 dark:text-amber-400' },
   APPROVATO: { variant: 'outline', className: 'border-green-500 text-green-700 dark:border-green-600 dark:text-green-400' },
   RIFIUTATO: { variant: 'destructive' },
-  LIQUIDATO: { variant: 'outline', className: 'border-blue-500 text-blue-700 dark:border-blue-600 dark:text-blue-400' },
+  LIQUIDATO: { variant: 'outline', className: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-300 dark:border-green-700' },
 };
 
 export default function StatusBadge({ stato }: { stato: CompensationStatus | ExpenseStatus }) {

@@ -266,7 +266,7 @@ export default function ResourceList({
               </div>
             )}
           </div>
-          {r.descrizione && <RichTextDisplay html={r.descrizione} />}
+          {r.descrizione && <div className="line-clamp-3 overflow-hidden"><RichTextDisplay html={r.descrizione} /></div>}
           <div className="flex items-center gap-2 flex-wrap">
             {r.link && (
               <a href={r.link} target="_blank" rel="noopener noreferrer"

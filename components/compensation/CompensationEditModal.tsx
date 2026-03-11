@@ -69,6 +69,12 @@ export default function CompensationEditModal({
   const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
   function handleClose() {
+    setImportoLordo('');
+    setDataCompetenza('');
+    setNomeServizioRuolo('');
+    setCompetenza('');
+    setInfoSpecifiche('');
+    setRateDecimal(0.20);
     onClose();
   }
 

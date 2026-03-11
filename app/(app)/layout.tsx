@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/Sidebar';
 import FeedbackButton from '@/components/FeedbackButton';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { ThemeSync } from '@/components/ThemeSync';
 import { SessionGuard } from '@/components/SessionGuard';
 import { Toaster } from '@/components/ui/sonner';
@@ -41,22 +42,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <ThemeSync dbTheme={dbTheme} />
       <SessionGuard />
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Sidebar
-          navItems={navItems}
-          userEmail={user.email ?? ''}
-          userName={userName}
-          avatarUrl={collaborator?.foto_profilo_url ?? null}
-          role={role}
-        />
-        <TooltipProvider delayDuration={300}>
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </TooltipProvider>
-        <FeedbackButton />
-      </div>
-      <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+      <SidebarProvider>
+        <div className="flex h-screen bg-background overflow-hidden">
+          <Sidebar
+            navItems={navItems}
+            userEmail={user.email ?? ''}
+            userName={userName}
+            avatarUrl={collaborator?.foto_profilo_url ?? null}
+            role={role}
+          />
+          <TooltipProvider delayDuration={300}>
+            <main className="flex-1 overflow-y-auto">
+              {children}
+            </main>
+          </TooltipProvider>
+          <FeedbackButton />
+        </div>
+      </SidebarProvider>
+      <Toaster position="bottom-right" richColors toastOptions={{ duration: 3000 }} />
     </>
   );
 }

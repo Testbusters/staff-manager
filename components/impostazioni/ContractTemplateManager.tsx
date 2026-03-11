@@ -161,7 +161,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
               <div className="grid grid-cols-1 gap-1.5">
                 {CONTRATTO_MARKERS.map(({ key, desc }) => (
                   <div key={key} className="flex items-center gap-3 text-xs">
-                    <code className="rounded bg-muted border border-border px-2 py-0.5 text-blue-700 dark:text-blue-300 font-mono flex-shrink-0">
+                    <code className="rounded bg-muted border border-border px-2 py-0.5 text-brand dark:text-brand font-mono flex-shrink-0">
                       {key}
                     </code>
                     <span className="text-muted-foreground">{desc}</span>
@@ -178,7 +178,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
               <div className="grid grid-cols-1 gap-1.5">
                 {RICEVUTA_MARKERS.map(({ key, desc }) => (
                   <div key={key} className="flex items-center gap-3 text-xs">
-                    <code className="rounded bg-muted border border-border px-2 py-0.5 text-blue-700 dark:text-blue-300 font-mono flex-shrink-0">
+                    <code className="rounded bg-muted border border-border px-2 py-0.5 text-brand dark:text-brand font-mono flex-shrink-0">
                       {key}
                     </code>
                     <span className="text-muted-foreground">{desc}</span>

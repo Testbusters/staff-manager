@@ -19,7 +19,7 @@ export default function RichTextDisplay({ html, className }: Props) {
         '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:text-sm [&_ol]:text-foreground [&_ol]:space-y-0.5 [&_ol]:mb-2',
         '[&_strong]:font-semibold [&_strong]:text-foreground',
         '[&_em]:italic [&_em]:text-foreground',
-        '[&_a]:text-blue-400 [&_a]:underline',
+        '[&_a]:text-link hover:[&_a]:text-link/80 [&_a]:underline',
         '[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground',
         className ?? '',
       ].join(' ')}

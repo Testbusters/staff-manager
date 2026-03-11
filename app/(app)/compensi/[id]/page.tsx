@@ -1,11 +1,11 @@
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import CompensationDetail from '@/components/compensation/CompensationDetail';
 import Timeline from '@/components/compensation/Timeline';
 import ActionPanel from '@/components/compensation/ActionPanel';
 import type { Role, CompensationStatus } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 export default async function CompensationDetailPage({
   params,
@@ -68,16 +68,21 @@ export default async function CompensationDetailPage({
   }
 
   const backHref = role === 'collaboratore' ? '/compensi' : role === 'responsabile_compensi' ? '/approvazioni' : '/coda';
+  const backLabel = role === 'collaboratore' ? 'Compensi' : role === 'responsabile_compensi' ? 'Approvazioni' : 'Coda';
 
   return (
     <div className="p-6 max-w-2xl">
-      <div className="mb-6 flex items-center gap-3">
-        <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground transition">
-          ← Indietro
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <h1 className="text-xl font-semibold text-foreground">Dettaglio compenso</h1>
-      </div>
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href={backHref}>{backLabel}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Dettaglio compenso</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <div className="space-y-6">
         <CompensationDetail

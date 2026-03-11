@@ -80,7 +80,7 @@ export default async function DiscountDetailPage({
           {expiryStatus(d.valid_to)}
           {d.fornitore && <span className="text-xs text-muted-foreground">{d.fornitore}</span>}
         </div>
-        <h1 className="text-2xl font-semibold text-foreground">{d.titolo}</h1>
+        <h1 className="text-xl font-semibold text-foreground">{d.titolo}</h1>
       </div>
 
       {d.logo_url && (

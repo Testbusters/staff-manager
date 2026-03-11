@@ -6,6 +6,8 @@ import TicketRecordRow from '@/components/ticket/TicketRecordRow';
 import type { TicketRecord } from '@/components/ticket/TicketRecordRow';
 import type { Role } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Inbox, Clock } from 'lucide-react';
 
 export default async function TicketPage() {
   const supabase = await createClient();
@@ -107,8 +109,8 @@ export default async function TicketPage() {
           <h2 className="text-sm font-medium text-muted-foreground mb-2">Ticket ricevuti</h2>
           {ricevuti.length === 0 ? (
             <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground">Nessun ticket aperto.</p>
+              <CardContent className="p-6">
+                <EmptyState icon={Inbox} title="Nessun ticket aperto" />
               </CardContent>
             </Card>
           ) : (
@@ -125,8 +127,8 @@ export default async function TicketPage() {
           <h2 className="text-sm font-medium text-muted-foreground mb-2">Ticket recenti <span className="text-muted-foreground font-normal">(ultimi 3 giorni)</span></h2>
           {recenti.length === 0 ? (
             <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground">Nessun ticket con attività recente.</p>
+              <CardContent className="p-6">
+                <EmptyState icon={Clock} title="Nessun ticket con attività recente" />
               </CardContent>
             </Card>
           ) : (

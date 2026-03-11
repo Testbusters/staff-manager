@@ -13,6 +13,15 @@ import {
 import type { Role } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import type { NavItem } from '@/lib/nav';
+import {
+  Sidebar as SidebarRoot,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Home, User, Wallet, GraduationCap, School, CalendarDays,
@@ -66,53 +75,63 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
   };
 
   return (
-    <aside className="flex h-screen w-56 flex-col bg-sidebar border-r border-sidebar-border flex-shrink-0">
+    <SidebarRoot collapsible="none" className="border-r border-sidebar-border w-56 flex-shrink-0">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-5 border-b border-sidebar-border">
-        <AppLogo className="w-8 h-8 flex-shrink-0" />
-        <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
-        <NotificationBell />
-      </div>
+      <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2.5">
+          <AppLogo className="w-8 h-8 flex-shrink-0" />
+          <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
+          <NotificationBell />
+        </div>
+      </SidebarHeader>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-0.5">
-        {navItems.map((item) => {
-          const Icon = ICON_MAP[item.iconName] ?? Home;
-          if (item.comingSoon) {
+      <SidebarContent className="px-2 py-4">
+        <SidebarMenu>
+          {navItems.map((item) => {
+            const Icon = ICON_MAP[item.iconName] ?? Home;
+            if (item.comingSoon) {
+              return (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton
+                    disabled
+                    className="cursor-not-allowed opacity-60 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground select-none"
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    <span className="text-[9px] font-medium rounded-full bg-muted/60 px-1.5 py-0.5 text-muted-foreground/60 whitespace-nowrap shrink-0">
+                      In arrivo
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            }
+            const isActive = pathname === item.href ||
+              (item.href !== '/' && pathname.startsWith(item.href));
             return (
-              <span
-                key={item.label}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed select-none"
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="flex-1">{item.label}</span>
-                <span className="text-[9px] font-medium rounded-full bg-muted/60 px-1.5 py-0.5 text-muted-foreground/60 whitespace-nowrap shrink-0">
-                  In arrivo
-                </span>
-              </span>
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
+                  }`}
+                >
+                  <Link href={item.href}>
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {item.label}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             );
-          }
-          const isActive = pathname === item.href ||
-            (item.href !== '/' && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+          })}
+        </SidebarMenu>
+      </SidebarContent>
 
       {/* User footer */}
-      <div className="px-3 py-4 border-t border-sidebar-border">
+      <SidebarFooter className="px-3 py-4 border-t border-sidebar-border">
         <div className="flex items-center gap-2.5 mb-2">
           <Avatar className="w-7 h-7 shrink-0">
             {role !== 'amministrazione' && <AvatarImage src={avatarUrl ?? undefined} alt="" />}
@@ -179,7 +198,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
-    </aside>
+      </SidebarFooter>
+    </SidebarRoot>
   );
 }

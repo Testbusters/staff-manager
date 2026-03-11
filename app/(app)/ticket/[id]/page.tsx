@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import TicketThread from '@/components/ticket/TicketThread';
 import TicketMessageForm from '@/components/ticket/TicketMessageForm';
 import TicketStatusInline from '@/components/ticket/TicketStatusInline';
@@ -23,7 +23,7 @@ function formatDate(iso: string) {
 const PRIORITY_DOT: Record<string, string> = {
   ALTA:    'bg-red-500 dark:bg-red-400',
   NORMALE: 'bg-yellow-500 dark:bg-yellow-400',
-  BASSA:   'bg-gray-500 dark:bg-gray-400',
+  BASSA:   'bg-muted-foreground/40',
 };
 
 export default async function TicketDetailPage({
@@ -119,15 +119,21 @@ export default async function TicketDetailPage({
   return (
     <div className="p-6 max-w-3xl">
       {/* Breadcrumb */}
-      <div className="mb-6 flex items-center gap-3">
-        {isManager && (
-          <Link href="/ticket" className="text-sm text-muted-foreground hover:text-foreground transition">
-            ← Ticket
-          </Link>
-        )}
-        {isManager && <span className="text-muted-foreground">/</span>}
-        <h1 className="text-xl font-semibold text-foreground truncate">{ticket.oggetto}</h1>
-      </div>
+      {isManager ? (
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/ticket">Ticket</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="truncate max-w-xs">{ticket.oggetto}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      ) : (
+        <h1 className="text-xl font-semibold text-foreground truncate mb-6">{ticket.oggetto}</h1>
+      )}
 
       {/* Ticket header */}
       <Card className="mb-5">

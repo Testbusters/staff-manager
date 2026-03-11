@@ -7,6 +7,8 @@ import type { Document } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import DocumentViewer from './DocumentViewer';
 import SignaturePad from './SignaturePad';
 
@@ -101,9 +103,14 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
     }
   }
 
+  const progressValue = mode === 'idle' ? 0 : mode === 'download' ? 33 : 66;
+
   return (
     <Card>
       <CardContent className="p-6 space-y-5">
+        {isDaFirmare && canSign && (
+          <Progress value={progressValue} className="w-full" />
+        )}
         <h2 className="text-base font-semibold text-foreground">Documento</h2>
 
         {/* Signed document — show if FIRMATO */}
@@ -151,34 +158,36 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
           <div className="space-y-4 border-t border-border pt-5">
 
             {/* Info + disclaimer + viewer/recompile */}
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 px-4 py-3 space-y-3">
-              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-                Verifica i tuoi dati nel documento prima di procedere
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setViewerOpen(true)}
-                  disabled={!viewerUrl}
-                >
-                  Visualizza documento
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRecompile}
-                  disabled={recompiling}
-                >
-                  {recompiling ? 'Ricompilazione…' : 'Ricompila con dati aggiornati'}
-                </Button>
-              </div>
-              {recompileError && (
-                <p className="text-xs text-red-600 dark:text-red-400">{recompileError}</p>
-              )}
-            </div>
+            <Alert variant="info">
+              <AlertDescription className="space-y-3">
+                <p className="font-medium">
+                  Verifica i tuoi dati nel documento prima di procedere
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewerOpen(true)}
+                    disabled={!viewerUrl}
+                  >
+                    Visualizza documento
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRecompile}
+                    disabled={recompiling}
+                  >
+                    {recompiling ? 'Ricompilazione…' : 'Ricompila con dati aggiornati'}
+                  </Button>
+                </div>
+                {recompileError && (
+                  <p className="text-xs text-red-600 dark:text-red-400">{recompileError}</p>
+                )}
+              </AlertDescription>
+            </Alert>
 
             {/* Mode selection */}
             {mode === 'idle' && (

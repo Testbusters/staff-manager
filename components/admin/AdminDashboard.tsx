@@ -383,7 +383,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className={sectionCls + ' px-4 py-3 text-center'}>
             <p className="text-xs text-muted-foreground">YTD pagato</p>
-            <p className="text-lg font-semibold tabular-nums text-blue-600 dark:text-blue-300 mt-0.5">{eur(periodMetrics.ytd.paidAmount)}</p>
+            <p className="text-lg font-semibold tabular-nums text-brand dark:text-brand mt-0.5">{eur(periodMetrics.ytd.paidAmount)}</p>
           </div>
           <div className={sectionCls + ' px-4 py-3 text-center'}>
             <p className="text-xs text-muted-foreground">YTD compensi approvati</p>

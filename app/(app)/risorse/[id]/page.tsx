@@ -77,7 +77,7 @@ export default async function ResourceDetailPage({
         <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${CATEGORIA_COLORS[r.categoria as ResourceCategoria] ?? 'bg-muted border-border text-muted-foreground'}`}>
           {CATEGORIA_LABELS[r.categoria as ResourceCategoria] ?? r.categoria}
         </span>
-        <h1 className="text-2xl font-semibold text-foreground">{r.titolo}</h1>
+        <h1 className="text-xl font-semibold text-foreground">{r.titolo}</h1>
       </div>
 
       {r.descrizione && (

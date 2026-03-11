@@ -1,11 +1,11 @@
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ExpenseDetail from '@/components/expense/ExpenseDetail';
 import ExpenseActionPanel from '@/components/expense/ExpenseActionPanel';
 import Timeline from '@/components/compensation/Timeline';
 import type { Role, ExpenseStatus, HistoryEvent } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 export default async function ExpenseDetailPage({
   params,
@@ -98,16 +98,21 @@ export default async function ExpenseDetailPage({
       : role === 'responsabile_compensi'
       ? '/approvazioni?tab=rimborsi'
       : '/coda?tab=rimborsi';
+  const backLabel = role === 'collaboratore' ? 'Rimborsi' : role === 'responsabile_compensi' ? 'Approvazioni' : 'Coda';
 
   return (
     <div className="p-6 max-w-2xl">
-      <div className="mb-6 flex items-center gap-3">
-        <Link href={backHref} className="text-sm text-muted-foreground hover:text-foreground transition">
-          ← Indietro
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <h1 className="text-xl font-semibold text-foreground">Dettaglio rimborso</h1>
-      </div>
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href={backHref}>{backLabel}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Dettaglio rimborso</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <div className="space-y-6">
         <ExpenseDetail

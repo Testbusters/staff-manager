@@ -66,8 +66,8 @@ export default async function CommunicationDetailPage({
       </Link>
 
       <div className="space-y-2">
-        {c.pinned && <span className="inline-flex items-center gap-1.5 text-blue-400 text-sm"><Pin className="h-3.5 w-3.5" />In evidenza</span>}
-        <h1 className="text-2xl font-semibold text-foreground">{c.titolo}</h1>
+        {c.pinned && <span className="inline-flex items-center gap-1.5 text-brand text-sm"><Pin className="h-3.5 w-3.5" />In evidenza</span>}
+        <h1 className="text-xl font-semibold text-foreground">{c.titolo}</h1>
         <p className="text-sm text-muted-foreground">{formatDate(c.published_at)}</p>
       </div>
 

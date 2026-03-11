@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -141,26 +143,26 @@ function SectionAccordion({
   children: React.ReactNode;
   defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-2xl bg-card border border-border">
+    <Collapsible defaultOpen={defaultOpen} className="rounded-2xl bg-card border border-border">
       <div className="px-5 py-4 border-b border-border flex items-center gap-3">
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="flex-1 flex items-center justify-between text-left min-w-0 gap-2"
-        >
-          <div className="min-w-0">
-            <h2 className="text-sm font-medium text-foreground">{title}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-          </div>
-          <ChevronDown
-            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          />
-        </button>
+        <CollapsibleTrigger asChild>
+          <button className="group flex-1 flex items-center justify-between text-left min-w-0 gap-2">
+            <div className="min-w-0">
+              <h2 className="text-sm font-medium text-foreground">{title}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+            </div>
+            <ChevronDown
+              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+            />
+          </button>
+        </CollapsibleTrigger>
         {controls && <div className="shrink-0 flex items-center gap-1">{controls}</div>}
       </div>
-      {open && <div>{children}</div>}
-    </div>
+      <CollapsibleContent>
+        <div>{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -428,9 +430,9 @@ function LogOperazioni({
               {Array.isArray(selected.detail_json) && (selected.detail_json as Record<string, unknown>[]).length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-foreground mb-2">Dettaglio righe</p>
-                  <div className="rounded border border-border divide-y divide-border text-xs max-h-96 overflow-y-auto">
+                  <ScrollArea className="h-96 rounded border border-border divide-y divide-border text-xs">
                     {(selected.detail_json as Record<string, unknown>[]).map((row, i) => (
-                      <div key={i} className="px-3 py-2 flex items-start gap-2">
+                      <div key={i} className="px-3 py-2 flex items-start gap-2 border-b border-border last:border-0">
                         <Badge
                           variant="outline"
                           className={`shrink-0 text-xs ${
@@ -446,7 +448,7 @@ function LogOperazioni({
                         {!!row.message && <span className="text-red-400 break-all">{String(row.message)}</span>}
                       </div>
                     ))}
-                  </div>
+                  </ScrollArea>
                 </div>
               )}
               {!!selected.detail_json && !Array.isArray(selected.detail_json) && (
@@ -483,7 +485,7 @@ function EmailDelivery({
   const EVENT_COLORS: Record<string, string> = {
     ['email.delivered']: 'text-emerald-600 border-emerald-300 dark:text-emerald-400',
     ['email.bounced']: 'text-red-500 border-red-300',
-    ['email.opened']: 'text-blue-600 border-blue-300 dark:text-blue-400',
+    ['email.opened']: 'text-brand border-brand/30 dark:text-brand',
     ['email.clicked']: 'text-purple-600 border-purple-300 dark:text-purple-400',
     ['email.complained']: 'text-orange-600 border-orange-300 dark:text-orange-400',
   };

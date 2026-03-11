@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { Notification } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent } from '@/components/ui/card';
 
 function entityHref(n: Notification): string | null {
@@ -148,16 +149,24 @@ export default function NotificationPageClient() {
           )}
         </div>
         <div className="flex items-center gap-3 mt-0.5 shrink-0">
-          <Button
-            onClick={() => pushParams({ unread_only: String(!unreadOnly), page: '1' })}
-            className={`text-xs px-3 py-1.5 rounded-full border h-auto ${
-              unreadOnly
-                ? 'bg-brand text-white border-blue-600 hover:bg-brand/90'
-                : 'bg-transparent text-muted-foreground border-border hover:border-muted-foreground hover:bg-transparent'
-            }`}
-          >
-            Solo non lette
-          </Button>
+          <ButtonGroup>
+            <Button
+              variant={!unreadOnly ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => pushParams({ unread_only: 'false', page: '1' })}
+              className={!unreadOnly ? 'bg-brand hover:bg-brand/90 text-white' : ''}
+            >
+              Tutte
+            </Button>
+            <Button
+              variant={unreadOnly ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => pushParams({ unread_only: 'true', page: '1' })}
+              className={unreadOnly ? 'bg-brand hover:bg-brand/90 text-white' : ''}
+            >
+              Non lette
+            </Button>
+          </ButtonGroup>
           {unread > 0 && (
             <Button
               variant="ghost"
