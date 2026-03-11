@@ -75,13 +75,15 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
   };
 
   return (
-    <SidebarRoot collapsible="none" className="border-r border-sidebar-border w-56 flex-shrink-0">
+    <SidebarRoot collapsible="offcanvas" className="border-r border-sidebar-border w-64 flex-shrink-0">
       {/* Logo */}
       <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
           <AppLogo className="w-8 h-8 flex-shrink-0" />
           <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
-          <NotificationBell />
+          <div className="hidden md:block">
+            <NotificationBell />
+          </div>
         </div>
       </SidebarHeader>
 
