@@ -174,6 +174,13 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
 - **For blocks with UI changes**: run the smoke test once in light mode and once in dark mode (sidebar theme toggle). Confirm both themes render correctly.
+- **For blocks that trigger transactional emails** (invite, state transitions, ticket reply, content publish): use the Resend MCP to verify delivery after the triggering action. Standard verification sequence:
+  1. Perform the action in the browser (or via API call) using the test account.
+  2. Wait ~5s, then call `resend_list_emails` with `limit: 5` to retrieve recent sends.
+  3. Confirm: correct `to` address, expected `subject`, `last_event: "delivered"` (not `bounced` or `complained`).
+  4. If the email has a CTA link: confirm the `APP_URL` env var produced a correct absolute URL (not `localhost`) by inspecting the HTML body via `resend_get_email`.
+  - Resend MCP is configured project-locally in `/Users/MarcoG/.claude.json`. Tools available: `resend_list_emails`, `resend_get_email`, `resend_send_email` (for ad-hoc test sends), and others.
+  - Do NOT send emails to real user addresses during smoke tests — use `@test.com` or `@test.local` addresses only.
 
 **Phase 6 — Outcome checklist + confirmation**
 Present this checklist filled with actual results, then wait for explicit confirmation before proceeding to Phase 8:
