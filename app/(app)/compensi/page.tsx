@@ -1,8 +1,10 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
 import CompenseTabs from '@/components/compensation/CompenseTabs';
 import TicketQuickModal from '@/components/ticket/TicketQuickModal';
+import { Button } from '@/components/ui/button';
 import type { Role } from '@/lib/types';
 
 type CompYearBreakdown = { year: number; netto: number; lordo: number };
@@ -137,7 +139,12 @@ export default async function CompensiPage() {
             Visualizza i tuoi compensi e rimborsi, e gestisci le richieste di supporto.
           </p>
         </div>
-        <TicketQuickModal />
+        <div className="flex items-center gap-2 shrink-0">
+          <Button asChild className="bg-brand hover:bg-brand/90 text-white">
+            <Link href="/rimborsi/nuova">Nuovo rimborso</Link>
+          </Button>
+          <TicketQuickModal />
+        </div>
       </div>
 
       <PaymentOverview

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2, Circle, Plus, X } from 'lucide-react';
 
 interface CollaboratorOption {
   id: string;
@@ -55,6 +55,8 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   const router = useRouter();
   const currentYear = new Date().getFullYear();
 
+  const [isOpen, setIsOpen] = useState(false);
+
   // Steps: admin = [1=collab, 2=metadata, 3=file]; collab = [2=metadata, 3=file] (starts at step 2)
   const startStep = isAdmin ? 1 : 2;
   const [step, setStep] = useState(startStep);
@@ -93,7 +95,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
     }
   };
 
-  const reset = () => {
+  const reset = (andClose = false) => {
     setStep(startStep);
     setSelectedCollab(null);
     setSearchQuery('');
@@ -102,6 +104,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
     setTitolo('');
     setStatoFirma('NON_RICHIESTO');
     handleFileChange(null);
+    if (andClose) setIsOpen(false);
   };
 
   const handleSubmit = async () => {
@@ -123,7 +126,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Errore creazione documento');
       toast.success('Documento caricato.');
-      reset();
+      reset(true);
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
@@ -145,10 +148,33 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
 
   const isContratto = tipo.startsWith('CONTRATTO_');
 
+  if (!isOpen) {
+    return (
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="bg-brand hover:bg-brand/90 text-white"
+      >
+        <Plus className="w-4 h-4 mr-1.5" />
+        Carica documento
+      </Button>
+    );
+  }
+
   return (
     <Card>
       <CardContent className="p-6">
-        <h2 className="text-base font-semibold text-foreground mb-5">Carica documento</h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Chiudi form"
+            onClick={() => reset(true)}
+            className="w-7 h-7 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
 
         <StepIndicator steps={stepLabels} current={isAdmin ? step : step - 1} />
 
@@ -187,7 +213,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
               <p className="text-sm text-muted-foreground text-center py-3">Nessun risultato</p>
             )}
             <div className="flex items-center justify-between pt-2">
-              <Button variant="ghost" onClick={reset}>Annulla</Button>
+              <Button variant="ghost" onClick={() => reset(true)}>Annulla</Button>
             </div>
           </div>
         )}
@@ -266,7 +292,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
               {isAdmin ? (
                 <Button variant="ghost" onClick={() => setStep(1)}>← Indietro</Button>
               ) : (
-                <Button variant="ghost" onClick={reset}>Annulla</Button>
+                <Button variant="ghost" onClick={() => reset(true)}>Annulla</Button>
               )}
               <Button
                 onClick={() => setStep(3)}

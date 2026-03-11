@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react';
 import { FileText, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Document, DocumentType, DocumentMacroType } from '@/lib/types';
@@ -100,12 +101,21 @@ function DocumentGroups({
   isAdmin: boolean;
   onRowClick?: (id: string) => void;
 }) {
+  const router = useRouter();
   const grouped = new Map<DocumentMacroType, DocumentRow[]>();
   for (const doc of documents) {
     const macro = DOCUMENT_MACRO_TYPE[doc.tipo as DocumentType] ?? ('CU' as DocumentMacroType);
     const arr = grouped.get(macro) ?? [];
     arr.push(doc);
     grouped.set(macro, arr);
+  }
+  // Sort: DA_FIRMARE first within each group
+  for (const [key, docs] of grouped) {
+    grouped.set(key, [...docs].sort((a, b) => {
+      if (a.stato_firma === 'DA_FIRMARE' && b.stato_firma !== 'DA_FIRMARE') return -1;
+      if (a.stato_firma !== 'DA_FIRMARE' && b.stato_firma === 'DA_FIRMARE') return 1;
+      return 0;
+    }));
   }
 
   if (documents.length === 0) {
@@ -118,76 +128,106 @@ function DocumentGroups({
     );
   }
 
+  // colspan = 6 for both views:
+  // admin:  Collaboratore + Titolo + Tipo + Anno + Stato + Data
+  // collab: Titolo + Tipo + Anno + Stato + Data + (Apri)
+  const colSpan = 6;
+
   return (
-    <div className="space-y-6">
-      {MACRO_ORDER.filter((macro) => grouped.has(macro)).map((macro) => {
-        const docs = grouped.get(macro)!;
-        return (
-          <Card key={macro}>
-            <CardContent className="overflow-hidden p-0">
-              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">{DOCUMENT_MACRO_TYPE_LABELS[macro]}</h3>
-                <span className="text-xs text-muted-foreground tabular-nums">({docs.length})</span>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {isAdmin && <TableHead>Collaboratore</TableHead>}
-                    <TableHead>Titolo</TableHead>
-                    {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
-                      <TableHead className="hidden sm:table-cell">Tipo</TableHead>
-                    )}
-                    <TableHead className="hidden md:table-cell">Anno</TableHead>
-                    <TableHead>Stato</TableHead>
-                    <TableHead className="hidden lg:table-cell">Data</TableHead>
-                    {!isAdmin && <TableHead />}
+    <Card>
+      <CardContent className="overflow-hidden p-0">
+        <Table className={isAdmin ? 'w-full' : 'w-auto'}>
+          <TableHeader>
+            <TableRow>
+              {isAdmin && <TableHead>Collaboratore</TableHead>}
+              <TableHead className={isAdmin ? '' : 'min-w-48'}>Titolo</TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap w-28">Tipo</TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap w-16">Anno</TableHead>
+              <TableHead className="whitespace-nowrap w-44">Stato</TableHead>
+              <TableHead className="hidden lg:table-cell whitespace-nowrap w-28">Data</TableHead>
+              {!isAdmin && <TableHead className="w-16" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {MACRO_ORDER.filter((macro) => grouped.has(macro)).map((macro) => {
+              const docs = grouped.get(macro)!;
+              return (
+                <>
+                  {/* Section header row */}
+                  <TableRow key={`section-${macro}`} className="bg-muted/40 hover:bg-muted/40 border-t border-border">
+                    <TableCell colSpan={colSpan} className="py-2.5 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-sm font-semibold tracking-tight text-foreground">
+                          {DOCUMENT_MACRO_TYPE_LABELS[macro]}
+                        </span>
+                        <span className="inline-flex items-center justify-center rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums min-w-[1.25rem] border border-border">
+                          {docs.length}
+                        </span>
+                        {docs.some((d) => d.stato_firma === 'DA_FIRMARE') && (
+                          <span className="ml-auto flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            Azione richiesta
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {docs.map((doc) => (
-                    <TableRow
-                      key={doc.id}
-                      className={`hover:bg-muted/60 ${isAdmin ? 'cursor-pointer' : ''}`}
-                      onClick={isAdmin && onRowClick ? () => onRowClick(doc.id) : undefined}
-                    >
-                      {isAdmin && (
-                        <TableCell className="text-foreground text-sm">
-                          {doc.collaborators
-                            ? `${doc.collaborators.nome} ${doc.collaborators.cognome}`
-                            : '—'}
-                        </TableCell>
-                      )}
-                      <TableCell className="text-foreground font-medium text-sm">{doc.titolo}</TableCell>
-                      {(macro === 'CONTRATTO' || macro === 'RICEVUTA') && (
+
+                  {/* Document rows */}
+                  {docs.map((doc) => {
+                    const isDaFirmare = doc.stato_firma === 'DA_FIRMARE';
+                    const handleRowClick = isAdmin && onRowClick
+                      ? () => onRowClick(doc.id)
+                      : !isAdmin
+                        ? () => router.push(`/documenti/${doc.id}`)
+                        : undefined;
+                    return (
+                      <TableRow
+                        key={doc.id}
+                        className={`hover:bg-muted/60 cursor-pointer ${isDaFirmare && !isAdmin ? 'border-l-2 border-l-amber-500' : ''}`}
+                        onClick={handleRowClick}
+                      >
+                        {isAdmin && (
+                          <TableCell className="text-foreground text-sm">
+                            {doc.collaborators
+                              ? `${doc.collaborators.nome} ${doc.collaborators.cognome}`
+                              : '—'}
+                          </TableCell>
+                        )}
+                        <TableCell className="text-foreground font-medium text-sm">{doc.titolo}</TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <TypeBadge tipo={doc.tipo} />
                         </TableCell>
-                      )}
-                      <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
-                        {doc.anno ?? '—'}
-                      </TableCell>
-                      <TableCell>
-                        <SignBadge stato={doc.stato_firma} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
-                        {new Date(doc.requested_at).toLocaleDateString('it-IT')}
-                      </TableCell>
-                      {!isAdmin && (
-                        <TableCell className="text-right">
-                          <Link href={`/documenti/${doc.id}`} className="text-xs text-link hover:text-link/80">
-                            Apri →
-                          </Link>
+                        <TableCell className="text-muted-foreground hidden md:table-cell text-sm tabular-nums">
+                          {doc.anno ?? '—'}
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+                        <TableCell>
+                          <SignBadge stato={doc.stato_firma} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden lg:table-cell tabular-nums text-xs">
+                          {new Date(doc.requested_at).toLocaleDateString('it-IT')}
+                        </TableCell>
+                        {!isAdmin && (
+                          <TableCell className="text-right whitespace-nowrap">
+                            <Link
+                              href={`/documenti/${doc.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-xs text-link hover:text-link/80"
+                            >
+                              Apri →
+                            </Link>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
 

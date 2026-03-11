@@ -52,14 +52,17 @@ export default async function ProfiloPage({
       .order('name'),
   ]);
 
-  const communities =
-    collaborator?.collaborator_communities?.flatMap(
-      (cc: { communities: { id: string; name: string } | { id: string; name: string }[] | null }) => {
-        const c = cc.communities;
-        if (!c) return [];
-        return Array.isArray(c) ? c : [c];
-      },
-    ) ?? [];
+  // PostgREST returns a single object (not array) when UNIQUE constraint exists on the FK column.
+  // Migration 044 added UNIQUE(collaborator_id) → normalize to array before flatMap.
+  const ccRaw = collaborator?.collaborator_communities;
+  const ccArray = Array.isArray(ccRaw) ? ccRaw : ccRaw ? [ccRaw] : [];
+  const communities = ccArray.flatMap(
+    (cc: { communities: { id: string; name: string } | { id: string; name: string }[] | null }) => {
+      const c = cc.communities;
+      if (!c) return [];
+      return Array.isArray(c) ? c : [c];
+    },
+  );
 
   const allCommunities = (allCommunitiesData ?? []) as { id: string; name: string }[];
 
@@ -104,7 +107,7 @@ export default async function ProfiloPage({
   }
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Profilo e Documenti</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -135,12 +138,7 @@ export default async function ProfiloPage({
       )}
 
       {activeTab === 'documenti' && (
-        <div className="space-y-6">
-          <div className="flex justify-end">
-            <Button asChild className="bg-brand hover:bg-brand/90 text-white">
-              <Link href="/rimborsi/nuova">Nuovo rimborso</Link>
-            </Button>
-          </div>
+        <div className="w-fit space-y-6">
           <DocumentUploadForm collaborators={[]} isAdmin={false} />
           <DocumentList documents={documents} isAdmin={false} />
         </div>
