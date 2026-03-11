@@ -73,7 +73,7 @@ export default async function OpportunityDetailPage({
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <Link href="/opportunita" className="text-sm text-muted-foreground hover:text-foreground transition">
+      <Link href="/opportunita" className="text-sm text-muted-foreground hover:text-foreground transition block mb-2">
         ← Torna alle opportunità
       </Link>
 

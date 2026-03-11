@@ -95,7 +95,7 @@ export default async function EventDetailPage({
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <Link href="/eventi" className="text-sm text-muted-foreground hover:text-foreground transition">
+      <Link href="/eventi" className="text-sm text-muted-foreground hover:text-foreground transition block mb-2">
         ← Torna agli eventi
       </Link>
 
