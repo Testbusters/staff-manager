@@ -27,9 +27,9 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   4. Check `e2e/` and `__tests__/api/` for files referencing affected routes or selectors
   5. Every shared type or utility being modified (e.g. `lib/types.ts`, `lib/transitions.ts`) → grep import count across `.ts`/`.tsx`. If >10 consumers: treat as high-impact regardless of file count; list all consumers in the file list.
   6. Every table being modified → check FK references from other tables and RLS policies filtering on modified columns. Query: `SELECT conname, conrelid::regclass FROM pg_constraint WHERE confrelid='tablename'::regclass AND contype='f';`
-  - **Always delegate the full dependency scan to an Explore subagent** — the standard checklist (items 1–6) is inherently multi-query and must never run in the main context. Pass all 6 checks in a single Agent call.
+  - **Always delegate the full dependency scan to an Explore subagent** — the standard checklist (items 1–6) is inherently multi-query and must never run in the main context. Pass all 6 checks in a single Agent call with `model: "haiku"`.
   - An incomplete dependency scan = incomplete file list = rework discovered in Phase 2. This is a process error.
-- For broad codebase searches (≥2 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` to protect the main context.
+- For broad codebase searches (≥2 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context and reduce cost.
 - **All clarification questions must use the `AskUserQuestion` tool** — never present open questions as inline text. Group all questions for the block into a single `AskUserQuestion` call and resolve them before the STOP gate.
 - Expected output: feature summary, **complete** file list verified by dependency scan, open questions.
 - *** STOP — present requirements summary and file list. Wait for explicit confirmation before proceeding. ***
@@ -234,7 +234,7 @@ Only after explicit confirmation:
 
 **Phase 8.5 — Context file review + compact**
 After git push, before closing the session:
-- **C1–C3** (pure grep checks — no reasoning required): delegate to a **Haiku subagent** via the Agent tool. Pass the exact grep commands from `context-review.md` and the relevant file paths in the prompt. Collect results; apply any fix in the main session if needed.
+- **C1–C3** (pure grep checks — no reasoning required): delegate to a **Haiku subagent** via the Agent tool with `model: "haiku"`. Pass the exact grep commands from `context-review.md` and the relevant file paths in the prompt. Collect results; apply any fix in the main session if needed.
 - Execute checks **C4 through C11** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
 - **Phase complete only when all 11 checks pass** — not when the review "seems thorough".
@@ -295,7 +295,7 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **Even if the plan is pre-written**: still execute phase by phase with the gates. A pre-written plan replaces only Phase 1, it does not compress subsequent phases.
 - **Do not re-read files already in context**: use the already-acquired line reference.
-- **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, use the Agent tool with `subagent_type: 'Explore'` to protect the main context from verbosity.
+- **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context from verbosity and reduce cost.
 - **Concise output**: always report only the build/test summary line. Paste details only on error.
 - **Keep MEMORY.md compact**: project-root MEMORY.md and auto-memory MEMORY.md must both stay under ~150 active lines. Beyond that: extract topics into separate files and link.
 - **Immediate migration**: every `supabase/migrations/*.sql` must be applied to the remote DB immediately after writing (Node.js Management API + SELECT verification + `docs/migrations-log.md` entry). Never leave a written migration unapplied before tests.
