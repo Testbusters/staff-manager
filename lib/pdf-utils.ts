@@ -27,9 +27,10 @@ export async function findMarkerPositions(
   // @ts-ignore — no type declarations for this path
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs') as any;
   if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-    const { createRequire } = await import('module');
-    const _require = createRequire(import.meta.url);
-    const workerPath = _require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+    // Use process.cwd() so the path resolves correctly in both plain Node.js
+    // scripts and Next.js server (where import.meta.url points to compiled chunks).
+    const { resolve } = await import('path');
+    const workerPath = resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
     pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
   }
 

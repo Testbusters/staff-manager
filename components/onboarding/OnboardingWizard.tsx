@@ -113,11 +113,12 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
       return;
     }
 
-    if (data.download_url) {
-      setDownloadUrl(data.download_url);
+    if (data.document_id) {
+      // Contract generated (document_id present) — download URL is optional
+      if (data.download_url) setDownloadUrl(data.download_url);
       setContractGenerated(true);
     } else {
-      // No template available, generation failed, or contract skipped — onboarding still completed
+      // No contract generated (skipped, no template, or failure) — onboarding still completed
       setOnboardingDoneNoContract(true);
     }
   };
@@ -184,7 +185,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               Accedi alla piattaforma
             </Button>
           </div>
-        ) : contractGenerated && downloadUrl ? (
+        ) : contractGenerated ? (
           <div className="space-y-4">
             <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -194,28 +195,30 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 <span className="text-sm font-medium text-green-700 dark:text-green-400">Contratto generato</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Il contratto è stato generato con i tuoi dati. Scaricalo e leggilo — quando sei pronto, vai nella sezione <strong className="text-foreground">Documenti</strong> per firmarlo digitalmente.
+                Il contratto è disponibile nella sezione <strong className="text-foreground">Documenti</strong>. Puoi firmarlo digitalmente in qualsiasi momento.
               </p>
             </div>
 
-            <button
-              onClick={handleDownload}
-              className="w-full rounded-lg bg-accent hover:bg-muted py-2.5 text-sm font-medium text-foreground transition flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Scarica contratto
-            </button>
+            {downloadUrl && (
+              <button
+                onClick={handleDownload}
+                className="w-full rounded-lg bg-accent hover:bg-muted py-2.5 text-sm font-medium text-foreground transition flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Scarica copia
+              </button>
+            )}
 
             <Button onClick={handleFinish} className="w-full bg-brand hover:bg-brand/90 text-white">
-              Ho scaricato il contratto — Accedi alla piattaforma
+              Accedi alla piattaforma
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
             {tipoContratto ? (
               <p className="text-sm text-muted-foreground">
-                Clicca il pulsante per generare il tuo contratto precompilato con i dati inseriti.
+                Il contratto verrà generato e precompilato con i dati inseriti. Lo troverai nella sezione <strong className="text-foreground">Documenti</strong> per la firma digitale.
               </p>
             ) : (
               <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/40 p-3">
@@ -239,7 +242,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                     </svg>
                     Generazione in corso…
                   </>
-                ) : 'Genera e scarica contratto'}
+                ) : 'Genera contratto'}
               </Button>
             ) : (
               <Button onClick={handleFinish} className="w-full bg-brand hover:bg-brand/90 text-white">
