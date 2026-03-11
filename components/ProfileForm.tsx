@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Check, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle, ChevronDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -64,27 +66,32 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 }
 
 function GuideBox({ guide }: { guide: GuideContent }) {
-  const [open, setOpen] = useState(false);
   if (!guide) return null;
   return (
-    <div className="mt-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/40">
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-xs text-blue-700 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-200 h-auto rounded-none"
-      >
-        <span className="font-medium">{guide.titolo}</span>
-        <svg className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </Button>
-      {open && guide.descrizione && (
-        <div className="px-3 pb-3 text-xs text-muted-foreground whitespace-pre-wrap border-t border-blue-800/40 pt-2.5">
-          {guide.descrizione}
-        </div>
-      )}
-    </div>
+    <Collapsible>
+      <Alert variant="info" className="mt-3">
+        <AlertDescription>
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="Mostra guida"
+              className="group w-full flex items-center justify-between px-0 py-0 text-xs h-auto rounded-none bg-transparent hover:bg-transparent"
+            >
+              <span className="font-medium">{guide.titolo}</span>
+              <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {guide.descrizione && (
+              <div className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap">
+                {guide.descrizione}
+              </div>
+            )}
+          </CollapsibleContent>
+        </AlertDescription>
+      </Alert>
+    </Collapsible>
   );
 }
 
@@ -540,11 +547,13 @@ export default function ProfileForm({ collaborator, role, email, communities, al
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Se sei figlio fiscalmente a carico</h3>
                 <p>I tuoi genitori hanno diritto a detrazioni fiscali finché sei loro &quot;figlio a carico&quot;. Perdi questo status se il tuo reddito annuo supera:</p>
                 <div className="mt-2 space-y-2">
-                  <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/30 px-4 py-3">
-                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Hai fino a 24 anni</p>
-                    <p>Limite reddito: <strong className="text-foreground">4.000€/anno</strong></p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Consiglio: imposta il massimale a 4.000€ o meno</p>
-                  </div>
+                  <Alert variant="info">
+                    <AlertDescription>
+                      <p className="text-xs font-semibold mb-1">Hai fino a 24 anni</p>
+                      <p>Limite reddito: <strong className="text-foreground">4.000€/anno</strong></p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Consiglio: imposta il massimale a 4.000€ o meno</p>
+                    </AlertDescription>
+                  </Alert>
                   <div className="rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/30 px-4 py-3">
                     <p className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1">Hai più di 24 anni</p>
                     <p>Limite reddito: <strong className="text-foreground">2.840,51€/anno</strong></p>
@@ -557,9 +566,9 @@ export default function ProfileForm({ collaborator, role, email, communities, al
               <section>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Come scegliere il massimale?</h3>
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">2.840€</span><span className="text-muted-foreground">— sei figlio a carico con più di 24 anni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">4.000€</span><span className="text-muted-foreground">— sei figlio a carico con fino a 24 anni</span></div>
-                  <div className="flex items-start gap-2"><span className="text-blue-700 dark:text-blue-400 font-semibold">5.000€</span><span className="text-muted-foreground">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-brand dark:text-brand font-semibold">2.840€</span><span className="text-muted-foreground">— sei figlio a carico con più di 24 anni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-brand dark:text-brand font-semibold">4.000€</span><span className="text-muted-foreground">— sei figlio a carico con fino a 24 anni</span></div>
+                  <div className="flex items-start gap-2"><span className="text-brand dark:text-brand font-semibold">5.000€</span><span className="text-muted-foreground">— nessun vincolo, vuoi massimizzare i guadagni</span></div>
                   <div className="flex items-start gap-2"><span className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400 font-semibold">Meno</span><span className="text-muted-foreground">— hai già altre collaborazioni o guadagni nell&apos;anno</span></div>
                 </div>
               </section>

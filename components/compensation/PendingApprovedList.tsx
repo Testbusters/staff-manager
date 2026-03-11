@@ -54,7 +54,7 @@ export default function PendingApprovedList({
             <TableRow
               key={c.id}
               onClick={() => router.push(`/compensi/${c.id}`)}
-              className="hover:bg-muted/40 cursor-pointer"
+              className="hover:bg-muted/60 cursor-pointer"
             >
               <TableCell className="text-foreground font-medium truncate max-w-[180px]">
                 {c.nome_servizio_ruolo ?? '—'}

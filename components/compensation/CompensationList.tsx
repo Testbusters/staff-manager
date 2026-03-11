@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Wallet } from 'lucide-react';
+import { Wallet, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Compensation, CompensationStatus, Role } from '@/lib/types';
@@ -161,9 +161,7 @@ export default function CompensationList({
                   </div>
                   <StatusBadge stato={c.stato} />
                 </div>
-                <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
             </Link>
           ))}

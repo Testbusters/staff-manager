@@ -241,6 +241,7 @@ export default function CommunityManager({
                       type="button"
                       disabled={togglingPublishId === resp.user_id}
                       onClick={() => togglePublish(resp.user_id, resp.can_publish_announcements)}
+                      aria-label={resp.can_publish_announcements ? 'Disabilita pubblicazione annunci' : 'Abilita pubblicazione annunci'}
                       className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none disabled:opacity-50 ${
                         resp.can_publish_announcements ? 'bg-brand' : 'bg-accent'
                       }`}

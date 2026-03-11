@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
 const STATUS_CONFIG: Record<TicketStatus, { variant: BadgeVariant; className?: string }> = {
-  APERTO:         { variant: 'outline', className: 'border-blue-500 text-blue-700 dark:border-blue-600 dark:text-blue-400' },
+  APERTO:         { variant: 'outline', className: 'bg-muted text-foreground border-border' },
   IN_LAVORAZIONE: { variant: 'outline', className: 'border-amber-500 text-amber-700 dark:border-amber-600 dark:text-amber-400' },
   CHIUSO:         { variant: 'secondary' },
 };

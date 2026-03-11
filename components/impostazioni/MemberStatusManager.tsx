@@ -240,10 +240,10 @@ export default function MemberStatusManager() {
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="px-5 py-2.5 text-left font-medium w-[180px]">Nome</th>
-                  <th className="px-5 py-2.5 text-left font-medium w-[220px]">Email</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[220px] hidden sm:table-cell">Email</th>
                   <th className="px-5 py-2.5 text-left font-medium w-[100px]">Accesso</th>
                   <th className="px-5 py-2.5 text-left font-medium w-[110px]">Data ingresso</th>
-                  <th className="px-5 py-2.5 text-left font-medium w-[180px]">Modalità uscita</th>
+                  <th className="px-5 py-2.5 text-left font-medium w-[180px] hidden sm:table-cell">Modalità uscita</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -259,7 +259,7 @@ export default function MemberStatusManager() {
                     <td className="px-5 py-3">
                       <span className="text-foreground block truncate">{m.cognome} {m.nome}</span>
                     </td>
-                    <td className="px-5 py-3 text-muted-foreground">{m.email}</td>
+                    <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">{m.email}</td>
                     <td className="px-5 py-3">
                       {m.is_active ? (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -274,7 +274,7 @@ export default function MemberStatusManager() {
                     <td className="px-5 py-3 text-muted-foreground tabular-nums">
                       {formatDate(m.data_ingresso)}
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 hidden sm:table-cell">
                       {m.member_status === 'uscente_con_compenso' && (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                           Uscente (con compenso)

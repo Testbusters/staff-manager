@@ -203,7 +203,7 @@ export default function ImportSection() {
                     </TableHeader>
                     <TableBody>
                       {state.rows.map((r) => (
-                        <TableRow key={r.rowIndex} className="hover:bg-muted/30">
+                        <TableRow key={r.rowIndex} className="hover:bg-muted/60">
                           <TableCell className="text-muted-foreground">{r.rowIndex}</TableCell>
                           <TableCell className="text-foreground">{r.collaboratore}</TableCell>
                           <TableCell className="text-muted-foreground">{formatDate(r.data_competenza)}</TableCell>

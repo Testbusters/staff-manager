@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, CreditCard, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,6 +28,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import MassimaleCheckModal, { type MassimaleImpact } from './MassimaleCheckModal';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 
 type CompensationRow = {
@@ -356,7 +359,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
   return (
     <div className="space-y-3">
       {/* ── SECTION 1 — Da processare ──────────────────────────── */}
-      <div className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
+      <Collapsible open={section1Open} onOpenChange={setSection1Open} className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
         <div className={`flex items-center gap-3 px-4 py-3 bg-amber-500/5 ${section1Open ? 'border-b border-border' : ''}`}>
           <SectionToggle
             label="Da processare"
@@ -383,19 +386,20 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
               Approva selezionati{selectedInAttesaIds.size > 0 ? ` (${selectedInAttesaIds.size})` : ''}
             </Button>
-            <button
-              onClick={() => setSection1Open((o) => !o)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={section1Open ? 'Comprimi sezione' : 'Espandi sezione'}
-              type="button"
-            >
-              {section1Open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
+            <CollapsibleTrigger asChild>
+              <button
+                className="group text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={section1Open ? 'Comprimi sezione' : 'Espandi sezione'}
+                type="button"
+              >
+                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
           </div>
         </div>
 
-        {section1Open && (
-          inAttesa.length === 0 ? (
+        <CollapsibleContent>
+          {inAttesa.length === 0 ? (
             <div className="px-4 py-8">
               <EmptyState icon={CheckCircle} title="Nessun compenso in attesa" description="Tutti i compensi sono stati processati." />
             </div>
@@ -409,7 +413,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                     <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
                   </TableHead>
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
-                  <TableHead className="w-24 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
+                  <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -478,12 +482,12 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                 </TableRow>
               </TableFooter>
             </Table>
-          )
-        )}
-      </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* ── SECTION 2 — Approvati · da liquidare ──────────────── */}
-      <div className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
+      <Collapsible open={section2Open} onOpenChange={setSection2Open} className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
         <div className={`flex items-center gap-3 px-4 py-3 bg-green-500/5 ${section2Open ? 'border-b border-border' : ''}`}>
           <SectionToggle
             label="Approvati · da liquidare"
@@ -510,19 +514,20 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               <CreditCard className="h-3.5 w-3.5 mr-1.5" />
               Liquida selezionati{selectedApprovatiIds.size > 0 ? ` (${selectedApprovatiIds.size})` : ''}
             </Button>
-            <button
-              onClick={() => setSection2Open((o) => !o)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={section2Open ? 'Comprimi sezione' : 'Espandi sezione'}
-              type="button"
-            >
-              {section2Open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
+            <CollapsibleTrigger asChild>
+              <button
+                className="group text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={section2Open ? 'Comprimi sezione' : 'Espandi sezione'}
+                type="button"
+              >
+                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
           </div>
         </div>
 
-        {section2Open && (
-          approvati.length === 0 ? (
+        <CollapsibleContent>
+          {approvati.length === 0 ? (
             <div className="px-4 py-8">
               <EmptyState icon={CreditCard} title="Nessun compenso da liquidare" description="Non ci sono compensi approvati in attesa di liquidazione." />
             </div>
@@ -536,7 +541,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                     <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
                   </TableHead>
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
-                  <TableHead className="w-12 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
+                  <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -596,29 +601,29 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                 </TableRow>
               </TableFooter>
             </Table>
-          )
-        )}
-      </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* ── SECTION 3 — Archivio ──────────────────────────────── */}
-      <div className="rounded-xl border border-border border-l-4 border-l-border bg-card overflow-hidden">
-        <button
-          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
-          onClick={() => setSection3Open((o) => !o)}
-          type="button"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Archivio</span>
-            <span className="text-xs text-muted-foreground/60">
-              · {archivioCount} {archivioCount === 1 ? 'voce' : 'voci'} · {fmtTotal(archivioTotal)}
-            </span>
-          </div>
-          {section3Open
-            ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-            : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
-        </button>
+      <Collapsible open={section3Open} onOpenChange={setSection3Open} className="rounded-xl border border-border border-l-4 border-l-border bg-card overflow-hidden">
+        <CollapsibleTrigger asChild>
+          <button
+            className="group w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/60 transition-colors"
+            type="button"
+            aria-label={section3Open ? 'Comprimi sezione' : 'Espandi sezione'}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Archivio</span>
+              <span className="text-xs text-muted-foreground/60">
+                · {archivioCount} {archivioCount === 1 ? 'voce' : 'voci'} · {fmtTotal(archivioTotal)}
+              </span>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+          </button>
+        </CollapsibleTrigger>
 
-        {section3Open && (
+        <CollapsibleContent>
           <div className="border-t border-border">
             {archivioCount === 0 ? (
               <div className="px-4 py-8">
@@ -657,8 +662,8 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               </Tabs>
             )}
           </div>
-        )}
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* ── Reject dialog ─────────────────────────────────────── */}
       <Dialog
@@ -717,9 +722,11 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                 </p>
               </div>
               {hasReceiptTemplate && (
-                <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 px-3 py-2 text-xs text-blue-800 dark:text-blue-200">
-                  Verrà generata una ricevuta di pagamento per {liquidateTarget.collabName}.
-                </div>
+                <Alert variant="info">
+                  <AlertDescription>
+                    Verrà generata una ricevuta di pagamento per {liquidateTarget.collabName}.
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
           )}
@@ -749,18 +756,20 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
             </DialogDescription>
           </DialogHeader>
           {bulkReceiptItems && (
-            <div className="space-y-1 max-h-60 overflow-y-auto">
-              {bulkReceiptItems.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
-                  <span className="text-foreground">{item.collabName}</span>
-                  <span className="text-muted-foreground tabular-nums">€{item.importo.toFixed(2)}</span>
+            <ScrollArea className="h-60">
+              <div className="space-y-1">
+                {bulkReceiptItems.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
+                    <span className="text-foreground">{item.collabName}</span>
+                    <span className="text-muted-foreground tabular-nums">€{item.importo.toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
+                  <span>Totale</span>
+                  <span className="tabular-nums">€{bulkReceiptItems.reduce((s, i) => s + i.importo, 0).toFixed(2)}</span>
                 </div>
-              ))}
-              <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border">
-                <span>Totale</span>
-                <span className="tabular-nums">€{bulkReceiptItems.reduce((s, i) => s + i.importo, 0).toFixed(2)}</span>
               </div>
-            </div>
+            </ScrollArea>
           )}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => { setReceiptModalOpen(false); setBulkReceiptItems(null); }}>

@@ -46,7 +46,7 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
             <TableRow
               key={e.id}
               onClick={() => router.push(`/rimborsi/${e.id}`)}
-              className="hover:bg-muted/40 cursor-pointer"
+              className="hover:bg-muted/60 cursor-pointer"
             >
               <TableCell className="text-foreground font-medium">{e.categoria}</TableCell>
               <TableCell className="text-muted-foreground hidden sm:table-cell">{formatDate(e.data_spesa)}</TableCell>

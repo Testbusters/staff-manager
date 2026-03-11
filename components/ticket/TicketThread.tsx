@@ -70,13 +70,13 @@ export default function TicketThread({
               <div
                 className={`max-w-[78%] rounded-2xl px-4 py-3 ${
                   m.is_own
-                    ? 'bg-brand/20 border border-blue-500/30 rounded-tr-sm'
+                    ? 'bg-brand/20 border border-brand/30 rounded-tr-sm'
                     : 'bg-card border border-border rounded-tl-sm'
                 }`}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between gap-4 mb-1.5">
-                  <span className={`text-xs font-semibold ${m.is_own ? 'text-blue-300' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs font-semibold ${m.is_own ? 'text-brand' : 'text-muted-foreground'}`}>
                     {m.author_label}
                   </span>
                   <span className="text-xs text-muted-foreground tabular-nums">{formatDateTime(m.created_at)}</span>

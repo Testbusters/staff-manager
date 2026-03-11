@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -205,10 +206,18 @@ export default function CollaboratoreDetail({
 
   return (
     <div className="p-6 space-y-6">
-      {/* Back */}
-      <Link href="/collaboratori" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition">
-        ← Torna alla lista
-      </Link>
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/collaboratori">Collaboratori</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{[collab.nome, collab.cognome].filter(Boolean).join(' ') || 'Dettaglio'}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* ── Identity card ────────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-xl p-6">
@@ -328,7 +337,7 @@ export default function CollaboratoreDetail({
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
-                <TableRow key={doc.id} className="hover:bg-muted/30">
+                <TableRow key={doc.id} className="hover:bg-muted/60">
                   <TableCell className="text-foreground text-sm font-medium">{doc.titolo}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     {DOCUMENT_TYPE_LABELS[doc.tipo] ?? doc.tipo}

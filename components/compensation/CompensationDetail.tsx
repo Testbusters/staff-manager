@@ -45,7 +45,7 @@ export default function CompensationDetail({
         <div className="min-w-0">
           <p className="text-lg font-medium text-foreground break-words">{c.nome_servizio_ruolo ?? '—'}</p>
           {competenzaLabel && (
-            <span className="mt-1 inline-block text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/40 rounded-full px-2.5 py-0.5">
+            <span className="mt-1 inline-block text-xs font-medium text-brand dark:text-brand bg-brand/10 dark:bg-brand/20 border border-brand/30 dark:border-brand/40 rounded-full px-2.5 py-0.5">
               {competenzaLabel}
             </span>
           )}

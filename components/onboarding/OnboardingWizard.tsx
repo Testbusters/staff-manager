@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 
 type PrefillData = {
@@ -139,6 +140,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
     return (
       <Card>
         <CardContent className="p-6 space-y-6">
+        <Progress value={100} className="w-full" />
         {/* Progress */}
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center gap-1.5">
@@ -258,6 +260,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   return (
     <Card>
       <CardContent className="p-6">
+      <Progress value={50} className="w-full mb-4" />
       {/* Progress */}
       <div className="flex items-center gap-3 mb-6">
         <div className="flex items-center gap-1.5">

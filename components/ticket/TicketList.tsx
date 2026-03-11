@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { TicketStatus, Role } from '@/lib/types';
 import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/lib/types';
@@ -35,7 +35,7 @@ function formatDate(iso: string) {
 const PRIORITY_DOT: Record<string, string> = {
   ALTA:    'bg-red-500 dark:bg-red-400',
   NORMALE: 'bg-yellow-500 dark:bg-yellow-400',
-  BASSA:   'bg-gray-500 dark:bg-gray-400',
+  BASSA:   'bg-muted-foreground/40',
 };
 
 export default function TicketList({
@@ -145,7 +145,7 @@ export default function TicketList({
                   <TableCell className="text-right text-muted-foreground hidden lg:table-cell tabular-nums">
                     {formatDate(t.created_at)}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground text-sm">→</TableCell>
+                  <TableCell className="text-right text-muted-foreground"><ChevronRight className="h-4 w-4 text-muted-foreground inline" /></TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -37,6 +37,8 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-link: var(--link);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -101,6 +103,9 @@
   --brand-foreground: oklch(1 0 0);
   /* Link — blue with good contrast in light mode */
   --link: oklch(0.488 0.243 264.376);
+  /* Info — informational blue for Alert variant="info" */
+  --info: oklch(0.488 0.243 264.376);
+  --info-foreground: oklch(1 0 0);
 }
 
 /* Dark mode — semantic tokens mapped to --base-* scale */
@@ -140,6 +145,9 @@
   --sidebar-ring: var(--base-500);
   /* Link — blue with good contrast in dark mode */
   --link: oklch(0.707 0.165 254.624);
+  /* Info — informational blue for Alert variant="info" */
+  --info: oklch(0.707 0.165 254.624);
+  --info-foreground: oklch(0.145 0 0);
 }
 
 @layer base {

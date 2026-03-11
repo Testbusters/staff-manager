@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { useRef, useState } from 'react';
 
 export default function CollaboratoriSearchInput({ defaultValue }: { defaultValue?: string }) {
@@ -25,14 +25,15 @@ export default function CollaboratoriSearchInput({ defaultValue }: { defaultValu
   };
 
   return (
-    <div className="relative w-full max-w-sm">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      <Input
+    <InputGroup className="w-full max-w-sm">
+      <InputGroupAddon align="inline-start">
+        <Search className="size-4" />
+      </InputGroupAddon>
+      <InputGroupInput
         value={value}
         onChange={handleChange}
         placeholder="Cerca per nome, cognome, username o email…"
-        className="pl-9"
       />
-    </div>
+    </InputGroup>
   );
 }

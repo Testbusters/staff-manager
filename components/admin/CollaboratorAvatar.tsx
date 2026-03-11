@@ -10,7 +10,7 @@ interface CollaboratorAvatarProps {
 }
 
 const AVATAR_COLORS = [
-  'bg-blue-600',
+  'bg-brand',
   'bg-purple-600',
   'bg-emerald-600',
   'bg-amber-600',

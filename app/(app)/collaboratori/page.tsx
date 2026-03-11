@@ -155,7 +155,7 @@ export default async function CollaboratoriPage({
               <Link
                 key={c.id}
                 href={`/collaboratori/${c.id}`}
-                className="flex items-center gap-4 px-5 py-4 hover:bg-muted/40 transition cursor-pointer group"
+                className="flex items-center gap-4 px-5 py-4 hover:bg-muted/60 transition cursor-pointer group"
               >
                 {/* Avatar */}
                 <CollaboratorAvatar

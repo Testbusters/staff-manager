@@ -121,7 +121,7 @@ export default function TicketDetailModal({
                 <span className="text-[11px] text-muted-foreground">{m.author_label}</span>
                 <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
                   m.is_own
-                    ? 'bg-brand/20 border border-blue-500/30 rounded-tr-sm text-foreground'
+                    ? 'bg-brand/20 border border-brand/30 rounded-tr-sm text-foreground'
                     : 'bg-muted border border-border rounded-tl-sm text-foreground'
                 }`}>
                   <p className="whitespace-pre-wrap break-words">{m.message}</p>

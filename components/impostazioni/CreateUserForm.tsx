@@ -6,6 +6,7 @@ import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
@@ -215,26 +216,24 @@ export default function CreateUserForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
 
       {/* Mode toggle */}
-      <div className="flex gap-2">
-        <button type="button"
+      <ButtonGroup className="w-full">
+        <Button
+          type="button"
+          variant={mode === 'quick' ? 'default' : 'outline'}
           onClick={() => setMode('quick')}
-          className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-            mode === 'quick'
-              ? 'bg-brand border-blue-600 text-white'
-              : 'bg-muted border-border text-muted-foreground hover:border-border'
-          }`}>
+          className={`flex-1${mode === 'quick' ? ' bg-brand hover:bg-brand/90 text-white' : ''}`}
+        >
           Invito rapido
-        </button>
-        <button type="button"
+        </Button>
+        <Button
+          type="button"
+          variant={mode === 'full' ? 'default' : 'outline'}
           onClick={() => setMode('full')}
-          className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-            mode === 'full'
-              ? 'bg-brand border-blue-600 text-white'
-              : 'bg-muted border-border text-muted-foreground hover:border-border'
-          }`}>
+          className={`flex-1${mode === 'full' ? ' bg-brand hover:bg-brand/90 text-white' : ''}`}
+        >
           Invito completo
-        </button>
-      </div>
+        </Button>
+      </ButtonGroup>
 
       {/* Auth */}
       <div>

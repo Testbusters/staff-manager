@@ -11,6 +11,7 @@ import type { Expense, ExpenseStatus, ExpenseCategory } from '@/lib/types';
 import { EXPENSE_STATUS_LABELS, EXPENSE_CATEGORIES, EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import StatusBadge from '@/components/compensation/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type ExpenseRow = Expense & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -146,7 +147,7 @@ export default function ApprovazioniRimborsi({
     <div className="space-y-6">
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-3">
-        <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleInAttesa} countColor="text-blue-600 dark:text-blue-400" />
+        <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleInAttesa} countColor="text-brand dark:text-brand" />
         <KpiCard label="Approvati" count={kpi.approvati} amount={kpi.totaleApprovati} countColor="text-amber-600 dark:text-amber-400" />
         <KpiCard label="Liquidati" count={kpi.liquidato} amount={kpi.totaleLiquidato} countColor="text-emerald-600 dark:text-emerald-400" />
       </div>
@@ -213,24 +214,28 @@ export default function ApprovazioniRimborsi({
 
       {/* Bulk approve bar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-blue-800 dark:text-blue-200">
-              {selectedIds.size} {selectedIds.size === 1 ? 'selezionato' : 'selezionati'}
-            </span>
-            <span className="text-xs text-blue-700 dark:text-blue-300 tabular-nums">{formatCurrency(totaleSelezionati)}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            {bulkError && <span className="text-xs text-red-600 dark:text-red-400">{bulkError}</span>}
-            <Button
-              onClick={handleBulkApprove}
-              disabled={bulkLoading || isPending}
-              className="bg-brand hover:bg-brand/90 text-white"
-            >
-              {bulkLoading ? 'Approvazione...' : 'Approva selezionati'}
-            </Button>
-          </div>
-        </div>
+        <Alert variant="info">
+          <AlertDescription>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm">
+                  {selectedIds.size} {selectedIds.size === 1 ? 'selezionato' : 'selezionati'}
+                </span>
+                <span className="text-xs tabular-nums">{formatCurrency(totaleSelezionati)}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                {bulkError && <span className="text-xs text-red-600 dark:text-red-400">{bulkError}</span>}
+                <Button
+                  onClick={handleBulkApprove}
+                  disabled={bulkLoading || isPending}
+                  className="bg-brand hover:bg-brand/90 text-white"
+                >
+                  {bulkLoading ? 'Approvazione...' : 'Approva selezionati'}
+                </Button>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* List */}
