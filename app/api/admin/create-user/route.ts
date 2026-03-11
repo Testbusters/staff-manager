@@ -110,6 +110,7 @@ export async function POST(request: Request) {
     is_active: true,
     must_change_password: true,
     onboarding_completed: false,
+    theme_preference: 'dark',
   });
 
   if (profileError) {
