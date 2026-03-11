@@ -135,10 +135,10 @@ export default async function ImpostazioniPage({
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
-  const wideTab = activeTab === 'template_mail' || activeTab === 'monitoraggio';
+  const narrowContent = activeTab !== 'template_mail' && activeTab !== 'monitoraggio';
 
   return (
-    <div className={wideTab ? 'p-6' : 'p-6 max-w-3xl'}>
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Impostazioni</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -146,8 +146,8 @@ export default async function ImpostazioniPage({
         </p>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-2 mb-6 overflow-x-auto">
+      {/* Tab bar — always full width so all tabs are visible */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
         <Link href="?tab=utenti" className={tabCls('utenti')}>Utenti</Link>
         <Link href="?tab=community" className={tabCls('community')}>Community</Link>
         <Link href="?tab=collaboratori" className={tabCls('collaboratori')}>Collaboratori</Link>
@@ -156,6 +156,9 @@ export default async function ImpostazioniPage({
         <Link href="?tab=template_mail" className={tabCls('template_mail')}>Template mail</Link>
         <Link href="?tab=monitoraggio" className={tabCls('monitoraggio')}>Monitoraggio</Link>
       </div>
+
+      {/* Content — narrow (max-w-3xl) for simple tabs, full-width for mail+monitoring */}
+      <div className={narrowContent ? 'max-w-3xl' : undefined}>
 
       {activeTab === 'utenti' && (
         <div className="rounded-2xl bg-card border border-border">
@@ -231,6 +234,7 @@ export default async function ImpostazioniPage({
           />
         </div>
       )}
+      </div>{/* end content width wrapper */}
     </div>
   );
 }
