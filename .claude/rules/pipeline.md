@@ -27,7 +27,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
   4. Check `e2e/` and `__tests__/api/` for files referencing affected routes or selectors
   5. Every shared type or utility being modified (e.g. `lib/types.ts`, `lib/transitions.ts`) → grep import count across `.ts`/`.tsx`. If >10 consumers: treat as high-impact regardless of file count; list all consumers in the file list.
   6. Every table being modified → check FK references from other tables and RLS policies filtering on modified columns. Query: `SELECT conname, conrelid::regclass FROM pg_constraint WHERE confrelid='tablename'::regclass AND contype='f';`
-  - **Always delegate the full dependency scan to an Explore subagent** — the standard checklist (items 1–6) is inherently multi-query and must never run in the main context. Pass all 6 checks in a single Agent call with `model: "haiku"`.
+  - **Always delegate the full dependency scan to the `dependency-scanner` custom agent** (`.claude/agents/dependency-scanner.md`) — the standard checklist (items 1–6) is inherently multi-query and must never run in the main context. Invoke via `Agent tool` with `subagent_type: "dependency-scanner"`. Fallback: generic Explore subagent with `model: "haiku"`.
   - An incomplete dependency scan = incomplete file list = rework discovered in Phase 2. This is a process error.
 - For broad codebase searches (≥2 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context and reduce cost.
 - **All clarification questions must use the `AskUserQuestion` tool** — never present open questions as inline text. Group all questions for the block into a single `AskUserQuestion` call and resolve them before the STOP gate.
@@ -114,6 +114,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - **DROP CONSTRAINT before UPDATE** (migrations): if a column has a CHECK constraint and the UPDATE sets a value not allowed by the current constraint (e.g. renaming an enum value), the UPDATE fails. Pattern inside a single migration: (1) `ALTER TABLE t DROP CONSTRAINT c;` (2) `UPDATE t SET col = new_val WHERE ...;` (3) `ALTER TABLE t ADD CONSTRAINT c CHECK (...);` — all three statements in the same migration file so they run atomically.
 - **Security checklist** (before intermediate commit): for every new/modified API route verify: (1) auth check before any operation, (2) input validated (Zod), (3) no sensitive data exposed in response, (4) RLS not implicitly bypassed; for every new Supabase table: (5) `ALTER TABLE t ENABLE ROW LEVEL SECURITY` is present in the migration and at least one policy covers each relevant role.
 - Expected output: list of created/modified files with paths.
+- **After writing code, before Phase 3**: run `/simplify` (built-in skill) on the changed files. It reviews for reuse, quality, and efficiency and fixes issues in-place. Skippable for trivial 1-file changes.
 
 **Phase 3 — Build + unit tests**
 - Run `npx tsc --noEmit` and `npm run build`. Must complete without errors.

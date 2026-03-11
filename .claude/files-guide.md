@@ -16,7 +16,9 @@ Automatically loaded at session start
 CLAUDE.md                        ← project context (official, committed)
 .claude/CLAUDE.local.md          ← personal overrides (official, gitignored)
 .claude/rules/pipeline.md        ← workflow rules (official, committed)
-.claude/settings.local.json      ← personal config (official, gitignored)
+.claude/rules/context-review.md  ← Phase 8.5 compliance checklist (official, committed)
+.claude/settings.json            ← project tool permissions (official, committed)
+.claude/settings.local.json      ← personal config overrides (official, gitignored)
 ~/.claude/projects/.../MEMORY.md ← auto-memory (Claude Code system, NOT committed)
 
 Loaded on demand
@@ -159,8 +161,9 @@ variables, model selection, sandbox mode, and more.
 
 **Precedence** (highest to lowest): managed (org-wide) → command-line → local → project → user.
 
-**This project's `.claude/settings.local.json`**: `Bash(*)` + all tool names pre-authorised,
-so Claude does not ask for permission at every pipeline command (tsc, vitest, playwright, git).
+**This project's `.claude/settings.json`** (committed): all Bash commands + MCP tools pre-authorised,
+so Claude does not ask for permission at every pipeline command (tsc, vitest, playwright, git, node scripts).
+No `settings.local.json` is currently active — personal overrides are in `~/.claude/settings.json` (Bash(*) global).
 
 ---
 
@@ -189,7 +192,9 @@ so Claude does not ask for permission at every pipeline command (tsc, vitest, pl
 | `CLAUDE.md` | Every session | Automatic |
 | `CLAUDE.local.md` | Every session | Automatic (gitignored) |
 | `.claude/rules/pipeline.md` | Every session | Automatic (rules dir) |
-| `.claude/settings.local.json` | Every session | Automatic (gitignored) |
+| `.claude/rules/context-review.md` | Every session | Automatic (rules dir) |
+| `.claude/settings.json` | Every session | Automatic (project settings) |
+| `.claude/settings.local.json` | Every session | Automatic (gitignored, if present) |
 | `MEMORY.md` (project root) | Phase 0 | Explicit read in pipeline |
 | Auto-memory `MEMORY.md` | Every session | Claude Code system injection |
 | `docs/requirements.md` | Phase 1 | Explicit read in pipeline |
