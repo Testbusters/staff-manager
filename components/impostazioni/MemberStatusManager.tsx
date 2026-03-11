@@ -281,7 +281,7 @@ export default function MemberStatusManager() {
                         </span>
                       )}
                       {m.member_status === 'uscente_senza_compenso' && (
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
                           Uscente (senza compenso)
                         </span>
                       )}

@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import type { ExpenseCategory } from '@/lib/types';
+import { Receipt, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -253,7 +255,7 @@ export default function DashboardPendingItems({
             </Link>
           </div>
           {pendingComps.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-muted-foreground text-center">Nessun compenso in attesa.</p>
+            <EmptyState icon={Wallet} title="Nessun compenso in attesa." />
           ) : (
             <div className="divide-y divide-border">
               {pendingComps.slice(0, 8).map((c) => (
@@ -289,7 +291,7 @@ export default function DashboardPendingItems({
             </Link>
           </div>
           {pendingExps.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-muted-foreground text-center">Nessun rimborso in attesa.</p>
+            <EmptyState icon={Receipt} title="Nessun rimborso in attesa." />
           ) : (
             <div className="divide-y divide-border">
               {pendingExps.slice(0, 8).map((e) => (

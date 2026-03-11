@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Shield, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -169,7 +171,7 @@ export default function CommunityManager({
         </div>
         <div className="divide-y divide-border">
           {communities.length === 0 && (
-            <p className="px-5 py-4 text-sm text-muted-foreground">Nessuna community.</p>
+            <EmptyState icon={Users} title="Nessuna community." />
           )}
           {communities.map((c) => (
             <div key={c.id} className="px-5 py-3 flex items-center gap-3">
@@ -225,7 +227,7 @@ export default function CommunityManager({
         </div>
         <div className="divide-y divide-border">
           {responsabili.length === 0 && (
-            <p className="px-5 py-4 text-sm text-muted-foreground">Nessun responsabile attivo.</p>
+            <EmptyState icon={Shield} title="Nessun responsabile attivo." />
           )}
           {responsabili.map((resp) => (
             <div key={resp.user_id} className="px-5 py-4 space-y-2">
