@@ -20,11 +20,18 @@ export async function findMarkerPositions(
 ): Promise<PdfMarkerPosition[]> {
   if (markers.length === 0) return [];
 
-  // Dynamic import — pdfjs-dist is ESM, disable worker for Node.js server use
+  // Dynamic import — pdfjs-dist is ESM, run worker inline for Node.js server use.
+  // Setting workerSrc to the real worker file path makes pdfjs-dist fall back to
+  // "fake worker" mode (runs inline in the main thread) when new Worker() is unavailable.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   // @ts-ignore — no type declarations for this path
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs') as any;
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    const { createRequire } = await import('module');
+    const _require = createRequire(import.meta.url);
+    const workerPath = _require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
+  }
 
   const pdf = await pdfjsLib.getDocument({
     data: new Uint8Array(pdfBuffer),

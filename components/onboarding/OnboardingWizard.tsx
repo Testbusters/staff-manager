@@ -71,6 +71,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   const [loading, setLoading]     = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [contractGenerated, setContractGenerated] = useState(false);
+  const [onboardingDoneNoContract, setOnboardingDoneNoContract] = useState(false);
 
   // Validate step 1
   const step1Valid =
@@ -116,9 +117,8 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
       setDownloadUrl(data.download_url);
       setContractGenerated(true);
     } else {
-      // No template available or generation failed — onboarding still completed
-      router.push('/');
-      router.refresh();
+      // No template available, generation failed, or contract skipped — onboarding still completed
+      setOnboardingDoneNoContract(true);
     }
   };
 
@@ -126,7 +126,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
     if (!downloadUrl) return;
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = `contratto_${tipoContratto?.toLowerCase() ?? 'contratto'}.docx`;
+    a.download = `contratto_${tipoContratto?.toLowerCase() ?? 'contratto'}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -167,7 +167,24 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           </p>
         </div>
 
-        {contractGenerated && downloadUrl ? (
+        {onboardingDoneNoContract ? (
+          <div className="space-y-4">
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">Account configurato</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Il tuo account è attivo. Troverai il contratto nella sezione <strong className="text-foreground">Documenti</strong> quando sarà pronto per la firma.
+              </p>
+            </div>
+            <Button onClick={handleFinish} className="w-full bg-brand hover:bg-brand/90 text-white">
+              Accedi alla piattaforma
+            </Button>
+          </div>
+        ) : contractGenerated && downloadUrl ? (
           <div className="space-y-4">
             <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -177,7 +194,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 <span className="text-sm font-medium text-green-700 dark:text-green-400">Contratto generato</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Il contratto è stato generato con i tuoi dati. Scaricalo, firmalo e caricalo nella sezione <strong className="text-foreground">Documenti</strong> quando sei pronto.
+                Il contratto è stato generato con i tuoi dati. Scaricalo e leggilo — quando sei pronto, vai nella sezione <strong className="text-foreground">Documenti</strong> per firmarlo digitalmente.
               </p>
             </div>
 
