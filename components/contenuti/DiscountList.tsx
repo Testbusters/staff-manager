@@ -100,7 +100,7 @@ function DiscountForm({
       <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <Input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)" />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input value={form.codice_sconto} onChange={set('codice_sconto')} placeholder="Codice sconto" />
         <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
         <Input value={form.logo_url} onChange={set('logo_url')} placeholder="URL logo fornitore" />
