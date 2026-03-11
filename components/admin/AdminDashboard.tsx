@@ -163,7 +163,7 @@ function CommunityColumn({ card }: { card: AdminCommunityCard }) {
     <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
       <h3 className="text-sm font-semibold text-foreground">{card.name}</h3>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <FilterTab label="Compensi" count={card.compsActiveCount} active={tab === 'comps'} onClick={() => handleTab('comps')} />
         <FilterTab label="Rimborsi" count={card.expsActiveCount} active={tab === 'exps'} onClick={() => handleTab('exps')} />
         <FilterTab label="Da firmare" count={card.docsToSignCount} active={tab === 'docs'} onClick={() => handleTab('docs')} />
@@ -380,7 +380,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
         </div>
 
         {/* YTD summary strip */}
-        <div className="mt-4 grid grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className={sectionCls + ' px-4 py-3 text-center'}>
             <p className="text-xs text-muted-foreground">YTD pagato</p>
             <p className="text-lg font-semibold tabular-nums text-brand dark:text-brand mt-0.5">{eur(periodMetrics.ytd.paidAmount)}</p>

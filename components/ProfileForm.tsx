@@ -128,7 +128,6 @@ export default function ProfileForm({ collaborator, role, email, communities, al
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>(
     communities[0]?.id ?? '',
   );
-  const [communityLoading, setCommunityLoading] = useState(false);
 
   const [loading, setLoading]           = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -164,12 +163,26 @@ export default function ProfileForm({ collaborator, role, email, communities, al
     });
 
     const data = await res.json();
-    setLoading(false);
-    if (!res.ok) { toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
+    if (!res.ok) { setLoading(false); toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
     if (data.emailChanged) {
       const supabase = createClient();
       await supabase.auth.refreshSession();
     }
+
+    // Save community in the same transaction if applicable
+    if (role === 'collaboratore' && selectedCommunityId) {
+      const commRes = await fetch('/api/profile/communities', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ community_ids: [selectedCommunityId] }),
+      });
+      const commData = await commRes.json();
+      setLoading(false);
+      if (!commRes.ok) { toast.error(commData.error ?? 'Errore salvataggio community.', { duration: 5000 }); return; }
+    } else {
+      setLoading(false);
+    }
+
     toast.success('Profilo salvato.');
   };
 
@@ -187,23 +200,6 @@ export default function ProfileForm({ collaborator, role, email, communities, al
     if (!res.ok) { toast.error(data.error ?? 'Errore caricamento foto.', { duration: 5000 }); return; }
     setAvatarUrl(data.url);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const handleSaveCommunities = async () => {
-    if (!selectedCommunityId) {
-      toast.error('Seleziona una community.', { duration: 5000 });
-      return;
-    }
-    setCommunityLoading(true);
-    const res = await fetch('/api/profile/communities', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ community_ids: [selectedCommunityId] }),
-    });
-    const data = await res.json();
-    setCommunityLoading(false);
-    if (!res.ok) { toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
-    toast.success('Community salvate.');
   };
 
   const initials = collaborator
@@ -294,7 +290,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
           <h2 className="text-sm font-medium text-foreground">Informazioni personali</h2>
         </div>
         <div className="p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Nome</label>
               <Input type="text" placeholder="Mario" value={nome}
@@ -314,7 +310,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
               onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
               disabled={loading} maxLength={16} className="font-mono" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Data di nascita</label>
               <Input type="date" value={dataNascita}
@@ -334,7 +330,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
               onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
               disabled={loading} maxLength={2} className="font-mono uppercase" />
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="col-span-2">
               <label className={labelCls}>Via/Piazza di residenza</label>
               <Input
@@ -357,7 +353,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Comune di residenza</label>
               <Input type="text" placeholder="Milano" value={comuneRes}
@@ -592,7 +588,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
             <Select
               value={selectedCommunityId}
               onValueChange={setSelectedCommunityId}
-              disabled={communityLoading}
+              disabled={loading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="— Seleziona community —" />
@@ -603,14 +599,6 @@ export default function ProfileForm({ collaborator, role, email, communities, al
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              type="button"
-              onClick={handleSaveCommunities}
-              disabled={communityLoading || !selectedCommunityId}
-              className="bg-brand hover:bg-brand/90 text-white"
-            >
-              {communityLoading ? 'Salvataggio…' : 'Salva community'}
-            </Button>
           </div>
         </div>
       )}
@@ -635,7 +623,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
       <Button
         type="submit"
         disabled={loading}
-        className="w-full bg-brand hover:bg-brand/90 text-white"
+        className="bg-brand hover:bg-brand/90 text-white"
       >
         {loading ? (
           <>

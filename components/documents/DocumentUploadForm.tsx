@@ -222,7 +222,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
         {step === 2 && (
           <div className="space-y-4">
             {/* Tipo + Anno */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">
                   Tipo <span className="text-red-500">*</span>
