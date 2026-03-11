@@ -86,7 +86,7 @@ function CommunicationForm({
       <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Contenuto *" />
       <Textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
         rows={2} className="resize-none" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Scade il (opzionale)</label>
           <Input type="date" value={form.expires_at} onChange={set('expires_at')} />

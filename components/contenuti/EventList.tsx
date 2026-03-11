@@ -108,7 +108,7 @@ function EventForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Data/ora inizio</label>
           <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
@@ -121,7 +121,7 @@ function EventForm({
       <Input value={form.location} onChange={set('location')} placeholder="Luogo (es. Online, Milano)" />
       <Input value={form.luma_url} onChange={set('luma_url')} placeholder="URL pagina Luma" type="url" />
       <Input value={form.luma_embed_url} onChange={set('luma_embed_url')} placeholder="URL embed Luma (per iframe)" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Tipo evento</label>
           <Select value={form.tipo || undefined} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>

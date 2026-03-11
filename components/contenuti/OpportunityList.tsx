@@ -13,6 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -21,17 +28,19 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
-  { value: 'Volontariato', label: 'Volontariato' },
-  { value: 'Formazione',   label: 'Formazione' },
-  { value: 'Lavoro',       label: 'Lavoro' },
-  { value: 'Altro',        label: 'Altro' },
+  { value: 'LAVORO',     label: 'Lavoro' },
+  { value: 'FORMAZIONE', label: 'Formazione' },
+  { value: 'STAGE',      label: 'Stage' },
+  { value: 'PROGETTO',   label: 'Progetto' },
+  { value: 'ALTRO',      label: 'Altro' },
 ];
 
 const TIPO_COLORS: Record<OpportunityTipo, string> = {
-  Volontariato: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
-  Formazione:   'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  Lavoro:       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  Altro:        'bg-muted border-border text-muted-foreground',
+  LAVORO:     'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  FORMAZIONE: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300',
+  STAGE:      'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  PROGETTO:   'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  ALTRO:      'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -42,6 +51,7 @@ interface FormData {
   titolo: string;
   tipo: string;
   descrizione: string;
+  requisiti: string;
   scadenza_candidatura: string;
   link_candidatura: string;
   file_url: string;
@@ -65,6 +75,7 @@ function OpportunityForm({
     titolo: initial?.titolo ?? '',
     tipo: initial?.tipo ?? 'ALTRO',
     descrizione: initial?.descrizione ?? '',
+    requisiti: initial?.requisiti ?? '',
     scadenza_candidatura: initial?.scadenza_candidatura ?? '',
     link_candidatura: initial?.link_candidatura ?? '',
     file_url: initial?.file_url ?? '',
@@ -89,7 +100,7 @@ function OpportunityForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required className="col-span-2" />
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Tipo</label>
@@ -106,7 +117,8 @@ function OpportunityForm({
         </div>
       </div>
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione *" />
-      <div className="grid grid-cols-2 gap-3">
+      <RichTextEditor value={form.requisiti} onChange={setRich('requisiti')} placeholder="Requisiti (opzionale)" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url" />
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
       </div>
@@ -145,19 +157,29 @@ function PaginationNav({ page, total, onPage }: { page: number; total: number; o
   const totalPages = Math.ceil(total / PAGE_SIZE);
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center justify-between pt-4 border-t border-border">
-      <span className="text-xs text-muted-foreground">Pagina {page} di {totalPages}</span>
-      <div className="flex gap-2">
-        {page > 1
-          ? <button onClick={() => onPage(page - 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina precedente">← Precedente</button>
-          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">← Precedente</span>
-        }
-        {page < totalPages
-          ? <button onClick={() => onPage(page + 1)} className="rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs text-foreground transition" aria-label="Pagina successiva">Successivo →</button>
-          : <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground/40 select-none">Successivo →</span>
-        }
-      </div>
-    </div>
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            onClick={() => onPage(Math.max(1, page - 1))}
+            aria-disabled={page <= 1}
+            className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+          />
+        </PaginationItem>
+        <PaginationItem>
+          <span className="text-xs text-muted-foreground px-2">
+            {page} / {totalPages}
+          </span>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext
+            onClick={() => onPage(page + 1)}
+            aria-disabled={page >= totalPages}
+            className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }
 
@@ -237,7 +259,7 @@ export default function OpportunityList({
             <OpportunityForm
               initial={{
                 titolo: editingItem.titolo, tipo: editingItem.tipo, descrizione: editingItem.descrizione,
-                scadenza_candidatura: editingItem.scadenza_candidatura ?? '',
+                requisiti: editingItem.requisiti ?? '', scadenza_candidatura: editingItem.scadenza_candidatura ?? '',
                 link_candidatura: editingItem.link_candidatura ?? '', file_url: editingItem.file_url ?? '',
                 community_ids: editingItem.community_ids ?? [],
               }}
@@ -284,7 +306,7 @@ export default function OpportunityList({
         <div key={o.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.Altro}`}>
+              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
                 {TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo}
               </span>
               <h3 className="text-sm font-semibold text-foreground">{o.titolo}</h3>
@@ -297,6 +319,7 @@ export default function OpportunityList({
             )}
           </div>
           <RichTextDisplay html={o.descrizione} className="line-clamp-3" />
+          {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
           <div className="flex items-center gap-3 flex-wrap">
             {o.scadenza_candidatura && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</span>
