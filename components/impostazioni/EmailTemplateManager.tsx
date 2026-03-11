@@ -160,7 +160,7 @@ export default function EmailTemplateManager({ initialTemplates, initialLayout }
   const currentKey = isTemplate ? (selection as { type: 'template'; key: string }).key : null;
 
   return (
-    <div className="flex gap-0 -mx-6 min-h-[600px]">
+    <div className="flex gap-0 min-h-[600px]">
 
       {/* ── Navigator ──────────────────────────────────────────── */}
       <div className="w-[220px] shrink-0 border-r border-border overflow-y-auto">
