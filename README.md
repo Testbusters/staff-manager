@@ -123,9 +123,9 @@ app/
   (app)/
     page.tsx                     → Dashboard collaboratore (greeting, 4 KPI cards, Ultimi aggiornamenti tabs, Da fare, CollabOpenTicketsSection, PaymentOverview, bar chart) + responsabile_compensi (4 KPI cards, DashboardPendingItems comp/rimborso modals, DashboardTicketSection full-row links) + amministrazione (KPI, community cards, urgenti, feed filtrable, period metrics, blocks drawer)
     layout.tsx                   → Protected layout (auth guard + Sidebar)
-    profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | blue CTA "Nuovo rimborso" + DocumentUploadForm + DocumentList)
+    profilo/page.tsx             → Profile editor + tab Documenti for collaboratore (avatar, fiscal data, editable IBAN/phone/address/tshirt | DocumentUploadForm collapsed behind "+ Carica documento" CTA + DocumentList)
     impostazioni/page.tsx        → Settings: 7-tab server component — Users (create), Community (CRUD + responsabile assignment), Collaborators (member_status), Contratti (template upload), Notifiche (in-app + email toggles per event), Template mail (email template editor), Monitoraggio (system health dashboard)
-    compensi/page.tsx            → Collaboratore: unified Compensi e Rimborsi page (PaymentOverview + CompensationList + ExpenseList + TicketQuickModal)
+    compensi/page.tsx            → Collaboratore: unified Compensi e Rimborsi page (PaymentOverview + CompensationList + ExpenseList + "Nuovo rimborso" primary CTA + TicketQuickModal)
     compensi/nuova/page.tsx      → (removed in Block 7)
     compensi/[id]/page.tsx       → Compensation detail + timeline + actions
     rimborsi/page.tsx            → Redirect → /compensi (unified page)
@@ -272,8 +272,8 @@ components/
     CodaRimborsi.tsx             → Admin coda tab: same pattern for expense_reimbursements
     MassimaleCheckModal.tsx      → Blocking warning modal: collapsible per-collaborator impact cards + total eccedenza strip
   documents/
-    DocumentList.tsx             → Documents grouped by macro-type (CONTRATTO/CU) with type badges (violet/blue) + delete button for admin on CONTRATTO
-    DocumentUploadForm.tsx       → Bifurcated admin/non-admin: admin gets collaboratore selector + firma toggle (CONTRATTO only); non-admin gets 2-option flat dropdown (CONTRATTO_OCCASIONALE/CU, NON_RICHIESTO enforced server-side)
+    DocumentList.tsx             → Single unified table with section header rows per macro-type (CONTRATTO/CU/RICEVUTA); DA_FIRMARE sorted first + amber left border + "Azione richiesta" label; rows clickable for collaboratore; admin keeps separate w-full layout
+    DocumentUploadForm.tsx       → Collapsed behind "+ Carica documento" CTA by default; admin: collaboratore selector + firma toggle (CONTRATTO only); non-admin: type dropdown (CONTRATTO_OCCASIONALE/CU/RICEVUTA); Annulla/✕ resets and collapses
     DocumentSignFlow.tsx         → Collaboratore: download original + checkbox confirmation gate + upload signed PDF
     DocumentDeleteButton.tsx     → Client component: delete CONTRATTO (admin only) via DELETE API + redirect
     CUBatchUpload.tsx            → Admin: ZIP + CSV + year batch import with success/duplicate/error detail
