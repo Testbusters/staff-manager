@@ -169,6 +169,7 @@ Key settings configured:
 - `attribution.commit/pr: ""` — suppresses automatic Co-Authored-By (pipeline adds it manually in commit heredoc)
 - `env.CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1"` — removes redundant built-in git instructions from system prompt (pipeline.md covers this)
 - `worktree.symlinkDirectories: ["node_modules", ".next"]` — auto-symlinks heavy dirs when using EnterWorktree (avoids the manual copy gotcha documented in MEMORY.md)
+- `hooks.SessionStart` — checks `~/.claude/projects/.../last-audit` timestamp; if >7 days since last `/arch-audit`, prints a reminder at session open
 
 ---
 
