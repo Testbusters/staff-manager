@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 
 type Setting = {
   id: string;
@@ -41,36 +42,6 @@ const ROLE_LABELS: Record<string, string> = {
   amministrazione:       'Amministrazione',
 };
 
-function Toggle({
-  checked, onChange, disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => !disabled && onChange(!checked)}
-      className={
-        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent ' +
-        'transition-colors focus:outline-none ' +
-        (disabled ? 'opacity-40 cursor-not-allowed ' : '') +
-        (checked ? 'bg-brand' : 'bg-gray-600')
-      }
-    >
-      <span
-        className={
-          'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ' +
-          (checked ? 'translate-x-4' : 'translate-x-0')
-        }
-      />
-    </button>
-  );
-}
 
 export default function NotificationSettingsManager({
   initialSettings,
@@ -161,16 +132,16 @@ export default function NotificationSettingsManager({
                       </span>
                     </span>
                     <div className="w-16 flex justify-center">
-                      <Toggle
+                      <Switch
                         checked={s.inapp_enabled}
-                        onChange={v => handleToggle(s, 'inapp_enabled', v)}
+                        onCheckedChange={v => handleToggle(s, 'inapp_enabled', v)}
                         disabled={saving === `${s.event_key}:inapp_enabled`}
                       />
                     </div>
                     <div className="w-16 flex justify-center">
-                      <Toggle
+                      <Switch
                         checked={s.email_enabled}
-                        onChange={v => handleToggle(s, 'email_enabled', v)}
+                        onCheckedChange={v => handleToggle(s, 'email_enabled', v)}
                         disabled={saving === `${s.event_key}:email_enabled`}
                       />
                     </div>

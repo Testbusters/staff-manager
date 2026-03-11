@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
+import { Activity, AlertTriangle, ChevronDown, Database, Mail } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -262,7 +263,7 @@ function LogAccessi({
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : total === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground text-center">Nessun evento trovato.</p>
+          <EmptyState icon={Activity} title="Nessun evento trovato." />
         ) : (
           <Table>
             <TableHeader>
@@ -340,7 +341,7 @@ function LogOperazioni({
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : total === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground text-center">Nessuna operazione registrata.</p>
+          <EmptyState icon={Activity} title="Nessuna operazione registrata." />
         ) : (
           <Table>
             <TableHeader>
@@ -517,7 +518,7 @@ function EmailDelivery({
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : !data || data.events.length === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground text-center">Nessun evento email registrato.</p>
+          <EmptyState icon={Mail} title="Nessun evento email registrato." />
         ) : (
           <Table>
             <TableHeader>
@@ -625,7 +626,7 @@ function LogSistema({
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : total === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground text-center">Nessun log disponibile per questo servizio.</p>
+          <EmptyState icon={Activity} title="Nessun log disponibile per questo servizio." />
         ) : (
           <Table>
             <TableHeader>
@@ -701,7 +702,7 @@ function DBPerformance({
           </div>
         ) : tab === 'queries' ? (
           topQueries.length === 0 ? (
-            <p className="p-5 text-sm text-muted-foreground text-center">Nessun dato. Esegui alcune query e ricarica.</p>
+            <EmptyState icon={Database} title="Nessun dato. Esegui alcune query e ricarica." />
           ) : (
             <Table>
               <TableHeader>
@@ -728,7 +729,7 @@ function DBPerformance({
           )
         ) : (
           tableStats.length === 0 ? (
-            <p className="p-5 text-sm text-muted-foreground text-center">Nessun dato tabelle.</p>
+            <EmptyState icon={Database} title="Nessun dato tabelle." />
           ) : (
             <Table>
               <TableHeader>
@@ -787,7 +788,7 @@ function AppErrorsSection({ errors, loading }: { errors: AppError[]; loading: bo
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
         ) : total === 0 ? (
-          <p className="p-5 text-sm text-muted-foreground text-center">Nessun errore registrato.</p>
+          <EmptyState icon={AlertTriangle} title="Nessun errore registrato." />
         ) : (
           <Table>
             <TableHeader>

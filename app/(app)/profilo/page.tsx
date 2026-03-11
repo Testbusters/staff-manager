@@ -138,7 +138,7 @@ export default async function ProfiloPage({
       )}
 
       {activeTab === 'documenti' && (
-        <div className="w-fit space-y-6">
+        <div className="w-full space-y-6">
           <DocumentUploadForm collaborators={[]} isAdmin={false} />
           <DocumentList documents={documents} isAdmin={false} />
         </div>
