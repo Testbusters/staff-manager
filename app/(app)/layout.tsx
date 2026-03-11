@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/Sidebar';
 import FeedbackButton from '@/components/FeedbackButton';
+import NotificationBell from '@/components/NotificationBell';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeSync } from '@/components/ThemeSync';
 import { SessionGuard } from '@/components/SessionGuard';
 import { Toaster } from '@/components/ui/sonner';
@@ -43,7 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ThemeSync dbTheme={dbTheme} />
       <SessionGuard />
       <SidebarProvider>
-        <div className="flex h-screen bg-background overflow-hidden">
+        <div className="flex h-screen w-full bg-background overflow-hidden">
           <Sidebar
             navItems={navItems}
             userEmail={user.email ?? ''}
@@ -51,11 +52,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             avatarUrl={collaborator?.foto_profilo_url ?? null}
             role={role}
           />
-          <TooltipProvider delayDuration={300}>
-            <main className="flex-1 overflow-y-auto">
-              {children}
-            </main>
-          </TooltipProvider>
+          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+            {/* Mobile header — hidden on desktop */}
+            <header className="flex items-center h-12 px-4 border-b border-border md:hidden flex-shrink-0">
+              <SidebarTrigger aria-label="Apri menu" />
+              <div className="flex-1" />
+              <NotificationBell />
+            </header>
+            <TooltipProvider delayDuration={300}>
+              <main className="flex-1 overflow-y-auto">
+                {children}
+              </main>
+            </TooltipProvider>
+          </div>
           <FeedbackButton />
         </div>
       </SidebarProvider>
