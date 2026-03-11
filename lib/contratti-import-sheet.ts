@@ -4,25 +4,19 @@
  * Sheet ID from env: CONTRATTI_SHEET_ID
  * Tab name: contratti
  *
- * Column layout (A–F):
- *   A = nome
- *   B = cognome
- *   C = email
- *   D = username
- *   E = stato (TO_PROCESS / PROCESSED — written by run)
- *   F = nome_pdf (written by match-contratti.mjs + read by import)
+ * Column layout (A–C):
+ *   A = username
+ *   B = nome_pdf
+ *   C = stato (TO_PROCESS / PROCESSED — written by run)
  */
 
 import { webcrypto } from 'crypto';
 
 export interface ContrattoSheetRow {
   rowIndex: number;
-  nome:     string;
-  cognome:  string;
-  email:    string;
   username: string;
-  stato:    string;
   nome_pdf: string;
+  stato:    string;
 }
 
 function pemToDer(pem: string): Buffer {
@@ -70,13 +64,13 @@ function getSheetConfig() {
 
 /**
  * Fetches data rows from the contratti tab.
- * Skips the header row and rows where stato (col E) = 'PROCESSED'.
+ * Skips the header row and rows where stato (col C) = 'PROCESSED'.
  */
 export async function getContrattiRows(): Promise<ContrattoSheetRow[]> {
   const { id, tab } = getSheetConfig();
   const token = await getToken();
 
-  const range = encodeURIComponent(`${tab}!A:F`);
+  const range = encodeURIComponent(`${tab}!A:C`);
   const res   = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}`,
     { headers: { Authorization: `Bearer ${token}` } });
   const data  = await res.json() as { values?: string[][]; error?: { message: string } };
@@ -87,20 +81,15 @@ export async function getContrattiRows(): Promise<ContrattoSheetRow[]> {
   return allRows.slice(1)
     .map((row, i) => ({
       rowIndex: i + 2, // 1-based sheet row
-      nome:     row[0] ?? '',
-      cognome:  row[1] ?? '',
-      email:    row[2] ?? '',
-      username: row[3] ?? '',
-      stato:    row[4] ?? '',
-      nome_pdf: row[5] ?? '',
+      username: row[0] ?? '',
+      nome_pdf: row[1] ?? '',
+      stato:    row[2] ?? '',
     }))
     .filter(r => r.stato.trim().toUpperCase() !== 'PROCESSED');
 }
 
 /**
- * Writes import results back to the sheet.
- * Col E = stato (PROCESSED)
- * Only called for successfully imported rows.
+ * Writes stato=PROCESSED (col C) for successfully imported rows.
  */
 export async function writeContrattiResults(
   updates: { rowIndex: number }[],
@@ -111,37 +100,8 @@ export async function writeContrattiResults(
   const token = await getToken();
 
   const data = updates.map(u => ({
-    range:  `${tab}!E${u.rowIndex}`,
+    range:  `${tab}!C${u.rowIndex}`,
     values: [['PROCESSED']],
-  }));
-
-  const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${id}/values:batchUpdate`,
-    {
-      method:  'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ valueInputOption: 'RAW', data }),
-    },
-  );
-  const json = await res.json() as { error?: { message: string } };
-  if (json.error) throw new Error(json.error.message);
-}
-
-/**
- * Writes nome_pdf (col F) for matched rows.
- * Used by match-contratti.mjs one-shot script.
- */
-export async function writeNomePdf(
-  updates: { rowIndex: number; nomePdf: string }[],
-): Promise<void> {
-  if (updates.length === 0) return;
-
-  const { id, tab } = getSheetConfig();
-  const token = await getToken();
-
-  const data = updates.map(u => ({
-    range:  `${tab}!F${u.rowIndex}`,
-    values: [[u.nomePdf]],
   }));
 
   const res = await fetch(
