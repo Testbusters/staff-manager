@@ -20,7 +20,7 @@ export default function DocumentViewer({ open, onClose, url, title }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-7xl h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
           <DialogTitle className="text-sm font-medium text-foreground pr-8">{title}</DialogTitle>
         </DialogHeader>

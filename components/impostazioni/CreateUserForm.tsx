@@ -57,6 +57,8 @@ export default function CreateUserForm() {
   const [intestatarioPagamento, setIntestatarioPagamento] = useState('');
   const [dataIngresso, setDataIngresso] = useState('');
   const [dataFineContratto, setDataFineContratto] = useState('');
+  const [sonoFiglio, setSonoFiglio] = useState(false);
+  const [massimale, setMassimale] = useState('');
 
   // Tipo rapporto: always OCCASIONALE
 
@@ -134,6 +136,8 @@ export default function CreateUserForm() {
         intestatario_pagamento: intestatarioPagamento.trim() || null,
         data_ingresso:       dataIngresso || null,
         data_fine_contratto: dataFineContratto || null,
+        sono_un_figlio_a_carico: sonoFiglio,
+        importo_lordo_massimale: massimale !== '' ? parseFloat(massimale) : null,
       });
     }
 
@@ -157,6 +161,7 @@ export default function CreateUserForm() {
     setCodiceFiscale(''); setDataNascita('');
     setLuogoNascita(''); setProvinciaNascita(''); setComuneRes(''); setPrvinciaRes('');
     setIndirizzo(''); setCivico(''); setTelefono(''); setIntestatarioPagamento(''); setDataIngresso(''); setDataFineContratto('');
+    setSonoFiglio(false); setMassimale('');
   };
 
   if (credentials) {
@@ -457,6 +462,51 @@ export default function CreateUserForm() {
               <Input type="date" value={dataIngresso}
                 onChange={(e) => setDataIngresso(e.target.value)}
                 required disabled={loading} />
+            </div>
+          </div>
+
+          {/* Dati fiscali */}
+          <div className="mt-4">
+            <p className={sectionTitle}>Dati fiscali</p>
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={sonoFiglio}
+                  onCheckedChange={(v) => setSonoFiglio(!!v)}
+                  disabled={loading}
+                  className="mt-0.5 flex-shrink-0"
+                />
+                <div>
+                  <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Seleziona se il collaboratore è fiscalmente a carico di un familiare (es. genitore).
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-[10px] text-muted-foreground list-none">
+                    <li>· Under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
+                    <li>· 24+ anni: soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
+                  </ul>
+                </div>
+              </label>
+              <div>
+                <label className={labelCls}>Massimale lordo annuo (max €5.000)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={5000}
+                    step={100}
+                    placeholder="5000"
+                    value={massimale}
+                    onChange={(e) => setMassimale(e.target.value)}
+                    disabled={loading}
+                    className="pl-7"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Importo lordo massimo che il collaboratore vuole ricevere nell&apos;anno solare.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -62,6 +62,11 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   const [intestatarioPagamento, setIntestatarioPagamento] = useState(prefill?.intestatario_pagamento ?? '');
   const [tshirt, setTshirt]                   = useState(prefill?.tshirt_size ?? '');
   const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
+  const [massimale, setMassimale]             = useState<string>(
+    (prefill as { importo_lordo_massimale?: number | null } | null)?.importo_lordo_massimale != null
+      ? String((prefill as { importo_lordo_massimale?: number | null }).importo_lordo_massimale)
+      : '',
+  );
 
   // Username preview (readonly — shows pre-set or computed from nome+cognome)
   const previewUsername = prefill?.username ?? generateUsername(nome, cognome);
@@ -102,6 +107,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         intestatario_pagamento: intestatarioPagamento.trim(),
         tshirt_size:         tshirt,
         sono_un_figlio_a_carico: sonoFiglio,
+        importo_lordo_massimale: massimale !== '' ? parseFloat(massimale) : null,
       }),
     });
 
@@ -134,7 +140,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   };
 
   const handleFinish = () => {
-    router.push('/');
+    router.push('/documenti');
     router.refresh();
   };
 
@@ -397,31 +403,60 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 onChange={(e) => setIban(e.target.value)}
                 required maxLength={34} className="font-mono" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Taglia t-shirt <span className="text-red-500">*</span></label>
-                <Select value={tshirt || undefined} onValueChange={setTshirt}>
-                  <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
-                  <SelectContent>
-                    {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end pb-0.5">
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <Checkbox
-                    checked={sonoFiglio}
-                    onCheckedChange={(v) => setSonoFiglio(!!v)}
-                  />
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={sonoFiglio}
+                  onCheckedChange={(v) => setSonoFiglio(!!v)}
+                  className="mt-0.5 flex-shrink-0"
+                />
+                <div>
                   <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
-                </label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Seleziona se sei fiscalmente a carico di un familiare (es. genitore).
+                  </p>
+                  <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground list-none">
+                    <li>· Figli under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
+                    <li>· Figli 24+ anni (dall&apos;1/01 dell&apos;anno del 24° compleanno): soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
+                  </ul>
+                </div>
+              </label>
+            </div>
+            <div>
+              <label className={labelCls}>
+                Massimale lordo annuo (max €5.000)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={5000}
+                  step={100}
+                  placeholder="5000"
+                  value={massimale}
+                  onChange={(e) => setMassimale(e.target.value)}
+                  className="pl-7"
+                />
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Importo lordo massimo che vuoi ricevere da noi nell&apos;anno solare. Se hai altre collaborazioni, abbassa questo valore per rispettare i tuoi limiti personali.
+              </p>
+            </div>
+            <div>
+              <label className={labelCls}>Taglia t-shirt <span className="text-red-500">*</span></label>
+              <Select value={tshirt || undefined} onValueChange={setTshirt}>
+                <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+                <SelectContent>
+                  {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
 
         <Button type="submit" disabled={!step1Valid} className="w-full bg-brand hover:bg-brand/90 text-white">
-          Avanti — Genera contratto
+          Avanti
         </Button>
       </form>
       </CardContent>

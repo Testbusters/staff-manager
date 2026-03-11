@@ -10,6 +10,7 @@ const ContentSecurityPolicy = `
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: ${supabaseUrl};
   connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace("https://", "wss://")};
+  frame-src 'self' ${supabaseUrl};
   font-src 'self';
   object-src 'none';
   base-uri 'self';
@@ -38,6 +39,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Keep pdfjs-dist and pdf-lib out of the Turbopack/webpack bundle so they
+  // run in plain Node.js context. Without this, Turbopack rewrites module
+  // paths into .next/dev/server/chunks/ and the fake-worker import resolution
+  // breaks (pdf.worker.mjs cannot be found at the rewritten path).
+  serverExternalPackages: ["pdfjs-dist", "pdf-lib"],
   typescript: {
     // Type checking runs locally via `npx tsc --noEmit` (pipeline Phase 3).
     // Skipped here to avoid OOM on Replit's build workers.

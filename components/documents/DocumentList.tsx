@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
@@ -152,7 +152,7 @@ function DocumentGroups({
             {MACRO_ORDER.filter((macro) => grouped.has(macro)).map((macro) => {
               const docs = grouped.get(macro)!;
               return (
-                <>
+                <React.Fragment key={macro}>
                   {/* Section header row */}
                   <TableRow key={`section-${macro}`} className="bg-muted/40 hover:bg-muted/40 border-t border-border">
                     <TableCell colSpan={colSpan} className="py-2.5 px-4">
@@ -221,7 +221,7 @@ function DocumentGroups({
                       </TableRow>
                     );
                   })}
-                </>
+                </React.Fragment>
               );
             })}
           </TableBody>

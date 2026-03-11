@@ -28,8 +28,10 @@ const schema = z.object({
   civico_residenza:    z.string().max(20).nullable().optional(),
   telefono:            z.string().max(20).nullable().optional(),
   intestatario_pagamento: z.string().max(100).nullable().optional(),
-  data_ingresso:       z.string().min(1, 'Obbligatoria').optional(),
-  data_fine_contratto: z.string().nullable().optional(),
+  data_ingresso:            z.string().min(1, 'Obbligatoria').optional(),
+  data_fine_contratto:      z.string().nullable().optional(),
+  sono_un_figlio_a_carico:  z.boolean().optional(),
+  importo_lordo_massimale:  z.number().min(0).max(5000).nullable().optional(),
 });
 
 
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
     luogo_nascita, provincia_nascita,
     comune, provincia_residenza,
     indirizzo, civico_residenza, telefono, intestatario_pagamento, data_ingresso,
-    data_fine_contratto,
+    data_fine_contratto, sono_un_figlio_a_carico, importo_lordo_massimale,
   } = parsed.data;
 
   // tipo_contratto is required for collaboratore and responsabile_compensi
@@ -164,9 +166,11 @@ export async function POST(request: Request) {
       indirizzo:           indirizzo ?? null,
       civico_residenza:    civico_residenza ?? null,
       telefono:            telefono ?? null,
-      intestatario_pagamento: intestatario_pagamento ?? null,
-      data_ingresso:       data_ingresso ?? null,
-      data_fine_contratto: data_fine_contratto ?? null,
+      intestatario_pagamento:  intestatario_pagamento ?? null,
+      data_ingresso:           data_ingresso ?? null,
+      data_fine_contratto:     data_fine_contratto ?? null,
+      sono_un_figlio_a_carico: sono_un_figlio_a_carico ?? false,
+      importo_lordo_massimale: importo_lordo_massimale ?? null,
     });
   }
 

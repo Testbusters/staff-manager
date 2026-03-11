@@ -34,6 +34,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
 
   // Mode selection
   const [mode, setMode] = useState<Mode>('idle');
+  const [pendingMode, setPendingMode] = useState<'guided' | 'download'>('guided');
 
   // Guided signing
   const [signatureBlob, setSignatureBlob] = useState<Blob | null>(null);
@@ -127,8 +128,8 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
           </div>
         )}
 
-        {/* Unsigned original */}
-        {originalUrl && (
+        {/* Unsigned original — hidden once signed */}
+        {originalUrl && doc.stato_firma !== 'FIRMATO' && (
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/60 border border-border px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm text-foreground font-medium truncate">{doc.file_original_name}</p>
@@ -181,32 +182,49 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
 
             {/* Mode selection */}
             {mode === 'idle' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPendingMode('guided')}
+                    className={`rounded-xl border-2 bg-card px-4 py-5 text-left transition ${
+                      pendingMode === 'guided'
+                        ? 'border-brand'
+                        : 'border-border hover:border-muted-foreground'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-foreground">
+                      Firma guidata
+                      <span className="ml-2 text-xs font-normal text-brand bg-brand/10 rounded-full px-2 py-0.5">
+                        consigliata
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Disegna o carica la tua firma — viene applicata automaticamente al documento.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingMode('download')}
+                    className={`rounded-xl border-2 bg-card px-4 py-5 text-left transition ${
+                      pendingMode === 'download'
+                        ? 'border-brand'
+                        : 'border-border hover:border-muted-foreground'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-foreground">Scarica e firma</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Scarica il PDF, stampa, firma manualmente e ricarica la versione firmata.
+                    </p>
+                  </button>
+                </div>
+                <Button
                   type="button"
-                  onClick={() => setMode('guided')}
-                  className="rounded-xl border-2 border-brand/50 hover:border-brand bg-card px-4 py-5 text-left transition group"
+                  onClick={() => setMode(pendingMode)}
+                  className="w-full bg-brand hover:bg-brand/90 text-white"
                 >
-                  <p className="text-sm font-semibold text-foreground group-hover:text-brand transition">
-                    Firma guidata
-                    <span className="ml-2 text-xs font-normal text-brand bg-brand/10 rounded-full px-2 py-0.5">
-                      consigliata
-                    </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Disegna o carica la tua firma — viene applicata automaticamente al documento.
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode('download')}
-                  className="rounded-xl border-2 border-border hover:border-muted-foreground bg-card px-4 py-5 text-left transition"
-                >
-                  <p className="text-sm font-semibold text-foreground">Scarica e firma</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Scarica il PDF, stampa, firma manualmente e ricarica la versione firmata.
-                  </p>
-                </button>
+                  Procedi con {pendingMode === 'guided' ? 'la firma guidata' : 'scarica e firma'} →
+                </Button>
               </div>
             )}
 

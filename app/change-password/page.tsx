@@ -2,31 +2,52 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
+function useToggle(initial = false): [boolean, () => void] {
+  const [value, setValue] = useState(initial);
+  return [value, () => setValue((v) => !v)];
+}
+
+interface Rule {
+  label: string;
+  test: (p: string) => boolean;
+}
+
+const RULES: Rule[] = [
+  { label: 'Almeno 8 caratteri',              test: (p) => p.length >= 8 },
+  { label: 'Almeno una lettera maiuscola',     test: (p) => /[A-Z]/.test(p) },
+  { label: 'Almeno un numero o simbolo',       test: (p) => /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p) },
+];
+
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm]   = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [showPass,    toggleShowPass]    = useToggle();
+  const [showConfirm, toggleShowConfirm] = useToggle();
   const router = useRouter();
+
+  const rulesPassed  = RULES.every((r) => r.test(password));
+  const mismatch     = confirm.length > 0 && password !== confirm;
+  const canSubmit    = rulesPassed && !mismatch && confirm.length > 0 && !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error('La password deve essere di almeno 8 caratteri', { duration: 5000 });
+    if (!rulesPassed) {
+      toast.error('La password non soddisfa i requisiti di sicurezza.', { duration: 5000 });
       return;
     }
     if (password !== confirm) {
-      toast.error('Le password non coincidono', { duration: 5000 });
+      toast.error('Le password non coincidono.', { duration: 5000 });
       return;
     }
     setLoading(true);
 
-    // Single server-side call: updates password + clears must_change_password atomically
-    // (avoids race condition from client-side updateUser invalidating the session cookie)
     const res = await fetch('/api/auth/change-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -41,16 +62,9 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    // Password change invalidates the current JWT — re-sign-in with the new password
-    // so the browser gets a fresh session cookie before we redirect to the dashboard.
+    // Password change invalidates the current JWT — re-sign-in to get a fresh session cookie.
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password,
-    });
-    if (signInError) {
-      // Re-sign-in failed — redirect anyway, proxy will enforce re-login
-    }
+    await supabase.auth.signInWithPassword({ email: data.email, password });
     router.push('/');
   };
 
@@ -80,34 +94,84 @@ export default function ChangePasswordPage() {
 
         <div className="rounded-2xl bg-card border border-border p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Password field */}
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Nuova password</label>
-              <Input
-                type="password"
-                placeholder="Minimo 8 caratteri"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-                autoComplete="new-password"
-              />
+              <div className="relative">
+                <Input
+                  type={showPass ? 'text' : 'password'}
+                  placeholder="Minimo 8 caratteri"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  autoComplete="new-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowPass}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPass ? 'Nascondi password' : 'Mostra password'}
+                  tabIndex={-1}
+                >
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* Strength checklist — shown once the user starts typing */}
+              {password.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {RULES.map((rule) => {
+                    const ok = rule.test(password);
+                    return (
+                      <li key={rule.label} className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                        {ok
+                          ? <Check className="h-3 w-3 shrink-0" />
+                          : <X className="h-3 w-3 shrink-0" />}
+                        {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
+
+            {/* Confirm field */}
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Conferma password</label>
-              <Input
-                type="password"
-                placeholder="Ripeti la nuova password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                disabled={loading}
-                required
-                autoComplete="new-password"
-              />
+              <div className="relative">
+                <Input
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Ripeti la nuova password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  disabled={loading}
+                  required
+                  autoComplete="new-password"
+                  className={`pr-10 ${mismatch ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowConfirm}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showConfirm ? 'Nascondi conferma' : 'Mostra conferma'}
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {mismatch && (
+                <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                  <X className="h-3 w-3" /> Le password non coincidono
+                </p>
+              )}
             </div>
 
             <Button
               type="submit"
-              disabled={loading || !password || !confirm}
+              disabled={!canSubmit}
               className="w-full bg-brand hover:bg-brand/90 text-white"
             >
               {loading ? <>{spinner} Aggiornamento…</> : 'Imposta nuova password'}

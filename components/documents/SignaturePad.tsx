@@ -29,12 +29,12 @@ export default function SignaturePad({ onSignatureReady, onClear }: Props) {
     setCanvasEmpty(empty);
     if (empty) {
       onClear();
+    } else {
+      // Auto-commit on every stroke — no explicit confirm step needed
+      canvasRef.current?.getSignaturePng().then((blob) => {
+        if (blob) onSignatureReady(blob);
+      });
     }
-  }
-
-  async function handleCanvasCommit() {
-    const blob = await canvasRef.current?.getSignaturePng();
-    if (blob) onSignatureReady(blob);
   }
 
   function handleTabSwitch(t: 'draw' | 'upload') {
@@ -70,15 +70,6 @@ export default function SignaturePad({ onSignatureReady, onClear }: Props) {
             Traccia la tua firma nell&apos;area bianca con mouse o dito.
           </p>
           <SignatureCanvas ref={canvasRef} onChange={handleCanvasChange} />
-          {!canvasEmpty && (
-            <button
-              type="button"
-              onClick={handleCanvasCommit}
-              className="text-xs text-link hover:text-link/80 underline"
-            >
-              Conferma firma disegnata
-            </button>
-          )}
         </div>
       )}
 

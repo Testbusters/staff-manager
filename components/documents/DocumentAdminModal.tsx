@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface DocData {
   document: Document & { collaborators?: { nome: string; cognome: string } | null };
   originalUrl: string | null;
+  firmatoUrl: string | null;
 }
 
 interface Props {
@@ -53,7 +54,7 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
     setLoading(true);
     fetch(`/api/documents/${docId}`)
       .then((r) => r.json())
-      .then((data) => setDocData({ document: data.document, originalUrl: data.originalUrl }))
+      .then((data) => setDocData({ document: data.document, originalUrl: data.originalUrl, firmatoUrl: data.firmatoUrl ?? null }))
       .catch(() => toast.error('Errore caricamento documento'))
       .finally(() => setLoading(false));
   }, [docId]);
@@ -81,6 +82,7 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
   const doc = docData?.document;
   const collab = doc?.collaborators as { nome: string; cognome: string } | null | undefined;
   const isDaFirmare = doc?.stato_firma === 'DA_FIRMARE';
+  const isFirmato = doc?.stato_firma === 'FIRMATO';
   const hasExistingFile = !!docData?.originalUrl;
   const replaceEnabled = !!file && (!isDaFirmare || markSigned);
 
@@ -141,8 +143,25 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
 
             {/* Current file */}
             <div className="border-t border-border pt-4">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Documento attuale</p>
-              {docData?.originalUrl ? (
+              <p className="text-xs font-medium text-muted-foreground mb-2">Documento</p>
+              {isFirmato && docData?.firmatoUrl ? (
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 px-3 py-2">
+                  <div className="min-w-0">
+                    <span className="text-sm text-foreground truncate block">{doc.file_firmato_name ?? 'documento_firmato.pdf'}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Firmato il {doc.signed_at ? new Date(doc.signed_at).toLocaleDateString('it-IT') : '—'}
+                    </span>
+                  </div>
+                  <a
+                    href={docData.firmatoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs text-link hover:text-link/80"
+                  >
+                    Scarica firmato
+                  </a>
+                </div>
+              ) : docData?.originalUrl ? (
                 <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/60 px-3 py-2">
                   <span className="text-sm text-foreground truncate">{doc.file_original_name ?? 'documento.pdf'}</span>
                   <a

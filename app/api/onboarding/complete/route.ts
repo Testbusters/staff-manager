@@ -24,6 +24,7 @@ const schema = z.object({
   intestatario_pagamento: z.string().min(1).max(100),
   tshirt_size:         z.string().min(1),
   sono_un_figlio_a_carico:   z.boolean(),
+  importo_lordo_massimale:   z.number().min(0).max(5000).nullable().optional(),
 });
 
 
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
     intestatario_pagamento: d.intestatario_pagamento,
     tshirt_size:               d.tshirt_size,
     sono_un_figlio_a_carico:   d.sono_un_figlio_a_carico,
+    importo_lordo_massimale:   d.importo_lordo_massimale ?? null,
   };
 
   if (existingCollab) {

@@ -141,7 +141,13 @@ export async function fillPdfMarkers(
     } else {
       const value = values[pos.marker] ?? '';
       if (value) {
-        const fontSize = Math.max(7, Math.min(rectHeight, 12));
+        // Start at the natural size, then shrink until the text fits within rectW.
+        // This prevents long values (e.g. codice fiscale) from overflowing into
+        // adjacent template text.
+        let fontSize = Math.max(7, Math.min(rectHeight, 12));
+        while (fontSize > 5 && helvetica.widthOfTextAtSize(value, fontSize) > rectW) {
+          fontSize -= 0.5;
+        }
         page.drawText(value, {
           x: pos.x,
           y: pos.y,
