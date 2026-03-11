@@ -47,9 +47,10 @@ export async function proxy(request: NextRequest) {
     : request.nextUrl.origin;
 
   const isHealthCheck = path === '/api/health';
+  const isPublicApiRoute = path.startsWith('/api/webhooks/');
 
   if (!user) {
-    if (!isLoginPage && !isAuthRoute && !isHealthCheck) {
+    if (!isLoginPage && !isAuthRoute && !isHealthCheck && !isPublicApiRoute) {
       return createRedirect(new URL('/login', origin), supabaseResponse);
     }
     return supabaseResponse;
