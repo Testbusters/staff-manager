@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Monitor } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CreateUserForm from '@/components/impostazioni/CreateUserForm';
@@ -139,6 +141,15 @@ export default async function ImpostazioniPage({
 
   return (
     <div className="p-6">
+      <div className="md:hidden mb-4">
+        <Alert>
+          <Monitor className="h-4 w-4" />
+          <AlertDescription>
+            Questa sezione è ottimizzata per desktop. Alcune funzionalità potrebbero non essere accessibili da mobile.
+          </AlertDescription>
+        </Alert>
+      </div>
+
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Impostazioni</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
