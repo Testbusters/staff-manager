@@ -3,6 +3,12 @@
     "commit": "",
     "pr": ""
   },
+  "env": {
+    "CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS": "1"
+  },
+  "worktree": {
+    "symlinkDirectories": ["node_modules", ".next"]
+  },
   "permissions": {
     "allow": [
       "Bash(node:*)",

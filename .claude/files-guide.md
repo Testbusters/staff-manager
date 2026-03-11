@@ -165,6 +165,11 @@ variables, model selection, sandbox mode, and more.
 so Claude does not ask for permission at every pipeline command (tsc, vitest, playwright, git, node scripts).
 No `settings.local.json` is currently active — personal overrides are in `~/.claude/settings.json` (Bash(*) global).
 
+Key settings configured:
+- `attribution.commit/pr: ""` — suppresses automatic Co-Authored-By (pipeline adds it manually in commit heredoc)
+- `env.CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1"` — removes redundant built-in git instructions from system prompt (pipeline.md covers this)
+- `worktree.symlinkDirectories: ["node_modules", ".next"]` — auto-symlinks heavy dirs when using EnterWorktree (avoids the manual copy gotcha documented in MEMORY.md)
+
 ---
 
 ## Quick reference — "Where does this information go?"
