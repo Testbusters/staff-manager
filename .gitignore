@@ -57,3 +57,10 @@ next-env.d.ts
 
 # Temporary files (local only)
 tmp/
+
+# One-shot GSheet preparation scripts (local only — not for CI)
+scripts/match-contratti.mjs
+scripts/rebuild-contratti-sheet.mjs
+scripts/check-import-usernames.mjs
+scripts/tag-community-column.mjs
+scripts/split-import-tabs.mjs
