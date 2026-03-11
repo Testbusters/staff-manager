@@ -151,10 +151,13 @@ export async function POST(request: Request) {
           console.error(`collaborator_communities insert failed for row ${r.rowIndex}:`, communityErr.message);
         }
 
-        // 5. Send invitation email (fire-and-forget)
-        getRenderedEmail('E8', { email, password, ruolo: 'Collaboratore' }).then(({ subject, html }) => {
-          sendEmail(email, subject, html).catch(() => {});
-        }).catch(() => {});
+        // 5. Send invitation email
+        try {
+          const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: 'Collaboratore' });
+          await sendEmail(email, subject, html);
+        } catch (emailErr) {
+          console.error(`[import/run] email send failed for ${email}:`, emailErr);
+        }
 
         details.push({ rowIndex: r.rowIndex, email, status: 'imported' });
         sheetUpdates.push({ rowIndex: r.rowIndex, stato: 'PROCESSED', password });
