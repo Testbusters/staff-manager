@@ -9,9 +9,10 @@ type Tab = 'comunicazioni' | 'risorse';
 
 const CATEGORIA_LABELS: Record<ResourceCategoria, string> = {
   GUIDA:     'Guida',
-  NORMATIVA: 'Normativa',
-  PROCEDURA: 'Procedura',
-  MODELLO:   'Modello',
+  ALLEGATO:  'Allegato',
+  LOCANDINA: 'Locandina',
+  BANDO:     'Bando',
+  DECRETO:   'Decreto',
   ALTRO:     'Altro',
 };
 
@@ -23,7 +24,7 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-const VALID_CATEGORIA = ['GUIDA', 'NORMATIVA', 'PROCEDURA', 'MODELLO', 'ALTRO'] as const;
+const VALID_CATEGORIA = ['GUIDA', 'ALLEGATO', 'LOCANDINA', 'BANDO', 'DECRETO', 'ALTRO'] as const;
 
 const PAGE_SIZE = 20;
 

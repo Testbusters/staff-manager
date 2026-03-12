@@ -6,19 +6,19 @@ import { EmptyState } from '@/components/ui/empty-state';
 import type { ContentEvent, EventTipo } from '@/lib/types';
 
 const TIPO_LABELS: Record<EventTipo, string> = {
-  WEBINAR:  'Webinar',
-  INCONTRO: 'Incontro',
-  WORKSHOP: 'Workshop',
-  SOCIAL:   'Social',
-  ALTRO:    'Altro',
+  CONVENTION:       'Convention',
+  ATTIVITA_INTERNA: 'Attività interna',
+  WORKSHOP:         'Workshop',
+  FORMAZIONE:       'Formazione',
+  ALTRO:            'Altro',
 };
 
 const TIPO_COLORS: Record<EventTipo, string> = {
-  WEBINAR:  'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  INCONTRO: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  WORKSHOP: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
-  SOCIAL:   'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:border-pink-800 dark:text-pink-400',
-  ALTRO:    'bg-muted border-border text-muted-foreground',
+  CONVENTION:       'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  ATTIVITA_INTERNA: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  WORKSHOP:         'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  FORMAZIONE:       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  ALTRO:            'bg-muted border-border text-muted-foreground',
 };
 
 function formatDatetime(iso: string) {

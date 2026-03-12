@@ -7,9 +7,10 @@ import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const CATEGORIA_LABELS: Record<ResourceCategoria, string> = {
   GUIDA:     'Guida',
-  NORMATIVA: 'Normativa',
-  PROCEDURA: 'Procedura',
-  MODELLO:   'Modello',
+  ALLEGATO:  'Allegato',
+  LOCANDINA: 'Locandina',
+  BANDO:     'Bando',
+  DECRETO:   'Decreto',
   ALTRO:     'Altro',
 };
 

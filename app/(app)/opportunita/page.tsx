@@ -10,19 +10,17 @@ type Tab = 'opportunita' | 'sconti' | 'sconti_peer4med';
 const PAGE_SIZE = 20;
 
 const OPP_TIPO_LABELS: Record<OpportunityTipo, string> = {
-  LAVORO:     'Lavoro',
-  FORMAZIONE: 'Formazione',
-  STAGE:      'Stage',
-  PROGETTO:   'Progetto',
-  ALTRO:      'Altro',
+  VOLONTARIATO: 'Volontariato',
+  FORMAZIONE:   'Formazione',
+  LAVORO:       'Lavoro',
+  ALTRO:        'Altro',
 };
 
 const OPP_TIPO_COLORS: Record<OpportunityTipo, string> = {
-  LAVORO:     'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  FORMAZIONE: 'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  STAGE:      'bg-purple-100 border-purple-200 text-purple-700 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
-  PROGETTO:   'bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
-  ALTRO:      'bg-muted border-border text-muted-foreground',
+  VOLONTARIATO: 'bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
+  FORMAZIONE:   'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  LAVORO:       'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  ALTRO:        'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
