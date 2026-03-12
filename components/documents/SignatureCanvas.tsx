@@ -17,6 +17,7 @@ const SignatureCanvas = forwardRef<SignatureCanvasHandle, Props>(
   function SignatureCanvas({ onChange }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const drawing = useRef(false);
+    const hasContent = useRef(false); // ref to avoid stale closure in stopDraw
     const [empty, setEmpty] = useState(true);
 
     // Resize canvas to match container
@@ -63,15 +64,20 @@ const SignatureCanvas = forwardRef<SignatureCanvasHandle, Props>(
       ctx.strokeStyle = '#111827';
       ctx.lineTo(x, y);
       ctx.stroke();
-      if (empty) {
+      if (!hasContent.current) {
+        hasContent.current = true;
         setEmpty(false);
-        onChange?.(false);
       }
     }
 
     function stopDraw(e: React.MouseEvent | React.TouchEvent) {
       e.preventDefault();
+      if (!drawing.current) return;
       drawing.current = false;
+      // Notify after every completed stroke (ref check avoids stale closure on first stroke)
+      if (hasContent.current) {
+        onChange?.(false);
+      }
     }
 
     function handleClear() {
@@ -80,6 +86,7 @@ const SignatureCanvas = forwardRef<SignatureCanvasHandle, Props>(
       const ctx = canvas.getContext('2d')!;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      hasContent.current = false;
       setEmpty(true);
       onChange?.(true);
     }

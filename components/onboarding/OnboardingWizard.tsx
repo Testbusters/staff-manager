@@ -129,16 +129,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
     }
   };
 
-  const handleDownload = () => {
-    if (!downloadUrl) return;
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `contratto_${tipoContratto?.toLowerCase() ?? 'contratto'}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   const handleFinish = () => {
     router.push('/documenti');
     router.refresh();
@@ -206,14 +196,16 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             </div>
 
             {downloadUrl && (
-              <button
-                onClick={handleDownload}
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full rounded-lg bg-accent hover:bg-muted py-2.5 text-sm font-medium text-foreground transition flex items-center justify-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-                Scarica copia
-              </button>
+                Visualizza documento
+              </a>
             )}
 
             <Button onClick={handleFinish} className="w-full bg-brand hover:bg-brand/90 text-white">
