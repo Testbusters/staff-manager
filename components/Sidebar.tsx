@@ -189,7 +189,8 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleSignOut}
-                className="px-3 py-1.5 text-xs font-medium bg-destructive hover:bg-destructive/90 text-white border-0"
+                variant="destructive"
+                className="px-3 py-1.5 text-xs font-medium"
               >
                 Esci
               </AlertDialogAction>
