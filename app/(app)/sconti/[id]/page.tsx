@@ -90,7 +90,7 @@ export default async function DiscountDetailPage({
           <div className="border-t border-border pt-3">
             <p className="text-xs text-muted-foreground mb-2">Codice sconto</p>
             <div className="flex items-center gap-3">
-              <span className="rounded-md bg-muted border border-border px-3 py-1.5 text-sm font-mono text-yellow-300">
+              <span className="rounded-md bg-muted border border-border px-3 py-1.5 text-sm font-mono text-foreground">
                 {d.codice_sconto}
               </span>
               <CopyButton text={d.codice_sconto} />

@@ -3,6 +3,11 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import DocumentSignFlow from '@/components/documents/DocumentSignFlow';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_SIGN_STATUS_LABELS } from '@/lib/types';
+
+const SIGN_STATUS_COLORS: Record<string, string> = {
+  DA_FIRMARE: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50',
+  FIRMATO:    'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/50',
+};
 import type { Role, Document } from '@/lib/types';
 import { getDocumentUrls } from '@/lib/documents-storage';
 import { Card, CardContent } from '@/components/ui/card';
@@ -70,13 +75,7 @@ export default async function DocumentDetailPage({
                 <p className="text-sm text-muted-foreground mt-0.5">{collab.nome} {collab.cognome}</p>
               )}
             </div>
-            <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-              doc.stato_firma === 'DA_FIRMARE'
-                ? 'bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700/40'
-                : doc.stato_firma === 'FIRMATO'
-                ? 'bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700/40'
-                : 'bg-muted text-muted-foreground border-border'
-            }`}>
+            <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${SIGN_STATUS_COLORS[doc.stato_firma] ?? 'bg-muted text-muted-foreground border-border'}`}>
               {DOCUMENT_SIGN_STATUS_LABELS[doc.stato_firma as keyof typeof DOCUMENT_SIGN_STATUS_LABELS]}
             </span>
           </div>
