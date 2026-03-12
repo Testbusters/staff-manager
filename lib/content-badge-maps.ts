@@ -1,19 +1,18 @@
 import type { OpportunityTipo, EventTipo } from '@/lib/types';
 
 export const OPP_TIPO_COLORS: Record<OpportunityTipo, string> = {
-  LAVORO:     'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  FORMAZIONE: 'bg-indigo-100 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300',
-  STAGE:      'bg-purple-100 border-purple-200 text-purple-700 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
-  PROGETTO:   'bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
-  ALTRO:      'bg-muted border-border text-muted-foreground',
+  Volontariato: 'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Formazione:   'bg-indigo-100 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300',
+  Lavoro:       'bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  Altro:        'bg-muted border-border text-muted-foreground',
 };
 
 export const EVENT_TIPO_COLORS: Record<EventTipo, string> = {
-  WEBINAR:  'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-300',
-  INCONTRO: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  WORKSHOP: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
-  SOCIAL:   'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:border-pink-800 dark:text-pink-400',
-  ALTRO:    'bg-muted border-border text-muted-foreground',
+  Convention:       'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-300',
+  Attivita_interna: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Workshop:         'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  Formazione:       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-300',
+  Altro:            'bg-muted border-border text-muted-foreground',
 };
 
 export function getExpiryBadgeData(valid_to: string | null): { label: string; cls: string } | null {
