@@ -220,5 +220,5 @@ export const RICEVUTA_MARKERS = [
   '{totale_netto_liquidato}',
   '{citta_residenza_collaboratore}',
   '{data_corrente}',
-  '{firma_collaboratore}',
+  '{firma}',
 ];

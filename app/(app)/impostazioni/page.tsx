@@ -151,7 +151,7 @@ export default async function ImpostazioniPage({
         <Link href="?tab=utenti" className={tabCls('utenti')}>Utenti</Link>
         <Link href="?tab=community" className={tabCls('community')}>Community</Link>
         <Link href="?tab=collaboratori" className={tabCls('collaboratori')}>Collaboratori</Link>
-        <Link href="?tab=contratti" className={tabCls('contratti')}>Contratti</Link>
+        <Link href="?tab=contratti" className={tabCls('contratti')}>Modelli Documenti</Link>
         <Link href="?tab=notifiche" className={tabCls('notifiche')}>Notifiche</Link>
         <Link href="?tab=template_mail" className={tabCls('template_mail')}>Template mail</Link>
         <Link href="?tab=monitoraggio" className={tabCls('monitoraggio')}>Monitoraggio</Link>

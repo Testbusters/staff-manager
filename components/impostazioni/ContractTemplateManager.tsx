@@ -40,7 +40,7 @@ const RICEVUTA_MARKERS = [
   { key: '{totale_netto_liquidato}',              desc: 'Netto liquidato (€)' },
   { key: '{citta_residenza_collaboratore}',       desc: 'Città per luogo di firma (comune)' },
   { key: '{data_corrente}',                       desc: 'Data di oggi (DD/MM/AAAA)' },
-  { key: '{firma_collaboratore}',                 desc: 'Firma collaboratore (PNG)' },
+  { key: '{firma}',                               desc: 'Firma collaboratore (PNG)' },
 ];
 
 const sectionCls = 'rounded-2xl bg-card border border-border';
