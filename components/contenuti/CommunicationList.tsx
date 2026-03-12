@@ -82,8 +82,14 @@ function CommunicationForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
-      <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Contenuto *" />
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
+        <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo comunicazione" required />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-foreground">Contenuto <span className="text-destructive">*</span></label>
+        <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Testo della comunicazione" />
+      </div>
       <Textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
         rows={2} className="resize-none" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

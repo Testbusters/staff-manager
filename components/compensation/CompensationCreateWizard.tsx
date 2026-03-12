@@ -308,7 +308,7 @@ export default function CompensationCreateWizard({
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Nome servizio / Ruolo
+              Nome servizio / Ruolo <span className="text-destructive">*</span>
             </label>
             <Input
               type="text"
@@ -321,7 +321,7 @@ export default function CompensationCreateWizard({
 
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Data di competenza
+              Data di competenza <span className="text-destructive">*</span>
             </label>
             <DatePicker
               value={formData.data_competenza}
@@ -332,7 +332,7 @@ export default function CompensationCreateWizard({
           {competenze.length > 0 && (
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Competenza
+                Competenza <span className="text-destructive">*</span>
               </label>
               <Select value={formData.competenza || undefined} onValueChange={(v) => setFormData((prev) => ({ ...prev, competenza: v }))}>
                 <SelectTrigger><SelectValue placeholder="— Nessuna —" /></SelectTrigger>
@@ -360,7 +360,7 @@ export default function CompensationCreateWizard({
 
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Importo lordo (€)
+              Importo lordo (€) <span className="text-destructive">*</span>
             </label>
             <Input
               type="number"

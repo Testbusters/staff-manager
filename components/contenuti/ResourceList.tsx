@@ -79,7 +79,10 @@ function ResourceForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
+        <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo della risorsa" required />
+      </div>
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
       <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)" />

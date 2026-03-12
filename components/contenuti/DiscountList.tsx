@@ -88,7 +88,10 @@ function DiscountForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required />
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
+        <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dello sconto o del beneficio" required />
+      </div>
       <Input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)" />
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
