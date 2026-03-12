@@ -139,8 +139,8 @@ function PreviewTable({ rows }: { rows: PreviewRow[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <div className="w-full rounded-xl border border-border overflow-x-auto">
-      <Table className="w-full">
+    <div className="rounded-xl border border-border overflow-hidden">
+      <Table className="w-auto">
         <TableHeader>
           <TableRow>
             <TableHead className="w-8">#</TableHead>

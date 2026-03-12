@@ -188,7 +188,7 @@ export default function ImportSection() {
               {state.errors.length > 0 && <ErrorList errors={state.errors} />}
 
               {state.rows.length > 0 && (
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-hidden rounded-lg border border-border">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">

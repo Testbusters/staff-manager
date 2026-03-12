@@ -136,7 +136,7 @@ function DocumentGroups({
   return (
     <Card>
       <CardContent className="overflow-hidden p-0">
-        <Table className="w-full">
+        <Table className="w-auto">
           <TableHeader>
             <TableRow>
               {isAdmin && <TableHead>Collaboratore</TableHead>}
