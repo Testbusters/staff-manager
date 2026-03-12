@@ -180,7 +180,7 @@ function PreviewTable({ rows }: { rows: CUPreviewRow[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-border overflow-x-auto">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

@@ -236,7 +236,7 @@ export default function MemberStatusManager() {
             <EmptyState icon={Users} title="Nessun collaboratore trovato" />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-hidden">
             <table className="w-auto text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">

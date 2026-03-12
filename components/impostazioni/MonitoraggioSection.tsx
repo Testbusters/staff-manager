@@ -258,7 +258,7 @@ function LogAccessi({
 
   return (
     <SectionAccordion title="Log accessi" description="Autenticazioni recenti dal log di Supabase Auth." controls={controls}>
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -336,7 +336,7 @@ function LogOperazioni({
 
   return (
     <SectionAccordion title="Log operazioni" description="Storico import e export con dettaglio righe.">
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-2">
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -513,7 +513,7 @@ function EmailDelivery({
         </div>
       ) : null}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-2">
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -621,7 +621,7 @@ function LogSistema({
 
   return (
     <SectionAccordion title="Log Supabase" description="Ultimi 100 log per servizio dal progetto Supabase." controls={controls}>
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-2">
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -696,7 +696,7 @@ function DBPerformance({
 
   return (
     <SectionAccordion title="Performance DB" description="Top query per tempo totale di esecuzione · statistiche tabelle." controls={controls}>
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -811,7 +811,7 @@ function AppErrorsSection({ errors, loading }: { errors: AppError[]; loading: bo
 
   return (
     <SectionAccordion title="Errori applicazione" description="Errori catturati da error.tsx · ultimi 50." controls={errorBadge}>
-      <div className="overflow-x-auto">
+      <div className="overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-2">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
