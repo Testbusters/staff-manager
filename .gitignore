@@ -30,6 +30,12 @@ CLAUDE.local.md
 .claude/CLAUDE.local.md
 .claude/settings.local.json
 
+# Claude session files (local only — temporary per-block context)
+.claude/session/
+
+# Claude worktree directories (local only — git worktree paths)
+.claude/worktrees/
+
 # playwright generated artifacts
 playwright-report/
 test-results/
@@ -58,9 +64,14 @@ next-env.d.ts
 # Temporary files (local only)
 tmp/
 
-# One-shot GSheet preparation scripts (local only — not for CI)
+# One-shot scripts (local only — not for CI)
 scripts/match-contratti.mjs
 scripts/rebuild-contratti-sheet.mjs
 scripts/check-import-usernames.mjs
 scripts/tag-community-column.mjs
 scripts/split-import-tabs.mjs
+scripts/cleanup-contract.mjs
+scripts/read-docs.mjs
+scripts/read-docs-deep.mjs
+scripts/read-full.mjs
+scripts/regen-contract-test.mjs

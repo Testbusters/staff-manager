@@ -98,9 +98,10 @@
 | Skill | Action |
 |---|---|
 | `/arch-audit` | Weekly compliance audit: fetches latest Anthropic docs + release notes, compares with local architecture, auto-fixes safe items, lists recommendations |
+| `/ui-audit` | Full UI/UX quality audit: reads `docs/sitemap.md` as file inventory, runs 9 grep checks + 4 supplemental checks (design tokens, responsive grids, empty states, accessibility), produces verdict table ✅/❌ per check. Audit-only — no code changes without confirmation. |
 
-> **Trigger**: SessionStart hook warns if ≥7 days since last run.
-> **Timestamp**: `~/.claude/projects/.../last-audit`
+> `/arch-audit` **Trigger**: SessionStart hook warns if ≥7 days since last run. Timestamp: `~/.claude/projects/.../last-audit`
+> `/ui-audit` **When to run**: after any UI wave, before merging a worktree, or on demand to verify design system compliance.
 
 ---
 
