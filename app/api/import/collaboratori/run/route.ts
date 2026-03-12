@@ -6,6 +6,7 @@ import { generatePassword } from '@/lib/password';
 import { getImportSheetRows, writeImportResults, type SheetUpdate } from '@/lib/import-sheet';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { buildImportXLSX } from '@/lib/import-history-utils';
 
 const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-z0-9_]{3,50}$/;
@@ -183,16 +184,24 @@ export async function POST(request: Request) {
   const imported = details.filter(d => d.status === 'imported').length;
   const errors   = details.filter(d => d.status === 'error').length;
 
-  // ── Record import run (non-blocking) ─────────────────────────────────────────
+  // ── Record import run + upload XLSX (non-blocking) ──────────────────────────
   try {
+    const runId     = crypto.randomUUID();
+    const xlsx      = buildImportXLSX('collaboratori', details);
+    const xlsxPath  = `collaboratori/${runId}.xlsx`;
+    await svc.storage.from('imports').upload(xlsxPath, xlsx, {
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     await svc.from('import_runs').insert({
-      tipo:        'collaboratori',
-      executed_by: user.id,
+      id:           runId,
+      tipo:         'collaboratori',
+      executed_by:  user.id,
       imported,
-      skipped:     0,
+      skipped:      0,
       errors,
-      detail_json: details,
-      duration_ms: Date.now() - runStartTime,
+      detail_json:  details,
+      duration_ms:  Date.now() - runStartTime,
+      storage_path: xlsxPath,
     });
   } catch {
     // Non-blocking — don't fail the import if tracking insert fails

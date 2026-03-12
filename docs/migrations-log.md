@@ -5,6 +5,8 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 047 | `047_import_runs_storage.sql` | 2026-03-12 | ADD COLUMN `storage_path text` on `import_runs`; CREATE private bucket `imports` (10 MB, xlsx only); admin-only SELECT + INSERT storage policies |
+| 046 | `046_theme_default_dark.sql` | 2026-03-10 | (theme default) |
 | 045 | `045_monitoring_ext.sql` | 2026-03-10 | CREATE TABLE `app_errors` (admin RLS); CREATE FUNCTION `get_top_queries()` / `get_table_stats()` / `reset_query_stats()` (SECURITY DEFINER, pg_stat_statements in extensions schema) |
 | 044 | `044_single_community.sql` | 2026-03-10 | ADD UNIQUE CONSTRAINT `collaborator_communities_collaborator_id_key` on `collaborator_communities.collaborator_id`; deduplicate existing rows (keep first by id) before adding constraint |
 | 043 | `043_monitoring.sql` | 2026-03-10 | CREATE TABLE `import_runs` (admin RLS) + `email_events` (admin RLS); ADD COLUMN `export_runs.duration_ms`; CREATE FUNCTION `get_recent_auth_events(days int)` (SECURITY DEFINER, reads auth.audit_log_entries) |

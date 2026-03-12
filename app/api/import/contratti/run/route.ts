@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { getContrattiRows, writeContrattiResults } from '@/lib/contratti-import-sheet';
 import { buildFolderMap, downloadFile } from '@/lib/google-drive';
 import { uploadBuffer } from '@/lib/documents-storage';
+import { buildImportXLSX } from '@/lib/import-history-utils';
 
 const ANNO_RE = /(?:contratto(?:tb|p4m))(\d{4})_/i;
 
@@ -194,16 +195,24 @@ export async function POST() {
   const skipped  = details.filter(d => d.status === 'skip').length;
   const errors   = details.filter(d => d.status === 'error').length;
 
-  // ── Record import run (non-blocking) ─────────────────────────────────────────
+  // ── Record import run + upload XLSX (non-blocking) ──────────────────────────
   try {
+    const runId    = crypto.randomUUID();
+    const xlsx     = buildImportXLSX('contratti', details);
+    const xlsxPath = `contratti/${runId}.xlsx`;
+    await svc.storage.from('imports').upload(xlsxPath, xlsx, {
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     await svc.from('import_runs').insert({
-      tipo:        'contratti',
-      executed_by: user.id,
+      id:           runId,
+      tipo:         'contratti',
+      executed_by:  user.id,
       imported,
       skipped,
       errors,
-      detail_json: details,
-      duration_ms: Date.now() - runStartTime,
+      detail_json:  details,
+      duration_ms:  Date.now() - runStartTime,
+      storage_path: xlsxPath,
     });
   } catch {
     // Non-blocking

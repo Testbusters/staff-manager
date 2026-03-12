@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ExternalLink, AlertTriangle, Info, CheckCircle2, XCircle, Loader2, SkipForward } from 'lucide-react';
+import ImportHistoryTab from './ImportHistoryTab';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -236,9 +237,25 @@ function RunResultPanel({ result }: { result: RunResult }) {
   );
 }
 
+// ── Tab toggle ────────────────────────────────────────────────────────────────
+
+function TabToggle({ tab, onChange }: { tab: 'importa' | 'storico'; onChange: (t: 'importa' | 'storico') => void }) {
+  const cls = (id: 'importa' | 'storico') =>
+    `px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+      tab === id ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'
+    }`;
+  return (
+    <div className="flex gap-2">
+      <button type="button" className={cls('importa')} onClick={() => onChange('importa')}>Importa</button>
+      <button type="button" className={cls('storico')} onClick={() => onChange('storico')}>Storico</button>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ImportCollaboratoriSection() {
+  const [tab, setTab]                       = useState<'importa' | 'storico'>('importa');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview]               = useState<PreviewResponse | null>(null);
   const [modalOpen, setModalOpen]           = useState(false);
@@ -291,8 +308,19 @@ export default function ImportCollaboratoriSection() {
     }
   };
 
+  // ── Storico tab (idle only) ──────────────────────────────────────────────────
+  if (tab === 'storico' && !preview && !runResult) {
+    return (
+      <div className="space-y-4">
+        <TabToggle tab={tab} onChange={setTab} />
+        <ImportHistoryTab tipo="collaboratori" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
+      {!preview && !runResult && <TabToggle tab={tab} onChange={setTab} />}
       {/* Sheet link card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
         <div className="space-y-0.5">

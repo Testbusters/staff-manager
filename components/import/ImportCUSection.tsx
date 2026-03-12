@@ -5,6 +5,7 @@ import {
   ExternalLink, AlertTriangle, CheckCircle2, XCircle,
   Loader2, Download, RefreshCw,
 } from 'lucide-react';
+import ImportHistoryTab from './ImportHistoryTab';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -368,9 +369,25 @@ function RunResultPanel({ result, onReset }: { result: CURunResult; onReset: () 
   );
 }
 
+// ── Tab toggle ────────────────────────────────────────────────────────────────
+
+function TabToggle({ tab, onChange }: { tab: 'importa' | 'storico'; onChange: (t: 'importa' | 'storico') => void }) {
+  const cls = (id: 'importa' | 'storico') =>
+    `px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+      tab === id ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'
+    }`;
+  return (
+    <div className="flex gap-2">
+      <button type="button" className={cls('importa')} onClick={() => onChange('importa')}>Importa</button>
+      <button type="button" className={cls('storico')} onClick={() => onChange('storico')}>Storico</button>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ImportCUSection() {
+  const [tab, setTab]                       = useState<'importa' | 'storico'>('importa');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview]               = useState<CUPreviewResponse | null>(null);
   const [filter, setFilter]                 = useState<FilterType>('all');
@@ -427,8 +444,15 @@ export default function ImportCUSection() {
   // ── Idle / Loading ──────────────────────────────────────────────────────────
   if (!preview && !runResult) {
     return (
-      <div className="max-w-md">
-        <SourceCard onPreview={handlePreview} loading={previewLoading} />
+      <div className="space-y-4">
+        <TabToggle tab={tab} onChange={setTab} />
+        {tab === 'importa' ? (
+          <div className="max-w-md">
+            <SourceCard onPreview={handlePreview} loading={previewLoading} />
+          </div>
+        ) : (
+          <ImportHistoryTab tipo="cu" />
+        )}
       </div>
     );
   }
