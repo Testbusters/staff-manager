@@ -143,15 +143,18 @@ export async function fillPdfMarkers(
     if (!page) continue;
 
     const rectHeight = Math.max(pos.height, 10);
-    // Slight padding: cover a bit above and below the baseline
     const rectY = pos.y - 2;
     const rectW = Math.max(pos.width, 20);
+    // Left padding compensates for proportional-font x estimation error on embedded markers.
+    // Characters before the marker (e.g. "Il ", "Nato/a ") are often narrower than average,
+    // causing the estimated marker start to be slightly too far right — leaving the "{" visible.
+    const leftPad = 8;
 
     // 1. White rectangle to cover the marker text
     page.drawRectangle({
-      x: pos.x,
+      x: pos.x - leftPad,
       y: rectY,
-      width: rectW + 4,
+      width: rectW + 4 + leftPad,
       height: rectHeight + 4,
       color: rgb(1, 1, 1),
     });
@@ -211,14 +214,13 @@ export const CONTRATTO_MARKERS = [
 export const RICEVUTA_MARKERS = [
   '{nome}',
   '{cognome}',
+  '{citta_nascita}',
   '{citta_residenza}',
   '{data_nascita}',
-  '{indirizzo_residenza}',
   '{codice_fiscale}',
   '{totale_lordo_liquidato}',
   '{totale_ritenuta_acconto_liquidato}',
   '{totale_netto_liquidato}',
-  '{citta_residenza_collaboratore}',
   '{data_corrente}',
   '{firma}',
 ];

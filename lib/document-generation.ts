@@ -56,8 +56,8 @@ export function buildReceiptVars(
     cognome: string | null;
     codice_fiscale: string | null;
     data_nascita: string | null;
+    luogo_nascita: string | null;
     comune: string | null;
-    indirizzo: string | null;
   },
   totals: {
     lordo_compensi: number;
@@ -67,17 +67,18 @@ export function buildReceiptVars(
     netto: number;
   },
 ): Record<string, string> {
+  // Amounts without € prefix — template already has "Euro €" as static text
+  const fmt = (n: number) => n.toFixed(2).replace('.', ',');
   return {
     '{nome}':                                 collab.nome ?? '',
     '{cognome}':                              collab.cognome ?? '',
+    '{citta_nascita}':                        collab.luogo_nascita ?? '',
     '{citta_residenza}':                      collab.comune ?? '',
     '{data_nascita}':                         formatDate(collab.data_nascita),
-    '{indirizzo_residenza}':                  collab.indirizzo ?? '',
     '{codice_fiscale}':                       collab.codice_fiscale ?? '',
-    '{totale_lordo_liquidato}':               formatEuro(totals.totale_lordo),
-    '{totale_ritenuta_acconto_liquidato}':    formatEuro(totals.ritenuta),
-    '{totale_netto_liquidato}':               formatEuro(totals.netto),
-    '{citta_residenza_collaboratore}':        collab.comune ?? '',
+    '{totale_lordo_liquidato}':               fmt(totals.totale_lordo),
+    '{totale_ritenuta_acconto_liquidato}':    fmt(totals.ritenuta),
+    '{totale_netto_liquidato}':               fmt(totals.netto),
     '{data_corrente}':                        formatDateToday(),
   };
 }

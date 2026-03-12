@@ -116,8 +116,8 @@ describe('buildReceiptVars', () => {
     cognome: 'Bianchi',
     codice_fiscale: 'BNCMRA85B41F205Y',
     data_nascita: '1985-02-01',
+    luogo_nascita: 'Roma',
     comune: 'Torino',
-    indirizzo: 'Corso Francia 5',
   };
 
   const totals = {
@@ -149,9 +149,14 @@ describe('buildReceiptVars', () => {
     expect(vars['{totale_netto_liquidato}']).toContain('1000');
   });
 
-  it('maps comune to citta_residenza_collaboratore', () => {
+  it('maps luogo_nascita to citta_nascita', () => {
     const vars = buildReceiptVars(collab, totals);
-    expect(vars['{citta_residenza_collaboratore}']).toBe('Torino');
+    expect(vars['{citta_nascita}']).toBe('Roma');
+  });
+
+  it('maps comune to citta_residenza', () => {
+    const vars = buildReceiptVars(collab, totals);
+    expect(vars['{citta_residenza}']).toBe('Torino');
   });
 });
 
@@ -170,10 +175,7 @@ describe('PDF marker constants', () => {
     expect(RICEVUTA_MARKERS).toContain('{totale_lordo_liquidato}');
     expect(RICEVUTA_MARKERS).toContain('{totale_ritenuta_acconto_liquidato}');
     expect(RICEVUTA_MARKERS).toContain('{totale_netto_liquidato}');
-    expect(RICEVUTA_MARKERS).toContain('{firma_collaboratore}');
-  });
-
-  it('RICEVUTA_MARKERS does not include {firma} (uses {firma_collaboratore})', () => {
-    expect(RICEVUTA_MARKERS).not.toContain('{firma}');
+    expect(RICEVUTA_MARKERS).toContain('{citta_nascita}');
+    expect(RICEVUTA_MARKERS).toContain('{firma}');
   });
 });

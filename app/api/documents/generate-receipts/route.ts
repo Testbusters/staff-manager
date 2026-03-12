@@ -25,7 +25,7 @@ async function generateReceiptForCollab(
 ): Promise<{ document_id: string | null; error: string | null }> {
   const { data: collab } = await svc
     .from('collaborators')
-    .select('nome, cognome, codice_fiscale, data_nascita, comune, indirizzo, user_id')
+    .select('nome, cognome, codice_fiscale, data_nascita, luogo_nascita, comune, user_id')
     .eq('id', collabId)
     .single();
 
