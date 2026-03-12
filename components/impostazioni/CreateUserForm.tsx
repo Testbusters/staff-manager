@@ -206,7 +206,7 @@ export default function CreateUserForm() {
           </div>
         </div>
 
-        <Button variant="outline" onClick={() => setCredentials(null)} className="w-full">
+        <Button variant="outline" onClick={() => setCredentials(null)}>
           Crea un altro utente
         </Button>
       </div>
@@ -532,7 +532,7 @@ export default function CreateUserForm() {
             !telefono.trim() || !intestatarioPagamento.trim() || !dataIngresso || !dataFineContratto
           ))
         }
-        className="w-full bg-brand hover:bg-brand/90 text-white"
+        className="bg-brand hover:bg-brand/90 text-white"
       >
         {loading ? (
           <>

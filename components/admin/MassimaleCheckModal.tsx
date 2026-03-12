@@ -118,7 +118,7 @@ export default function MassimaleCheckModal({ open, onClose, impacts, entityType
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="w-full">
+          <Button variant="outline" onClick={onClose}>
             Chiudi e rivedi manualmente
           </Button>
         </DialogFooter>

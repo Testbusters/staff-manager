@@ -140,7 +140,7 @@ export default async function ImpostazioniPage({
   const narrowContent = activeTab !== 'template_mail' && activeTab !== 'monitoraggio';
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-4xl">
       <div className="md:hidden mb-4">
         <Alert>
           <Monitor className="h-4 w-4" />

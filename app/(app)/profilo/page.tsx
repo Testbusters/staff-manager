@@ -107,7 +107,7 @@ export default async function ProfiloPage({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-3xl">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Profilo e Documenti</h1>
         <p className="text-sm text-muted-foreground mt-0.5">

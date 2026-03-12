@@ -84,7 +84,7 @@ export default async function DocumentiPage({
     }`;
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-foreground">Documenti</h1>
         <p className="text-sm text-muted-foreground mt-0.5">

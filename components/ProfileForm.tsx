@@ -574,7 +574,7 @@ export default function ProfileForm({ collaborator, role, email, communities, al
 
           </div>
           <div className="px-6 py-4 border-t border-border flex-shrink-0">
-            <Button type="button" variant="outline" onClick={() => setShowGuida(false)} className="w-full">
+            <Button type="button" variant="outline" onClick={() => setShowGuida(false)}>
               Ho capito
             </Button>
           </div>
