@@ -94,12 +94,13 @@ export async function POST(request: Request) {
     const batch = toProcess.slice(i, i + BATCH_SIZE);
 
     await Promise.all(batch.map(async (r) => {
-      const email         = r.email.trim().toLowerCase();
-      const username      = r.username.trim().toLowerCase();
-      const nome          = r.nome.trim();
-      const cognome       = r.cognome.trim();
-      const community     = r.community.trim().toLowerCase();
-      const data_ingresso = r.data_ingresso.trim();
+      const email               = r.email.trim().toLowerCase();
+      const username            = r.username.trim().toLowerCase();
+      const nome                = r.nome.trim();
+      const cognome             = r.cognome.trim();
+      const community           = r.community.trim().toLowerCase();
+      const data_ingresso       = r.data_ingresso.trim();
+      const data_fine_contratto = r.data_fine_contratto.trim() || null;
       const communityId   = communityMap.get(community)!;
       const password      = generatePassword();
 
@@ -127,13 +128,14 @@ export async function POST(request: Request) {
 
         // 3. Insert collaborators
         const { data: collabData, error: collabErr } = await svc.from('collaborators').insert({
-          user_id:        userId,
+          user_id:             userId,
           email,
           nome,
           cognome,
           username,
-          tipo_contratto: 'OCCASIONALE',
+          tipo_contratto:      'OCCASIONALE',
           data_ingresso,
+          data_fine_contratto,
         }).select('id').single();
         if (collabErr || !collabData) {
           await svc.auth.admin.deleteUser(userId).catch(() => {});

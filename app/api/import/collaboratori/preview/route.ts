@@ -5,15 +5,16 @@ import { cookies } from 'next/headers';
 import { getImportSheetRows } from '@/lib/import-sheet';
 
 export interface PreviewRow {
-  rowIndex:      number;
-  nome:          string;
-  cognome:       string;
-  email:         string;
-  username:      string;
-  community:     string;
-  data_ingresso: string;
-  stato:         string; // current stato in sheet
-  errors:        string[];
+  rowIndex:            number;
+  nome:                string;
+  cognome:             string;
+  email:               string;
+  username:            string;
+  community:           string;
+  data_ingresso:       string;
+  data_fine_contratto: string;
+  stato:               string; // current stato in sheet
+  errors:              string[];
 }
 
 export interface PreviewResponse {
@@ -95,13 +96,14 @@ export async function POST(request: Request) {
   const batchUsernames = new Map<string, number>(); // username → first rowIndex
 
   const rows: PreviewRow[] = rawRows.map((r) => {
-    const nome          = r.nome.trim();
-    const cognome       = r.cognome.trim();
-    const email         = r.email.trim().toLowerCase();
-    const username      = r.username.trim().toLowerCase();
-    const community     = r.community.trim().toLowerCase();
-    const data_ingresso = r.data_ingresso.trim();
-    const stato         = r.stato.trim();
+    const nome                = r.nome.trim();
+    const cognome             = r.cognome.trim();
+    const email               = r.email.trim().toLowerCase();
+    const username            = r.username.trim().toLowerCase();
+    const community           = r.community.trim().toLowerCase();
+    const data_ingresso       = r.data_ingresso.trim();
+    const data_fine_contratto = r.data_fine_contratto.trim();
+    const stato               = r.stato.trim();
     const errors: string[] = [];
 
     if (!nome)    errors.push('nome mancante');
@@ -139,12 +141,16 @@ export async function POST(request: Request) {
       errors.push('data_ingresso non valida (formato atteso: YYYY-MM-DD)');
     }
 
+    if (data_fine_contratto && isNaN(Date.parse(data_fine_contratto))) {
+      errors.push('data_fine_contratto non valida (formato atteso: YYYY-MM-DD)');
+    }
+
     if (errors.length === 0) {
       batchEmails.set(email, r.rowIndex);
       batchUsernames.set(username, r.rowIndex);
     }
 
-    return { rowIndex: r.rowIndex, nome, cognome, email, username, community, data_ingresso, stato, errors };
+    return { rowIndex: r.rowIndex, nome, cognome, email, username, community, data_ingresso, data_fine_contratto, stato, errors };
   });
 
   const validCount    = rows.filter(r => r.errors.length === 0).length;

@@ -5,7 +5,7 @@
  *   IMPORT_COLLABORATORI_SHEET_ID
  *   IMPORT_COLLABORATORI_SHEET_TAB  (default: import_collaboratori)
  *
- * Column layout (A–I):
+ * Column layout (A–J):
  *   A = nome
  *   B = cognome
  *   C = email
@@ -13,28 +13,30 @@
  *   E = stato (TO_PROCESS / PROCESSED / ERROR — written by run)
  *   F = community (testbusters | peer4med)
  *   G = data_ingresso (ISO date, e.g. 2025-01-01)
- *   H = password (written by run on PROCESSED rows)
- *   I = note_errore (written by run on ERROR rows)
+ *   H = data_fine_contratto (ISO date, e.g. 2026-12-31 — optional)
+ *   I = password (written by run on PROCESSED rows)
+ *   J = note_errore (written by run on ERROR rows)
  */
 
 import { webcrypto } from 'crypto';
 
 export interface ImportSheetRow {
-  rowIndex:      number;
-  nome:          string;
-  cognome:       string;
-  email:         string;
-  username:      string;
-  stato:         string;
-  community:     string;
-  data_ingresso: string;
+  rowIndex:              number;
+  nome:                  string;
+  cognome:               string;
+  email:                 string;
+  username:              string;
+  stato:                 string;
+  community:             string;
+  data_ingresso:         string;
+  data_fine_contratto:   string;
 }
 
 export interface SheetUpdate {
   rowIndex:    number;
   stato:       'PROCESSED' | 'ERROR';
-  password?:   string;   // col H — set on PROCESSED rows
-  noteErrore?: string;   // col I — set on ERROR rows
+  password?:   string;   // col I — set on PROCESSED rows
+  noteErrore?: string;   // col J — set on ERROR rows
 }
 
 function pemToDer(pem: string): Buffer {
@@ -88,7 +90,7 @@ export async function getImportSheetRows(): Promise<ImportSheetRow[]> {
   const { id, tab } = getSheetConfig();
   const token = await getToken();
 
-  const range = encodeURIComponent(`${tab}!A:H`);
+  const range = encodeURIComponent(`${tab}!A:J`);
   const res   = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}`,
     { headers: { Authorization: `Bearer ${token}` } });
   const data  = await res.json() as { values?: string[][]; error?: { message: string } };
@@ -99,14 +101,15 @@ export async function getImportSheetRows(): Promise<ImportSheetRow[]> {
   // Skip header row (index 0); skip rows with stato = PROCESSED
   return allRows.slice(1)
     .map((row, i) => ({
-      rowIndex:      i + 2, // 1-based sheet row
-      nome:          row[0] ?? '',
-      cognome:       row[1] ?? '',
-      email:         row[2] ?? '',
-      username:      row[3] ?? '',
-      stato:         row[4] ?? '',
-      community:     row[5] ?? '',
-      data_ingresso: row[6] ?? '',
+      rowIndex:            i + 2, // 1-based sheet row
+      nome:                row[0] ?? '',
+      cognome:             row[1] ?? '',
+      email:               row[2] ?? '',
+      username:            row[3] ?? '',
+      stato:               row[4] ?? '',
+      community:           row[5] ?? '',
+      data_ingresso:       row[6] ?? '',
+      data_fine_contratto: row[7] ?? '',
     }))
     .filter(r => r.stato.trim().toUpperCase() !== 'PROCESSED');
 }
@@ -114,8 +117,8 @@ export async function getImportSheetRows(): Promise<ImportSheetRow[]> {
 /**
  * Writes import results back to the sheet.
  * Col E = stato (PROCESSED | ERROR)
- * Col H = password (only on PROCESSED rows)
- * Col I = note_errore (only on ERROR rows)
+ * Col I = password (only on PROCESSED rows)
+ * Col J = note_errore (only on ERROR rows)
  */
 export async function writeImportResults(updates: SheetUpdate[]): Promise<void> {
   if (updates.length === 0) return;
@@ -127,10 +130,10 @@ export async function writeImportResults(updates: SheetUpdate[]): Promise<void> 
   for (const u of updates) {
     data.push({ range: `${tab}!E${u.rowIndex}`, values: [[u.stato]] });
     if (u.stato === 'PROCESSED' && u.password) {
-      data.push({ range: `${tab}!H${u.rowIndex}`, values: [[u.password]] });
+      data.push({ range: `${tab}!I${u.rowIndex}`, values: [[u.password]] });
     }
     if (u.stato === 'ERROR' && u.noteErrore) {
-      data.push({ range: `${tab}!I${u.rowIndex}`, values: [[u.noteErrore]] });
+      data.push({ range: `${tab}!J${u.rowIndex}`, values: [[u.noteErrore]] });
     }
   }
 

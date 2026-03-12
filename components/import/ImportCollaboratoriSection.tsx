@@ -37,11 +37,11 @@ function ImportRulesPanel() {
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
-            <span><strong>E</strong> stato (scritto dall&apos;import) · <strong>F</strong> community · <strong>G</strong> data_ingresso</span>
+            <span><strong>E</strong> stato (scritto dall&apos;import) · <strong>F</strong> community · <strong>G</strong> data_ingresso · <strong>H</strong> data_fine_contratto</span>
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
-            <span><strong>H</strong> password (scritto dall&apos;import) · <strong>I</strong> note_errore</span>
+            <span><strong>I</strong> password (scritto dall&apos;import) · <strong>J</strong> note_errore</span>
           </li>
           <li className="flex items-start gap-1.5">
             <span className="text-brand mt-0.5 shrink-0">•</span>
@@ -149,6 +149,7 @@ function PreviewTable({ rows }: { rows: PreviewRow[] }) {
             <TableHead>Username</TableHead>
             <TableHead>Community</TableHead>
             <TableHead>Data ingresso</TableHead>
+            <TableHead>Fine contratto</TableHead>
             <TableHead>Stato</TableHead>
           </TableRow>
         </TableHeader>
@@ -164,6 +165,7 @@ function PreviewTable({ rows }: { rows: PreviewRow[] }) {
                 <TableCell className="font-mono text-xs">{r.username || <span className="text-destructive text-xs">—</span>}</TableCell>
                 <TableCell className="text-xs">{r.community || <span className="text-destructive text-xs">—</span>}</TableCell>
                 <TableCell className="font-mono text-xs">{r.data_ingresso || <span className="text-destructive text-xs">—</span>}</TableCell>
+                <TableCell className="font-mono text-xs">{r.data_fine_contratto || <span className="text-muted-foreground text-xs">—</span>}</TableCell>
                 <TableCell>
                   {hasErrors ? (
                     <div className="space-y-0.5">
