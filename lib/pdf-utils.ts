@@ -84,11 +84,16 @@ export async function findMarkerPositions(
 
         // Case 2: marker embedded within a longer text item
         // Use proportional character-width to approximate x and width of the marker.
+        // Also extend coverage to include any consecutive underscores immediately following
+        // the marker within the same item (template fill guides, e.g. {nome}________).
         const idx = str.indexOf(marker);
         if (idx !== -1 && totalW > 0) {
           const charW = totalW / str.length;
           const markerX = x + idx * charW;
-          const markerW = marker.length * charW;
+          const afterMarker = str.slice(idx + marker.length);
+          const trailingUnderscores = afterMarker.match(/^[_]+/);
+          const coverLen = marker.length + (trailingUnderscores ? trailingUnderscores[0].length : 0);
+          const markerW = coverLen * charW;
           positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h, isStandalone: false, isFullWidth: false });
           continue;
         }
@@ -106,6 +111,15 @@ export async function findMarkerPositions(
             // Width spans into next item — approximate conservatively
             const markerW = marker.length * charW;
             positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h, isStandalone: false, isFullWidth: false });
+
+            // Erase the continuation fragment on the next line (word-wrap remainder).
+            // The replacement text is drawn at the first-line position above; the second
+            // line shows only the tail of the marker string (e.g. "quidato}") which must
+            // be whited-out. Use __ERASE__ so the fill loop covers it without drawing text.
+            const nextH = Math.abs(next.height ?? h);
+            const nextW = next.width > 0 ? next.width : next.str.length * nextH * 0.6;
+            const [,,,, nextX, nextY] = next.transform as number[];
+            positions.push({ marker: '__ERASE__', pageIndex: p - 1, x: nextX, y: nextY, width: nextW, height: nextH, isStandalone: false, isFullWidth: false });
           }
         }
       }
@@ -192,32 +206,24 @@ export async function fillPdfMarkers(
     const rectW = Math.max(pos.width, 20);
     // leftPad: compensates for x estimation error on embedded markers (Case 2/3 — proportional charW).
     // Standalone markers (Case 1/1b) have exact x from pdfjs — no padding to avoid erasing preceding text.
-    const leftPad = pos.isStandalone ? 0 : 8;
+    // 4pt is sufficient for Courier New (monospace) templates — charW estimation is very accurate for
+    // fixed-width fonts, so a large pad is unnecessary and would erase adjacent label characters.
+    const leftPad = pos.isStandalone ? 0 : 4;
 
-    // Right extension: cover trailing underscore decorations after standalone markers.
-    // - Case 1b (isFullWidth): underscores are already part of rectW — extend 0 to avoid erasing
-    //   static text that immediately follows (e.g. "il", "n.", "codice fiscale").
-    // - Case 2/3 (embedded): static text follows immediately — extend 0.
-    // - Case 1 (exact standalone): space to the right is typically free — extend up to 60 units.
-    let rightExtension = 0;
-    if (pos.isStandalone && !pos.isFullWidth) {
-      const rightNeighbors = realPositions.filter(p =>
-        p !== pos &&
-        p.pageIndex === pos.pageIndex &&
-        Math.abs(p.y - pos.y) < rectHeight * 1.5 &&
-        p.x > pos.x + rectW,
-      );
-      rightExtension = rightNeighbors.length > 0
-        ? Math.max(0, Math.min(...rightNeighbors.map(p => p.x)) - (pos.x + rectW) - 5)
-        : 60;
-    }
+    // Right extension: always 0.
+    // Trailing underscore/dash decorations that appear as standalone items on the same line are
+    // erased by the __ERASE__ pass (eraseTrailingUnderscores=true). Extending the white rect to the
+    // right risks erasing static label text that sits between two markers on the same line
+    // (e.g. "nato/a a" in receipt, "n." in contract). The eraseTrailingUnderscores pass is the
+    // correct tool for decorations; rightExtension is not needed.
+    const rightExtension = 0;
 
     // 1. White rectangle to cover the marker text + trailing decorations
     page.drawRectangle({
       x: pos.x - leftPad,
       y: rectY,
       width: rectW + leftPad + rightExtension,
-      height: rectHeight + 12,
+      height: rectHeight + 7,
       color: rgb(1, 1, 1),
     });
 
