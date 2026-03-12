@@ -46,21 +46,51 @@ export async function findMarkerPositions(
     const page = await pdf.getPage(p);
     const textContent = await page.getTextContent();
 
-    for (const item of textContent.items) {
-      if (!item || typeof (item as { str?: string }).str !== 'string') continue;
-      const { str, transform, width: itemWidth, height: itemHeight } = item as {
-        str: string;
-        transform: number[];
-        width: number;
-        height: number;
-      };
+    type TextItem = { str: string; transform: number[]; width: number; height: number };
+    const items = (textContent.items as unknown[]).filter(
+      (item): item is TextItem =>
+        !!item && typeof (item as TextItem).str === 'string',
+    );
+
+    for (let i = 0; i < items.length; i++) {
+      const { str, transform, width: itemWidth, height: itemHeight } = items[i];
+      const [, , , scaleY, x, y] = transform;
+      const h = Math.abs(itemHeight ?? scaleY ?? 12);
+      const totalW = itemWidth ?? 0;
 
       for (const marker of markers) {
+        // Case 1: exact match (original behaviour — fast path)
         if (str === marker) {
-          const [, , , scaleY, x, y] = transform;
-          const h = Math.abs(itemHeight ?? scaleY ?? 12);
-          const w = itemWidth ?? Math.abs(marker.length * (h * 0.55));
+          const w = totalW > 0 ? totalW : Math.abs(marker.length * (h * 0.55));
           positions.push({ marker, pageIndex: p - 1, x, y, width: w, height: h });
+          continue;
+        }
+
+        // Case 2: marker embedded within a longer text item
+        // Use proportional character-width to approximate x and width of the marker.
+        const idx = str.indexOf(marker);
+        if (idx !== -1 && totalW > 0) {
+          const charW = totalW / str.length;
+          const markerX = x + idx * charW;
+          const markerW = marker.length * charW;
+          positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h });
+          continue;
+        }
+
+        // Case 3: marker split across two consecutive text items (word-wrap in table cells)
+        // Check if current item ends with a prefix of the marker AND next item starts with the remainder.
+        if (i + 1 < items.length) {
+          const next = items[i + 1];
+          const combined = str + next.str;
+          const cidx = combined.indexOf(marker);
+          if (cidx !== -1 && cidx < str.length && cidx + marker.length > str.length) {
+            // Marker starts in current item — use current item's position as anchor
+            const charW = totalW > 0 ? totalW / str.length : h * 0.55;
+            const markerX = x + cidx * charW;
+            // Width spans into next item — approximate conservatively
+            const markerW = marker.length * charW;
+            positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h });
+          }
         }
       }
     }
