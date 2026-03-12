@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -300,9 +301,10 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Data di nascita <span className="text-destructive">*</span></label>
-                <Input type="date" value={dataNascita}
-                  onChange={(e) => setDataNascita(e.target.value)}
-                  required />
+                <DatePicker
+                  value={dataNascita}
+                  onChange={(v) => setDataNascita(v)}
+                />
               </div>
               <div>
                 <label className={labelCls}>Città di nascita <span className="text-destructive">*</span></label>

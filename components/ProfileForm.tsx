@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -313,9 +314,11 @@ export default function ProfileForm({ collaborator, role, email, communities, al
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Data di nascita</label>
-              <Input type="date" value={dataNascita}
-                onChange={(e) => setDataNascita(e.target.value)}
-                disabled={loading} />
+              <DatePicker
+                value={dataNascita}
+                onChange={(v) => setDataNascita(v)}
+                disabled={loading}
+              />
             </div>
             <div>
               <label className={labelCls}>Città di nascita</label>

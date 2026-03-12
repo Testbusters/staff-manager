@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Activity, AlertTriangle, ChevronDown, Database, Mail } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
@@ -704,6 +705,33 @@ function DBPerformance({
           topQueries.length === 0 ? (
             <EmptyState icon={Database} title="Nessun dato. Esegui alcune query e ricarica." />
           ) : (
+            <>
+              {topQueries.length >= 2 && (
+                <div className="px-4 pt-4 pb-2">
+                  <p className="text-xs text-muted-foreground mb-2">Top {Math.min(5, topQueries.length)} per media ms</p>
+                  <ResponsiveContainer width="100%" height={Math.min(5, topQueries.length) * 28}>
+                    <BarChart
+                      layout="vertical"
+                      data={topQueries.slice(0, 5).map((q) => ({ name: q.query.slice(0, 40), mean_ms: q.mean_ms }))}
+                      margin={{ top: 0, right: 8, left: 0, bottom: 0 }}
+                    >
+                      <XAxis type="number" tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="name" width={160} tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        formatter={(v: number | undefined) => [`${(v ?? 0).toLocaleString('it-IT')} ms`, 'Media']}
+                        contentStyle={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 12, color: 'var(--color-foreground)' }}
+                        labelStyle={{ color: 'var(--color-muted-foreground)' }}
+                        cursor={{ fill: 'rgba(128,128,128,0.06)' }}
+                      />
+                      <Bar dataKey="mean_ms" radius={[0, 3, 3, 0]} maxBarSize={16}>
+                        {topQueries.slice(0, 5).map((_, i) => (
+                          <Cell key={i} fill={i === 0 ? 'var(--color-brand)' : 'var(--color-muted-foreground)'} fillOpacity={i === 0 ? 1 : 0.5} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             <Table>
               <TableHeader>
                 <TableRow>
@@ -726,6 +754,7 @@ function DBPerformance({
                 ))}
               </TableBody>
             </Table>
+            </>
           )
         ) : (
           tableStats.length === 0 ? (
