@@ -1,250 +1,167 @@
 ---
 name: ui-audit
-description: Run a structured UI compliance check on the staff-manager codebase. Scope: shadcn component adoption, design token correctness, accessibility attributes, table layout rules. Does NOT cover UX flows or responsiveness (use /ux-audit and /responsive-audit for those). Pass "screenshots" to capture live screenshots via Playwright (requires npm run dev on localhost:3000). Pass "screenshots full" for all routes.
+description: Run a full UI/UX quality audit against the design system, responsive rules, and UX patterns. Uses docs/sitemap.md as the authoritative file inventory — no free-form filesystem search.
 user-invocable: true
 model: sonnet
-context: fork
-argument-hint: [screenshots|screenshots full]
-allowed-tools: Read, Glob, Grep, Agent, WebFetch, mcp__playwright__browser_navigate, mcp__playwright__browser_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_wait_for
 ---
 
-## Mode detection
+You are performing a UI/UX quality audit of the staff-manager Next.js app.
 
-Check `$ARGUMENTS`:
-- Empty / not provided → **static mode** (Steps 1–5 + 7 only)
-- Contains `screenshots` → **static + visual mode** (Steps 1–7)
-- Contains `screenshots full` → **static + visual mode, all routes**
-
-Announce the mode at the start: `Running ui-audit in [STATIC | VISUAL (fast) | VISUAL (full)] mode.`
+**Critical constraint**: `docs/sitemap.md` is the authoritative inventory of every page file and key component. Read it first and derive the file target list from it. Do NOT run free-form `grep -r` across all of `app/` or `components/` — scope every check to the files listed in the sitemap.
 
 ---
 
-## Step 1 — Load reference documents (parallel)
+## Step 1 — Read sitemap and build target lists
 
-Read ALL of these before running any checks:
+Read `docs/sitemap.md`. Extract:
 
-1. **`docs/ui-components.md`** — the project's component contract: available shadcn components, badge → variant mapping per status, documented patterns for Dialog, Sheet, Tooltip, Tabs, EmptyState.
+**A — Page files**: every path in the "Page file" column (e.g. `app/(app)/compensi/page.tsx`).
 
-2. **`docs/sitemap.md`** — canonical route list. Use the **Componenti chiave** column to scope checks per route. Use the **loading.tsx** column for S1.
+**B — Component groups by layout type**:
+- `full-list` pages: compensi, rimborsi, ticket, collaboratori, documenti, feedback, notifiche, contenuti
+- `detail` pages: compensi/[id], rimborsi/[id], ticket/[id], comunicazioni/[id], eventi/[id], opportunita/[id], sconti/[id], risorse/[id], documenti/[id]
+- `form / wizard` pages: rimborsi/nuova, onboarding, profilo
+- `tabs` pages: profilo, impostazioni, contenuti, approvazioni, collaboratori/[id]
+- `dashboard`: app/(app)/page.tsx
+- `feed`: comunicazioni, eventi, opportunita
 
-3. **`~/.claude/ui-kits/shadcn-ui-kit/components/ui/button.tsx`**, **`dialog.tsx`**, **`badge.tsx`**, **`table.tsx`** — reference shadcn implementations. Read these when a check requires understanding the correct prop structure.
+**C — Key component files**: for each page, note the "Componenti chiave" column and map to actual files under `components/`. These are the component files to include in grep checks.
 
-After reading, extract and hold in working memory:
-- Full component map (18 components from `docs/ui-components.md`)
-- Status → Badge variant mapping (compensations, documents, tickets)
-- Correct className pattern for Dialog/Sheet backgrounds
-- Route list grouped by role (from `docs/sitemap.md`)
-
----
-
-## Step 2 — Build the file scope
-
-Glob `app/(app)/**/*.tsx` and `components/**/*.tsx`. This is the target for all grep checks.
+Output: structured lists A, B, C. Do not proceed to Step 2 until these are complete.
 
 ---
 
-## Step 3 — Automated grep checks (delegate to Explore subagent, model: haiku)
+## Step 2 — Delegate grep checks to Explore agent
 
-Launch a single Explore subagent with the instruction: "Run all grep searches in parallel and return file path + line number + matching line for every hit. Scope: all .tsx files under app/ and components/."
+Launch a **single Explore subagent** (model: haiku) with the following instructions and the exact file lists from Step 1. Pass all file paths explicitly — do not ask the agent to discover them.
 
-### G1 — Hardcoded blue on interactive elements
-`bg-blue-` → must be `bg-brand hover:bg-brand/90 text-white`
+### Instructions for the Explore agent:
 
-### G2 — Hardcoded blue link text
-`text-blue-` → must be `text-link hover:text-link/80`
+"Run all 9 checks below. For each check: report the total match count, list every match as `file:line — excerpt`, and state PASS (0 matches) or FAIL (N matches). If a check returns 0 matches, explicitly state '0 matches — PASS'. Do not skip any check.
 
-### G3 — Insufficient muted hover opacity
-Regex: `hover:bg-muted\/([1-5][0-9]?)\b` where captured value < 60 → must be `hover:bg-muted/60`
+File scope: use ONLY the page files and component files provided. Do not search outside this list.
 
-### G4 — Bare empty-state paragraphs
-`<p className=` within 2 lines of `text-center` or `text-muted` → must use `<EmptyState>`
+**CHECK 1 — Grids without responsive prefix**
+Pattern: `"grid grid-cols-[2-9]` (any grid-cols-2 through 9 that is NOT preceded by sm:/md:/lg:)
+Grep: for each file in scope, search for lines matching `grid grid-cols-[2-9]` and filter OUT lines containing `sm:grid-cols` or `md:grid-cols` or `lg:grid-cols`.
+Expected: 0 matches.
 
-### G5 — Non-existent Tailwind scale
-`gray-850|slate-850|zinc-850|neutral-850` → scale ends at 950, 850 does not exist
+**CHECK 2 — Hardcoded blue color tokens**
+Pattern: `bg-blue-|text-blue-|border-blue-`
+Exclude: lines starting with `//`, lines containing `focus:`, `ring-`, `via-`, `aria-`
+Expected: 0 matches. Any match is a design system violation.
 
-### G6 — Full-width table
-`w-full` within 3 lines of `<Table` → `<Table>` must be `w-auto`, container `w-fit`
+**CHECK 3 — Hardcoded gray on structural containers**
+Pattern: `bg-gray-[789]\|bg-gray-[89][0-9]\|bg-gray-[0-9]{3}`
+Exclude: lines with `dark:`, `hover:`, `border-`, `//`, `focus:`
+Expected: 0 on structural elements. Badge pairs (bg-gray-100 text-gray-700) are acceptable only if they have a matching dark: override.
 
-### G7 — Horizontal scroll on table containers
-`overflow-x-auto` (exclude `<pre>` blocks) → table containers use `overflow-hidden`
+**CHECK 4 — Required field asterisks using text-red-500 instead of text-destructive**
+Pattern: `text-red-500`
+Exclude: lines with `//`, `border-`, `hover:`, `ring-`, `focus:`
+Count per file. After Wave 3 fix (Q1=B), expected: 0 matches.
 
-### G8 — Wrong color for required field asterisks
-`text-red-500|text-red-400|text-red-600` on form asterisks or required markers → use `text-destructive`
+**CHECK 5 — Duplicate CSS class tokens**
+Pattern: look for any word repeated twice in the same className string, specifically `dark:[a-z-]+-[0-9]+ dark:[a-z-]+-[0-9]+` where the two tokens are identical.
+Flag lines where the same utility class appears twice.
+Expected: 0 matches.
 
-### G9 — Icon-only buttons missing aria-label
-`<Button[^>]*>` or `<button[^>]*>` containing only a Lucide icon component, without `aria-label` on the same element
+**CHECK 6 — Bare empty states (no EmptyState component)**
+Pattern: lines containing `<p` AND (`Nessun` OR `Nessuna`) with a className including `text-center` or `text-muted-foreground`
+Exclude: lines containing `EmptyState`, `toast`, `aria-`, `placeholder=`, `title=`
+Expected: 0 matches. All empty states must use the EmptyState component.
 
-### G10 — Hardcoded dark background in Dialog/Sheet
-`bg-gray-900|bg-gray-800|bg-zinc-900` inside `DialogContent` or `SheetContent` className → use `bg-card` for theme compatibility
+**CHECK 7 — Back links in detail pages missing block display**
+Scope: only the 'detail' layout pages from the sitemap.
+Pattern: `← Torna` — check that the containing Link has `block` in its className.
+Expected: every back link has `block` in className.
 
-### G11 — Native HTML inside modal components
-`<button |<input |<select |<textarea ` (lowercase native) inside `<Dialog` or `<Sheet` blocks → use shadcn Button, Input, Select, Textarea
+**CHECK 8 — Content status badges with hardcoded colors**
+Scope: only the 'detail' and 'feed' layout pages for content routes (comunicazioni, eventi, opportunita, sconti, risorse).
+Pattern: `bg-green-|bg-yellow-|bg-orange-|text-green-|text-yellow-` on badge/span elements
+After Wave 3 fix (Q2=B), expected: 0 matches. Before fix: document all occurrences.
 
-### G12 — Status badges missing data-* attributes
-`<StatusBadge|<Badge` rendering a status value without `data-stato` (compensations/expenses) or `data-ticket-stato` (tickets) attribute
-
----
-
-## Step 4 — Supplemental checks (you, not the subagent)
-
-### S1 — Pages missing loading.tsx
-For each directory under `app/(app)/` with a `page.tsx`, verify a sibling `loading.tsx` exists.
-Cross-reference with sitemap `loading.tsx` column. List all routes missing it.
-
-### S2 — Native HTML instead of shadcn components
-Extend G11 results to the full scope. Cross-reference `docs/ui-components.md` component map.
-Exclude: `components/ui/` (source files), `<input type="hidden">`, server components with no interactivity.
-Map: `<button` → `Button`, `<input` → `Input`, `<textarea` → `Textarea`, `<select` → `Select`.
-
-### S3 — Lucide icons in Server→Client data props
-Read `lib/nav.ts`. Verify icon references use `iconName: string`, not `icon: LucideIcon`.
-Also grep any file exporting navigation/menu data structures for `icon:` followed by a capitalized identifier.
-
-### S4 — Hardcoded structural colors
-Extend G10 results. `bg-gray-*`, `bg-slate-*`, `bg-zinc-*` on cards, sidebars, headers, form containers → use `bg-card`, `bg-muted`, `bg-background`.
-**Allowed**: semantic badge pairs (`bg-green-100 text-green-700`, `bg-amber-100`, etc.) — these are valid per `docs/ui-components.md`.
-
-### S5 — Badge variant mismatch
-Grep for `<Badge` or `<StatusBadge` rendering compensation/expense/document/ticket status.
-Verify `variant` and `className` match the documented mapping in `docs/ui-components.md`.
-Flag deviations from the contract.
+**CHECK 9 — Tab bars missing whitespace-nowrap**
+Scope: only the 'tabs' layout pages from the sitemap.
+Pattern: check tab link elements (`className=.*tabCls\|rounded-lg.*px-4.*py-2`) for presence of `whitespace-nowrap`.
+Expected: all tab links have whitespace-nowrap to prevent wrapping on mobile."
 
 ---
 
-## Step 5 — Static audit report
+## Step 3 — Supplemental checks (run in main context, not delegated)
 
-Produce this table before visual audit (if enabled):
+These require judgment, not just pattern matching:
+
+**S1 — loading.tsx coverage**
+From the sitemap "loading.tsx" column, identify any route marked ✗ or missing.
+Run: `find app/(app) -name "loading.tsx" | sort` and cross-reference with the sitemap.
+Flag any route with significant data loading that lacks a loading.tsx.
+
+**S2 — NotificationBell placement**
+Read `components/Sidebar.tsx` and `app/(app)/layout.tsx`.
+Verify: NotificationBell appears exactly once in the rendered DOM per viewport (no duplication).
+Known issue: `collapsible="offcanvas"` sidebar + `md:hidden` header can cause double rendering. The correct pattern is a persistent AppHeader above main content.
+
+**S3 — Sign-out button semantic color**
+Read `components/Sidebar.tsx` lines containing "Esci" or "sign" or "red".
+Verify: uses `bg-destructive` (semantic) not `bg-red-600` (hardcoded).
+Expected: `bg-destructive hover:bg-destructive/90`.
+
+**S4 — Responsive sidebar trigger accessibility**
+Read `app/(app)/layout.tsx`.
+Verify: SidebarTrigger is reachable on BOTH mobile (in mobile header) and desktop (always accessible, not hidden when sidebar is open).
+Flag if trigger is inside an `md:hidden` wrapper with no desktop alternative.
+
+---
+
+## Step 4 — Produce audit report
+
+Output in this exact format:
 
 ```
-## UI Audit — [DATE] — [MODE]
-### Reference: docs/ui-components.md · shadcn-ui-kit · docs/sitemap.md
-### Scope: shadcn compliance · design tokens · accessibility attributes · table layout
-### Out of scope: UX flows → /ux-audit | Responsiveness → /responsive-audit
+## UI Audit — [DATE]
+### Scope: [N] page files from sitemap.md + [N] component files
 
-### Static analysis
-
-| Check | Description | Status | Violations |
+### Grep Checks
+| # | Check | Matches | Verdict |
 |---|---|---|---|
-| G1  | bg-blue-* on interactive elements | ✅/❌ | N |
-| G2  | text-blue-* link pairs | ✅/❌ | N |
-| G3  | hover:bg-muted < /60 | ✅/❌ | N |
-| G4  | Bare <p> for empty states | ✅/❌ | N |
-| G5  | Non-existent Tailwind *-850 | ✅/❌ | N |
-| G6  | w-full on <Table> | ✅/❌ | N |
-| G7  | overflow-x-auto on table containers | ✅/❌ | N |
-| G8  | text-red-* for required markers | ✅/❌ | N |
-| G9  | Icon-only buttons without aria-label | ✅/❌ | N |
-| G10 | Hardcoded bg in Dialog/Sheet | ✅/❌ | N |
-| G11 | Native HTML inside modals | ✅/❌ | N |
-| G12 | Status badges missing data-* attrs | ✅/❌ | N |
-| S1  | Pages missing loading.tsx | ✅/❌ | N |
-| S2  | Native HTML instead of shadcn | ✅/❌ | N |
-| S3  | Lucide icons in Server→Client props | ✅/❌ | N |
-| S4  | Hardcoded structural colors | ✅/❌ | N |
-| S5  | Badge variant mismatch | ✅/❌ | N |
+| 1 | Grids without responsive prefix | N | ✅/❌ |
+| 2 | Hardcoded blue tokens | N | ✅/❌ |
+| 3 | Hardcoded gray structural | N | ✅/❌ |
+| 4 | text-red-500 asterisks | N | ✅/❌ |
+| 5 | Duplicate CSS tokens | N | ✅/❌ |
+| 6 | Bare empty states | N | ✅/❌ |
+| 7 | Back links missing block | N | ✅/❌ |
+| 8 | Content status badges hardcoded | N | ✅/❌ |
+| 9 | Tab bars missing whitespace-nowrap | N | ✅/❌ |
 
-### Violations detail
-[For each ❌: file:line — violation — suggested fix from component map or UI kit]
-
-### Clean checks
-[✅ checks with one-line confirmation each]
-
-### Component map coverage
-Components from docs/ui-components.md in use: N/18
-Not yet found in codebase: [list if any]
-```
-
----
-
-## Step 6 — Visual audit via Playwright (only if screenshots mode)
-
-**Skip entirely if $ARGUMENTS is empty.**
-
-### 6a — Pre-flight check
-Navigate to `http://localhost:3000` with a GET check. If not reachable, stop and output:
-> ❌ Dev server not running. Start it with `npm run dev` then re-run `/ui-audit screenshots`.
-
-### 6b — Route matrix
-Use these route groups for screenshots:
-
-**Fast mode** (`screenshots` without `full`) — 12 key routes covering each layout type:
-| Role | Routes |
-|---|---|
-| admin | `/`, `/coda`, `/collaboratori`, `/documenti`, `/contenuti`, `/import`, `/impostazioni` |
-| collab | `/compensi`, `/rimborsi`, `/ticket` |
-| resp | `/approvazioni` |
-
-**Full mode** (`screenshots full`) — all routes from sitemap (skip detail routes like `/compensi/[id]` unless a real record ID is available).
-
-### 6c — Login flow (admin session first)
-```
-1. Navigate to http://localhost:3000/login
-2. Wait for login form
-3. Type email: admin_test@test.com
-4. Type password: Testbusters123
-5. Click submit button
-6. Wait for redirect to / (dashboard)
-```
-
-### 6d — Screenshot loop (admin routes)
-For each admin route:
-1. `browser_navigate` to the route
-2. Wait 1500ms for render (or wait for main content element)
-3. `browser_screenshot` — save with label `[route]-admin`
-4. `browser_snapshot` — capture ARIA accessibility tree
-5. From the ARIA snapshot, flag:
-   - Interactive elements with no accessible name (buttons/links with empty label)
-   - Images with no alt text
-   - Form fields with no associated label
-
-### 6e — Switch to collaboratore session
-```
-1. Navigate to http://localhost:3000/login (or use logout if session persists)
-2. Login with collaboratore_test@test.com / Testbusters123
-3. Screenshot collaboratore routes
-```
-
-### 6f — Switch to responsabile session
-```
-1. Navigate to http://localhost:3000/login
-2. Login with responsabile_compensi_test@test.com / Testbusters123
-3. Screenshot responsabile routes
-```
-
-### 6g — Visual audit report
-Append to the main report:
-
-```
-### Visual audit — [N] routes screenshotted
-
-| Route | Role | Screenshot | ARIA issues |
+### Supplemental Checks
+| # | Check | Verdict | Notes |
 |---|---|---|---|
-| /  | admin | ✅ | N issues |
-| /coda | admin | ✅ | N issues |
-| ... | ... | ... | ... |
+| S1 | loading.tsx coverage | ✅/❌ | [missing routes if any] |
+| S2 | NotificationBell placement | ✅/❌ | [details] |
+| S3 | Sign-out semantic color | ✅/❌ | |
+| S4 | Sidebar trigger accessibility | ✅/❌ | |
 
-### Accessibility issues from ARIA snapshots
-[For each issue: route — element — missing property — suggested fix]
+### ❌ Failures requiring action ([N] total)
+For each FAIL check: list every file:line with excerpt and recommended fix.
 
-### Visual UI observations
-[UI-layer anomalies visible in screenshots that static analysis would not catch:
-text overflow in cards, icon misalignment, token rendering issues, unexpected blank sections,
-component spacing anomalies, theme inconsistencies (light vs dark).
-Do NOT include UX flow observations — those belong in /ux-audit.]
+### ✅ Passing checks ([N] total)
+List check names with 0 matches confirmed.
+
+### Coverage
+Page files checked: N/N from sitemap.md
+Component files checked: N
 ```
+
+If all checks pass: output "UI Audit CLEAN — [DATE]. No violations found."
 
 ---
 
-## Step 7 — Final offer
+## Execution notes
 
-After the full report:
-
-> "Vuoi che sistemi le violazioni trovate? Posso fixare:
-> - Tutto in una volta
-> - Per categoria: **token** (G1–G3, G10) · **componenti** (G4, G11, G12, S2, S5) · **accessibilità** (G9, S3) · **layout** (G6, G7) · **form** (G8)
-> - Per check specifici (indica i numeri)"
-
-**Do NOT apply any changes until confirmed.** Before starting, list:
-- Which checks will be fixed
-- How many files will be modified
-- Any fix requiring a judgment call (flag these separately for user decision)
+- Do NOT make any code changes during this skill. Audit only.
+- Do NOT re-read files already in context from Step 1.
+- The Explore agent in Step 2 handles all grep work. Do not duplicate searches in the main context.
+- If `docs/sitemap.md` is not present in the worktree, read it from `/Users/MarcoG/Projects/staff-manager/docs/sitemap.md` (main branch copy).
+- After the report is produced, if any HIGH severity failures are found, ask the user: "Vuoi che implementi i fix identificati?" before touching any file.
