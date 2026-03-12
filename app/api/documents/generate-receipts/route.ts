@@ -37,7 +37,7 @@ async function generateReceiptForCollab(
 
   const docId = crypto.randomUUID();
   const anno = new Date().getFullYear();
-  const fileName = `ricevuta_pagamento_${anno}.pdf`;
+  const fileName = `ricevuta_pagamento_${anno}_${collab.nome}_${collab.cognome}.pdf`;
   const storagePath = `${collab.user_id}/${docId}/${fileName}`;
 
   const { error: uploadErr } = await svc.storage
