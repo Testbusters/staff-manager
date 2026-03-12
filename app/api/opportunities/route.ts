@@ -25,13 +25,12 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const {
-    titolo, tipo, descrizione, requisiti,
+    titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
   } = body as {
     titolo: string;
     tipo?: string;
     descrizione: string;
-    requisiti?: string;
     scadenza_candidatura?: string;
     link_candidatura?: string;
     file_url?: string;
@@ -55,7 +54,7 @@ export async function POST(request: Request) {
       titolo: titolo.trim(),
       tipo: tipo ?? 'ALTRO',
       descrizione: descrizione.trim(),
-      requisiti: requisiti?.trim() || null,
+
       scadenza_candidatura: scadenza_candidatura || null,
       link_candidatura: link_candidatura?.trim() || null,
       file_url: file_url?.trim() || null,

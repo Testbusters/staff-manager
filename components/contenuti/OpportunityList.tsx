@@ -42,7 +42,6 @@ interface FormData {
   titolo: string;
   tipo: string;
   descrizione: string;
-  requisiti: string;
   scadenza_candidatura: string;
   link_candidatura: string;
   file_url: string;
@@ -66,7 +65,6 @@ function OpportunityForm({
     titolo: initial?.titolo ?? '',
     tipo: initial?.tipo ?? 'ALTRO',
     descrizione: initial?.descrizione ?? '',
-    requisiti: initial?.requisiti ?? '',
     scadenza_candidatura: initial?.scadenza_candidatura ?? '',
     link_candidatura: initial?.link_candidatura ?? '',
     file_url: initial?.file_url ?? '',
@@ -108,7 +106,6 @@ function OpportunityForm({
         </div>
       </div>
       <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione *" />
-      <RichTextEditor value={form.requisiti} onChange={setRich('requisiti')} placeholder="Requisiti (opzionale)" />
       <div className="grid grid-cols-2 gap-3">
         <Input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url" />
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
@@ -240,7 +237,7 @@ export default function OpportunityList({
             <OpportunityForm
               initial={{
                 titolo: editingItem.titolo, tipo: editingItem.tipo, descrizione: editingItem.descrizione,
-                requisiti: editingItem.requisiti ?? '', scadenza_candidatura: editingItem.scadenza_candidatura ?? '',
+                scadenza_candidatura: editingItem.scadenza_candidatura ?? '',
                 link_candidatura: editingItem.link_candidatura ?? '', file_url: editingItem.file_url ?? '',
                 community_ids: editingItem.community_ids ?? [],
               }}
@@ -300,7 +297,6 @@ export default function OpportunityList({
             )}
           </div>
           <RichTextDisplay html={o.descrizione} className="line-clamp-3" />
-          {o.requisiti && <RichTextDisplay html={o.requisiti} className="text-xs" />}
           <div className="flex items-center gap-3 flex-wrap">
             {o.scadenza_candidatura && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5 shrink-0" />Scadenza: {formatDate(o.scadenza_candidatura)}</span>

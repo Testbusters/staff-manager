@@ -90,12 +90,6 @@ export default async function OpportunityDetailPage({
           <RichTextDisplay html={o.descrizione} />
         </div>
 
-        {o.requisiti && (
-          <div className="border-t border-border pt-3">
-            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Requisiti</h2>
-            <RichTextDisplay html={o.requisiti} />
-          </div>
-        )}
 
         {o.scadenza_candidatura && (
           <div className="border-t border-border pt-3 flex items-center gap-2">

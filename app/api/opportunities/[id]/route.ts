@@ -31,13 +31,12 @@ export async function PATCH(
 
   const body = await request.json();
   const {
-    titolo, tipo, descrizione, requisiti,
+    titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
   } = body as {
     titolo?: string;
     tipo?: string;
     descrizione?: string;
-    requisiti?: string | null;
     scadenza_candidatura?: string | null;
     link_candidatura?: string | null;
     file_url?: string | null;
@@ -52,7 +51,7 @@ export async function PATCH(
   if (titolo !== undefined) update.titolo = titolo.trim();
   if (tipo !== undefined) update.tipo = tipo;
   if (descrizione !== undefined) update.descrizione = descrizione.trim();
-  if (requisiti !== undefined) update.requisiti = requisiti;
+
   if (scadenza_candidatura !== undefined) update.scadenza_candidatura = scadenza_candidatura;
   if (link_candidatura !== undefined) update.link_candidatura = link_candidatura;
   if (file_url !== undefined) update.file_url = file_url;

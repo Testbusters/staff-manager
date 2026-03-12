@@ -215,7 +215,7 @@ export interface Opportunity {
   titolo: string;
   tipo: OpportunityTipo;
   descrizione: string;
-  requisiti: string | null;
+
   scadenza_candidatura: string | null;
   link_candidatura: string | null;
   file_url: string | null;
