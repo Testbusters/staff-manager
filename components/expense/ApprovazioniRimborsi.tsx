@@ -146,7 +146,7 @@ export default function ApprovazioniRimborsi({
   return (
     <div className="space-y-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard label="In attesa" count={kpi.inAttesa} amount={kpi.totaleInAttesa} countColor="text-brand dark:text-brand" />
         <KpiCard label="Approvati" count={kpi.approvati} amount={kpi.totaleApprovati} countColor="text-amber-600 dark:text-amber-400" />
         <KpiCard label="Liquidati" count={kpi.liquidato} amount={kpi.totaleLiquidato} countColor="text-emerald-600 dark:text-emerald-400" />

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Briefcase, CalendarDays, Paperclip, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Opportunity, OpportunityTipo, Community } from '@/lib/types';
+import { TipoBadge } from '@/components/ui/content-status-badge';
+import { OPP_TIPO_COLORS } from '@/lib/content-badge-maps';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
@@ -35,13 +37,6 @@ const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
   { value: 'ALTRO',      label: 'Altro' },
 ];
 
-const TIPO_COLORS: Record<OpportunityTipo, string> = {
-  LAVORO:     'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  FORMAZIONE: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300',
-  STAGE:      'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
-  PROGETTO:   'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
-  ALTRO:      'bg-muted border-border text-muted-foreground',
-};
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -306,9 +301,7 @@ export default function OpportunityList({
         <div key={o.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
-                {TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo}
-              </span>
+              <TipoBadge tipo={o.tipo} label={TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo} colorMap={OPP_TIPO_COLORS} />
               <h3 className="text-sm font-semibold text-foreground">{o.titolo}</h3>
             </div>
             {canWrite && (

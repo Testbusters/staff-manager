@@ -14,7 +14,7 @@ import type { FeedbackRow } from './page';
 
 const CATEGORIA_COLORS: Record<string, string> = {
   Bug:          'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30',
-  Suggerimento: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30',
+  Suggerimento: 'bg-muted text-muted-foreground border-border/30',
   Domanda:      'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/30',
   Altro:        'text-muted-foreground bg-muted/40 border-border/30',
 };
