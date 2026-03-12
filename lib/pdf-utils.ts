@@ -8,6 +8,11 @@ export interface PdfMarkerPosition {
   y: number;
   width: number;
   height: number;
+  /** True when the marker was the entire text item (standalone). False when embedded in a longer run. */
+  isStandalone: boolean;
+  /** True when rectWidth already equals the full allocated space (Case 1b: marker + trailing underscores/spaces).
+   *  When true, rightExtension must be 0 — the underscores reserve the space and static text may follow immediately. */
+  isFullWidth: boolean;
 }
 
 const SIGNATURE_MARKERS = ['{firma}', '{firma_collaboratore}'];
@@ -60,10 +65,20 @@ export async function findMarkerPositions(
       const totalW = itemWidth ?? 0;
 
       for (const marker of markers) {
-        // Case 1: exact match (original behaviour — fast path)
+        // Case 1: exact match — marker is the entire text item (standalone)
         if (str === marker) {
           const w = totalW > 0 ? totalW : Math.abs(marker.length * (h * 0.55));
-          positions.push({ marker, pageIndex: p - 1, x, y, width: w, height: h });
+          positions.push({ marker, pageIndex: p - 1, x, y, width: w, height: h, isStandalone: true, isFullWidth: false });
+          continue;
+        }
+
+        // Case 1b: marker at the START of the text item, followed only by spaces/underscores.
+        // The trailing chars are visual fill guides (e.g. {nome}___________ in a contract template).
+        // Use the FULL item width as rectW so the replacement value is never shrunk to fit a narrow slot.
+        // isFullWidth=true: rightExtension must be 0 — static text may follow immediately after the underscores.
+        if (str.startsWith(marker) && /^[\s_]+$/.test(str.slice(marker.length))) {
+          const w = totalW > 0 ? totalW : Math.abs(str.length * (h * 0.55));
+          positions.push({ marker, pageIndex: p - 1, x, y, width: w, height: h, isStandalone: true, isFullWidth: true });
           continue;
         }
 
@@ -74,7 +89,7 @@ export async function findMarkerPositions(
           const charW = totalW / str.length;
           const markerX = x + idx * charW;
           const markerW = marker.length * charW;
-          positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h });
+          positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h, isStandalone: false, isFullWidth: false });
           continue;
         }
 
@@ -90,7 +105,7 @@ export async function findMarkerPositions(
             const markerX = x + cidx * charW;
             // Width spans into next item — approximate conservatively
             const markerW = marker.length * charW;
-            positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h });
+            positions.push({ marker, pageIndex: p - 1, x: markerX, y, width: markerW, height: h, isStandalone: false, isFullWidth: false });
           }
         }
       }
@@ -111,7 +126,7 @@ export async function findMarkerPositions(
           // Only erase if on the same horizontal line as a found marker
           const onSameLine = pagePositions.some(mp => Math.abs(mp.y - iy) < h * 1.5);
           if (onSameLine) {
-            positions.push({ marker: '__ERASE__', pageIndex: p - 1, x: ix, y: iy, width: w, height: h });
+            positions.push({ marker: '__ERASE__', pageIndex: p - 1, x: ix, y: iy, width: w, height: h, isStandalone: false, isFullWidth: false });
           }
         }
       }
@@ -143,7 +158,9 @@ export async function fillPdfMarkers(
 
   const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
   const pdfDoc = await PDFDocument.load(pdfBuffer);
-  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  // Use Courier Bold to match the monospace Courier New font used in the PDF templates.
+  // This keeps replacement values visually consistent with the surrounding template text.
+  const fillFont = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
   let sigImage: { width: number; height: number } & object | null = null;
   if (signatureBuffer) {
@@ -173,20 +190,27 @@ export async function fillPdfMarkers(
     // (e.g. {data_nascita} contains "_" whose glyph descends below the PDF baseline y).
     const rectY = pos.y - 7;
     const rectW = Math.max(pos.width, 20);
-    // Left padding compensates for proportional-font x estimation error on embedded markers.
-    const leftPad = 8;
+    // leftPad: compensates for x estimation error on embedded markers (Case 2/3 — proportional charW).
+    // Standalone markers (Case 1/1b) have exact x from pdfjs — no padding to avoid erasing preceding text.
+    const leftPad = pos.isStandalone ? 0 : 8;
 
-    // Right extension: cover trailing underscores / path-underlines after the replaced value.
-    // Extend to the nearest marker on the same line, or 180 units if none.
-    const rightNeighbors = realPositions.filter(p =>
-      p !== pos &&
-      p.pageIndex === pos.pageIndex &&
-      Math.abs(p.y - pos.y) < rectHeight * 1.5 &&
-      p.x > pos.x + rectW,
-    );
-    const rightExtension = rightNeighbors.length > 0
-      ? Math.max(0, Math.min(...rightNeighbors.map(p => p.x)) - (pos.x + rectW) - 5)
-      : 180;
+    // Right extension: cover trailing underscore decorations after standalone markers.
+    // - Case 1b (isFullWidth): underscores are already part of rectW — extend 0 to avoid erasing
+    //   static text that immediately follows (e.g. "il", "n.", "codice fiscale").
+    // - Case 2/3 (embedded): static text follows immediately — extend 0.
+    // - Case 1 (exact standalone): space to the right is typically free — extend up to 60 units.
+    let rightExtension = 0;
+    if (pos.isStandalone && !pos.isFullWidth) {
+      const rightNeighbors = realPositions.filter(p =>
+        p !== pos &&
+        p.pageIndex === pos.pageIndex &&
+        Math.abs(p.y - pos.y) < rectHeight * 1.5 &&
+        p.x > pos.x + rectW,
+      );
+      rightExtension = rightNeighbors.length > 0
+        ? Math.max(0, Math.min(...rightNeighbors.map(p => p.x)) - (pos.x + rectW) - 5)
+        : 60;
+    }
 
     // 1. White rectangle to cover the marker text + trailing decorations
     page.drawRectangle({
@@ -216,14 +240,14 @@ export async function fillPdfMarkers(
         // This prevents long values (e.g. codice fiscale) from overflowing into
         // adjacent template text.
         let fontSize = Math.max(7, Math.min(rectHeight, 12));
-        while (fontSize > 5 && helvetica.widthOfTextAtSize(value, fontSize) > rectW) {
+        while (fontSize > 5 && fillFont.widthOfTextAtSize(value, fontSize) > rectW) {
           fontSize -= 0.5;
         }
         page.drawText(value, {
           x: pos.x,
           y: pos.y,
           size: fontSize,
-          font: helvetica,
+          font: fillFont,
           color: rgb(0, 0, 0),
         });
       }
