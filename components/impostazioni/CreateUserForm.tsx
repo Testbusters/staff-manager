@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CONTRACT_TEMPLATE_LABELS, type ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -299,9 +300,11 @@ export default function CreateUserForm() {
           <p className={sectionTitle}>Durata contratto</p>
           <div>
             <label className={labelCls}>Data fine contratto <span className="text-destructive">*</span></label>
-            <Input type="date" value={dataFineContratto}
-              onChange={(e) => setDataFineContratto(e.target.value)}
-              required disabled={loading} />
+            <DatePicker
+              value={dataFineContratto}
+              onChange={(v) => setDataFineContratto(v)}
+              disabled={loading}
+            />
             <p className="text-[10px] text-muted-foreground mt-1">
               Usata per compilare automaticamente il template PDF del contratto.
             </p>
@@ -346,9 +349,11 @@ export default function CreateUserForm() {
             </div>
             <div>
               <label className={labelCls}>Data di ingresso <span className="text-destructive">*</span></label>
-              <Input type="date" value={dataIngresso}
-                onChange={(e) => setDataIngresso(e.target.value)}
-                required disabled={loading} />
+              <DatePicker
+                value={dataIngresso}
+                onChange={(v) => setDataIngresso(v)}
+                disabled={loading}
+              />
             </div>
           </div>
         </div>
@@ -398,9 +403,11 @@ export default function CreateUserForm() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Data di nascita <span className="text-destructive">*</span></label>
-                <Input type="date" value={dataNascita}
-                  onChange={(e) => setDataNascita(e.target.value)}
-                  required disabled={loading} />
+                <DatePicker
+                  value={dataNascita}
+                  onChange={(v) => setDataNascita(v)}
+                  disabled={loading}
+                />
               </div>
               <div>
                 <label className={labelCls}>Città di nascita <span className="text-destructive">*</span></label>
@@ -458,9 +465,11 @@ export default function CreateUserForm() {
             </div>
             <div>
               <label className={labelCls}>Data di ingresso <span className="text-destructive">*</span></label>
-              <Input type="date" value={dataIngresso}
-                onChange={(e) => setDataIngresso(e.target.value)}
-                required disabled={loading} />
+              <DatePicker
+                value={dataIngresso}
+                onChange={(v) => setDataIngresso(v)}
+                disabled={loading}
+              />
             </div>
           </div>
 

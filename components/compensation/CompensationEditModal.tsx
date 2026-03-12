@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -138,10 +139,9 @@ export default function CompensationEditModal({
             <label className="block text-xs text-muted-foreground mb-1.5">
               Data competenza <span className="text-red-500">*</span>
             </label>
-            <Input
-              type="date"
+            <DatePicker
               value={data_competenza}
-              onChange={(e) => setDataCompetenza(e.target.value)}
+              onChange={(v) => setDataCompetenza(v)}
             />
           </div>
 

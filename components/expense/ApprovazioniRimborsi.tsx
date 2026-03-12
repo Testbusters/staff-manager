@@ -12,6 +12,7 @@ import { EXPENSE_STATUS_LABELS, EXPENSE_CATEGORIES, EXPENSE_CATEGORIA_BADGE } fr
 import StatusBadge from '@/components/compensation/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DataTable, type ColumnDef } from '@/components/ui/data-table';
 
 type ExpenseRow = Expense & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -27,7 +28,6 @@ type Kpi = {
 };
 
 const ALL_STATI: ExpenseStatus[] = ['IN_ATTESA', 'APPROVATO', 'RIFIUTATO', 'LIQUIDATO'];
-const PAGE_SIZE = 20;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -63,7 +63,6 @@ export default function ApprovazioniRimborsi({
   const [filterStato, setFilterStato] = useState<ExpenseStatus | 'ALL'>('ALL');
   const [filterCategoria, setFilterCategoria] = useState<ExpenseCategory | 'ALL'>('ALL');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(1);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
 
@@ -77,23 +76,19 @@ export default function ApprovazioniRimborsi({
       return name.includes(q);
     });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  const approvabiliOnPage = paginated.filter((e) => e.stato === 'IN_ATTESA');
-  const allPageSelected =
-    approvabiliOnPage.length > 0 && approvabiliOnPage.every((e) => selectedIds.has(e.id));
+  const approvabiliInFiltered = filtered.filter((e) => e.stato === 'IN_ATTESA');
+  const allFilteredSelected =
+    approvabiliInFiltered.length > 0 && approvabiliInFiltered.every((e) => selectedIds.has(e.id));
   const totaleSelezionati = expenses
     .filter((e) => selectedIds.has(e.id))
     .reduce((s, e) => s + (e.importo ?? 0), 0);
 
   function toggleSelectAll() {
     const next = new Set(selectedIds);
-    if (allPageSelected) {
-      approvabiliOnPage.forEach((e) => next.delete(e.id));
+    if (allFilteredSelected) {
+      approvabiliInFiltered.forEach((e) => next.delete(e.id));
     } else {
-      approvabiliOnPage.forEach((e) => next.add(e.id));
+      approvabiliInFiltered.forEach((e) => next.add(e.id));
     }
     setSelectedIds(next);
   }
@@ -104,23 +99,59 @@ export default function ApprovazioniRimborsi({
     setSelectedIds(next);
   }
 
-  function handleFilterChange(stato: ExpenseStatus | 'ALL') {
-    setFilterStato(stato);
-    setPage(1);
-    setSelectedIds(new Set());
-  }
-
-  function handleCategoriaChange(cat: ExpenseCategory | 'ALL') {
-    setFilterCategoria(cat);
-    setPage(1);
-    setSelectedIds(new Set());
-  }
-
-  function handleSearchChange(val: string) {
-    setSearch(val);
-    setPage(1);
-    setSelectedIds(new Set());
-  }
+  const columns: ColumnDef<ExpenseRow>[] = [
+    {
+      id: 'select',
+      header: () => approvabiliInFiltered.length > 0 ? (
+        <Checkbox checked={allFilteredSelected} onCheckedChange={() => toggleSelectAll()} />
+      ) : null,
+      cell: ({ row }) => row.original.stato === 'IN_ATTESA' ? (
+        <Checkbox
+          checked={selectedIds.has(row.original.id)}
+          onCheckedChange={() => toggleOne(row.original.id)}
+        />
+      ) : <div className="w-4" />,
+      enableSorting: false,
+    },
+    {
+      id: 'collaboratore',
+      accessorFn: (row) => `${row.collaborators?.cognome ?? ''} ${row.collaborators?.nome ?? ''}`,
+      header: 'Collaboratore',
+      cell: ({ row }) => (
+        <Link href={`/rimborsi/${row.original.id}`} className="block min-w-0 hover:no-underline">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {row.original.collaborators
+              ? `${row.original.collaborators.nome} ${row.original.collaborators.cognome}`
+              : '—'}
+          </p>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{row.original.descrizione ?? '—'}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${EXPENSE_CATEGORIA_BADGE[row.original.categoria]}`}>
+              {row.original.categoria}
+            </span>
+            {row.original.data_spesa && (
+              <span className="text-xs text-muted-foreground">Spesa: {formatDate(row.original.data_spesa)}</span>
+            )}
+          </div>
+        </Link>
+      ),
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Inviato il',
+      cell: ({ row }) => <span className="text-xs text-muted-foreground">{formatDate(row.original.created_at)}</span>,
+    },
+    {
+      accessorKey: 'importo',
+      header: 'Importo',
+      cell: ({ row }) => <span className="text-sm font-medium tabular-nums">{formatCurrency(row.original.importo)}</span>,
+    },
+    {
+      accessorKey: 'stato',
+      header: 'Stato',
+      cell: ({ row }) => <StatusBadge stato={row.original.stato} />,
+    },
+  ];
 
   async function handleBulkApprove() {
     setBulkLoading(true);
@@ -163,7 +194,7 @@ export default function ApprovazioniRimborsi({
       <input
         type="text"
         value={search}
-        onChange={(e) => handleSearchChange(e.target.value)}
+        onChange={(e) => { setSearch(e.target.value); setSelectedIds(new Set()); }}
         placeholder="Cerca per nome cognome collaboratore"
         className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
       />
@@ -173,7 +204,7 @@ export default function ApprovazioniRimborsi({
         {(['ALL', ...ALL_STATI] as const).map((s) => (
           <button
             key={s}
-            onClick={() => handleFilterChange(s)}
+            onClick={() => { setFilterStato(s); setSelectedIds(new Set()); }}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
                 ? 'bg-brand text-white'
@@ -188,7 +219,7 @@ export default function ApprovazioniRimborsi({
       {/* Filter chips — categoria */}
       <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
         <button
-          onClick={() => handleCategoriaChange('ALL')}
+          onClick={() => { setFilterCategoria('ALL'); setSelectedIds(new Set()); }}
           className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
             filterCategoria === 'ALL'
               ? 'bg-brand text-white'
@@ -200,7 +231,7 @@ export default function ApprovazioniRimborsi({
         {EXPENSE_CATEGORIES.map((cat) => (
           <button
             key={cat}
-            onClick={() => handleCategoriaChange(cat)}
+            onClick={() => { setFilterCategoria(cat); setSelectedIds(new Set()); }}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterCategoria === cat
                 ? 'bg-brand text-white'
@@ -247,106 +278,10 @@ export default function ApprovazioniRimborsi({
         </Card>
       ) : (
         <Card>
-          <CardContent className="divide-y divide-border p-0">
-          {/* Select-all row */}
-          {approvabiliOnPage.length > 0 && (
-            <div className="flex items-center gap-3 px-4 py-2 bg-muted/40 rounded-t-xl">
-              <Checkbox
-                checked={allPageSelected}
-                onCheckedChange={() => toggleSelectAll()}
-              />
-              <span className="text-xs text-muted-foreground">
-                {allPageSelected ? 'Deseleziona tutti' : `Seleziona tutti in attesa (${approvabiliOnPage.length})`}
-              </span>
-            </div>
-          )}
-
-          {paginated.map((e, idx) => {
-            const isApprovabile = e.stato === 'IN_ATTESA';
-            const isSelected = selectedIds.has(e.id);
-            const isFirst = idx === 0 && approvabiliOnPage.length === 0;
-            const isLast = idx === paginated.length - 1;
-            return (
-              <div
-                key={e.id}
-                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/60 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
-              >
-                {/* Checkbox column */}
-                <div className="w-5 shrink-0 flex items-center justify-center">
-                  {isApprovabile && (
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleOne(e.id)}
-                    />
-                  )}
-                </div>
-
-                {/* Row content */}
-                <Link
-                  href={`/rimborsi/${e.id}`}
-                  className="flex flex-1 items-start justify-between gap-4 min-w-0"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {e.collaborators
-                        ? `${e.collaborators.nome} ${e.collaborators.cognome}`
-                        : '—'}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{e.descrizione ?? '—'}</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${EXPENSE_CATEGORIA_BADGE[e.categoria]}`}>
-                        {e.categoria}
-                      </span>
-                      {e.data_spesa && (
-                        <><span className="text-muted-foreground">·</span><span>Spesa: {formatDate(e.data_spesa)}</span></>
-                      )}
-                      <span className="text-muted-foreground">·</span>
-                      <span>{formatDate(e.created_at)}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="flex flex-col items-end gap-1.5">
-                      <span className="text-sm font-medium tabular-nums text-foreground">
-                        {formatCurrency(e.importo)}
-                      </span>
-                      <StatusBadge stato={e.stato} />
-                    </div>
-                    <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Link>
-              </div>
-            );
-          })}
+          <CardContent className="p-0">
+            <DataTable columns={columns} data={filtered} pagination pageSize={20} />
           </CardContent>
         </Card>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-            aria-label="Pagina precedente"
-          >
-            ‹
-          </Button>
-          <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-            aria-label="Pagina successiva"
-          >
-            ›
-          </Button>
-        </div>
       )}
     </div>
   );

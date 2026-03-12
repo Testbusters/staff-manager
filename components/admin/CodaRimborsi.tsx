@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, CreditCard, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DataTable, type ColumnDef } from '@/components/ui/data-table';
 import {
   Dialog,
   DialogContent,
@@ -45,8 +46,6 @@ type ExpenseRow = {
   massimale: number | null;
 };
 
-type SortDir = 'asc' | 'desc' | null;
-
 function fmt(amount: number | null) {
   if (amount == null) return <span className="text-muted-foreground/40">—</span>;
   return `€\u202f${amount.toFixed(2)}`;
@@ -56,28 +55,6 @@ function fmtTotal(amount: number) {
   return `€\u202f${amount.toFixed(2)}`;
 }
 
-function sortByDate(rows: ExpenseRow[], dir: SortDir): ExpenseRow[] {
-  if (!dir) return rows;
-  return [...rows].sort((a, b) => {
-    const da = a.data_spesa ?? '';
-    const db = b.data_spesa ?? '';
-    return dir === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
-  });
-}
-
-
-function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => void }) {
-  const Icon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
-  return (
-    <button
-      onClick={onCycle}
-      className="flex items-center gap-1 hover:text-foreground transition-colors"
-      aria-label="Ordina per data"
-    >
-      Data <Icon className="h-3 w-3" />
-    </button>
-  );
-}
 
 function SectionToggle({
   label,
@@ -105,58 +82,41 @@ function SectionToggle({
   );
 }
 
-function ArchiveTable({
-  rows,
-  showRejectionNote,
-  sortDir,
-  onCycleSort,
-}: {
-  rows: ExpenseRow[];
-  showRejectionNote: boolean;
-  sortDir: SortDir;
-  onCycleSort: () => void;
-}) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border">
-          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-            <SortButton sortDir={sortDir} onCycle={onCycleSort} />
-          </TableHead>
-          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((exp) => (
-          <TableRow key={exp.id} className="opacity-70">
-            <TableCell className="py-3">
-              <p className="text-sm font-medium text-foreground leading-tight">{exp.collabName}</p>
-              {exp.categoria && (
-                <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{exp.categoria}</p>
-              )}
-              {showRejectionNote && exp.rejection_note && (
-                <p className="text-xs text-destructive mt-0.5 leading-tight">↳ {exp.rejection_note}</p>
-              )}
-            </TableCell>
-            <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
-              {exp.data_spesa
-                ? new Date(exp.data_spesa).toLocaleDateString('it-IT')
-                : <span className="text-muted-foreground/40">—</span>}
-            </TableCell>
-            <TableCell className="py-3 text-sm text-muted-foreground text-right tabular-nums">
-              {fmt(exp.importo)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+function archiveColumns(showRejectionNote: boolean): ColumnDef<ExpenseRow>[] {
+  return [
+    {
+      id: 'collaboratore',
+      accessorKey: 'collabName',
+      header: 'Collaboratore',
+      cell: ({ row }) => (
+        <div>
+          <p className="text-sm font-medium text-foreground leading-tight">{row.original.collabName}</p>
+          {row.original.categoria && (
+            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{row.original.categoria}</p>
+          )}
+          {showRejectionNote && row.original.rejection_note && (
+            <p className="text-xs text-destructive mt-0.5 leading-tight">↳ {row.original.rejection_note}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'data_spesa',
+      header: 'Data spesa',
+      cell: ({ row }) => row.original.data_spesa
+        ? <span className="text-sm text-muted-foreground tabular-nums">{new Date(row.original.data_spesa).toLocaleDateString('it-IT')}</span>
+        : <span className="text-muted-foreground/40">—</span>,
+    },
+    {
+      accessorKey: 'importo',
+      header: 'Importo',
+      cell: ({ row }) => <span className="text-sm text-muted-foreground tabular-nums">{fmt(row.original.importo)}</span>,
+    },
+  ];
 }
 
 export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expenses: ExpenseRow[]; hasReceiptTemplate?: boolean }) {
   const router = useRouter();
-  const [sortDir, setSortDir] = useState<SortDir>(null);
 
   // Section open/closed
   const [section1Open, setSection1Open] = useState(true);
@@ -176,10 +136,10 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
   const [loading, setLoading] = useState(false);
 
   // ── Sections ───────────────────────────────────────────────────
-  const inAttesa  = useMemo(() => sortByDate(expenses.filter((e) => e.stato === 'IN_ATTESA'),  sortDir), [expenses, sortDir]);
-  const approvati = useMemo(() => sortByDate(expenses.filter((e) => e.stato === 'APPROVATO'), sortDir), [expenses, sortDir]);
-  const liquidati = useMemo(() => sortByDate(expenses.filter((e) => e.stato === 'LIQUIDATO'), sortDir), [expenses, sortDir]);
-  const rifiutati = useMemo(() => sortByDate(expenses.filter((e) => e.stato === 'RIFIUTATO'), sortDir), [expenses, sortDir]);
+  const inAttesa  = useMemo(() => expenses.filter((e) => e.stato === 'IN_ATTESA'),  [expenses]);
+  const approvati = useMemo(() => expenses.filter((e) => e.stato === 'APPROVATO'), [expenses]);
+  const liquidati = useMemo(() => expenses.filter((e) => e.stato === 'LIQUIDATO'), [expenses]);
+  const rifiutati = useMemo(() => expenses.filter((e) => e.stato === 'RIFIUTATO'), [expenses]);
 
   const totalInAttesa  = useMemo(() => inAttesa.reduce((s, e)  => s + (e.importo ?? 0), 0), [inAttesa]);
   const totalApprovati = useMemo(() => approvati.reduce((s, e) => s + (e.importo ?? 0), 0), [approvati]);
@@ -191,10 +151,6 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
 
   const allInAttesaSelected  = inAttesa.length > 0  && selectedInAttesaIds.size === inAttesa.length;
   const allApprovatiSelected = approvati.length > 0 && selectedApprovatiIds.size === approvati.length;
-
-  function cycleSortDir() {
-    setSortDir((d) => (d === null ? 'asc' : d === 'asc' ? 'desc' : null));
-  }
 
   function toggleSelectInAttesa(id: string) {
     setSelectedInAttesaIds((prev) => {
@@ -408,9 +364,7 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                    <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
-                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Data</TableHead>
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
                   <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
                 </TableRow>
@@ -536,9 +490,7 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                    <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
-                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Data</TableHead>
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
                   <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
                 </TableRow>
@@ -646,7 +598,7 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
                       <EmptyState icon={CreditCard} title="Nessun rimborso liquidato" description="Non ci sono rimborsi liquidati." />
                     </div>
                   ) : (
-                    <ArchiveTable rows={liquidati} showRejectionNote={false} sortDir={sortDir} onCycleSort={cycleSortDir} />
+                    <DataTable columns={archiveColumns(false)} data={liquidati} className="[&_tbody_tr]:opacity-70" />
                   )}
                 </TabsContent>
                 <TabsContent value="rifiutati" className="mt-0">
@@ -655,7 +607,7 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
                       <EmptyState icon={XCircle} title="Nessun rimborso rifiutato" description="Non ci sono rimborsi rifiutati." />
                     </div>
                   ) : (
-                    <ArchiveTable rows={rifiutati} showRejectionNote={true} sortDir={sortDir} onCycleSort={cycleSortDir} />
+                    <DataTable columns={archiveColumns(true)} data={rifiutati} className="[&_tbody_tr]:opacity-70" />
                   )}
                 </TabsContent>
               </Tabs>

@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Compensation, CompensationStatus } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 import ImportSection from './ImportSection';
 import { Card, CardContent } from '@/components/ui/card';
+import { DataTable, type ColumnDef } from '@/components/ui/data-table';
 
 type CompensationRow = Compensation & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -25,7 +25,6 @@ type Kpi = {
 };
 
 const ALL_STATI: CompensationStatus[] = ['IN_ATTESA', 'APPROVATO', 'RIFIUTATO', 'LIQUIDATO'];
-const PAGE_SIZE = 20;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -58,7 +57,6 @@ export default function ApprovazioniCompensazioni({
 }) {
   const [search, setSearch] = useState('');
   const [filterStato, setFilterStato] = useState<CompensationStatus | 'ALL'>('ALL');
-  const [page, setPage] = useState(1);
 
   const filtered = compensations
     .filter((c) => filterStato === 'ALL' || c.stato === filterStato)
@@ -69,19 +67,38 @@ export default function ApprovazioniCompensazioni({
       return name.includes(q);
     });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  function handleFilterChange(stato: CompensationStatus | 'ALL') {
-    setFilterStato(stato);
-    setPage(1);
-  }
-
-  function handleSearchChange(val: string) {
-    setSearch(val);
-    setPage(1);
-  }
+  const columns: ColumnDef<CompensationRow>[] = [
+    {
+      id: 'collaboratore',
+      accessorFn: (row) => `${row.collaborators?.cognome ?? ''} ${row.collaborators?.nome ?? ''}`,
+      header: 'Collaboratore',
+      cell: ({ row }) => (
+        <Link href={`/compensi/${row.original.id}`} className="block min-w-0 hover:no-underline">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {row.original.collaborators
+              ? `${row.original.collaborators.nome} ${row.original.collaborators.cognome}`
+              : '—'}
+          </p>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{row.original.nome_servizio_ruolo ?? '—'}</p>
+        </Link>
+      ),
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Data',
+      cell: ({ row }) => <span className="text-xs text-muted-foreground">{formatDate(row.original.created_at)}</span>,
+    },
+    {
+      accessorKey: 'importo_lordo',
+      header: 'Importo',
+      cell: ({ row }) => <span className="text-sm font-medium tabular-nums">{formatCurrency(row.original.importo_lordo)}</span>,
+    },
+    {
+      accessorKey: 'stato',
+      header: 'Stato',
+      cell: ({ row }) => <StatusBadge stato={row.original.stato} />,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -122,7 +139,7 @@ export default function ApprovazioniCompensazioni({
       <input
         type="text"
         value={search}
-        onChange={(e) => handleSearchChange(e.target.value)}
+        onChange={(e) => { setSearch(e.target.value); }}
         placeholder="Cerca per nome o cognome..."
         className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
       />
@@ -132,7 +149,7 @@ export default function ApprovazioniCompensazioni({
         {(['ALL', ...ALL_STATI] as const).map((s) => (
           <button
             key={s}
-            onClick={() => handleFilterChange(s)}
+            onClick={() => setFilterStato(s)}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition ${
               filterStato === s
                 ? 'bg-brand text-white'
@@ -153,73 +170,10 @@ export default function ApprovazioniCompensazioni({
         </Card>
       ) : (
         <Card>
-          <CardContent className="divide-y divide-border p-0">
-          {paginated.map((c, idx) => {
-            const isFirst = idx === 0;
-            const isLast = idx === paginated.length - 1;
-            return (
-              <div
-                key={c.id}
-                className={`flex items-center gap-3 px-4 py-4 hover:bg-muted/60 transition ${isFirst ? 'rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}
-              >
-                <Link
-                  href={`/compensi/${c.id}`}
-                  className="flex flex-1 items-start justify-between gap-4 min-w-0"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {c.collaborators
-                        ? `${c.collaborators.nome} ${c.collaborators.cognome}`
-                        : '—'}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{c.nome_servizio_ruolo ?? '—'}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      <span>{formatDate(c.created_at)}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="flex flex-col items-end gap-1.5">
-                      <span className="text-sm font-medium tabular-nums text-foreground">
-                        {formatCurrency(c.importo_lordo)}
-                      </span>
-                      <StatusBadge stato={c.stato} />
-                    </div>
-                    <svg className="h-4 w-4 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Link>
-              </div>
-            );
-          })}
+          <CardContent className="p-0">
+            <DataTable columns={columns} data={filtered} pagination pageSize={20} />
           </CardContent>
         </Card>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-            aria-label="Pagina precedente"
-          >
-            ‹
-          </Button>
-          <span className="text-xs text-muted-foreground">{safePage} / {totalPages}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-            aria-label="Pagina successiva"
-          >
-            ›
-          </Button>
-        </div>
       )}
     </div>
   );

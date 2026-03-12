@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, CreditCard, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DataTable, type ColumnDef } from '@/components/ui/data-table';
 import {
   Dialog,
   DialogContent,
@@ -46,8 +47,6 @@ type CompensationRow = {
   massimale: number | null;
 };
 
-type SortDir = 'asc' | 'desc' | null;
-
 function fmt(amount: number | null) {
   if (amount == null) return <span className="text-muted-foreground/40">—</span>;
   return `€\u202f${amount.toFixed(2)}`;
@@ -57,28 +56,6 @@ function fmtTotal(amount: number) {
   return `€\u202f${amount.toFixed(2)}`;
 }
 
-function sortByDate(rows: CompensationRow[], dir: SortDir): CompensationRow[] {
-  if (!dir) return rows;
-  return [...rows].sort((a, b) => {
-    const da = a.data_competenza ?? '';
-    const db = b.data_competenza ?? '';
-    return dir === 'asc' ? da.localeCompare(db) : db.localeCompare(da);
-  });
-}
-
-
-function SortButton({ sortDir, onCycle }: { sortDir: SortDir; onCycle: () => void }) {
-  const Icon = sortDir === 'asc' ? ArrowUp : sortDir === 'desc' ? ArrowDown : ArrowUpDown;
-  return (
-    <button
-      onClick={onCycle}
-      className="flex items-center gap-1 hover:text-foreground transition-colors"
-      aria-label="Ordina per data"
-    >
-      Data <Icon className="h-3 w-3" />
-    </button>
-  );
-}
 
 function SectionToggle({
   label,
@@ -106,58 +83,41 @@ function SectionToggle({
   );
 }
 
-function ArchiveTable({
-  rows,
-  showRejectionNote,
-  sortDir,
-  onCycleSort,
-}: {
-  rows: CompensationRow[];
-  showRejectionNote: boolean;
-  sortDir: SortDir;
-  onCycleSort: () => void;
-}) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border">
-          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-            <SortButton sortDir={sortDir} onCycle={onCycleSort} />
-          </TableHead>
-          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((comp) => (
-          <TableRow key={comp.id} className="opacity-70">
-            <TableCell className="py-3">
-              <p className="text-sm font-medium text-foreground leading-tight">{comp.collabName}</p>
-              {comp.nome_servizio_ruolo && (
-                <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{comp.nome_servizio_ruolo}</p>
-              )}
-              {showRejectionNote && comp.rejection_note && (
-                <p className="text-xs text-destructive mt-0.5 leading-tight">↳ {comp.rejection_note}</p>
-              )}
-            </TableCell>
-            <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
-              {comp.data_competenza
-                ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
-                : <span className="text-muted-foreground/40">—</span>}
-            </TableCell>
-            <TableCell className="py-3 text-sm text-muted-foreground text-right tabular-nums">
-              {fmt(comp.importo_lordo)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+function archiveColumns(showRejectionNote: boolean): ColumnDef<CompensationRow>[] {
+  return [
+    {
+      id: 'collaboratore',
+      accessorKey: 'collabName',
+      header: 'Collaboratore',
+      cell: ({ row }) => (
+        <div>
+          <p className="text-sm font-medium text-foreground leading-tight">{row.original.collabName}</p>
+          {row.original.nome_servizio_ruolo && (
+            <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{row.original.nome_servizio_ruolo}</p>
+          )}
+          {showRejectionNote && row.original.rejection_note && (
+            <p className="text-xs text-destructive mt-0.5 leading-tight">↳ {row.original.rejection_note}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'data_competenza',
+      header: 'Data',
+      cell: ({ row }) => row.original.data_competenza
+        ? <span className="text-sm text-muted-foreground tabular-nums">{new Date(row.original.data_competenza).toLocaleDateString('it-IT')}</span>
+        : <span className="text-muted-foreground/40">—</span>,
+    },
+    {
+      accessorKey: 'importo_lordo',
+      header: 'Importo lordo',
+      cell: ({ row }) => <span className="text-sm text-muted-foreground tabular-nums">{fmt(row.original.importo_lordo)}</span>,
+    },
+  ];
 }
 
 export default function CodaCompensazioni({ compensations, hasReceiptTemplate }: { compensations: CompensationRow[]; hasReceiptTemplate?: boolean }) {
   const router = useRouter();
-  const [sortDir, setSortDir] = useState<SortDir>(null);
 
   // Section open/closed
   const [section1Open, setSection1Open] = useState(true);
@@ -177,10 +137,10 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
   const [loading, setLoading] = useState(false);
 
   // ── Sections ───────────────────────────────────────────────────
-  const inAttesa  = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'IN_ATTESA'),  sortDir), [compensations, sortDir]);
-  const approvati = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'APPROVATO'), sortDir), [compensations, sortDir]);
-  const liquidati = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'LIQUIDATO'), sortDir), [compensations, sortDir]);
-  const rifiutati = useMemo(() => sortByDate(compensations.filter((c) => c.stato === 'RIFIUTATO'), sortDir), [compensations, sortDir]);
+  const inAttesa  = useMemo(() => compensations.filter((c) => c.stato === 'IN_ATTESA'),  [compensations]);
+  const approvati = useMemo(() => compensations.filter((c) => c.stato === 'APPROVATO'), [compensations]);
+  const liquidati = useMemo(() => compensations.filter((c) => c.stato === 'LIQUIDATO'), [compensations]);
+  const rifiutati = useMemo(() => compensations.filter((c) => c.stato === 'RIFIUTATO'), [compensations]);
 
   const totalInAttesa  = useMemo(() => inAttesa.reduce((s, c)  => s + (c.importo_lordo ?? 0), 0), [inAttesa]);
   const totalApprovati = useMemo(() => approvati.reduce((s, c) => s + (c.importo_lordo ?? 0), 0), [approvati]);
@@ -192,10 +152,6 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
 
   const allInAttesaSelected  = inAttesa.length > 0  && selectedInAttesaIds.size === inAttesa.length;
   const allApprovatiSelected = approvati.length > 0 && selectedApprovatiIds.size === approvati.length;
-
-  function cycleSortDir() {
-    setSortDir((d) => (d === null ? 'asc' : d === 'asc' ? 'desc' : null));
-  }
 
   function toggleSelectInAttesa(id: string) {
     setSelectedInAttesaIds((prev) => {
@@ -409,9 +365,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                    <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
-                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Data</TableHead>
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo lordo</TableHead>
                   <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
                 </TableRow>
@@ -537,9 +491,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
-                    <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
-                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Data</TableHead>
                   <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
                   <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
                 </TableRow>
@@ -647,7 +599,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                       <EmptyState icon={CreditCard} title="Nessun compenso liquidato" description="Non ci sono compensi liquidati." />
                     </div>
                   ) : (
-                    <ArchiveTable rows={liquidati} showRejectionNote={false} sortDir={sortDir} onCycleSort={cycleSortDir} />
+                    <DataTable columns={archiveColumns(false)} data={liquidati} className="[&_tbody_tr]:opacity-70" />
                   )}
                 </TabsContent>
                 <TabsContent value="rifiutati" className="mt-0">
@@ -656,7 +608,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                       <EmptyState icon={XCircle} title="Nessun compenso rifiutato" description="Non ci sono compensi rifiutati." />
                     </div>
                   ) : (
-                    <ArchiveTable rows={rifiutati} showRejectionNote={true} sortDir={sortDir} onCycleSort={cycleSortDir} />
+                    <DataTable columns={archiveColumns(true)} data={rifiutati} className="[&_tbody_tr]:opacity-70" />
                   )}
                 </TabsContent>
               </Tabs>

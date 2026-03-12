@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -391,15 +392,13 @@ export default function MemberStatusManager() {
               {/* Data ingresso */}
               <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">Data ingresso</p>
-                <Input
-                  type="date"
+                <DatePicker
                   value={editState.data_ingresso ?? ''}
-                  onChange={(e) =>
+                  onChange={(v) =>
                     setEditState((prev) =>
-                      prev ? { ...prev, data_ingresso: e.target.value || null } : prev
+                      prev ? { ...prev, data_ingresso: v || null } : prev
                     )
                   }
-                  className="w-full"
                 />
               </div>
             </div>

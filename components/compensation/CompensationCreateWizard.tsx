@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -322,10 +323,9 @@ export default function CompensationCreateWizard({
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               Data di competenza
             </label>
-            <Input
-              type="date"
+            <DatePicker
               value={formData.data_competenza}
-              onChange={(e) => setFormData((prev) => ({ ...prev, data_competenza: e.target.value }))}
+              onChange={(v) => setFormData((prev) => ({ ...prev, data_competenza: v }))}
             />
           </div>
 
