@@ -17,6 +17,7 @@ const SIGNATURE_MARKERS = ['{firma}', '{firma_collaboratore}'];
 export async function findMarkerPositions(
   pdfBuffer: Buffer,
   markers: string[],
+  eraseTrailingUnderscores = false,
 ): Promise<PdfMarkerPosition[]> {
   if (markers.length === 0) return [];
 
@@ -94,6 +95,27 @@ export async function findMarkerPositions(
         }
       }
     }
+
+    // Erase trailing underscore/dash sequences on lines that contain a marker.
+    // These are template fill-in decorations (underlines) that remain visible after substitution.
+    if (eraseTrailingUnderscores) {
+      const pagePositions = positions.filter(pos => pos.pageIndex === p - 1);
+      if (pagePositions.length > 0) {
+        for (const item of items) {
+          const { str, transform, width: iw, height: ih } = item;
+          // Match items composed only of underscores, dashes, dots, spaces — with at least one _ or -
+          if (!/^[_ \-.]+$/.test(str) || !/[_\-]/.test(str)) continue;
+          const [, , , scaleY, ix, iy] = transform;
+          const h = Math.abs(ih ?? scaleY ?? 12);
+          const w = iw > 0 ? iw : str.length * h * 0.6;
+          // Only erase if on the same horizontal line as a found marker
+          const onSameLine = pagePositions.some(mp => Math.abs(mp.y - iy) < h * 1.5);
+          if (onSameLine) {
+            positions.push({ marker: '__ERASE__', pageIndex: p - 1, x: ix, y: iy, width: w, height: h });
+          }
+        }
+      }
+    }
   }
 
   return positions;
@@ -116,7 +138,7 @@ export async function fillPdfMarkers(
 
   if (allMarkersToFind.length === 0) return pdfBuffer;
 
-  const positions = await findMarkerPositions(pdfBuffer, allMarkersToFind);
+  const positions = await findMarkerPositions(pdfBuffer, allMarkersToFind, true);
   if (positions.length === 0) return pdfBuffer;
 
   const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
@@ -138,24 +160,40 @@ export async function fillPdfMarkers(
 
   const pages = pdfDoc.getPages();
 
+  // Pre-compute: for each marker position, find the nearest marker to the right on the same line.
+  // Used to clamp the right extension of the white rect so we don't cover adjacent markers.
+  const realPositions = positions.filter(p => p.marker !== '__ERASE__');
+
   for (const pos of positions) {
     const page = pages[pos.pageIndex];
     if (!page) continue;
 
     const rectHeight = Math.max(pos.height, 10);
-    const rectY = pos.y - 2;
+    // Extend 5 units below baseline to cover underscore descenders inside marker names
+    // (e.g. {data_nascita} contains "_" whose glyph descends below the PDF baseline y).
+    const rectY = pos.y - 7;
     const rectW = Math.max(pos.width, 20);
     // Left padding compensates for proportional-font x estimation error on embedded markers.
-    // Characters before the marker (e.g. "Il ", "Nato/a ") are often narrower than average,
-    // causing the estimated marker start to be slightly too far right — leaving the "{" visible.
     const leftPad = 8;
 
-    // 1. White rectangle to cover the marker text
+    // Right extension: cover trailing underscores / path-underlines after the replaced value.
+    // Extend to the nearest marker on the same line, or 180 units if none.
+    const rightNeighbors = realPositions.filter(p =>
+      p !== pos &&
+      p.pageIndex === pos.pageIndex &&
+      Math.abs(p.y - pos.y) < rectHeight * 1.5 &&
+      p.x > pos.x + rectW,
+    );
+    const rightExtension = rightNeighbors.length > 0
+      ? Math.max(0, Math.min(...rightNeighbors.map(p => p.x)) - (pos.x + rectW) - 5)
+      : 180;
+
+    // 1. White rectangle to cover the marker text + trailing decorations
     page.drawRectangle({
       x: pos.x - leftPad,
       y: rectY,
-      width: rectW + 4 + leftPad,
-      height: rectHeight + 4,
+      width: rectW + leftPad + rightExtension,
+      height: rectHeight + 12,
       color: rgb(1, 1, 1),
     });
 
