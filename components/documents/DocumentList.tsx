@@ -134,7 +134,7 @@ function DocumentGroups({
   const colSpan = 6;
 
   return (
-    <Card>
+    <Card className="w-fit">
       <CardContent className="overflow-hidden p-0">
         <Table className="w-auto">
           <TableHeader>
