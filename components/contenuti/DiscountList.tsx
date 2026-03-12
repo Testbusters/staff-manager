@@ -327,7 +327,7 @@ export default function DiscountList({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={doDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={doDelete} variant="destructive">
               Elimina
             </AlertDialogAction>
           </AlertDialogFooter>
