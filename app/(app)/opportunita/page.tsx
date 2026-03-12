@@ -10,17 +10,17 @@ type Tab = 'opportunita' | 'sconti' | 'sconti_peer4med';
 const PAGE_SIZE = 20;
 
 const OPP_TIPO_LABELS: Record<OpportunityTipo, string> = {
-  VOLONTARIATO: 'Volontariato',
-  FORMAZIONE:   'Formazione',
-  LAVORO:       'Lavoro',
-  ALTRO:        'Altro',
+  Volontariato: 'Volontariato',
+  Formazione:   'Formazione',
+  Lavoro:       'Lavoro',
+  Altro:        'Altro',
 };
 
 const OPP_TIPO_COLORS: Record<OpportunityTipo, string> = {
-  VOLONTARIATO: 'bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
-  FORMAZIONE:   'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  LAVORO:       'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  ALTRO:        'bg-muted border-border text-muted-foreground',
+  Volontariato: 'bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
+  Formazione:   'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Lavoro:       'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Altro:        'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -242,7 +242,7 @@ export default async function OpportunitaPage({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${OPP_TIPO_COLORS[o.tipo as OpportunityTipo] ?? OPP_TIPO_COLORS.ALTRO}`}>
+                  <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${OPP_TIPO_COLORS[o.tipo as OpportunityTipo] ?? OPP_TIPO_COLORS.Altro}`}>
                     {OPP_TIPO_LABELS[o.tipo as OpportunityTipo] ?? o.tipo}
                   </span>
                   <h3 className="text-sm font-semibold text-foreground truncate">{o.titolo}</h3>

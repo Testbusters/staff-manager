@@ -150,9 +150,9 @@ export interface TicketMessage {
 }
 
 // ── Content ──────────────────────────────────────────────────
-export type ResourceCategoria = 'GUIDA' | 'ALLEGATO' | 'LOCANDINA' | 'BANDO' | 'DECRETO' | 'ALTRO';
-export type EventTipo = 'CONVENTION' | 'ATTIVITA_INTERNA' | 'WORKSHOP' | 'FORMAZIONE' | 'ALTRO';
-export type OpportunityTipo = 'VOLONTARIATO' | 'FORMAZIONE' | 'LAVORO' | 'ALTRO';
+export type ResourceCategoria = 'Guida' | 'Allegato' | 'Locandina' | 'Bando' | 'Decreto' | 'Altro';
+export type EventTipo = 'Convention' | 'Attivita_interna' | 'Workshop' | 'Formazione' | 'Altro';
+export type OpportunityTipo = 'Volontariato' | 'Formazione' | 'Lavoro' | 'Altro';
 
 export interface Communication {
   id: string;

@@ -6,12 +6,21 @@ import type { Resource, ResourceCategoria } from '@/lib/types';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const CATEGORIA_LABELS: Record<ResourceCategoria, string> = {
-  GUIDA:     'Guida',
-  ALLEGATO:  'Allegato',
-  LOCANDINA: 'Locandina',
-  BANDO:     'Bando',
-  DECRETO:   'Decreto',
-  ALTRO:     'Altro',
+  Guida:     'Guida',
+  Allegato:  'Allegato',
+  Locandina: 'Locandina',
+  Bando:     'Bando',
+  Decreto:   'Decreto',
+  Altro:     'Altro',
+};
+
+const CATEGORIA_COLORS: Record<ResourceCategoria, string> = {
+  Guida:     'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Allegato:  'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
+  Locandina: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400',
+  Bando:     'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  Decreto:   'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:border-violet-800 dark:text-violet-400',
+  Altro:     'bg-muted border-border text-muted-foreground',
 };
 
 export default async function ResourceDetailPage({
@@ -65,7 +74,7 @@ export default async function ResourceDetailPage({
       </Link>
 
       <div className="space-y-2">
-        <span className="inline-block rounded-full bg-muted border border-border px-3 py-0.5 text-xs text-muted-foreground">
+        <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${CATEGORIA_COLORS[r.categoria as ResourceCategoria] ?? 'bg-muted border-border text-muted-foreground'}`}>
           {CATEGORIA_LABELS[r.categoria as ResourceCategoria] ?? r.categoria}
         </span>
         <h1 className="text-2xl font-semibold text-foreground">{r.titolo}</h1>

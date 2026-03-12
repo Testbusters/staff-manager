@@ -8,12 +8,21 @@ import type { Communication, Resource, ResourceCategoria } from '@/lib/types';
 type Tab = 'comunicazioni' | 'risorse';
 
 const CATEGORIA_LABELS: Record<ResourceCategoria, string> = {
-  GUIDA:     'Guida',
-  ALLEGATO:  'Allegato',
-  LOCANDINA: 'Locandina',
-  BANDO:     'Bando',
-  DECRETO:   'Decreto',
-  ALTRO:     'Altro',
+  Guida:     'Guida',
+  Allegato:  'Allegato',
+  Locandina: 'Locandina',
+  Bando:     'Bando',
+  Decreto:   'Decreto',
+  Altro:     'Altro',
+};
+
+const CATEGORIA_COLORS: Record<ResourceCategoria, string> = {
+  Guida:     'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Allegato:  'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400',
+  Locandina: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400',
+  Bando:     'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  Decreto:   'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:border-violet-800 dark:text-violet-400',
+  Altro:     'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(iso: string) {
@@ -24,7 +33,7 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-const VALID_CATEGORIA = ['GUIDA', 'ALLEGATO', 'LOCANDINA', 'BANDO', 'DECRETO', 'ALTRO'] as const;
+const VALID_CATEGORIA = ['Guida', 'Allegato', 'Locandina', 'Bando', 'Decreto', 'Altro'] as const;
 
 const PAGE_SIZE = 20;
 
@@ -216,7 +225,7 @@ export default async function ComunicazioniPage({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <span className="flex-shrink-0 rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                  <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORIA_COLORS[r.categoria as ResourceCategoria] ?? 'bg-muted border-border text-muted-foreground'}`}>
                     {CATEGORIA_LABELS[r.categoria as ResourceCategoria] ?? r.categoria}
                   </span>
                   <h3 className="text-sm font-semibold text-foreground truncate">

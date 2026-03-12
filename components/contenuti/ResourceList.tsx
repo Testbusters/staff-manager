@@ -21,12 +21,12 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const CATEGORIA_OPTIONS: { value: ResourceCategoria; label: string }[] = [
-  { value: 'GUIDA',      label: 'Guida' },
-  { value: 'ALLEGATO',   label: 'Allegato' },
-  { value: 'LOCANDINA',  label: 'Locandina' },
-  { value: 'BANDO',      label: 'Bando' },
-  { value: 'DECRETO',    label: 'Decreto' },
-  { value: 'ALTRO',      label: 'Altro' },
+  { value: 'Guida',     label: 'Guida' },
+  { value: 'Allegato',  label: 'Allegato' },
+  { value: 'Locandina', label: 'Locandina' },
+  { value: 'Bando',     label: 'Bando' },
+  { value: 'Decreto',   label: 'Decreto' },
+  { value: 'Altro',     label: 'Altro' },
 ];
 
 interface FormData {

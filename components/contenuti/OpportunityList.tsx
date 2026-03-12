@@ -21,17 +21,17 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const TIPO_OPTIONS: { value: OpportunityTipo; label: string }[] = [
-  { value: 'VOLONTARIATO', label: 'Volontariato' },
-  { value: 'FORMAZIONE',   label: 'Formazione' },
-  { value: 'LAVORO',       label: 'Lavoro' },
-  { value: 'ALTRO',        label: 'Altro' },
+  { value: 'Volontariato', label: 'Volontariato' },
+  { value: 'Formazione',   label: 'Formazione' },
+  { value: 'Lavoro',       label: 'Lavoro' },
+  { value: 'Altro',        label: 'Altro' },
 ];
 
 const TIPO_COLORS: Record<OpportunityTipo, string> = {
-  VOLONTARIATO: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
-  FORMAZIONE:   'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  LAVORO:       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  ALTRO:        'bg-muted border-border text-muted-foreground',
+  Volontariato: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
+  Formazione:   'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Lavoro:       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Altro:        'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -287,7 +287,7 @@ export default function OpportunityList({
         <div key={o.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
+              <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.Altro}`}>
                 {TIPO_OPTIONS.find((t) => t.value === o.tipo)?.label ?? o.tipo}
               </span>
               <h3 className="text-sm font-semibold text-foreground">{o.titolo}</h3>

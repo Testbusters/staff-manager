@@ -23,19 +23,19 @@ function buildMapsUrl(location: string): string {
 }
 
 const TIPO_LABELS: Record<EventTipo, string> = {
-  CONVENTION:       'Convention',
-  ATTIVITA_INTERNA: 'Attività interna',
-  WORKSHOP:         'Workshop',
-  FORMAZIONE:       'Formazione',
-  ALTRO:            'Altro',
+  Convention:       'Convention',
+  Attivita_interna: 'Attività interna',
+  Workshop:         'Workshop',
+  Formazione:       'Formazione',
+  Altro:            'Altro',
 };
 
 const TIPO_COLORS: Record<EventTipo, string> = {
-  CONVENTION:       'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
-  ATTIVITA_INTERNA: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  WORKSHOP:         'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
-  FORMAZIONE:       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  ALTRO:            'bg-muted border-border text-muted-foreground',
+  Convention:       'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  Attivita_interna: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Workshop:         'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  Formazione:       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Altro:            'bg-muted border-border text-muted-foreground',
 };
 
 function formatDatetime(iso: string) {
@@ -101,7 +101,7 @@ export default async function EventDetailPage({
 
       <div className="space-y-3">
         {event.tipo && (
-          <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[event.tipo as EventTipo] ?? TIPO_COLORS.ALTRO}`}>
+          <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[event.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
             {TIPO_LABELS[event.tipo as EventTipo] ?? event.tipo}
           </span>
         )}

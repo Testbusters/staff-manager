@@ -6,17 +6,17 @@ import type { Opportunity, OpportunityTipo } from '@/lib/types';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
 const TIPO_LABELS: Record<OpportunityTipo, string> = {
-  VOLONTARIATO: 'Volontariato',
-  FORMAZIONE:   'Formazione',
-  LAVORO:       'Lavoro',
-  ALTRO:        'Altro',
+  Volontariato: 'Volontariato',
+  Formazione:   'Formazione',
+  Lavoro:       'Lavoro',
+  Altro:        'Altro',
 };
 
 const TIPO_COLORS: Record<OpportunityTipo, string> = {
-  VOLONTARIATO: 'bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
-  FORMAZIONE:   'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
-  LAVORO:       'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
-  ALTRO:        'bg-muted border-border text-muted-foreground',
+  Volontariato: 'bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400',
+  Formazione:   'bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Lavoro:       'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Altro:        'bg-muted border-border text-muted-foreground',
 };
 
 function formatDate(d: string) {
@@ -78,7 +78,7 @@ export default async function OpportunityDetailPage({
       </Link>
 
       <div className="space-y-2">
-        <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.ALTRO}`}>
+        <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[o.tipo as OpportunityTipo] ?? TIPO_COLORS.Altro}`}>
           {TIPO_LABELS[o.tipo as OpportunityTipo] ?? o.tipo}
         </span>
         <h1 className="text-2xl font-semibold text-foreground">{o.titolo}</h1>

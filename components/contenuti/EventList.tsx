@@ -21,11 +21,11 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
-  { value: 'CONVENTION',       label: 'Convention' },
-  { value: 'ATTIVITA_INTERNA', label: 'Attività interna' },
-  { value: 'WORKSHOP',         label: 'Workshop' },
-  { value: 'FORMAZIONE',       label: 'Formazione' },
-  { value: 'ALTRO',            label: 'Altro' },
+  { value: 'Convention',       label: 'Convention' },
+  { value: 'Attivita_interna', label: 'Attività interna' },
+  { value: 'Workshop',         label: 'Workshop' },
+  { value: 'Formazione',       label: 'Formazione' },
+  { value: 'Altro',            label: 'Altro' },
 ];
 
 function formatDateRange(start: string | null, end: string | null): string {

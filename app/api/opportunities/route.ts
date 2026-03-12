@@ -6,7 +6,7 @@ import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 
-const VALID_TIPO = ['VOLONTARIATO', 'FORMAZIONE', 'LAVORO', 'ALTRO'];
+const VALID_TIPO = ['Volontariato', 'Formazione', 'Lavoro', 'Altro'];
 
 export async function POST(request: Request) {
   const supabase = await createClient();
