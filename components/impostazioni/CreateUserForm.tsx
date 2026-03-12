@@ -240,7 +240,7 @@ export default function CreateUserForm() {
         <p className={sectionTitle}>Accesso</p>
         <div className="space-y-3">
           <div>
-            <label className={labelCls}>Email <span className="text-red-500">*</span></label>
+            <label className={labelCls}>Email <span className="text-destructive">*</span></label>
             <Input type="email" placeholder="nome@email.com" value={email}
               onChange={(e) => setEmail(e.target.value)}
               required disabled={loading} autoComplete="off" />
@@ -298,7 +298,7 @@ export default function CreateUserForm() {
         <div>
           <p className={sectionTitle}>Durata contratto</p>
           <div>
-            <label className={labelCls}>Data fine contratto <span className="text-red-500">*</span></label>
+            <label className={labelCls}>Data fine contratto <span className="text-destructive">*</span></label>
             <Input type="date" value={dataFineContratto}
               onChange={(e) => setDataFineContratto(e.target.value)}
               required disabled={loading} />
@@ -316,20 +316,20 @@ export default function CreateUserForm() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Nome <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Nome <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Cognome <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Cognome <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
                   required disabled={loading} />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Username <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Username <span className="text-destructive">*</span></label>
               <Input
                 type="text"
                 placeholder="mario_rossi"
@@ -345,7 +345,7 @@ export default function CreateUserForm() {
               <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
-              <label className={labelCls}>Data di ingresso <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Data di ingresso <span className="text-destructive">*</span></label>
               <Input type="date" value={dataIngresso}
                 onChange={(e) => setDataIngresso(e.target.value)}
                 required disabled={loading} />
@@ -361,20 +361,20 @@ export default function CreateUserForm() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Nome <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Nome <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Cognome <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Cognome <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
                   required disabled={loading} />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Username <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Username <span className="text-destructive">*</span></label>
               <Input
                 type="text"
                 placeholder="mario_rossi"
@@ -390,40 +390,40 @@ export default function CreateUserForm() {
               <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
-              <label className={labelCls}>Codice fiscale <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Codice fiscale <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
                 onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                 required disabled={loading} maxLength={16} className="font-mono" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Data di nascita <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Data di nascita <span className="text-destructive">*</span></label>
                 <Input type="date" value={dataNascita}
                   onChange={(e) => setDataNascita(e.target.value)}
                   required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Città di nascita <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Città di nascita <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Roma" value={luogoNascita}
                   onChange={(e) => setLuogoNascita(e.target.value)}
                   required disabled={loading} />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Provincia di nascita (sigla) <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Provincia di nascita (sigla) <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="RM" value={provinciaNascita}
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
                 required disabled={loading} maxLength={2} className="font-mono uppercase" />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className={labelCls}>Via/Piazza <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Via/Piazza <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Via Roma" value={indirizzo}
                   onChange={(e) => setIndirizzo(e.target.value)}
                   required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Civico <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Civico <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="1" value={civico}
                   onChange={(e) => setCivico(e.target.value)}
                   required disabled={loading} maxLength={10} />
@@ -431,33 +431,33 @@ export default function CreateUserForm() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Comune di residenza <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Comune di residenza <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Milano" value={comuneRes}
                   onChange={(e) => setComuneRes(e.target.value)}
                   required disabled={loading} />
               </div>
               <div>
-                <label className={labelCls}>Provincia di residenza (sigla) <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Provincia di residenza (sigla) <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="MI" value={provinciaRes}
                   onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
                   required disabled={loading} maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Telefono <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Telefono <span className="text-destructive">*</span></label>
               <Input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 required disabled={loading} />
             </div>
             <div>
-              <label className={labelCls}>Intestatario del conto bancario <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Intestatario del conto bancario <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
                 onChange={(e) => setIntestatarioPagamento(e.target.value)}
                 required disabled={loading} maxLength={100} />
               <p className="text-[10px] text-muted-foreground mt-1">Nome e cognome dell&apos;intestatario del conto. Pre-compilato per l&apos;onboarding.</p>
             </div>
             <div>
-              <label className={labelCls}>Data di ingresso <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Data di ingresso <span className="text-destructive">*</span></label>
               <Input type="date" value={dataIngresso}
                 onChange={(e) => setDataIngresso(e.target.value)}
                 required disabled={loading} />

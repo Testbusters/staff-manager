@@ -53,9 +53,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             role={role}
           />
           <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-            {/* Mobile header — hidden on desktop */}
-            <header className="flex items-center h-12 px-4 border-b border-border md:hidden flex-shrink-0">
-              <SidebarTrigger aria-label="Apri menu" />
+            {/* AppHeader — persistent across all viewports */}
+            <header className="flex items-center h-12 px-4 border-b border-border flex-shrink-0">
+              <span className="md:hidden">
+                <SidebarTrigger aria-label="Apri menu" />
+              </span>
               <div className="flex-1" />
               <NotificationBell />
             </header>

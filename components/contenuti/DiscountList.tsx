@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Tag, Paperclip, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Discount, Community } from '@/lib/types';
+import { ExpiryBadge } from '@/components/ui/content-status-badge';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
@@ -30,16 +31,6 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function expiryBadge(valid_to: string | null) {
-  if (!valid_to) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const exp = new Date(valid_to);
-  const diffDays = Math.ceil((exp.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays < 0) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Scaduto</span>;
-  if (diffDays <= 7) return <span className="rounded-full bg-yellow-100 border border-yellow-200 px-2 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-700 dark:text-yellow-300">In scadenza</span>;
-  return <span className="rounded-full bg-green-100 border border-green-200 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400">Attivo</span>;
-}
 
 interface FormData {
   titolo: string;
@@ -245,7 +236,7 @@ export default function DiscountList({
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-sm font-semibold text-foreground">{d.titolo}</h3>
             {d.fornitore && <span className="text-xs text-muted-foreground">· {d.fornitore}</span>}
-            {expiryBadge(d.valid_to)}
+            <ExpiryBadge valid_to={d.valid_to} />
           </div>
           {canWrite && (
             <div className="flex gap-2 shrink-0">

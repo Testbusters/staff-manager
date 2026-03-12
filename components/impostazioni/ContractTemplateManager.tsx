@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CONTRACT_TEMPLATE_LABELS, type ContractTemplateType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 
 type Template = {
@@ -99,7 +100,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
                       {tpl.file_name} · {new Date(tpl.uploaded_at).toLocaleDateString('it-IT')}
                     </p>
                   ) : (
-                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">Nessun template caricato</p>
+                    <Alert variant="default" className="mt-0.5 py-2"><AlertDescription className="text-xs">Nessun template contratto caricato. Carica un template per abilitare la generazione automatica.</AlertDescription></Alert>
                   )}
                 </div>
                 <label className={`ml-4 flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer

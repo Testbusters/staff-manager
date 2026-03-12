@@ -29,7 +29,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard, Inbox, UsersRound, FileDown, Files,
   LifeBuoy, LayoutGrid, SlidersHorizontal, MessageSquarePlus,
 };
-import NotificationBell from '@/components/NotificationBell';
 import AppLogo from '@/components/ui/AppLogo';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -81,9 +80,6 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
         <div className="flex items-center gap-2.5">
           <AppLogo className="w-8 h-8 flex-shrink-0" />
           <span className="text-sm font-semibold text-foreground flex-1">Staff Manager</span>
-          <div className="hidden md:block">
-            <NotificationBell />
-          </div>
         </div>
       </SidebarHeader>
 
@@ -193,7 +189,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleSignOut}
-                className="px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-500 dark:bg-red-700 dark:hover:bg-red-600 text-white border-0"
+                className="px-3 py-1.5 text-xs font-medium bg-destructive hover:bg-destructive/90 text-white border-0"
               >
                 Esci
               </AlertDialogAction>

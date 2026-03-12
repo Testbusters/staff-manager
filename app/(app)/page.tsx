@@ -18,7 +18,8 @@ import DashboardUpdates from '@/components/compensation/DashboardUpdates';
 import type { DashboardDocItem, DashboardEventItem, DashboardCommItem, DashboardOppItem } from '@/components/compensation/DashboardUpdates';
 import CollabOpenTicketsSection from '@/components/ticket/CollabOpenTicketsSection';
 import ResponsabileAvatarHero from '@/components/responsabile/ResponsabileAvatarHero';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // ── Constants ──────────────────────────────────────────────
 const ACTIVE_STATES = new Set([
@@ -102,7 +103,7 @@ function DocCard({ count }: { count: number }) {
           </Link>
         </>
       ) : (
-        <p className="text-xs text-muted-foreground">Nessun documento in attesa di firma.</p>
+        <EmptyState icon={FileText} title="Nessun documento in attesa di firma." />
       )}
     </div>
   );

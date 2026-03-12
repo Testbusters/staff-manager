@@ -270,13 +270,13 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Nome <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Nome <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Mario" value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   required />
               </div>
               <div>
-                <label className={labelCls}>Cognome <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Cognome <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Rossi" value={cognome}
                   onChange={(e) => setCognome(e.target.value)}
                   required />
@@ -292,40 +292,40 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               </div>
             )}
             <div>
-              <label className={labelCls}>Codice fiscale <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Codice fiscale <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
                 onChange={(e) => setCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                 required maxLength={16} className="font-mono" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Data di nascita <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Data di nascita <span className="text-destructive">*</span></label>
                 <Input type="date" value={dataNascita}
                   onChange={(e) => setDataNascita(e.target.value)}
                   required />
               </div>
               <div>
-                <label className={labelCls}>Città di nascita <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Città di nascita <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Roma" value={luogoNascita}
                   onChange={(e) => setLuogo(e.target.value)}
                   required />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Provincia di nascita (sigla) <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Provincia di nascita (sigla) <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="RM" value={provinciaNascita}
                 onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
                 required maxLength={2} className="font-mono uppercase" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className={labelCls}>Via/Piazza di residenza <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Via/Piazza di residenza <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Via Roma" value={indirizzo}
                   onChange={(e) => setIndirizzo(e.target.value)}
                   required />
               </div>
               <div>
-                <label className={labelCls}>Civico <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Civico <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="1" value={civico}
                   onChange={(e) => setCivico(e.target.value)}
                   required maxLength={10} />
@@ -340,20 +340,20 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Comune <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Comune <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="Milano" value={comune}
                   onChange={(e) => setComune(e.target.value)}
                   required />
               </div>
               <div>
-                <label className={labelCls}>Provincia (sigla) <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Provincia (sigla) <span className="text-destructive">*</span></label>
                 <Input type="text" placeholder="MI" value={provinciaRes}
                   onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
                   required maxLength={2} className="font-mono uppercase" />
               </div>
             </div>
             <div>
-              <label className={labelCls}>Telefono di contatto <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Telefono di contatto <span className="text-destructive">*</span></label>
               <Input type="tel" placeholder="+39 333 0000000" value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 required />
@@ -366,7 +366,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
           <p className={sectionTitle}>Pagamento e preferenze</p>
           <div className="space-y-3">
             <div>
-              <label className={labelCls}>Intestatario del conto bancario <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Intestatario del conto bancario <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
                 onChange={(e) => setIntestatarioPagamento(e.target.value)}
                 required maxLength={100} />
@@ -375,14 +375,14 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
               </p>
             </div>
             <div>
-              <label className={labelCls}>IBAN <span className="text-red-500">*</span></label>
+              <label className={labelCls}>IBAN <span className="text-destructive">*</span></label>
               <Input type="text" placeholder="IT60 X054 2811 1010 0000 0123 456" value={iban}
                 onChange={(e) => setIban(e.target.value)}
                 required maxLength={34} className="font-mono" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Taglia t-shirt <span className="text-red-500">*</span></label>
+                <label className={labelCls}>Taglia t-shirt <span className="text-destructive">*</span></label>
                 <Select value={tshirt || undefined} onValueChange={setTshirt}>
                   <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
                   <SelectContent>

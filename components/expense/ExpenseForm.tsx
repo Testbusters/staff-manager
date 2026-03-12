@@ -157,7 +157,7 @@ export default function ExpenseForm() {
 
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">
-              Categoria <span className="text-red-500">*</span>
+              Categoria <span className="text-destructive">*</span>
             </label>
             <Select value={form.categoria || undefined} onValueChange={(v) => set('categoria', v)}>
               <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
@@ -167,10 +167,10 @@ export default function ExpenseForm() {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">
-                Data spesa <span className="text-red-500">*</span>
+                Data spesa <span className="text-destructive">*</span>
               </label>
               <Input
                 type="date"
@@ -180,7 +180,7 @@ export default function ExpenseForm() {
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">
-                Importo (€) <span className="text-red-500">*</span>
+                Importo (€) <span className="text-destructive">*</span>
               </label>
               <Input
                 type="number"

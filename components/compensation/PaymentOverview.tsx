@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { BarChart2 } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -41,13 +43,13 @@ function CompensazioniCard({
   const isEmpty = paidByYear.length === 0 && approvedNetto === 0 && inAttesaNetto === 0;
 
   return (
-    <div className="rounded-2xl bg-card border border-border flex-1 min-w-[260px]">
+    <div className="rounded-2xl bg-card border border-border w-full sm:flex-1 sm:min-w-[260px]">
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-sm font-medium text-foreground">Compensi liquidati</h2>
       </div>
       <div className="p-5 space-y-3">
         {isEmpty ? (
-          <p className="text-xs text-muted-foreground italic">Nessun dato disponibile.</p>
+          <EmptyState icon={BarChart2} title="Nessun dato disponibile." />
         ) : (
           <>
             {paidByYear.map(({ year, netto, lordo }) => (
@@ -109,13 +111,13 @@ function RimborsiCard({
   const isEmpty = paidByYear.length === 0 && approved === 0 && inAttesa === 0;
 
   return (
-    <div className="rounded-2xl bg-card border border-border flex-1 min-w-[260px]">
+    <div className="rounded-2xl bg-card border border-border w-full sm:flex-1 sm:min-w-[260px]">
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-sm font-medium text-foreground">Rimborsi liquidati</h2>
       </div>
       <div className="p-5 space-y-3">
         {isEmpty ? (
-          <p className="text-xs text-muted-foreground italic">Nessun dato disponibile.</p>
+          <EmptyState icon={BarChart2} title="Nessun dato disponibile." />
         ) : (
           <>
             {paidByYear.map(({ year, total }) => (
@@ -173,7 +175,7 @@ export default function PaymentOverview({
             <h2 className="text-sm font-medium text-foreground">
               Massimale annuo {currentYear} lordo
             </h2>
-            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-600 dark:text-red-400' : isNearLimit ? 'text-yellow-600 dark:text-yellow-400 dark:text-yellow-400' : 'text-muted-foreground'}`}>
+            <span className={`text-xs font-mono ${pct >= 100 ? 'text-red-600 dark:text-red-400' : isNearLimit ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`}>
               {fmt(paidCurrentYear)} / {fmt(massimale)}
             </span>
           </div>
@@ -187,7 +189,7 @@ export default function PaymentOverview({
             <p className="text-xs text-red-600 dark:text-red-400 mt-2">Hai raggiunto il massimale impostato.</p>
           )}
           {isNearLimit && pct < 100 && (
-            <p className="text-xs text-yellow-600 dark:text-yellow-400 dark:text-yellow-400 mt-2">
+            <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
               Stai avvicinandoti al massimale ({pct.toFixed(0)}%).
             </p>
           )}
