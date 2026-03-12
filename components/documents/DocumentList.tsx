@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { FileText, Search } from 'lucide-react';
@@ -154,7 +153,7 @@ function DocumentGroups({
               return (
                 <React.Fragment key={macro}>
                   {/* Section header row */}
-                  <TableRow key={`section-${macro}`} className="bg-muted/40 hover:bg-muted/40 border-t border-border">
+                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-t border-border">
                     <TableCell colSpan={colSpan} className="py-2.5 px-4">
                       <div className="flex items-center gap-2.5">
                         <span className="text-sm font-semibold tracking-tight text-foreground">
