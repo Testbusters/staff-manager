@@ -93,7 +93,10 @@ function OpportunityForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo *" required className="col-span-2" />
+        <div className="col-span-2 space-y-1">
+          <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
+          <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo dell'opportunità" required />
+        </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Tipo</label>
           <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
@@ -108,7 +111,10 @@ function OpportunityForm({
           <Input type="date" value={form.scadenza_candidatura} onChange={set('scadenza_candidatura')} />
         </div>
       </div>
-      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione *" />
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-foreground">Descrizione <span className="text-destructive">*</span></label>
+        <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione dell'opportunità" />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url" />
         <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
