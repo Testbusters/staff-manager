@@ -95,13 +95,17 @@
 
 ## Claude Code — Custom Skills (this project)
 
-| Skill | Action |
-|---|---|
-| `/arch-audit` | Weekly compliance audit: fetches latest Anthropic docs + release notes, compares with local architecture, auto-fixes safe items, lists recommendations |
-| `/ui-audit` | Full UI/UX quality audit: reads `docs/sitemap.md` as file inventory, runs 9 grep checks + 4 supplemental checks (design tokens, responsive grids, empty states, accessibility), produces verdict table ✅/❌ per check. Audit-only — no code changes without confirmation. |
+| Skill | Scope | When to run |
+|---|---|---|
+| `/arch-audit` | Claude Code architecture compliance: fetches latest Anthropic docs + release notes, compares with local `.claude/` setup, auto-fixes safe items | Weekly (SessionStart hook warns if ≥7 days). Timestamp: `~/.claude/projects/.../last-audit` |
+| `/ui-audit [screenshots]` | **shadcn compliance only**: design tokens (G1–G8), component adoption (S1–S5), accessibility attrs, table layout rules. Static + optional live screenshots. Does NOT cover UX flows or responsiveness. | After any UI wave, before merging a worktree |
+| `/ui-audit screenshots full` | Same as above but captures all routes via Playwright | Full pre-merge review |
+| `/responsive-audit` | Breakpoints 375/768/1024px — only collab+responsabile routes (admin excluded). 6 checks: overflow, table scaling, text truncation, 44px tap targets, stacked layout, modal fit. PASS/WARN/FAIL per route×breakpoint | After layout or grid changes |
+| `/ux-audit` | User experience quality: simulates F1–F5 flows (standard) or F1–F10 (full) via Playwright per role. Evaluates 6 UX dimensions D1–D6. Severity-ranked report Critical/Major/Minor with fix proposals | Before feature releases, after significant flow changes |
+| `/visual-audit [quick\|full\|page:<route>]` | Aesthetic quality: takes live screenshots in light + dark mode, scores each page on 7 visual dimensions V1–V7 (typography, spacing, hierarchy, colour, density, dark-mode, micro-polish). Score 1–5 per dimension. Critical/Major findings with concrete fix suggestions. Can invoke `/frontend-design` for before/after mockups | On demand — when the app "looks wrong" or before a client demo |
 
-> `/arch-audit` **Trigger**: SessionStart hook warns if ≥7 days since last run. Timestamp: `~/.claude/projects/.../last-audit`
-> `/ui-audit` **When to run**: after any UI wave, before merging a worktree, or on demand to verify design system compliance.
+> **Rule**: every new custom skill must be added to this table immediately after creation.
+> **Prerequisites for screenshot-based skills**: `npm run dev` must be running on `localhost:3001` (worktree) or `localhost:3000` (main).
 
 ---
 
