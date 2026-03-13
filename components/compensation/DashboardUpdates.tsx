@@ -80,7 +80,12 @@ export default function DashboardUpdates({
   opportunita: DashboardOppItem[];
   unreadCounts?: UnreadCounts;
 }) {
-  const [activeTab, setActiveTab] = useState<string>('eventi');
+  const defaultTab = comunicazioni.length > 0 ? 'comunicazioni'
+    : documents.length > 0 ? 'documenti'
+    : events.length > 0 ? 'eventi'
+    : opportunita.length > 0 ? 'opportunita'
+    : 'comunicazioni';
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [page, setPage] = useState(0);
 
   const currentItems =

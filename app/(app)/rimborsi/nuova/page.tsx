@@ -22,7 +22,7 @@ export default async function NuovoRimborsoPage() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6 flex items-center gap-3">
-        <Link href="/rimborsi" className="text-sm text-muted-foreground hover:text-foreground transition">
+        <Link href="/compensi?tab=rimborsi" className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Rimborsi
         </Link>
         <span className="text-muted-foreground">/</span>

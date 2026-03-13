@@ -151,7 +151,7 @@ export default function ExpenseForm() {
         }
       }
 
-      router.push('/rimborsi');
+      router.push('/compensi?tab=rimborsi');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
       setLoading(false);
@@ -251,7 +251,7 @@ export default function ExpenseForm() {
             </p>
 
             <div className="flex justify-between pt-1">
-              <Button type="button" variant="outline" onClick={() => router.push('/rimborsi')}>
+              <Button type="button" variant="outline" onClick={() => router.push('/compensi?tab=rimborsi')}>
                 ← Annulla
               </Button>
               <Button type="button" onClick={handleStep1Next} className="bg-brand hover:bg-brand/90 text-white">
@@ -306,6 +306,12 @@ export default function ExpenseForm() {
                 </ul>
               )}
             </div>
+
+            {files.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Carica almeno un documento per continuare.
+              </p>
+            )}
 
             <div className="flex justify-between pt-1">
               <Button type="button" variant="ghost" onClick={() => setStep(1)}>

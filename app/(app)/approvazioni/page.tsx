@@ -98,7 +98,15 @@ export default async function ApprovazioniPage({
       </div>
 
       {activeTab === 'compensi' && (
-        <ApprovazioniCompensazioni compensations={compensations} kpi={compKpi} />
+        <>
+          <Alert className="mb-4 border-border bg-muted/50">
+            <Info className="h-4 w-4 text-muted-foreground" />
+            <AlertDescription className="text-sm text-muted-foreground">
+              Visualizzazione in sola lettura. L&apos;approvazione e la liquidazione sono riservate all&apos;amministrazione.
+            </AlertDescription>
+          </Alert>
+          <ApprovazioniCompensazioni compensations={compensations} kpi={compKpi} />
+        </>
       )}
       {activeTab === 'rimborsi' && (
         <>

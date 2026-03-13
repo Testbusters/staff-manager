@@ -1,5 +1,6 @@
 'use client';
 import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export function DatePicker({ value, onChange, placeholder = 'Seleziona data', di
           mode="single"
           selected={date}
           onSelect={(d) => onChange(d ? format(d, 'yyyy-MM-dd') : '')}
+          locale={it}
           initialFocus
         />
       </PopoverContent>
