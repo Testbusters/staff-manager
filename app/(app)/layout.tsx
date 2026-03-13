@@ -37,7 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ? `${collaborator.nome} ${collaborator.cognome}`
     : user.email ?? 'Utente';
 
-  const dbTheme = profile.theme_preference ?? 'light';
+  const dbTheme = profile.theme_preference ?? 'dark';
 
   return (
     <>
