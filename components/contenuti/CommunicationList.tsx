@@ -313,8 +313,8 @@ export default function CommunicationList({
             </div>
             {canWrite && (
               <div className="flex gap-2 shrink-0">
-                <button onClick={() => setEditingId(c.id)} className="text-xs text-muted-foreground hover:text-foreground transition">Modifica</button>
-                <button onClick={() => setDeleteTarget(c.id)} className="text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition">Elimina</button>
+                <Button variant="ghost" size="sm" onClick={() => setEditingId(c.id)} className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground">Modifica</Button>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(c.id)} className="h-auto p-0 text-xs text-red-600 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300">Elimina</Button>
               </div>
             )}
           </div>

@@ -685,8 +685,8 @@ function DBPerformance({
   const controls = (
     <div className="flex items-center gap-2">
       <div className="flex gap-1">
-        <button onClick={() => setTab('queries')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'queries' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Query</button>
-        <button onClick={() => setTab('tables')} className={`rounded px-3 py-1 text-xs font-medium transition ${tab === 'tables' ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>Tabelle</button>
+        <Button size="sm" onClick={() => setTab('queries')} className={`text-xs ${tab === 'queries' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/60'}`}>Query</Button>
+        <Button size="sm" onClick={() => setTab('tables')} className={`text-xs ${tab === 'tables' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/60'}`}>Tabelle</Button>
       </div>
       <Button variant="outline" size="sm" onClick={onReset} disabled={resetting} className="text-xs">
         {resetting ? 'Reset…' : 'Reset stats'}

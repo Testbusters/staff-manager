@@ -114,7 +114,7 @@ export default function FeedbackButton() {
                 {/* Messaggio */}
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">
-                    Messaggio <span className="text-red-500">*</span>
+                    Messaggio <span className="text-destructive">*</span>
                   </label>
                   <Textarea
                     value={messaggio}

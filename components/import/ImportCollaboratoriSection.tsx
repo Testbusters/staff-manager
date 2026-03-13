@@ -240,14 +240,10 @@ function RunResultPanel({ result }: { result: RunResult }) {
 // ── Tab toggle ────────────────────────────────────────────────────────────────
 
 function TabToggle({ tab, onChange }: { tab: 'importa' | 'storico'; onChange: (t: 'importa' | 'storico') => void }) {
-  const cls = (id: 'importa' | 'storico') =>
-    `px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-      tab === id ? 'bg-brand text-white' : 'bg-muted text-muted-foreground hover:bg-accent'
-    }`;
   return (
     <div className="flex gap-2">
-      <button type="button" className={cls('importa')} onClick={() => onChange('importa')}>Importa</button>
-      <button type="button" className={cls('storico')} onClick={() => onChange('storico')}>Storico</button>
+      <Button size="sm" onClick={() => onChange('importa')} className={`text-sm font-medium ${tab === 'importa' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/60'}`}>Importa</Button>
+      <Button size="sm" onClick={() => onChange('storico')} className={`text-sm font-medium ${tab === 'storico' ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/60'}`}>Storico</Button>
     </div>
   );
 }

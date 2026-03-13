@@ -124,13 +124,13 @@ export default async function EventiPage({
           isPast ? 'border-border bg-card/50' : 'border-border bg-card'
         }`}
       >
-        <div className={`flex-shrink-0 w-12 text-center rounded-lg p-1.5 ${isPast ? 'bg-muted' : 'bg-blue-50 border border-blue-200 dark:bg-blue-950/50 dark:border-blue-800/40'}`}>
+        <div className={`flex-shrink-0 w-12 text-center rounded-lg p-1.5 ${isPast ? 'bg-muted' : 'bg-brand/10 border border-brand/20'}`}>
           {ev.start_datetime ? (
             <>
-              <p className={`text-lg font-bold leading-none ${isPast ? 'text-muted-foreground' : 'text-blue-600 dark:text-blue-300'}`}>
+              <p className={`text-lg font-bold leading-none ${isPast ? 'text-muted-foreground' : 'text-brand'}`}>
                 {new Date(ev.start_datetime).getDate()}
               </p>
-              <p className={`text-xs uppercase ${isPast ? 'text-muted-foreground' : 'text-blue-500 dark:text-blue-400'}`}>
+              <p className={`text-xs uppercase ${isPast ? 'text-muted-foreground' : 'text-brand/80'}`}>
                 {new Date(ev.start_datetime).toLocaleString('it-IT', { month: 'short' })}
               </p>
             </>

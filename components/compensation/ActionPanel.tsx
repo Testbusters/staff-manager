@@ -125,7 +125,7 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">
               Motivazione del rifiuto
-              <span className="text-red-500 ml-1">*</span>
+              <span className="text-destructive ml-1">*</span>
             </label>
             <Textarea
               value={rejectNote}

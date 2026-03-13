@@ -18,7 +18,7 @@ import DashboardUpdates from '@/components/compensation/DashboardUpdates';
 import type { DashboardDocItem, DashboardEventItem, DashboardCommItem, DashboardOppItem } from '@/components/compensation/DashboardUpdates';
 import CollabOpenTicketsSection from '@/components/ticket/CollabOpenTicketsSection';
 import ResponsabileAvatarHero from '@/components/responsabile/ResponsabileAvatarHero';
-import { AlertTriangle, FileText } from 'lucide-react';
+import { AlertTriangle, FileText, Users } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 
 // ── Constants ──────────────────────────────────────────────
@@ -237,7 +237,7 @@ export default async function DashboardPage() {
     if (communityIds.length === 0) {
       return (
         <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-sm text-muted-foreground">Nessuna community assegnata.</p>
+          <EmptyState icon={Users} title="Nessuna community assegnata." />
         </div>
       );
     }

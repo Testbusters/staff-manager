@@ -75,7 +75,7 @@ export default function CUBatchUpload() {
       {/* Anno */}
       <div>
         <label className="block text-xs text-muted-foreground mb-1.5">
-          Anno fiscale <span className="text-red-500">*</span>
+          Anno fiscale <span className="text-destructive">*</span>
         </label>
         <Input
           type="number"
@@ -91,7 +91,7 @@ export default function CUBatchUpload() {
       {/* ZIP */}
       <div>
         <label className="block text-xs text-muted-foreground mb-1.5">
-          File ZIP (PDF CU) <span className="text-red-500">*</span>
+          File ZIP (PDF CU) <span className="text-destructive">*</span>
         </label>
         <input
           type="file"
@@ -105,7 +105,7 @@ export default function CUBatchUpload() {
       {/* CSV */}
       <div>
         <label className="block text-xs text-muted-foreground mb-1.5">
-          File CSV mapping <span className="text-red-500">*</span>
+          File CSV mapping <span className="text-destructive">*</span>
         </label>
         <input
           type="file"

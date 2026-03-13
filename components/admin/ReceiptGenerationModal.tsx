@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import type { ReceiptPreviewItem } from '@/lib/types';
 
@@ -102,39 +103,39 @@ export default function ReceiptGenerationModal({ open, onClose }: Props) {
               </p>
             ) : (
               <>
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Collaboratore</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Lordo</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Ritenuta</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Netto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <div className="w-fit overflow-hidden rounded-lg border border-border">
+                  <Table className="w-auto text-sm">
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="text-xs">Collaboratore</TableHead>
+                        <TableHead className="text-right text-xs">Lordo</TableHead>
+                        <TableHead className="text-right text-xs">Ritenuta</TableHead>
+                        <TableHead className="text-right text-xs">Netto</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {items.map((item) => (
-                        <tr key={item.collaborator_id} className="border-t border-border">
-                          <td className="px-3 py-2 text-foreground">{item.nome} {item.cognome}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-foreground">{fmt(item.totale_lordo)}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{fmt(item.ritenuta)}</td>
-                          <td className="px-3 py-2 text-right tabular-nums font-medium text-foreground">{fmt(item.netto)}</td>
-                        </tr>
+                        <TableRow key={item.collaborator_id}>
+                          <TableCell className="text-foreground">{item.nome} {item.cognome}</TableCell>
+                          <TableCell className="text-right tabular-nums text-foreground">{fmt(item.totale_lordo)}</TableCell>
+                          <TableCell className="text-right tabular-nums text-muted-foreground">{fmt(item.ritenuta)}</TableCell>
+                          <TableCell className="text-right tabular-nums font-medium text-foreground">{fmt(item.netto)}</TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                    <tfoot className="bg-muted/30 border-t border-border">
-                      <tr>
-                        <td className="px-3 py-2 text-xs text-muted-foreground">{items.length} collaboratori</td>
-                        <td className="px-3 py-2 text-right tabular-nums text-sm font-semibold text-foreground">{fmt(totLordo)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums text-sm text-muted-foreground">
+                    </TableBody>
+                    <TableFooter className="bg-muted/30">
+                      <TableRow>
+                        <TableCell className="text-xs text-muted-foreground">{items.length} collaboratori</TableCell>
+                        <TableCell className="text-right tabular-nums text-sm font-semibold text-foreground">{fmt(totLordo)}</TableCell>
+                        <TableCell className="text-right tabular-nums text-sm text-muted-foreground">
                           {fmt(totLordoCompensi * 0.2)}
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums text-sm font-semibold text-foreground">
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm font-semibold text-foreground">
                           {fmt(totLordo - totLordoCompensi * 0.2)}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Lordo compensi: {fmt(totLordoCompensi)} · Lordo rimborsi: {fmt(totLordoRimborsi)}
