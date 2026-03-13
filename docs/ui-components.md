@@ -46,7 +46,7 @@ check whether a mapped component exists here.
 | `IN_ATTESA` | `outline` | `border-amber-600 text-amber-400` |
 | `APPROVATO` | `outline` | `border-green-600 text-green-400` |
 | `RIFIUTATO` | `destructive` | — |
-| `LIQUIDATO` | `outline` | `border-blue-600 text-blue-400` |
+| `LIQUIDATO` | `outline` | `bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-300` |
 
 ### Documents
 
@@ -59,7 +59,7 @@ check whether a mapped component exists here.
 
 | Stato | Variante | className extra |
 |---|---|---|
-| `APERTO` | `outline` | `border-blue-600 text-blue-400` |
+| `APERTO` | `outline` | `bg-muted text-foreground border-border` |
 | `IN_LAVORAZIONE` | `outline` | `border-amber-600 text-amber-400` |
 | `CHIUSO` | `secondary` | — |
 
