@@ -17,15 +17,19 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 ## Mandatory Development Pipeline
 
 **Phase 0 — Session orientation** *(only at the start of each new session or after a context summary)*
+- **FIRST ACTION — session file**: before anything else, check `.claude/session/` for existing `block-*.md` files.
+  - If one exists: read it immediately — a previous session was interrupted. Resume from the recorded state. Do NOT create a new file.
+  - If none exists: create `.claude/session/block-new-session.md` with the current date and a placeholder skeleton. This file will be renamed to the real block name in Phase 1 once the block name is known.
+  - This is non-negotiable: the session file must exist before any other Phase 0 action runs.
 - Read `.claude/CLAUDE.local.md` to confirm active overrides for this session (it is auto-loaded, but an explicit read ensures its content is fully in context). If the file does not exist, continue.
 - Check `MEMORY.md` (project root): read the **Active plan** section (if present) to re-align on in-progress sessions, then **Lessons/Patterns** for patterns relevant to the current block. The auto-memory is injected automatically — no explicit read needed.
-- **Check `.claude/session/`**: if any `block-*.md` file exists, read it immediately — it means a requirements definition session was interrupted. Resume from the recorded state rather than starting over.
 - If context was compressed (summary): read `docs/implementation-checklist.md` to re-align on current state.
 - Do not re-read files already in the current context — use the already-acquired line reference.
 - **Branch check**: run `git branch --show-current`. If the result is `main` or `staging`, stop immediately — do NOT start development on those branches. Instruct the user to run `sm-start block-name` from iTerm (or `git checkout staging && git pull && git checkout -b feature/block-name`) before proceeding. Development always starts on a `feature/block-name` branch.
 
 **Phase 1 — Requirements**
-- **Create session recovery file**: at the very start of Phase 1, create `.claude/session/block-[name].md` with the block name and an empty requirements skeleton. Update this file after every significant exchange during requirements definition (each AskUserQuestion answer, each design decision). This ensures the session can be resumed if the tab is accidentally closed. See `.claude/session/` for format reference.
+- **Rename session file**: at the start of Phase 1, once the block name is determined, rename `.claude/session/block-new-session.md` → `.claude/session/block-[name].md`. If the file was already named correctly (resumed session), skip this step.
+- Update the session file after every significant exchange during requirements definition (each AskUserQuestion answer, each design decision). This ensures the session can be resumed if the tab is accidentally closed. See `.claude/session/` for format reference.
 - Read `docs/implementation-checklist.md` to verify current state and block dependencies.
 - Read **only the relevant section** of `docs/requirements.md` for the current block — not the entire file.
 - Check `docs/refactoring-backlog.md`: if there are entries that intersect the current block, include them in the work plan or flag them explicitly.
@@ -240,7 +244,10 @@ SELECT …;
 
 **Phase 8 — Block closure**
 Only after explicit confirmation:
-0. **Delete session recovery file**: remove `.claude/session/block-[name].md` if it exists — the block is complete, the file is no longer needed.
+0. **Delete session recovery file**: remove `.claude/session/block-[name].md` if it exists.
+   - Proceed with deletion only if the user's confirmation message unambiguously closes the block (e.g. "ok", "procedi", "tutto ok", "confermo").
+   - If the confirmation is ambiguous (e.g. partial approval, open questions remaining, or the user mentioned wanting to continue something): ask explicitly before deleting — `"Confermo rimozione del file di sessione e chiusura del blocco?"` — then wait for a clear yes before proceeding.
+   - Never delete the session file speculatively.
 1. Update `docs/implementation-checklist.md`: mark block ✅, add a Log row with date, files, test results, relevant notes.
 2. Update `CLAUDE.md` **only if** the block introduces non-obvious patterns, modifies RBAC, or adds a new coding convention. Do not update for simple file additions — Claude infers structure from code.
 2b. If the block touched collaborator profile fields, permissions, or edit flows: update `docs/profile-editing-contract.md` (field × entry point matrix). Mandatory per CLAUDE.md reference documents.
@@ -293,7 +300,10 @@ After git push, before closing the session:
 Use when: the change touches ≤3 files, introduces no migration, no new patterns, no shared type changes.
 Branch prefix `fix/` activates this pipeline automatically.
 
-**FL-0 — Branch check**
+**FL-0 — Branch check + session file**
+- **FIRST ACTION — session file**: check `.claude/session/` for existing `fix-*.md` files.
+  - If one exists: read it — a previous fix session was interrupted. Resume from it. Do NOT create a new file.
+  - If none exists: create `.claude/session/fix-[description].md` with a one-line description of the fix and the current date. This file must exist before any code is written.
 - Confirm current branch starts with `fix/`. If not, stop and instruct user to run `sm-fix description`.
 - If on `main` or `staging`: stop — same rule as Phase 0 of the full pipeline.
 
@@ -316,6 +326,9 @@ Branch prefix `fix/` activates this pipeline automatically.
 **FL-4 — Cleanup**
 - Update `docs/implementation-checklist.md` only if the fix closes a tracked item.
 - Update `CLAUDE.md` only if the fix reveals a non-obvious pattern worth documenting.
+- **Delete session file**: remove `.claude/session/fix-[description].md`.
+  - Proceed only if `sm-deploy` completed without errors and the fix is confirmed in production.
+  - If the outcome is ambiguous (deploy not yet verified, user hasn't confirmed the fix works): ask explicitly — `"Il fix è confermato in produzione — rimuovo il file di sessione?"` — before deleting.
 - Instruct user: `sm-cleanup fix/description` to delete the branch.
 
 > Fast Lane has no STOP gates — proceed autonomously unless the fix scope expands beyond 3 files or requires a migration, at which point escalate to the full pipeline and notify the user.
