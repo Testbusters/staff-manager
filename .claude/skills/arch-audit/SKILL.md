@@ -3,6 +3,7 @@ name: arch-audit
 description: Audit the Claude Code architecture files against latest Anthropic documentation and release notes. Run weekly to maintain compliance, catch new features, and keep the project's context system clean and efficient.
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing a weekly architecture compliance audit for the staff-manager project. Execute all steps below in order.
