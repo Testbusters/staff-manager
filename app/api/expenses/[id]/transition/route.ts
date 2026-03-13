@@ -24,6 +24,7 @@ const transitionSchema = z.object({
     'approve',
     'reject',
     'mark_liquidated',
+    'revert_to_pending',
   ]),
   note: z.string().optional(),
   payment_reference: z.string().optional(),
@@ -121,6 +122,10 @@ export async function POST(
     updatePayload.liquidated_by = user.id;
     updatePayload.payment_reference = payment_reference ?? null;
   }
+  if (action === 'revert_to_pending') {
+    updatePayload.approved_by = null;
+    updatePayload.approved_at = null;
+  }
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -144,6 +149,21 @@ export async function POST(
       approved_lordo_ytd: currentYtd + (expense.importo ?? 0),
       approved_year: year,
     }).eq('id', expense.collaborator_id);
+  }
+
+  // Decrement approved_lordo_ytd counter on revert_to_pending
+  if (action === 'revert_to_pending') {
+    const { data: revertCollab } = await serviceClient
+      .from('collaborators')
+      .select('approved_lordo_ytd, approved_year')
+      .eq('id', expense.collaborator_id)
+      .single();
+    if (revertCollab) {
+      const currentYtd = getYtd(revertCollab);
+      await serviceClient.from('collaborators').update({
+        approved_lordo_ytd: Math.max(0, currentYtd - (expense.importo ?? 0)),
+      }).eq('id', expense.collaborator_id);
+    }
   }
 
   const { error: historyError } = await serviceClient
@@ -177,9 +197,10 @@ export async function POST(
       );
 
       const eventKeyMap: Record<string, string> = {
-        approve:         'rimborso_approvato',
-        reject:          'rimborso_rifiutato',
-        mark_liquidated: 'rimborso_pagato',
+        approve:           'rimborso_approvato',
+        reject:            'rimborso_rifiutato',
+        mark_liquidated:   'rimborso_pagato',
+        revert_to_pending: 'rimborso_rimessa_attesa',
       };
       const eventKey = eventKeyMap[action];
       const setting = eventKey ? settings.get(`${eventKey}:collaboratore`) : undefined;
@@ -194,9 +215,10 @@ export async function POST(
           ? new Date(expense.data_spesa).toLocaleDateString('it-IT')
           : '';
         const emailKeyMap: Record<string, string> = {
-          approve: 'E2',
-          reject: 'E3',
-          mark_liquidated: 'E4',
+          approve:           'E2',
+          reject:            'E3',
+          mark_liquidated:   'E4',
+          revert_to_pending: 'E13',
         };
         const emailKey = emailKeyMap[action];
         if (emailKey) {
@@ -205,6 +227,7 @@ export async function POST(
             tipo: 'Rimborso',
             importo: (expense.importo ?? 0).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' }),
             data: dataFormatted,
+            ...(note ? { nota: note } : {}),
           }).then((payload) => {
             sendEmail(collabInfo.email!, payload.subject, payload.html).catch(() => {});
           }).catch(() => {});

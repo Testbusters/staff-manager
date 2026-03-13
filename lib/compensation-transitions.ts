@@ -4,7 +4,8 @@ export type CompensationAction =
   | 'reopen'
   | 'approve'
   | 'reject'
-  | 'mark_liquidated';
+  | 'mark_liquidated'
+  | 'revert_to_pending';
 
 interface TransitionDef {
   fromStates: CompensationStatus[];
@@ -13,17 +14,19 @@ interface TransitionDef {
 }
 
 export const ALLOWED_TRANSITIONS: Record<CompensationAction, TransitionDef> = {
-  reopen:          { fromStates: ['RIFIUTATO'], allowedRoles: ['collaboratore'],                              requiresNote: false },
-  approve:         { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'],   requiresNote: false },
-  reject:          { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'],   requiresNote: true  },
-  mark_liquidated: { fromStates: ['APPROVATO'], allowedRoles: ['responsabile_compensi', 'amministrazione'],   requiresNote: false },
+  reopen:           { fromStates: ['RIFIUTATO'], allowedRoles: ['collaboratore'],                              requiresNote: false },
+  approve:          { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'],   requiresNote: false },
+  reject:           { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'],   requiresNote: true  },
+  mark_liquidated:  { fromStates: ['APPROVATO'], allowedRoles: ['responsabile_compensi', 'amministrazione'],   requiresNote: false },
+  revert_to_pending: { fromStates: ['APPROVATO'], allowedRoles: ['amministrazione'],                           requiresNote: true  },
 };
 
 export const ACTION_TO_STATE: Record<CompensationAction, CompensationStatus> = {
-  reopen:          'IN_ATTESA',
-  approve:         'APPROVATO',
-  reject:          'RIFIUTATO',
-  mark_liquidated: 'LIQUIDATO',
+  reopen:            'IN_ATTESA',
+  approve:           'APPROVATO',
+  reject:            'RIFIUTATO',
+  mark_liquidated:   'LIQUIDATO',
+  revert_to_pending: 'IN_ATTESA',
 };
 
 export type TransitionResult =

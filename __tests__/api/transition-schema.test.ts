@@ -4,13 +4,13 @@ import { z } from 'zod';
 // ── Replicate schemas from API routes (single source of truth for validation) ─
 
 const compensationTransitionSchema = z.object({
-  action: z.enum(['reopen', 'approve', 'reject', 'mark_liquidated']),
+  action: z.enum(['reopen', 'approve', 'reject', 'mark_liquidated', 'revert_to_pending']),
   note: z.string().optional(),
   payment_reference: z.string().optional(),
 });
 
 const expenseTransitionSchema = z.object({
-  action: z.enum(['approve', 'reject', 'mark_liquidated']),
+  action: z.enum(['approve', 'reject', 'mark_liquidated', 'revert_to_pending']),
   note: z.string().optional(),
   payment_reference: z.string().optional(),
 });
@@ -30,8 +30,8 @@ const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000';
 // ── Compensation transition ────────────────────────────────────────────────────
 
 describe('compensation transition schema', () => {
-  it('accetta tutte le 4 azioni valide', () => {
-    const valid = ['reopen', 'approve', 'reject', 'mark_liquidated'];
+  it('accetta tutte le 5 azioni valide', () => {
+    const valid = ['reopen', 'approve', 'reject', 'mark_liquidated', 'revert_to_pending'];
     for (const action of valid) {
       expect(compensationTransitionSchema.safeParse({ action }).success).toBe(true);
     }
@@ -84,13 +84,22 @@ describe('compensation transition schema', () => {
       expect(result.data.payment_reference).toBeUndefined();
     }
   });
+
+  it('revert_to_pending accettato con note', () => {
+    const result = compensationTransitionSchema.safeParse({
+      action: 'revert_to_pending',
+      note: 'Importo lordo errato',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.note).toBe('Importo lordo errato');
+  });
 });
 
 // ── Expense transition ─────────────────────────────────────────────────────────
 
 describe('expense transition schema', () => {
-  it('accetta le 3 azioni valide per rimborsi', () => {
-    const valid = ['approve', 'reject', 'mark_liquidated'];
+  it('accetta le 4 azioni valide per rimborsi', () => {
+    const valid = ['approve', 'reject', 'mark_liquidated', 'revert_to_pending'];
     for (const action of valid) {
       expect(expenseTransitionSchema.safeParse({ action }).success).toBe(true);
     }
@@ -121,6 +130,20 @@ describe('expense transition schema', () => {
     });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.note).toBe('Scontrino illeggibile');
+  });
+
+  it('revert_to_pending accettato con note', () => {
+    const result = expenseTransitionSchema.safeParse({
+      action: 'revert_to_pending',
+      note: 'Importo da verificare',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.note).toBe('Importo da verificare');
+  });
+
+  it('revert_to_pending accettato anche senza note (validazione note nel route handler)', () => {
+    const result = expenseTransitionSchema.safeParse({ action: 'revert_to_pending' });
+    expect(result.success).toBe(true);
   });
 });
 

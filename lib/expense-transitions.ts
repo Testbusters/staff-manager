@@ -3,7 +3,8 @@ import type { Role, ExpenseStatus } from './types';
 export type ExpenseAction =
   | 'approve'
   | 'reject'
-  | 'mark_liquidated';
+  | 'mark_liquidated'
+  | 'revert_to_pending';
 
 interface TransitionDef {
   fromStates: ExpenseStatus[];
@@ -12,15 +13,17 @@ interface TransitionDef {
 }
 
 export const ALLOWED_EXPENSE_TRANSITIONS: Record<ExpenseAction, TransitionDef> = {
-  approve:         { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: false },
-  reject:          { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: true  },
-  mark_liquidated: { fromStates: ['APPROVATO'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: false },
+  approve:           { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: false },
+  reject:            { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: true  },
+  mark_liquidated:   { fromStates: ['APPROVATO'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: false },
+  revert_to_pending: { fromStates: ['APPROVATO'], allowedRoles: ['amministrazione'],                          requiresNote: true  },
 };
 
 export const EXPENSE_ACTION_TO_STATE: Record<ExpenseAction, ExpenseStatus> = {
-  approve:         'APPROVATO',
-  reject:          'RIFIUTATO',
-  mark_liquidated: 'LIQUIDATO',
+  approve:           'APPROVATO',
+  reject:            'RIFIUTATO',
+  mark_liquidated:   'LIQUIDATO',
+  revert_to_pending: 'IN_ATTESA',
 };
 
 export type TransitionResult =

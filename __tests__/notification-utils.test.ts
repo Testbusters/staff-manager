@@ -71,13 +71,15 @@ describe('NOTIFIED_ACTIONS constants', () => {
     expect(COMPENSATION_NOTIFIED_ACTIONS).toContain('approve');
     expect(COMPENSATION_NOTIFIED_ACTIONS).toContain('reject');
     expect(COMPENSATION_NOTIFIED_ACTIONS).toContain('mark_liquidated');
-    expect(COMPENSATION_NOTIFIED_ACTIONS).toHaveLength(3);
+    expect(COMPENSATION_NOTIFIED_ACTIONS).toContain('revert_to_pending');
+    expect(COMPENSATION_NOTIFIED_ACTIONS).toHaveLength(4);
   });
 
   it('EXPENSE_NOTIFIED_ACTIONS includes all expected actions', () => {
     expect(EXPENSE_NOTIFIED_ACTIONS).toContain('approve');
     expect(EXPENSE_NOTIFIED_ACTIONS).toContain('reject');
     expect(EXPENSE_NOTIFIED_ACTIONS).toContain('mark_liquidated');
-    expect(EXPENSE_NOTIFIED_ACTIONS).toHaveLength(3);
+    expect(EXPENSE_NOTIFIED_ACTIONS).toContain('revert_to_pending');
+    expect(EXPENSE_NOTIFIED_ACTIONS).toHaveLength(4);
   });
 });

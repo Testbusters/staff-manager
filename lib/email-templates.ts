@@ -352,6 +352,32 @@ export function emailNuovoEvento(p: {
   };
 }
 
+// ── E13 — Rimesso in attesa ──────────────────────────────────
+export function emailRimessaInAttesa(p: {
+  nome: string;
+  tipo: 'Compenso' | 'Rimborso';
+  importo: number;
+  data: string;
+  nota?: string | null;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`Il tuo <strong>${p.tipo}</strong> del <strong>${p.data}</strong> è stato rimesso in attesa di approvazione.`)}
+    ${highlight([
+      { label: 'Tipo', value: p.tipo },
+      { label: 'Importo', value: eur(p.importo) },
+      { label: 'Stato', value: 'In attesa' },
+    ])}
+    ${p.nota ? note(p.nota) : ''}
+    ${bodyText('Per chiarimenti contatta il tuo responsabile o apri un ticket di supporto.')}
+    ${ctaButton("Vai all'app")}
+  `;
+  return {
+    subject: `Il tuo ${p.tipo.toLowerCase()} è stato rimesso in attesa`,
+    html: layout(body),
+  };
+}
+
 // ── E12 — Nuovo contenuto generico (→ collaboratore) ─────────
 // Used for opportunità and sconti (tipo = 'Opportunità' | 'Sconto').
 export function emailNuovoContenuto(p: {

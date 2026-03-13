@@ -27,6 +27,7 @@ const transitionSchema = z.object({
     'approve',
     'reject',
     'mark_liquidated',
+    'revert_to_pending',
   ]),
   note: z.string().optional(),
   payment_reference: z.string().optional(),
@@ -127,6 +128,10 @@ export async function POST(
     updatePayload.liquidated_by = user.id;
     updatePayload.payment_reference = payment_reference ?? null;
   }
+  if (action === 'revert_to_pending') {
+    updatePayload.approved_by = null;
+    updatePayload.approved_at = null;
+  }
 
   // Use service role to bypass RLS for transitions the collaboratore RLS doesn't cover
   // (reopen: RIFIUTATO→IN_ATTESA)
@@ -152,6 +157,21 @@ export async function POST(
       approved_lordo_ytd: currentYtd + (comp.importo_lordo ?? 0),
       approved_year: year,
     }).eq('id', comp.collaborator_id);
+  }
+
+  // Decrement approved_lordo_ytd counter on revert_to_pending
+  if (action === 'revert_to_pending') {
+    const { data: revertCollab } = await serviceClient
+      .from('collaborators')
+      .select('approved_lordo_ytd, approved_year')
+      .eq('id', comp.collaborator_id)
+      .single();
+    if (revertCollab) {
+      const currentYtd = getYtd(revertCollab);
+      await serviceClient.from('collaborators').update({
+        approved_lordo_ytd: Math.max(0, currentYtd - (comp.importo_lordo ?? 0)),
+      }).eq('id', comp.collaborator_id);
+    }
   }
 
   // Insert history entry
@@ -202,9 +222,10 @@ export async function POST(
       );
 
       const eventKeyMap: Record<string, string> = {
-        approve:         'comp_approvato',
-        reject:          'comp_rifiutato',
-        mark_liquidated: 'comp_pagato',
+        approve:           'comp_approvato',
+        reject:            'comp_rifiutato',
+        mark_liquidated:   'comp_pagato',
+        revert_to_pending: 'comp_rimessa_attesa',
       };
       const eventKey = eventKeyMap[action];
       const setting = eventKey ? settings.get(`${eventKey}:collaboratore`) : undefined;
@@ -219,9 +240,10 @@ export async function POST(
           ? new Date(comp.data_competenza).toLocaleDateString('it-IT')
           : '';
         const emailKeyMap: Record<string, string> = {
-          approve: 'E2',
-          reject: 'E3',
-          mark_liquidated: 'E4',
+          approve:           'E2',
+          reject:            'E3',
+          mark_liquidated:   'E4',
+          revert_to_pending: 'E13',
         };
         const emailKey = emailKeyMap[action];
         if (emailKey) {
@@ -230,6 +252,7 @@ export async function POST(
             tipo: 'Compenso',
             importo: (comp.importo_lordo ?? 0).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' }),
             data: dataFormatted,
+            ...(note ? { nota: note } : {}),
           }).then((payload) => {
             sendEmail(collabInfo.email!, payload.subject, payload.html).catch(() => {});
           }).catch(() => {});
