@@ -38,7 +38,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   // Keep pdfjs-dist and pdf-lib out of the Turbopack/webpack bundle so they
   // run in plain Node.js context. Without this, Turbopack rewrites module
   // paths into .next/dev/server/chunks/ and the fake-worker import resolution
