@@ -65,13 +65,9 @@ next-env.d.ts
 tmp/
 
 # One-shot scripts (local only — not for CI)
-scripts/match-contratti.mjs
-scripts/rebuild-contratti-sheet.mjs
-scripts/check-import-usernames.mjs
-scripts/tag-community-column.mjs
-scripts/split-import-tabs.mjs
-scripts/cleanup-contract.mjs
-scripts/read-docs.mjs
-scripts/read-docs-deep.mjs
-scripts/read-full.mjs
-scripts/regen-contract-test.mjs
+# All .mjs files at root or in scripts/ are ignored by default.
+# To track a specific script, use: git add -f scripts/my-script.mjs
+*.mjs
+!eslint.config.mjs
+!postcss.config.mjs
+scripts/*.mjs
