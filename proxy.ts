@@ -119,3 +119,6 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
+
+// Next.js 16 uses proxy.ts as the middleware entry point (replaces middleware.ts)
+export default proxy;
