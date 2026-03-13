@@ -108,7 +108,7 @@ export default function ImportSection() {
             <div>
               <h3 className="text-sm font-medium text-foreground">Importa da Google Sheet</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Legge le righe con stato <code className="text-muted-foreground">TO_PROCESS</code> e le importa come compensi IN_ATTESA.{' '}
+                Legge le righe contrassegnate per l&apos;elaborazione e le importa come compensi in attesa.{' '}
                 <a
                   href={SHEET_URL}
                   target="_blank"
@@ -182,7 +182,7 @@ export default function ImportSection() {
           {state.phase === 'preview' && (
             <div className="flex-1 overflow-y-auto space-y-4 pr-1">
               <p className="text-xs text-muted-foreground">
-                {state.rows.length} righe valide · {state.errors.length} con errori · {state.total} totali in TO_PROCESS
+                {state.rows.length} righe valide · {state.errors.length} con errori · {state.total} totali da elaborare
               </p>
 
               {state.errors.length > 0 && <ErrorList errors={state.errors} />}
@@ -220,7 +220,7 @@ export default function ImportSection() {
 
               {state.rows.length === 0 && state.errors.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Nessuna riga con stato TO_PROCESS trovata nel foglio.
+                  Nessuna riga da elaborare trovata nel foglio.
                 </p>
               )}
             </div>

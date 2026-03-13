@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, MessageCircle } from 'lucide-react';
 import type { TicketStatus } from '@/lib/types';
+import { EmptyState } from '@/components/ui/empty-state';
 import { TICKET_STATUS_LABELS } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -49,10 +50,13 @@ export default function TicketThread({
     <div className="space-y-2">
       {messages.length === 0 ? (
         <Card>
-          <CardContent className="p-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Nessun messaggio ancora. Aggiungi il primo messaggio qui sotto.
-            </p>
+          <CardContent className="p-2">
+            <EmptyState
+              icon={MessageCircle}
+              title="Nessun messaggio ancora."
+              description="Aggiungi il primo messaggio qui sotto."
+              className="py-8"
+            />
           </CardContent>
         </Card>
       ) : (

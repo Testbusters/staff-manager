@@ -112,6 +112,7 @@ export type TicketPriority = 'BASSA' | 'NORMALE' | 'ALTA';
 export const TICKET_CATEGORIES = [
   'Compenso',
   'Rimborso',
+  'Altro',
 ] as const;
 
 export type TicketCategory = typeof TICKET_CATEGORIES[number];

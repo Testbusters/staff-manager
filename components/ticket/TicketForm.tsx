@@ -44,6 +44,7 @@ export default function TicketForm() {
       return;
     }
 
+    toast.success('Ticket aperto con successo.');
     router.push(`/ticket/${data.ticket.id}`);
   }
 

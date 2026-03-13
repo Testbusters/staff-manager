@@ -163,7 +163,7 @@ export default async function ComunicazioniPage({
       {activeTab === 'comunicazioni' && (
         <div className="space-y-3">
           {communications.length === 0 && (
-            <EmptyState icon={Bell} title="Nessuna comunicazione" description="Non ci sono comunicazioni pubblicate al momento." />
+            <EmptyState icon={Bell} title="Nessuna comunicazione" description="Le comunicazioni vengono pubblicate dall'amministrazione. Torna a controllare più tardi." />
           )}
           {pageCommunications.map((c) => (
             <Link

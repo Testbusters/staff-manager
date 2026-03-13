@@ -337,7 +337,8 @@ export default async function DashboardPage() {
       last_message_author_name:   t.last_message_author_name,
     });
     const ticketsRicevuti = rawRicevuti.map(toTicket);
-    const ticketsRecenti  = rawRecenti.map(toTicket);
+    const ricevutiIds     = new Set(rawRicevuti.map(t => t.id));
+    const ticketsRecenti  = rawRecenti.filter(t => !ricevutiIds.has(t.id)).map(toTicket);
 
     // ── Hero data ────────────────────────────────────────────
     const rTodayStr  = new Date().toLocaleDateString('it-IT', {

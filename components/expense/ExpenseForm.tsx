@@ -31,17 +31,30 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
+const STEP_LABELS: Record<1 | 2 | 3, string> = { 1: 'Dati', 2: 'Allegati', 3: 'Riepilogo' };
+
 function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
   return (
-    <div className="flex gap-1.5 mb-6">
-      {([1, 2, 3] as const).map((s) => (
-        <div
-          key={s}
-          className={`h-1 flex-1 rounded-full transition-colors ${
-            s < step ? 'bg-brand' : s === step ? 'bg-brand' : 'bg-accent'
-          }`}
-        />
-      ))}
+    <div className="mb-6">
+      <div className="flex gap-1.5 mb-1.5">
+        {([1, 2, 3] as const).map((s) => (
+          <div
+            key={s}
+            className={`h-1 flex-1 rounded-full transition-colors ${
+              s <= step ? 'bg-brand' : 'bg-accent'
+            }`}
+          />
+        ))}
+      </div>
+      <div className="flex">
+        {([1, 2, 3] as const).map((s) => (
+          <div key={s} className="flex-1 text-center">
+            <span className={`text-[10px] font-medium ${s === step ? 'text-brand' : s < step ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}>
+              {STEP_LABELS[s]}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -149,7 +162,6 @@ export default function ExpenseForm() {
     <div className="rounded-2xl bg-card border border-border p-6">
       {/* Step indicator */}
       <div className="mb-5">
-        <p className="text-xs text-muted-foreground mb-2">Step {step} di 3</p>
         <ProgressBar step={step} />
       </div>
 
@@ -233,6 +245,10 @@ export default function ExpenseForm() {
                 </FormItem>
               )}
             />
+
+            <p className="text-xs text-muted-foreground">
+              Al passo successivo dovrai allegare almeno un documento giustificativo.
+            </p>
 
             <div className="flex justify-between pt-1">
               <Button type="button" variant="outline" onClick={() => router.push('/rimborsi')}>

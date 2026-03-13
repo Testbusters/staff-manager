@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ApprovazioniCompensazioni from '@/components/compensation/ApprovazioniCompensazioni';
 import ApprovazioniRimborsi from '@/components/expense/ApprovazioniRimborsi';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 export default async function ApprovazioniPage({
   searchParams,
@@ -99,7 +101,15 @@ export default async function ApprovazioniPage({
         <ApprovazioniCompensazioni compensations={compensations} kpi={compKpi} />
       )}
       {activeTab === 'rimborsi' && (
-        <ApprovazioniRimborsi expenses={expenses} kpi={expKpi} />
+        <>
+          <Alert className="mb-4 border-border bg-muted/50">
+            <Info className="h-4 w-4 text-muted-foreground" />
+            <AlertDescription className="text-sm text-muted-foreground">
+              Visualizzazione in sola lettura. Le azioni di approvazione e liquidazione sono riservate all&apos;amministrazione.
+            </AlertDescription>
+          </Alert>
+          <ApprovazioniRimborsi expenses={expenses} kpi={expKpi} />
+        </>
       )}
     </div>
   );

@@ -62,7 +62,7 @@ function SourceCard({ onPreview, loading }: { onPreview: () => void; loading: bo
       <div className="text-xs text-muted-foreground space-y-1 border-t border-border pt-3">
         <p className="font-medium text-foreground">Come funziona</p>
         <ol className="list-decimal list-inside space-y-0.5">
-          <li>Legge le righe del foglio con stato ≠ PROCESSED</li>
+          <li>Legge le righe del foglio non ancora elaborate</li>
           <li>Verifica la presenza del file PDF nella cartella Drive</li>
           <li>Mostra anteprima con eventuali errori o avvisi</li>
           <li>Importa i contratti validi come documenti FIRMATO</li>

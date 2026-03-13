@@ -93,6 +93,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     disabled
+                    title="Funzionalità in arrivo — disponibile prossimamente"
                     className="cursor-not-allowed opacity-60 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground select-none"
                   >
                     <Icon className="h-4 w-4 shrink-0" />

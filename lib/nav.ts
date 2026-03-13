@@ -12,6 +12,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Home',                    href: '/',              iconName: 'Home' },
     { label: 'Profilo e Documenti',     href: '/profilo',       iconName: 'User' },
     { label: 'Compensi e Rimborsi',     href: '/compensi',      iconName: 'Wallet' },
+    { label: 'Ticket',                  href: '/ticket',        iconName: 'LifeBuoy' },
     { label: 'Corsi',                   href: '#',              iconName: 'GraduationCap', comingSoon: true },
     { label: 'Schoolbusters',           href: '#',              iconName: 'School', comingSoon: true },
     { label: 'Eventi',                  href: '/eventi',        iconName: 'CalendarDays' },

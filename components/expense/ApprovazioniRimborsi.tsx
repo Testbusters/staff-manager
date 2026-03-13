@@ -211,7 +211,7 @@ export default function ApprovazioniRimborsi({
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
-            {s === 'ALL' ? 'Tutti gli stati' : EXPENSE_STATUS_LABELS[s]}
+            {s === 'ALL' ? 'Tutti' : EXPENSE_STATUS_LABELS[s]}
           </button>
         ))}
       </div>

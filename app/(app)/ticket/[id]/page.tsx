@@ -119,21 +119,17 @@ export default async function TicketDetailPage({
   return (
     <div className="p-6 max-w-3xl">
       {/* Breadcrumb */}
-      {isManager ? (
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/ticket">Ticket</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="truncate max-w-xs">{ticket.oggetto}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      ) : (
-        <h1 className="text-xl font-semibold text-foreground truncate mb-6">{ticket.oggetto}</h1>
-      )}
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/ticket">Ticket</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="truncate max-w-xs">{ticket.oggetto}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Ticket header */}
       <Card className="mb-5">
