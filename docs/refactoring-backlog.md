@@ -47,6 +47,11 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | N3 | Italian URL routes — rename to English | LOW |
 | N4 | Italian DB column names — rename to English | LOW |
 | N5 | Italian PostgreSQL enum values — translate to English | LOW |
+| UX1 | Ticket form validation: global toast only, no inline `<FormMessage>` per field | LOW |
+| UX2 | Tab switching pattern inconsistency: `/comunicazioni` + `/approvazioni` use `<Link href="?tab=">` (URL-based, history entries), while `/compensi` uses Radix `<Tabs>` (state-based) — normalise to one pattern | LOW |
+| UI1 | G4: 6 bare `<p>` empty states in import sections and constrained UI contexts (NotificationBell, TicketDetailModal) — replace with `<EmptyState>` | LOW |
+| UI2 | S2: 7 native `<button>` elements — filter chips in CompensationList/ExpenseList/ApprovazioniRimborsi/ApprovazioniCompensazioni + MonitoraggioSection (×2) + SignaturePad (×2) | LOW |
+| UI3 | S4: Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files — consolidate | LOW |
 
 ---
 

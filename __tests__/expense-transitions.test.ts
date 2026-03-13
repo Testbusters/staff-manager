@@ -98,9 +98,9 @@ describe('applyExpenseTransition', () => {
 });
 
 describe('ALLOWED_EXPENSE_TRANSITIONS map', () => {
-  it('contains exactly 3 defined actions', () => {
+  it('contains exactly 4 defined actions', () => {
     const actions = Object.keys(ALLOWED_EXPENSE_TRANSITIONS);
-    expect(actions).toHaveLength(3);
+    expect(actions).toHaveLength(4);
   });
 
   it('reject.requiresNote è true', () => {

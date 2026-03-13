@@ -111,27 +111,29 @@ export default function LoginPage() {
           Per problemi di accesso contatta l&apos;amministrazione.
         </p>
 
-        {/* Test credentials */}
-        <div className="mt-6 space-y-2">
-          <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
-          <div className="grid grid-cols-3 gap-2">
-            {TEST_USERS.map((u) => (
-              <button
-                key={u.email}
-                type="button"
-                onClick={() => {
-                  setEmail(u.email);
-                  setPassword('Testbusters123');
-                  passwordRef.current?.focus();
-                }}
-                className="rounded-lg bg-background border border-border px-2 py-2.5 text-left hover:border-muted-foreground/30 hover:bg-muted/60 transition"
-              >
-                <p className="text-xs font-medium text-muted-foreground">{u.role}</p>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">{u.email}</p>
-              </button>
-            ))}
+        {/* Test credentials — staging/preview only */}
+        {process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
+          <div className="mt-6 space-y-2">
+            <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
+            <div className="grid grid-cols-3 gap-2">
+              {TEST_USERS.map((u) => (
+                <button
+                  key={u.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(u.email);
+                    setPassword('Testbusters123');
+                    passwordRef.current?.focus();
+                  }}
+                  className="rounded-lg bg-background border border-border px-2 py-2.5 text-left hover:border-muted-foreground/30 hover:bg-muted/60 transition"
+                >
+                  <p className="text-xs font-medium text-muted-foreground">{u.role}</p>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{u.email}</p>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

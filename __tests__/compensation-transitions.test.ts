@@ -107,9 +107,9 @@ describe('applyTransition', () => {
 });
 
 describe('ALLOWED_TRANSITIONS map', () => {
-  it('contains exactly 4 defined actions', () => {
+  it('contains exactly 5 defined actions', () => {
     const actions = Object.keys(ALLOWED_TRANSITIONS);
-    expect(actions).toHaveLength(4);
+    expect(actions).toHaveLength(5);
   });
 
   it('reject.requiresNote è true', () => {

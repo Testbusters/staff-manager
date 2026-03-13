@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, CreditCard, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { CheckCircle, XCircle, CreditCard, RotateCcw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
@@ -167,6 +167,8 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
 
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote]   = useState('');
+  const [revertTarget, setRevertTarget]     = useState<CompensationRow | null>(null);
+  const [revertNote, setRevertNote]         = useState('');
   const [massimaleWarning, setMassimaleWarning] = useState<MassimaleImpact[] | null>(null);
   const [liquidateTarget, setLiquidateTarget] = useState<CompensationRow | null>(null);
   const [bulkReceiptItems, setBulkReceiptItems] = useState<Array<{ id: string; collabName: string; importo: number }> | null>(null);
@@ -352,6 +354,23 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
   }
 
   const rejectTarget = rejectTargetId ? compensations.find((c) => c.id === rejectTargetId) : null;
+
+  async function handleRevert() {
+    if (!revertTarget || revertNote.trim().length === 0) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/compensations/${revertTarget.id}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'revert_to_pending', note: revertNote }),
+      });
+      if (!res.ok) { const d = await res.json(); toast.error(d.error ?? 'Errore.', { duration: 5000 }); return; }
+      setRevertTarget(null);
+      setRevertNote('');
+      toast.success('Compenso rimesso in attesa.');
+      router.refresh();
+    } finally { setLoading(false); }
+  }
 
   return (
     <div className="space-y-3">
@@ -566,7 +585,16 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
                         {fmt(comp.importo_lordo)}
                       </TableCell>
                       <TableCell className="py-3">
-                        <div className="flex justify-end">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm" variant="ghost"
+                            className="h-7 w-7 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
+                            onClick={() => { setRevertTarget(comp); setRevertNote(''); }}
+                            disabled={loading}
+                            aria-label="Rimetti in attesa"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
                           <Button
                             size="sm" variant="ghost"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
@@ -692,6 +720,44 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               disabled={loading || rejectionNote.trim().length === 0}
             >
               Conferma rifiuto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Revert to pending dialog ──────────────────────────────── */}
+      <Dialog
+        open={revertTarget !== null}
+        onOpenChange={(open) => { if (!open) { setRevertTarget(null); setRevertNote(''); } }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rimetti in attesa</DialogTitle>
+            {revertTarget && (
+              <DialogDescription>
+                {revertTarget.collabName}
+                {revertTarget.importo_lordo != null && ` — €\u202f${revertTarget.importo_lordo.toFixed(2)}`}
+                {revertTarget.nome_servizio_ruolo && ` — ${revertTarget.nome_servizio_ruolo}`}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <Textarea
+            placeholder="Motivazione obbligatoria…"
+            value={revertNote}
+            onChange={(e) => setRevertNote(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setRevertTarget(null); setRevertNote(''); }}>
+              Annulla
+            </Button>
+            <Button
+              variant="outline"
+              className="border-amber-500 text-amber-700 hover:bg-amber-500/10"
+              onClick={handleRevert}
+              disabled={loading || revertNote.trim().length === 0}
+            >
+              Conferma
             </Button>
           </DialogFooter>
         </DialogContent>

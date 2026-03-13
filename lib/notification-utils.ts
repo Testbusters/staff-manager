@@ -12,8 +12,8 @@ export interface NotificationPayload {
   entity_id: string;
 }
 
-type CompensationNotifiableAction = 'approve' | 'reject' | 'mark_liquidated';
-type ExpenseNotifiableAction = 'approve' | 'reject' | 'mark_liquidated';
+type CompensationNotifiableAction = 'approve' | 'reject' | 'mark_liquidated' | 'revert_to_pending';
+type ExpenseNotifiableAction = 'approve' | 'reject' | 'mark_liquidated' | 'revert_to_pending';
 
 export function buildCompensationNotification(
   action: CompensationNotifiableAction,
@@ -43,6 +43,13 @@ export function buildCompensationNotification(
         tipo: 'liquidato',
         titolo: 'Compenso liquidato',
         messaggio: 'Il tuo compenso è stato contrassegnato come liquidato.',
+      };
+    case 'revert_to_pending':
+      return {
+        ...base,
+        tipo: 'rimesso_in_attesa',
+        titolo: 'Compenso rimesso in attesa',
+        messaggio: note ? `Il tuo compenso è stato rimesso in attesa. Nota: ${note}` : 'Il tuo compenso è stato rimesso in attesa di approvazione.',
       };
   }
 }
@@ -76,6 +83,13 @@ export function buildExpenseNotification(
         titolo: 'Rimborso liquidato',
         messaggio: 'Il tuo rimborso è stato contrassegnato come liquidato.',
       };
+    case 'revert_to_pending':
+      return {
+        ...base,
+        tipo: 'rimesso_in_attesa',
+        titolo: 'Rimborso rimesso in attesa',
+        messaggio: note ? `Il tuo rimborso è stato rimesso in attesa. Nota: ${note}` : 'Il tuo rimborso è stato rimesso in attesa di approvazione.',
+      };
   }
 }
 
@@ -83,12 +97,14 @@ export const COMPENSATION_NOTIFIED_ACTIONS: CompensationNotifiableAction[] = [
   'approve',
   'reject',
   'mark_liquidated',
+  'revert_to_pending',
 ];
 
 export const EXPENSE_NOTIFIED_ACTIONS: ExpenseNotifiableAction[] = [
   'approve',
   'reject',
   'mark_liquidated',
+  'revert_to_pending',
 ];
 
 export function buildTicketReplyNotification(
