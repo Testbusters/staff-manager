@@ -12,6 +12,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - **Check `.claude/session/`**: if any `block-*.md` file exists, read it immediately — it means a requirements definition session was interrupted. Resume from the recorded state rather than starting over.
 - If context was compressed (summary): read `docs/implementation-checklist.md` to re-align on current state.
 - Do not re-read files already in the current context — use the already-acquired line reference.
+- **Branch check**: run `git branch --show-current`. If the result is `main` or `staging`, stop immediately — do NOT start development on those branches. Instruct the user to run `sm-start block-name` from iTerm (or `git checkout staging && git pull && git checkout -b feature/block-name`) before proceeding. Development always starts on a `feature/block-name` branch.
 
 **Phase 1 — Requirements**
 - **Create session recovery file**: at the very start of Phase 1, create `.claude/session/block-[name].md` with the block name and an empty requirements skeleton. Update this file after every significant exchange during requirements definition (each AskUserQuestion answer, each design decision). This ensures the session can be resumed if the tab is accidentally closed. See `.claude/session/` for format reference.
@@ -121,7 +122,7 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Run `npx vitest run`. All tests must pass.
 - Expected output: summary line only (e.g. `✓ 106/106`). Do NOT paste full output — reduces token consumption.
 - If something fails: paste only the error lines, fix, and re-run. Do not proceed with open errors.
-- After green build + tests: **make an intermediate commit** (`git add … && git commit`).
+- After green build + tests: **make an intermediate commit** (`git add … && git commit`) on the current `feature/block-name` branch. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
 
 **Phase 3b — API integration tests** *(only if the block creates or modifies API routes)*
 - Write core tests in `__tests__/api/<route-name>.test.ts` with vitest:
@@ -167,7 +168,11 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 - Leave test data in DB for the smoke test. Clean up after Phase 5c only if the records would break other tests.
 
 **Phase 5c — Manual smoke test** *(before the formal checklist)*
-- Use the test account established in Phase 5b (or the role-mapped account if Phase 5b was skipped):
+- **Step 0 — deploy to staging**: before smoke testing, merge the feature branch to staging so the test runs against the real Vercel preview deploy, not localhost.
+  - Run `sm-staging` from iTerm (merges `feature/block-name` → `staging`, pushes, triggers Vercel preview deploy).
+  - Wait ~1–2 min for the Vercel deploy to complete (check the deploy status at `staff-staging.peerpetual.it` or Vercel dashboard).
+  - If a bug is found during smoke test: fix on the `feature/` branch, re-run `sm-staging`, re-test.
+- **Step 1 — smoke test on staging**: open `https://staff-staging.peerpetual.it` and use the staging test accounts:
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
   - Admin → `admin_test@test.com`
@@ -234,11 +239,15 @@ Only after explicit confirmation:
 4. Update `MEMORY.md` (project root) **only if** new lessons emerged that are not already documented. Avoid duplications.
    - If project-root MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.
 5. If structural or design issues emerged: open `docs/refactoring-backlog.md`, check for duplicates, add new entries ordered by topic.
-6. **Commit sequence** — each block produces up to 3 commits:
+6. **Commit sequence** — each block produces up to 3 commits, all on the `feature/block-name` branch:
    - **Commit 1 — code** (already done in Phase 3): source files only.
    - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b.
    - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
-7. Run `git push` immediately after the last commit.
+7. **Branch promotion sequence** (after all commits are on `feature/` branch):
+   - **staging**: if `sm-staging` was already run in Phase 5c, just ensure the feature branch's latest commits are included — re-run `sm-staging` if any commits were added after the Phase 5c merge.
+   - **production**: run `sm-deploy` from iTerm to merge `staging → main` and trigger the production deploy on `staff.peerpetual.it`.
+   - Verify the production deploy completes without errors (Vercel dashboard or direct URL check).
+   - Do NOT run `git push origin main` manually — always use `sm-deploy` to ensure staging is the promotion source.
 
 **Phase 8.5 — Context file review + compact**
 After git push, before closing the session:
@@ -299,6 +308,8 @@ Activate when stakeholders introduce changes to the functional scope that impact
 ## Cross-Cutting Rules
 
 - **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, Node.js scripts, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline. Note: use Node.js `https.request` (not `curl`) for Supabase Management API calls — `curl` fails with PAT due to shell interpolation.
+- **Branch discipline**: never commit directly to `main` or `staging`. All development happens on `feature/block-name` branches. Promotions only via `sm-staging` (feature→staging, Vercel preview) and `sm-deploy` (staging→main, Vercel production). Both commands are shell functions in `~/.zshrc` — instruct the user to run them from iTerm.
+- **Migrations target the shared Supabase project**: both production and staging point to the same Supabase DB. Migrations applied in Phase 2 are immediately live in both environments — there is no separate staging DB schema.
 - **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Do not rely on memory or partial exploration. The user must never need to ask for a deeper analysis — it is your responsibility to deliver a complete file list from the start.
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **Even if the plan is pre-written**: still execute phase by phase with the gates. A pre-written plan replaces only Phase 1, it does not compress subsequent phases.
