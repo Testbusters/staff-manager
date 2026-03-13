@@ -72,7 +72,7 @@ export default function TicketQuickModal() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-foreground">
-                Riferimento <span className="text-red-500">*</span>
+                Riferimento <span className="text-destructive">*</span>
               </label>
               <Select value={categoria || undefined} onValueChange={setCategoria}>
                 <SelectTrigger><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
@@ -84,7 +84,7 @@ export default function TicketQuickModal() {
 
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-foreground">
-                Oggetto <span className="text-red-500">*</span>
+                Oggetto <span className="text-destructive">*</span>
               </label>
               <Input
                 type="text"

@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { FileText, CalendarDays, MessageSquare, Briefcase } from 'lucide-react';
 import { DOCUMENT_TYPE_LABELS } from '@/lib/types';
 import type { DocumentType, ResourceCategoria, EventTipo, OpportunityTipo } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Pagination,
@@ -135,12 +137,11 @@ export default function DashboardUpdates({
       {/* Content */}
       <div className="divide-y divide-border/50">
         {visible.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            {activeTab === 'documenti' ? 'Nessun documento in attesa di firma.' :
-             activeTab === 'eventi'    ? 'Nessun evento in programma.' :
-             activeTab === 'comunicazioni' ? 'Nessuna comunicazione recente.' :
-             'Nessuna opportunità recente.'}
-          </p>
+          <EmptyState
+            icon={activeTab === 'documenti' ? FileText : activeTab === 'eventi' ? CalendarDays : activeTab === 'comunicazioni' ? MessageSquare : Briefcase}
+            title={activeTab === 'documenti' ? 'Nessun documento in attesa di firma.' : activeTab === 'eventi' ? 'Nessun evento in programma.' : activeTab === 'comunicazioni' ? 'Nessuna comunicazione recente.' : 'Nessuna opportunità recente.'}
+            className="py-8"
+          />
         ) : activeTab === 'documenti' ? (
           (visible as DashboardDocItem[]).map((doc) => (
             <Link

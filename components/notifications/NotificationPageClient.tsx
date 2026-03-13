@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Bell } from 'lucide-react';
 import type { Notification } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 
 function entityHref(n: Notification): string | null {
   if (!n.entity_type || !n.entity_id) return null;
@@ -209,9 +211,10 @@ export default function NotificationPageClient() {
         ) : loading ? (
           <p className="text-sm text-muted-foreground text-center py-12">Caricamento…</p>
         ) : notifications.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-12">
-            {unreadOnly ? 'Nessuna notifica non letta' : entityType ? `Nessuna notifica per questa categoria` : 'Nessuna notifica'}
-          </p>
+          <EmptyState
+            icon={Bell}
+            title={unreadOnly ? 'Nessuna notifica non letta' : entityType ? 'Nessuna notifica per questa categoria' : 'Nessuna notifica'}
+          />
         ) : (
           <ul className="divide-y divide-border">
             {notifications.map((n) => {

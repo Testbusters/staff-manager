@@ -52,7 +52,7 @@ export default function TicketForm() {
       {/* Riferimento */}
       <div className="space-y-1.5">
         <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
-          Riferimento <span className="text-red-500">*</span>
+          Riferimento <span className="text-destructive">*</span>
         </label>
         <Select value={categoria || undefined} onValueChange={setCategoria}>
           <SelectTrigger id="categoria"><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
@@ -80,7 +80,7 @@ export default function TicketForm() {
       {/* Oggetto */}
       <div className="space-y-1.5">
         <label htmlFor="oggetto" className="block text-sm font-medium text-foreground">
-          Oggetto <span className="text-red-500">*</span>
+          Oggetto <span className="text-destructive">*</span>
         </label>
         <Input
           id="oggetto"

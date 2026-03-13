@@ -292,7 +292,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
 
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">
-                    Carica PDF firmato <span className="text-red-500">*</span>
+                    Carica PDF firmato <span className="text-destructive">*</span>
                   </label>
                   <input
                     type="file"

@@ -183,7 +183,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
           <div className="space-y-4">
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">
-                Cerca collaboratore <span className="text-red-500">*</span>
+                Cerca collaboratore <span className="text-destructive">*</span>
               </label>
               <Input
                 value={searchQuery}
@@ -225,7 +225,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">
-                  Tipo <span className="text-red-500">*</span>
+                  Tipo <span className="text-destructive">*</span>
                 </label>
                 <Select
                   value={tipo || undefined}
@@ -254,7 +254,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
             {/* Titolo */}
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">
-                Titolo <span className="text-red-500">*</span>
+                Titolo <span className="text-destructive">*</span>
               </label>
               <Input
                 type="text"
@@ -310,7 +310,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
           <div className="space-y-4">
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">
-                File PDF <span className="text-red-500">*</span>
+                File PDF <span className="text-destructive">*</span>
               </label>
               <input
                 type="file"

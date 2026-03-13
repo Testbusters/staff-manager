@@ -125,7 +125,7 @@ export default function CompensationEditModal({
           {/* Nome servizio/ruolo */}
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">
-              Nome servizio / ruolo <span className="text-red-500">*</span>
+              Nome servizio / ruolo <span className="text-destructive">*</span>
             </label>
             <Input
               value={nome_servizio_ruolo}
@@ -137,7 +137,7 @@ export default function CompensationEditModal({
           {/* Data competenza */}
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">
-              Data competenza <span className="text-red-500">*</span>
+              Data competenza <span className="text-destructive">*</span>
             </label>
             <DatePicker
               value={data_competenza}
@@ -148,7 +148,7 @@ export default function CompensationEditModal({
           {/* Competenza */}
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">
-              Competenza <span className="text-red-500">*</span>
+              Competenza <span className="text-destructive">*</span>
             </label>
             <Select value={competenza} onValueChange={setCompetenza}>
               <SelectTrigger>
@@ -165,7 +165,7 @@ export default function CompensationEditModal({
           {/* Importo lordo */}
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">
-              Importo lordo (€) <span className="text-red-500">*</span>
+              Importo lordo (€) <span className="text-destructive">*</span>
             </label>
             <Input
               type="number"
