@@ -2,6 +2,16 @@
 
 CRITICAL: these are non-negotiable process constraints. They apply to EVERY development task — feature blocks, bug fixes, refactoring, minor features — even when the full plan is provided in a single prompt. Always execute one phase at a time and stop at the indicated gates. Do not proceed to the next phase without explicit confirmation.
 
+## Which pipeline to use
+
+| Work type | Branch prefix | Pipeline |
+|---|---|---|
+| Functional block (new feature, redesign, migration) | `feature/block-name` | Full pipeline — Phases 0 → 8.5 |
+| Mini fix / bugfix / 1–3 file correction | `fix/description` | **Fast Lane** — see section below |
+| Worktree block (parallel development) | `worktree-block-name` | Full pipeline — with worktree-specific rules in Cross-Cutting |
+
+The branch prefix determines which pipeline Claude follows automatically. If the current branch starts with `fix/`, use the Fast Lane. Otherwise, use the full pipeline.
+
 ---
 
 ## Mandatory Development Pipeline
@@ -278,6 +288,40 @@ After git push, before closing the session:
 
 ---
 
+## Fast Lane — Mini fixes and bugfixes
+
+Use when: the change touches ≤3 files, introduces no migration, no new patterns, no shared type changes.
+Branch prefix `fix/` activates this pipeline automatically.
+
+**FL-0 — Branch check**
+- Confirm current branch starts with `fix/`. If not, stop and instruct user to run `sm-fix description`.
+- If on `main` or `staging`: stop — same rule as Phase 0 of the full pipeline.
+
+**FL-1 — Implement**
+- No requirements STOP gate. No dependency scan (unless a shared utility is touched — then do a quick grep).
+- Write the fix. Run `npx tsc --noEmit`. Run `npx vitest run`. Must be green.
+- Commit: `git add … && git commit -m "fix(scope): description"`.
+- No intermediate docs update unless `CLAUDE.md` genuinely needs a pattern correction.
+
+**FL-2 — Deploy to staging + smoke**
+- Run: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git -C ~/Projects/staff-manager merge <fix-branch> --no-ff -m "fix: merge <fix-branch> into staging" && git -C ~/Projects/staff-manager push origin staging`
+- Alternatively instruct user: `sm-staging fix/description` from iTerm.
+- Wait for Vercel preview deploy (~1–2 min). Open `https://staff-staging.peerpetual.it`.
+- Verify the fix in 1–3 steps. If broken: fix on the `fix/` branch, re-merge to staging.
+
+**FL-3 — Promote to production**
+- Instruct user: `sm-deploy` from iTerm (or run git merge commands directly).
+- Output a one-line summary: `fix complete ✅ — [description] · tsc ✅ · vitest N/N ✅`
+
+**FL-4 — Cleanup**
+- Update `docs/implementation-checklist.md` only if the fix closes a tracked item.
+- Update `CLAUDE.md` only if the fix reveals a non-obvious pattern worth documenting.
+- Instruct user: `sm-cleanup fix/description` to delete the branch.
+
+> Fast Lane has no STOP gates — proceed autonomously unless the fix scope expands beyond 3 files or requires a migration, at which point escalate to the full pipeline and notify the user.
+
+---
+
 ## Pipeline for Structural Requirements Changes
 
 Activate when stakeholders introduce changes to the functional scope that impact already-implemented blocks or the project structure. This pipeline **precedes** the standard development pipeline and is its prerequisite.
@@ -308,7 +352,13 @@ Activate when stakeholders introduce changes to the functional scope that impact
 ## Cross-Cutting Rules
 
 - **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, Node.js scripts, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline. Note: use Node.js `https.request` (not `curl`) for Supabase Management API calls — `curl` fails with PAT due to shell interpolation.
-- **Branch discipline**: never commit directly to `main` or `staging`. All development happens on `feature/block-name` branches. Promotions only via `sm-staging` (feature→staging, Vercel preview) and `sm-deploy` (staging→main, Vercel production). Both commands are shell functions in `~/.zshrc` — instruct the user to run them from iTerm.
+- **Branch discipline**: never commit directly to `main` or `staging`. All development happens on `feature/block-name`, `fix/description`, or `worktree-block-name` branches. Promotions only via `sm-staging <branch>` (→staging, Vercel preview) and `sm-deploy` (staging→main, Vercel production). Both are shell functions in `~/.zshrc` — instruct the user to run them from iTerm. Claude can also run the underlying git commands directly (see below).
+- **Promoting branches from Claude**: `sm-staging` and `sm-deploy` are zsh functions — not available in Claude's Bash subprocess. Claude must use git commands directly: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge <branch> --no-ff && git push origin staging`. Always use `-C ~/Projects/staff-manager` to target the main repo, even when running inside a worktree directory.
+- **Worktree — migration numbering**: before creating a new migration inside a worktree, always check `ls ~/Projects/staff-manager/supabase/migrations/` (the main repo, not the worktree) to get the correct next number. Two parallel worktrees must not use the same migration number.
+- **Worktree — staging is serial**: if two worktrees are ready to merge simultaneously, they must merge to staging sequentially. Staging must be in a testable state at all times — never merge two unrelated worktree branches to staging at the same time without smoke-testing the first one first.
+- **Worktree — CLAUDE.local.md**: if `.claude/CLAUDE.local.md` exists in the main repo (active overrides), copy it into the worktree directory at setup time. It is gitignored and not auto-present in worktrees.
+- **Worktree — sm-staging command**: always pass the branch name explicitly: `sm-staging worktree-block-name`. Never call `sm-staging` without arguments when in a worktree context.
+- **Worktree cleanup after production deploy**: after `sm-deploy` confirms the worktree branch is in production, instruct user to run `sm-cleanup worktree-block-name` to delete both local and remote branch.
 - **Migrations target the shared Supabase project**: both production and staging point to the same Supabase DB. Migrations applied in Phase 2 are immediately live in both environments — there is no separate staging DB schema.
 - **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Do not rely on memory or partial exploration. The user must never need to ask for a deeper analysis — it is your responsibility to deliver a complete file list from the start.
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
