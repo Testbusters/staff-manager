@@ -27,6 +27,10 @@ MEMORY.md (project root)         ← shared lessons (project convention — read
 docs/requirements.md             ← product spec (read in Phase 1)
 docs/implementation-checklist.md ← progress tracker (read in Phase 1)
 docs/refactoring-backlog.md      ← tech debt (read in Phase 1)
+docs/prd/prd.md                  ← PRD source of truth (read in Phase 1 for new feature areas; updated in Phase 8 step 2f — mandatory)
+docs/entity-manifest.md          ← functional entity index (read in Phase 1 for domain blocks)
+docs/contracts/*.md              ← per-entity field×role×surface contracts (read in Phase 1)
+docs/prd/01-rbac-matrix.md       ← Role × Entity × Action matrix (read in Phase 1 for RBAC blocks)
 docs/migrations-log.md           ← migration history (read/written in Phase 2)
 ```
 
@@ -46,7 +50,7 @@ rules, business workflow summaries, known gotchas, coding conventions.
 |---|---|---|
 | `~/.claude/CLAUDE.md` | All projects on this machine (personal) | No |
 | `CLAUDE.md` (project root) | This project, all team members | Yes |
-| `CLAUDE.local.md` (project root) | This project, personal only | No (auto-gitignored) |
+| `.claude/CLAUDE.local.md` | This project, personal only | No (gitignored) |
 | `subdir/CLAUDE.md` | That subdirectory only | Yes |
 
 Each more-specific file takes precedence over broader ones.
@@ -96,8 +100,9 @@ or a process error reveals a gap. Not routine.
 
 ## CLAUDE.local.md — Personal/temporary overrides
 
-**Official Anthropic feature**: yes — auto-loaded at session start. Auto-gitignored by
-Claude Code (no need to add manually to `.gitignore`, though adding explicitly is harmless).
+**Official Anthropic feature**: yes — auto-loaded at session start. Gitignored in this project
+(explicitly added to `.gitignore`). Official Anthropic default path is `CLAUDE.local.md` at
+project root; this project uses `.claude/CLAUDE.local.md` (both paths are supported).
 
 **What it is**: a personal override file for instructions that should NOT be shared with the team.
 Useful for: temporary suspensions (e.g. "skip Phase 4 and 5 during requirements revision"),
@@ -167,9 +172,11 @@ No `settings.local.json` is currently active — personal overrides are in `~/.c
 
 Key settings configured:
 - `attribution.commit/pr: ""` — suppresses automatic Co-Authored-By (pipeline adds it manually in commit heredoc)
-- `env.CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS: "1"` — removes redundant built-in git instructions from system prompt (pipeline.md covers this)
+- `includeGitInstructions: false` — removes redundant built-in git instructions from system prompt (pipeline.md covers this); replaces the old `env.CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS` env var approach
+- `claudeMdExcludes` — glob patterns for CLAUDE.md files to skip; used here to suppress any CLAUDE.md in `additionalDirectories` (staff-manager-requirements-check) that could add context noise
 - `worktree.symlinkDirectories: ["node_modules", ".next"]` — auto-symlinks heavy dirs when using EnterWorktree (avoids the manual copy gotcha documented in MEMORY.md)
 - `hooks.SessionStart` — checks `~/.claude/projects/.../last-audit` timestamp; if >7 days since last `/arch-audit`, prints a reminder at session open
+- `hooks.InstructionsLoaded` — appends raw hook payload (JSON) to `/tmp/claude-instructions-YYYYMMDD.log` (async, non-blocking); inspect this file to debug which CLAUDE.md or rules files were loaded and when
 
 ---
 
@@ -188,6 +195,10 @@ Key settings configured:
 | Product specification | `docs/requirements.md` |
 | Block progress and test results | `docs/implementation-checklist.md` |
 | Tech debt and deferred improvements | `docs/refactoring-backlog.md` |
+| Product context, feature scope, stakeholder requirements | `docs/prd/prd.md` |
+| Domain entity: role permissions, surfaces, entry points | `docs/entity-manifest.md` |
+| Domain entity: field × permission × validation matrix | `docs/contracts/<entity>-fields.md` |
+| Role × Entity × Action cross-cutting permissions | `docs/prd/01-rbac-matrix.md` |
 
 ---
 
@@ -206,5 +217,9 @@ Key settings configured:
 | `docs/requirements.md` | Phase 1 | Explicit read in pipeline |
 | `docs/implementation-checklist.md` | Phase 1 | Explicit read in pipeline |
 | `docs/refactoring-backlog.md` | Phase 1 | Explicit read in pipeline |
+| `docs/prd/prd.md` | Phase 1 (new feature areas) + Phase 8 step 2f (update, mandatory) | Explicit read/write in pipeline |
+| `docs/entity-manifest.md` | Phase 1 (domain blocks) | Explicit read in pipeline |
+| `docs/contracts/<entity>-fields.md` | Phase 1 (domain blocks) | Explicit read in pipeline |
+| `docs/prd/01-rbac-matrix.md` | Phase 1 (RBAC/permissions blocks) | Explicit read in pipeline |
 | `docs/migrations-log.md` | Phase 2 | Explicit write after migration |
 | `subdir/CLAUDE.md` | When reading files in that subdir | On-demand by Claude Code |
