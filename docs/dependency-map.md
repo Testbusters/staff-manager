@@ -3,6 +3,9 @@
 > **Phase 1 mandatory lookup**: before producing the file list for any block,
 > find the entity being modified below and add ALL listed surfaces to the file list.
 > If the entity is not listed: add it here before proceeding.
+>
+> **Companion document**: `docs/entity-manifest.md` — for functional surfaces (role permissions,
+> entry points, field-level access). Read the relevant contract in `docs/contracts/` alongside this map.
 
 ---
 
@@ -11,7 +14,8 @@
 1. Identify the entity being changed (profile field, state machine, role, etc.)
 2. Look it up in the table below
 3. Every row in that entity's surface list is a candidate for the file list
-4. Cross-check with the dependency scan (grep/glob) — this map is the starting point, not a substitute
+4. For field-level permission and entry point details: read `docs/entity-manifest.md` → linked contract
+5. Cross-check with the dependency scan (grep/glob) — this map is the starting point, not a substitute
 
 ---
 
