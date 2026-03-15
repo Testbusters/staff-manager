@@ -405,6 +405,9 @@ export default function CreateUserForm() {
                   value={dataNascita}
                   onChange={(v) => setDataNascita(v)}
                   disabled={loading}
+                  captionLayout="dropdown"
+                  fromYear={1940}
+                  toYear={new Date().getFullYear() - 16}
                 />
               </div>
               <div>

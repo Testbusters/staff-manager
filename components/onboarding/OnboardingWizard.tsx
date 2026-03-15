@@ -304,6 +304,9 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                 <DatePicker
                   value={dataNascita}
                   onChange={(v) => setDataNascita(v)}
+                  captionLayout="dropdown"
+                  fromYear={1940}
+                  toYear={new Date().getFullYear() - 16}
                 />
               </div>
               <div>
