@@ -129,7 +129,7 @@ export default function ApprovazioniCompensazioni({
       </div>
 
       {/* List header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mt-2">
         <h2 className="text-sm font-medium text-muted-foreground">
           Compensi{filtered.length !== compensations.length ? ` (${filtered.length} di ${compensations.length})` : ` (${compensations.length})`}
         </h2>

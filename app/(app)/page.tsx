@@ -38,7 +38,7 @@ type CompRow = {
 type ExpRow = { id: string; stato: string; importo: number | null; liquidated_at: string | null };
 
 // ── Helpers ────────────────────────────────────────────────
-const sectionCls = 'rounded-2xl bg-card border border-border';
+const sectionCls = 'rounded-2xl bg-card border border-border dark:border-white/[0.12]';
 
 function eur(n: number) {
   return n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
@@ -369,6 +369,7 @@ export default async function DashboardPage() {
             sub={pendingComps.length > 0 ? formatCurrencyR(pendingComps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0)) : null}
             color={pendingComps.length > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=compensi"
+            highlight={pendingComps.length > 0}
           />
           <RKpiCard
             label="Rimborsi in attesa"

@@ -426,12 +426,12 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <TableHead className="text-xs font-medium text-muted-foreground">Collaboratore</TableHead>
+                  <TableHead className="text-xs font-medium text-muted-foreground">
                     <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
                   </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
-                  <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azioni</TableHead>
+                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Importo</TableHead>
+                  <TableHead className="w-16 text-xs font-medium text-muted-foreground text-right">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -554,12 +554,12 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <TableHead className="text-xs font-medium text-muted-foreground">Collaboratore</TableHead>
+                  <TableHead className="text-xs font-medium text-muted-foreground">
                     <SortButton sortDir={sortDir} onCycle={cycleSortDir} />
                   </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground text-right">Importo</TableHead>
-                  <TableHead className="w-16 text-xs uppercase tracking-wide text-muted-foreground text-right">Azione</TableHead>
+                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Importo</TableHead>
+                  <TableHead className="w-16 text-xs font-medium text-muted-foreground text-right">Azione</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

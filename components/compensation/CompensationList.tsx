@@ -122,7 +122,20 @@ export default function CompensationList({
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <EmptyState icon={Wallet} title="Nessun compenso trovato" description="Nessun compenso corrisponde ai filtri selezionati." />
+            {compensations.length === 0 ? (
+              <EmptyState
+                icon={Wallet}
+                title="Nessun compenso ancora"
+                description="I tuoi compensi appariranno qui una volta inseriti dal responsabile."
+                action={
+                  <Link href="/ticket/nuova" className="text-sm text-link hover:text-link/80 transition">
+                    Hai domande? Apri un ticket →
+                  </Link>
+                }
+              />
+            ) : (
+              <EmptyState icon={Wallet} title="Nessun compenso trovato" description="Nessun compenso corrisponde ai filtri selezionati." />
+            )}
           </CardContent>
         </Card>
       ) : (

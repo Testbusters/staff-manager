@@ -20,7 +20,7 @@ export default async function NuovoRimborsoPage() {
   if (profile.member_status === 'uscente_senza_compenso') redirect('/rimborsi');
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-2xl mx-auto">
       <div className="mb-6 flex items-center gap-3">
         <Link href="/compensi?tab=rimborsi" className="text-sm text-muted-foreground hover:text-foreground transition">
           ← Rimborsi

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { TICKET_CATEGORIES, TICKET_PRIORITY_LABELS } from '@/lib/types';
 import type { TicketPriority } from '@/lib/types';
 import { Input } from '@/components/ui/input';
@@ -50,32 +51,33 @@ export default function TicketForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Riferimento */}
-      <div className="space-y-1.5">
-        <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
-          Riferimento <span className="text-destructive">*</span>
-        </label>
-        <Select value={categoria || undefined} onValueChange={setCategoria}>
-          <SelectTrigger id="categoria"><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
-          <SelectContent>
-            {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Riferimento + Priorità — 2-col grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
+            Riferimento <span className="text-destructive">*</span>
+          </label>
+          <Select value={categoria || undefined} onValueChange={setCategoria}>
+            <SelectTrigger id="categoria"><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
+            <SelectContent>
+              {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Priorità */}
-      <div className="space-y-1.5">
-        <label htmlFor="priority" className="block text-sm font-medium text-foreground">
-          Priorità
-        </label>
-        <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
-          <SelectTrigger id="priority"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {(['BASSA', 'NORMALE', 'ALTA'] as TicketPriority[]).map((p) => (
-              <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <label htmlFor="priority" className="block text-sm font-medium text-foreground">
+            Priorità
+          </label>
+          <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
+            <SelectTrigger id="priority"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(['BASSA', 'NORMALE', 'ALTA'] as TicketPriority[]).map((p) => (
+                <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Oggetto */}
@@ -113,6 +115,9 @@ export default function TicketForm() {
         <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
           {loading ? 'Apertura…' : 'Apri ticket'}
         </Button>
+        <Link href="/ticket" className="text-sm text-muted-foreground hover:text-foreground transition">
+          ← Annulla
+        </Link>
       </div>
     </form>
   );
