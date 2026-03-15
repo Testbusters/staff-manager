@@ -11,15 +11,15 @@ export default defineConfig({
   workers: 1, // serial — tests share DB state
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3001',
     headless: true,
     screenshot: 'only-on-failure',
     video: 'off',
   },
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true, // usa il server già avviato se presente
+    command: 'npm run dev -- --port 3001',
+    url: 'http://localhost:3001',
+    reuseExistingServer: false, // always spin up a dedicated test server on port 3001
     timeout: 60_000,
   },
 });
