@@ -37,6 +37,15 @@ export function DatePicker({
   const startMonth = fromYear ? new Date(fromYear, 0) : undefined;
   const endMonth   = toYear   ? new Date(toYear, 11)  : undefined;
 
+  // In dropdown mode: hide the redundant caption_label (duplicates select values)
+  // and hide the prev/next nav buttons (direct year/month select makes them redundant)
+  const isDropdown = captionLayout === 'dropdown' || captionLayout === 'dropdown-months' || captionLayout === 'dropdown-years';
+  const dropdownClassNames = isDropdown ? {
+    caption_label:   'sr-only',
+    button_previous: 'hidden',
+    button_next:     'hidden',
+  } : {};
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -59,6 +68,7 @@ export function DatePicker({
           captionLayout={captionLayout}
           startMonth={startMonth}
           endMonth={endMonth}
+          classNames={dropdownClassNames}
         />
       </PopoverContent>
     </Popover>

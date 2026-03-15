@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
@@ -33,6 +33,12 @@ function Calendar({
           "absolute right-1 top-0 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         month_grid: "w-full border-collapse",
+        // dropdown-mode layout
+        dropdowns: "flex gap-2 items-center justify-center",
+        dropdown_root: "relative inline-flex items-center gap-1",
+        dropdown:
+          "appearance-none bg-transparent border-0 text-sm font-medium text-foreground cursor-pointer focus:outline-none",
+        chevron: "pointer-events-none shrink-0 text-muted-foreground",
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem] text-center",
         week: "flex w-full mt-2",
@@ -60,12 +66,11 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Chevron: (chevronProps) =>
-          chevronProps.orientation === "left" ? (
-            <ChevronLeft {...chevronProps} className="h-4 w-4" />
-          ) : (
-            <ChevronRight {...chevronProps} className="h-4 w-4" />
-          ),
+        Chevron: (chevronProps) => {
+          if (chevronProps.orientation === "left")  return <ChevronLeft  {...chevronProps} className="h-4 w-4" />;
+          if (chevronProps.orientation === "down")  return <ChevronDown  {...chevronProps} className="h-3.5 w-3.5" />;
+          return <ChevronRight {...chevronProps} className="h-4 w-4" />;
+        },
       }}
       {...props}
     />
