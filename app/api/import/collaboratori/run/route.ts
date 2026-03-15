@@ -118,7 +118,7 @@ export async function POST(request: Request) {
           user_id:                      userId,
           role:                         'collaboratore',
           is_active:                    true,
-          must_change_password:         false,
+          must_change_password:         true,
           onboarding_completed:         false,
           skip_contract_on_onboarding:  skipContract,
         });
