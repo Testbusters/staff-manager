@@ -103,9 +103,15 @@
 | `/responsive-audit` | Breakpoints 375/768/1024px — only collab+responsabile routes (admin excluded). 6 checks: overflow, table scaling, text truncation, 44px tap targets, stacked layout, modal fit. PASS/WARN/FAIL per route×breakpoint | After layout or grid changes |
 | `/ux-audit` | User experience quality: simulates F1–F5 flows (standard) or F1–F10 (full) via Playwright per role. Evaluates 6 UX dimensions D1–D6. Severity-ranked report Critical/Major/Minor with fix proposals | Before feature releases, after significant flow changes |
 | `/visual-audit [quick\|full\|page:<route>]` | Aesthetic quality: takes live screenshots in light + dark mode, scores each page on 7 visual dimensions V1–V7 (typography, spacing, hierarchy, colour, density, dark-mode, micro-polish). Score 1–5 per dimension. Critical/Major findings with concrete fix suggestions. Can invoke `/frontend-design` for before/after mockups | On demand — when the app "looks wrong" or before a client demo |
+| `/skill-dev` | Code quality and technical debt: coupling, duplication, dead code, pattern inconsistencies, magic strings, `@ts-ignore`, prop drilling, over-large components. Uses `docs/sitemap.md` as guide. Outputs to `docs/backlog-refinement.md` | Periodically — before major refactoring, quarterly review |
+| `/skill-db` | DB schema and query quality: missing indexes, normalization, RLS gaps, constraint completeness, N+1 in API routes, cascade behavior. Uses `docs/db-map.md` as guide. Outputs to `docs/backlog-refinement.md` | After any migration wave; before production releases |
+| `/security-audit` | Security review: auth guards on all routes, RLS completeness, Zod coverage, sensitive data in responses, HTTP security headers, proxy bypass. Internal app — SEO/indexing out of scope. Outputs to `docs/backlog-refinement.md` | Before each production deploy; after adding new API routes |
+| `/api-design` | API consistency: HTTP verb correctness, URL structure, response shape, error codes, pagination patterns, validation placement. Outputs to `docs/backlog-refinement.md` | After adding 3+ new routes; quarterly |
+| `/perf-audit` | Performance: server/client boundaries, unnecessary `use client`, heavy lib bundling, useEffect data fetching, image optimization, unbounded queries, serial awaits. Internal app — CWV/SEO out of scope. Outputs to `docs/backlog-refinement.md` | Before production releases; after major UI additions |
 
 > **Rule**: every new custom skill must be added to this table immediately after creation.
 > **Prerequisites for screenshot-based skills**: `npm run dev` must be running on `localhost:3001` (worktree) or `localhost:3000` (main).
+> **MCP Playwright**: uses bundled Chromium (`--browser chromium`) — no conflict with open Chrome. Requires Claude Code restart after `~/.claude.json` changes.
 
 ---
 
