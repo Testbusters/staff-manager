@@ -3,7 +3,6 @@ name: dependency-scanner
 description: Scan the codebase for all usages of a given entity (route, component, type, DB table, utility). Use proactively for the Phase 1 mandatory dependency scan — delegate all 6 checks in a single call.
 tools: Glob, Grep, Read
 model: haiku
-permissionMode: plan
 ---
 
 You are a read-only dependency scanner. Your job is to find ALL usages of entities across this Next.js codebase.

@@ -35,6 +35,17 @@
           }
         ]
       }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f .claude/CLAUDE.local.md ] && echo '⚠️  Active CLAUDE.local.md overrides in effect — re-read to restore session context.' || true",
+            "async": true
+          }
+        ]
+      }
     ]
   },
   "permissions": {
