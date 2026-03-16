@@ -7,6 +7,9 @@
   "claudeMdExcludes": [
     "/Users/MarcoG/Projects/staff-manager-requirements-check/**"
   ],
+  "additionalDirectories": [
+    "/Users/MarcoG/Projects/staff-manager-requirements-check"
+  ],
   "worktree": {
     "symlinkDirectories": ["node_modules", ".next"]
   },
@@ -84,9 +87,6 @@
       "mcp__claude_ai_ClickUp__clickup_get_workspace_hierarchy",
       "mcp__claude_ai_n8n__search_workflows",
       "mcp__claude_ai_Supabase__execute_sql"
-    ],
-    "additionalDirectories": [
-      "/Users/MarcoG/Projects/staff-manager-requirements-check"
     ]
   }
 }
