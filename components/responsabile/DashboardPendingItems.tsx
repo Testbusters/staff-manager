@@ -258,7 +258,7 @@ export default function DashboardPendingItems({
             <EmptyState icon={Wallet} title="Nessun compenso in attesa." />
           ) : (
             <div className="divide-y divide-border">
-              {pendingComps.slice(0, 8).map((c) => (
+              {pendingComps.slice(0, 5).map((c) => (
                 <Button
                   key={c.id}
                   variant="ghost"
@@ -294,7 +294,7 @@ export default function DashboardPendingItems({
             <EmptyState icon={Receipt} title="Nessun rimborso in attesa." />
           ) : (
             <div className="divide-y divide-border">
-              {pendingExps.slice(0, 8).map((e) => (
+              {pendingExps.slice(0, 5).map((e) => (
                 <Button
                   key={e.id}
                   variant="ghost"

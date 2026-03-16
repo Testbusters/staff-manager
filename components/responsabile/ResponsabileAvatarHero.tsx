@@ -41,7 +41,7 @@ export default function ResponsabileAvatarHero({
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-center gap-4">
         <div className="relative group flex-shrink-0">
-          <div className="w-14 h-14 rounded-full bg-accent overflow-hidden flex items-center justify-center">
+          <div className="w-14 h-14 rounded-full bg-accent overflow-hidden flex items-center justify-center ring-1 ring-border">
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (

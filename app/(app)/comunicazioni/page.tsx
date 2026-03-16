@@ -163,7 +163,18 @@ export default async function ComunicazioniPage({
       {activeTab === 'comunicazioni' && (
         <div className="space-y-3">
           {communications.length === 0 && (
-            <EmptyState icon={Bell} title="Nessuna comunicazione" description="Le comunicazioni vengono pubblicate dall'amministrazione. Torna a controllare più tardi." />
+            <div className="min-h-[60vh] flex items-center justify-center">
+              <EmptyState
+                icon={Bell}
+                title="Nessuna comunicazione"
+                description="Le comunicazioni vengono pubblicate dall'amministrazione. Torna a controllare più tardi."
+                action={
+                  <Link href="?tab=risorse" className="text-sm text-link hover:text-link/80 transition">
+                    Sfoglia le Risorse →
+                  </Link>
+                }
+              />
+            </div>
           )}
           {pageCommunications.map((c) => (
             <Link
@@ -215,7 +226,9 @@ export default async function ComunicazioniPage({
             })}
           </div>
           {resources.length === 0 && (
-            <EmptyState icon={BookOpen} title="Nessuna risorsa disponibile" description="Non ci sono risorse pubblicate al momento." />
+            <div className="min-h-[60vh] flex items-center justify-center">
+              <EmptyState icon={BookOpen} title="Nessuna risorsa disponibile" description="Non ci sono risorse pubblicate al momento." />
+            </div>
           )}
           {pageResources.map((r) => (
             <Link

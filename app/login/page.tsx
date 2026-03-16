@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
@@ -54,87 +56,99 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
-      <div className="w-full max-w-sm">
-        {/* Logo / Title */}
-        <div className="text-center mb-8">
-          <AppLogo className="w-14 h-14 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-foreground">Staff Manager</h1>
-          <p className="text-sm text-muted-foreground mt-1">Accedi alla tua area personale</p>
-        </div>
-
-        <div className="rounded-2xl bg-card border border-border p-6 shadow-sm">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Email</label>
-              <Input
-                type="email"
-                placeholder="nome@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Password</label>
-              <Input
-                ref={passwordRef}
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-
-            {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-3 py-2.5 text-xs text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading || !email || !password}
-              className="w-full bg-brand hover:bg-brand/90 text-white"
-            >
-              {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
-            </Button>
-          </form>
-        </div>
-
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          Per problemi di accesso contatta l&apos;amministrazione.
-        </p>
-
-        {/* Test credentials — staging/preview only */}
-        {process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
-          <div className="mt-6 space-y-2">
-            <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
-            <div className="grid grid-cols-3 gap-2">
-              {TEST_USERS.map((u) => (
-                <button
-                  key={u.email}
-                  type="button"
-                  onClick={() => {
-                    setEmail(u.email);
-                    setPassword('Testbusters123');
-                    passwordRef.current?.focus();
-                  }}
-                  className="rounded-lg bg-background border border-border px-2 py-2.5 text-left hover:border-muted-foreground/30 hover:bg-muted/60 transition"
-                >
-                  <p className="text-xs font-medium text-muted-foreground">{u.role}</p>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{u.email}</p>
-                </button>
-              ))}
-            </div>
+    <>
+      {/* Centered login block — test credentials excluded from flex flow */}
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4 pb-52">
+        <div className="w-full max-w-sm">
+          {/* Logo / Title */}
+          <div className="text-center mb-8">
+            <AppLogo className="w-14 h-14 mx-auto mb-4" />
+            <h1 className="text-xl font-semibold text-foreground">Staff Manager</h1>
+            <p className="text-sm text-muted-foreground mt-1">Accedi alla tua area personale</p>
           </div>
-        )}
+
+          <div className="rounded-2xl bg-card border border-border p-6 shadow-sm">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1.5">Email</label>
+                <Input
+                  type="email"
+                  placeholder="nome@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1.5">Password</label>
+                <div className="relative">
+                  <Input
+                    ref={passwordRef}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    required
+                    autoComplete="current-password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition"
+                    aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-3 py-2.5 text-xs text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading || !email || !password}
+                className="w-full bg-brand hover:bg-brand/90 text-white"
+              >
+                {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
+              </Button>
+            </form>
+          </div>
+
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Per problemi di accesso contatta l&apos;amministrazione.
+          </p>
+        </div>
       </div>
-    </div>
+
+      {/* Test credentials — fixed at bottom, outside flex flow */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 space-y-2">
+        <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
+        <div className="grid grid-cols-3 gap-2">
+          {TEST_USERS.map((u) => (
+            <button
+              key={u.email}
+              type="button"
+              onClick={() => {
+                setEmail(u.email);
+                setPassword('Testbusters123');
+                passwordRef.current?.focus();
+              }}
+              className="rounded-lg bg-background border border-border px-2 py-2.5 text-left hover:border-muted-foreground/30 hover:bg-muted/60 transition"
+            >
+              <p className="text-xs font-medium text-muted-foreground">{u.role}</p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{u.email}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
