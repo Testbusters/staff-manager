@@ -128,8 +128,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Test credentials — fixed at bottom, outside flex flow */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 space-y-2">
+      {/* Test credentials — local dev only */}
+      {process.env.NODE_ENV === 'development' && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 space-y-2">
         <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
         <div className="grid grid-cols-3 gap-2">
           {TEST_USERS.map((u) => (
@@ -148,7 +148,7 @@ export default function LoginPage() {
             </button>
           ))}
         </div>
-      </div>
+      </div>}
     </>
   );
 }
