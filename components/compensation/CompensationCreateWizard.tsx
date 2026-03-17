@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { calcRitenuta } from '@/lib/ritenuta';
 
 type Community = { id: string; name: string };
 
@@ -36,8 +37,6 @@ type FormData = {
 };
 
 type Competenza = { key: string; label: string };
-
-const RITENUTA_RATE = 0.2;
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -151,7 +150,8 @@ export default function CompensationCreateWizard({
     setSubmitError('');
 
     const lordo = parseFloat(formData.importo_lordo);
-    const ritenuta = Math.round(lordo * RITENUTA_RATE * 100) / 100;
+    const communityName = selectedCollab.communities[0]?.name ?? '';
+    const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
     const payload: Record<string, unknown> = {
@@ -292,7 +292,8 @@ export default function CompensationCreateWizard({
   // ── Step 2 — Dati compenso ────────────────────────────────────────────────
   if (step === 'step2' && selectedCollab) {
     const lordo = parseFloat(formData.importo_lordo) || 0;
-    const ritenuta = Math.round(lordo * RITENUTA_RATE * 100) / 100;
+    const communityName = selectedCollab.communities[0]?.name ?? '';
+    const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
     return (
@@ -411,7 +412,8 @@ export default function CompensationCreateWizard({
   // ── Step 3 — Riepilogo ────────────────────────────────────────────────────
   if (step === 'step3' && selectedCollab) {
     const lordo = parseFloat(formData.importo_lordo) || 0;
-    const ritenuta = Math.round(lordo * RITENUTA_RATE * 100) / 100;
+    const communityName = selectedCollab.communities[0]?.name ?? '';
+    const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
     const competenzaLabel = competenze.find((c) => c.key === formData.competenza)?.label;
 
@@ -425,7 +427,7 @@ export default function CompensationCreateWizard({
     if (formData.info_specifiche.trim()) rows.push({ label: 'Info specifiche', value: formData.info_specifiche.trim() });
     rows.push(
       { label: 'Importo lordo', value: formatCurrency(lordo) },
-      { label: 'Ritenuta (20%)', value: `-${formatCurrency(ritenuta)}` },
+      { label: 'Ritenuta acconto', value: `-${formatCurrency(ritenuta)}` },
       { label: 'Importo netto', value: formatCurrency(netto) },
     );
 

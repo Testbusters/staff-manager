@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { CONTRACT_TEMPLATE_DOCUMENT_TYPE, type ContractTemplateType } from '@/lib/types';
 import { buildContractVars, generateDocumentFromTemplate } from '@/lib/document-generation';
+import { getContractTemplateTipo } from '@/lib/ritenuta';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { sendEmail } from '@/lib/email';
 
@@ -124,7 +125,14 @@ export async function POST(request: Request) {
 
   if (tipoContratto && !profile.skip_contract_on_onboarding) {
     try {
-      const tipo = tipoContratto as ContractTemplateType;
+      // Determine community-aware template tipo
+      const { data: ccOnboarding } = await admin
+        .from('collaborator_communities')
+        .select('communities(name)')
+        .eq('collaborator_id', collaboratorId)
+        .maybeSingle();
+      const onboardingCommunity = (ccOnboarding?.communities as unknown as { name: string } | null)?.name ?? '';
+      const tipo: ContractTemplateType = getContractTemplateTipo(onboardingCommunity);
       const collabForVars = {
         nome: d.nome,
         cognome: d.cognome,

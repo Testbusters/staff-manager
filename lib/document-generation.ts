@@ -4,6 +4,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ContractTemplateType } from '@/lib/types';
 import { fillPdfMarkers } from '@/lib/pdf-utils';
+export { calcRitenuta, getContractTemplateTipo, getReceiptTemplateTipo } from '@/lib/ritenuta';
 
 function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) return '';
