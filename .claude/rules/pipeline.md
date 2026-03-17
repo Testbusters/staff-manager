@@ -60,47 +60,22 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 
 **Phase 1.6 — Visual & UX Design** *(MANDATORY for any block with UI/UX impact — cannot be skipped)*
 
-**Triggers — this phase is required when the block:**
-- Creates a new page route or full-page redesign
-- Introduces a new layout pattern, component hierarchy, or navigation structure
-- Changes the information architecture of an existing page (sections, tabs, panels)
-- Adds a complex interactive pattern (multi-step flow, bulk actions, split views)
+**Triggers**: new page route or full-page redesign, new layout pattern or navigation structure, changed information architecture (sections/tabs/panels), complex interactive pattern (multi-step flow, bulk actions, split views).
 
-**When triggered, always execute in this order:**
+**Execute in order:**
 
-1. **ASCII wireframe** — invoke the `frontend-design` skill with an explicit ASCII wireframe request. The wireframe must show:
-   - Full page layout with named regions
-   - Column structure for tables/lists
-   - Action placement and grouping
-   - Empty states and loading states
-   - Mobile breakpoint if relevant
+1. **ASCII wireframe** — invoke `frontend-design` skill. Must show: full page layout with named regions, column structure for tables/lists, action placement, empty/loading states, mobile breakpoint if relevant.
 
-2. **HTML standalone preview** *(optional, higher fidelity)* — after the ASCII wireframe is approved in rough terms, choose one of two paths:
+2. **HTML standalone preview** *(optional, higher fidelity)* — choose one path:
+   - **Path A — frontend-design → CodePen** (layout + visual tone): ask for a self-contained HTML file (inline Tailwind via CDN) → paste into CodePen → iterate with plain-text corrections.
+   - **Path B — v0.dev → npx v0 add** (component fidelity, shadcn-native): prompt v0.dev with the ASCII wireframe → iterate in live preview → `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real API calls.
+   Both paths: approved preview = visual contract for Phase 2. Generated code is reference only (exception: `npx v0 add` output may be used as starting point after review).
 
-   **Path A — frontend-design → CodePen** (layout + visual tone)
-   - Invoke `frontend-design` asking for a **self-contained HTML file** (single file, inline Tailwind via CDN, no external dependencies)
-   - Copy the output → paste into **CodePen** (browser tab, already open alongside iTerm2)
-   - Iterate in CodePen; feed changes back as plain text corrections
+3. **UX rationale**: state the mental model (inbox/pipeline/kanban/wizard), why competing alternatives were discarded, the single most important UX improvement.
 
-   **Path B — v0.dev → npx v0 add** (component fidelity, shadcn-native)
-   - Open v0.dev in browser (`open https://v0.dev` from terminal, or use the pinned browser tab)
-   - Prompt using the ASCII wireframe as input — v0.dev generates React + shadcn/ui + Tailwind natively
-   - Iterate in v0.dev's live preview using natural language
-   - Once approved, import directly into the project: `npx v0@latest add https://v0.dev/t/[id]`
-   - **After import**: adapt prop names, remove mock data, wire real API calls — never use generated code as-is
+4. **Design system mapping**: map every wireframe region to the correct shadcn component and token. No region should be "TBD".
 
-   Both paths:
-   - The approved preview is the visual contract — Phase 2 must match its layout and component structure
-   - Generated code is **reference only** — rewrite in Phase 2 following project conventions and the real shadcn component set (exception: `npx v0 add` output may be used as starting point after review)
-
-3. **UX rationale** — for each layout decision, state explicitly:
-   - What mental model it maps to (inbox, pipeline, kanban, wizard…)
-   - Why competing alternatives were discarded
-   - The single most important UX improvement over the current state
-
-4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
-
-5. **STOP — present wireframe (+ CodePen link or description if HTML preview was used) + UX rationale + component map. Wait for explicit approval before proceeding to Phase 2. The approved wireframe/preview is the implementation contract — Phase 2 must match it.**
+5. **STOP — present wireframe + UX rationale + component map. Wait for explicit approval before Phase 2. The approved wireframe/preview is the implementation contract.**
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
 - Use `EnterPlanMode` to present the complete approved plan in structured, locked form.
@@ -395,5 +370,4 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Immediate migration**: every `supabase/migrations/*.sql` must be applied to the remote DB immediately after writing (Node.js Management API + SELECT verification + `docs/migrations-log.md` entry). Never leave a written migration unapplied before tests.
 - **FK check before PostgREST joins**: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f'`. If FK absent: two-step query.
 - **Locators from real JSX**: before writing every e2e locator, read the component (Read tool). Identify unique classes for each target element — never assume from memory.
-- **Playwright UAT**: CSS class selectors (e.g. `span.text-green-300`) for status badges. Never `getByText()` for status values.
 - **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5. After compact completes, re-read `.claude/CLAUDE.local.md` to restore any active session overrides before resuming.

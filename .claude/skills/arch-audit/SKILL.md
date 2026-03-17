@@ -12,13 +12,13 @@ You are performing a weekly architecture compliance audit for the staff-manager 
 
 Launch a single research agent to fetch ALL of the following URLs and extract key changes:
 
-- https://docs.anthropic.com/en/docs/claude-code/memory
-- https://docs.anthropic.com/en/docs/claude-code/settings
-- https://docs.anthropic.com/en/docs/claude-code/hooks
-- https://docs.anthropic.com/en/docs/claude-code/mcp
-- https://docs.anthropic.com/en/docs/claude-code/sub-agents
-- https://docs.anthropic.com/en/docs/claude-code/slash-commands
-- https://docs.anthropic.com/en/docs/claude-code/changelog
+- https://code.claude.com/docs/en/memory
+- https://code.claude.com/docs/en/settings
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/sub-agents
+- https://code.claude.com/docs/en/slash-commands
+- https://code.claude.com/docs/en/changelog
 - https://github.com/anthropics/claude-code/releases (latest 5 releases)
 
 From each source extract: new keys/features, deprecations, breaking changes, best practice updates.
