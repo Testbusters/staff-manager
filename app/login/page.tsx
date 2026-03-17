@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import AppLogo from '@/components/ui/AppLogo';
 
 const TEST_USERS = [
-  { role: 'Collaboratore',                    email: 'collaboratore_test@test.com' },
+  { role: 'Collab. TB',                       email: 'collaboratore_tb_test@test.com' },
+  { role: 'Collab. P4M',                      email: 'collaboratore_p4m_test@test.com' },
   { role: 'Resp. Cittadino',                  email: 'responsabile_cittadino_test@test.com' },
   { role: 'Resp. Compensi',                   email: 'responsabile_compensi_test@test.com' },
   { role: 'Resp. Servizi Ind.',               email: 'responsabile_servizi_individuali_test@test.com' },
