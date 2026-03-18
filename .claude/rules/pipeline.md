@@ -282,7 +282,7 @@ After git push, before closing the session:
 - Execute checks **C4 through C11** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
 - **Phase complete only when all 11 checks pass** — not when the review "seems thorough".
-- **Final commit + push**: if any context file was modified during C1–C11 (CLAUDE.md, MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
+- **Final commit + push**: if any context file was modified during C1–C11 (CLAUDE.md, project-root MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
   ```
   git add <modified context files>
   git commit -m "chore(context): post-block context review fixes"
