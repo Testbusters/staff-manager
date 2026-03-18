@@ -176,6 +176,7 @@ FR-COMP-06: The system shall allow a collaboratore to reopen a rejected compensa
 FR-COMP-07: Upon liquidation, the system shall automatically generate and archive a payment receipt document in the collaboratore's document history.
 FR-COMP-08: The system shall allow the Amministrazione to approve or liquidate multiple pending compensation records simultaneously through a bulk action in the Work Queue. The annual earnings limit check applies individually to each record during bulk approval.
 FR-COMP-09: The system shall support import of compensation records from an external spreadsheet, providing a validation preview before any records are committed to the database.
+FR-COMP-10: The system shall apply a community-specific withholding tax rate when calculating compensation net amounts. Testbusters collaborators are subject to a 20% withholding on gross earnings (ritenuta = gross × 0.20). Peer4Med collaborators are subject to a reduced taxable base with a 20% rate applied to 60% of gross earnings (ritenuta = gross × 0.60 × 0.20). This rate must be applied consistently at creation, import, receipt preview, receipt generation, and document recompilation.
 
 ### 10. Reimbursement Management
 The reimbursement module allows collaboratori to submit expense claims for costs they have personally incurred on behalf of the community — travel expenses, material purchases, and similar out-of-pocket items. Unlike compensations, reimbursements are self-submitted by the collaboratore and are accompanied by supporting documentation uploaded at the time of submission.
@@ -270,7 +271,7 @@ The settings module gives the Amministrazione control over the operational confi
 
 FR-SET-01: The system shall allow the Amministrazione to customise the content and visual layout of all transactional email templates used by the portal, with changes taking effect for all subsequent sends.
 FR-SET-02: The system shall allow the Amministrazione to manage the list of available compensation competency types — the categories that define what type of work a compensation represents.
-FR-SET-03: The system shall allow the Amministrazione to upload and manage the document templates used for contract and receipt generation.
+FR-SET-03: The system shall allow the Amministrazione to upload and manage the document templates used for contract and receipt generation. Four template slots are available — one contract and one receipt per community (Testbusters and Peer4Med) — each independently uploadable and replaceable. Template selection at generation time is determined by the collaboratore's community membership.
 FR-SET-04: The system shall provide an operational monitoring dashboard for the Amministrazione, displaying system health indicators, user access logs, email delivery reports, database performance metrics, and application error records.
 FR-SET-05: The system shall allow the Amministrazione to assign community management access to Responsabili, defining which communities each Responsabile is authorised to manage.
 
@@ -312,6 +313,7 @@ Rationale: Stakeholders and team members need a navigable, readable document tha
 Impact: The development pipeline includes a synchronisation step in Phase 8 that updates this document when significant product changes are made.
 
 ## Part VII — Changelog
+2026-03-18  |  v1.2  |  P4M Community Logic: added FR-COMP-10 (community-aware withholding tax — TB = 20%, P4M = 60% taxable base × 20%); updated FR-SET-03 (four document template slots, one contract + one receipt per community). Community-aware logic applied at all compensation and receipt touchpoints.
 2026-03-15  |  v1.1  |  Full rewrite: narrative language, functional requirements (FR-*), glossary, out of scope, decision log. Structured for dual audience: stakeholders and development team.
 2026-03-13  |  v1.0  |  Initial creation. Technical reference structure compiled from internal development context files.
 
