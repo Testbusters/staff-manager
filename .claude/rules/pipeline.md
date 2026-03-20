@@ -75,23 +75,7 @@ The branch prefix determines which pipeline Claude follows automatically. If the
    - Empty states and loading states
    - Mobile breakpoint if relevant
 
-2. **HTML standalone preview** *(optional, higher fidelity)* — after the ASCII wireframe is approved in rough terms, choose one of two paths:
-
-   **Path A — frontend-design → CodePen** (layout + visual tone)
-   - Invoke `frontend-design` asking for a **self-contained HTML file** (single file, inline Tailwind via CDN, no external dependencies)
-   - Copy the output → paste into **CodePen** (browser tab, already open alongside iTerm2)
-   - Iterate in CodePen; feed changes back as plain text corrections
-
-   **Path B — v0.dev → npx v0 add** (component fidelity, shadcn-native)
-   - Open v0.dev in browser (`open https://v0.dev` from terminal, or use the pinned browser tab)
-   - Prompt using the ASCII wireframe as input — v0.dev generates React + shadcn/ui + Tailwind natively
-   - Iterate in v0.dev's live preview using natural language
-   - Once approved, import directly into the project: `npx v0@latest add https://v0.dev/t/[id]`
-   - **After import**: adapt prop names, remove mock data, wire real API calls — never use generated code as-is
-
-   Both paths:
-   - The approved preview is the visual contract — Phase 2 must match its layout and component structure
-   - Generated code is **reference only** — rewrite in Phase 2 following project conventions and the real shadcn component set (exception: `npx v0 add` output may be used as starting point after review)
+2. **HTML standalone preview** *(optional)* — Path A: `frontend-design` → self-contained HTML (inline Tailwind CDN) → paste into CodePen, iterate. Path B: v0.dev → `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real APIs. Either way: approved preview = visual contract for Phase 2; generated code is reference only — rewrite following project conventions (`npx v0 add` output may be used as a starting point after review).
 
 3. **UX rationale** — for each layout decision, state explicitly:
    - What mental model it maps to (inbox, pipeline, kanban, wizard…)
@@ -201,7 +185,6 @@ The branch prefix determines which pipeline Claude follows automatically. If the
   2. Wait ~5s, then call `resend_list_emails` with `limit: 5` to retrieve recent sends.
   3. Confirm: correct `to` address, expected `subject`, `last_event: "delivered"` (not `bounced` or `complained`).
   4. If the email has a CTA link: confirm the `APP_URL` env var produced a correct absolute URL (not `localhost`) by inspecting the HTML body via `resend_get_email`.
-  - Resend MCP is configured project-locally in `/Users/MarcoG/.claude.json`. Tools available: `resend_list_emails`, `resend_get_email`, `resend_send_email` (for ad-hoc test sends), and others.
   - Do NOT send emails to real user addresses during smoke tests — use `@test.com` or `@test.local` addresses only.
 
 **Phase 6 — Outcome checklist + confirmation**
@@ -384,8 +367,7 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Worktree — CLAUDE.local.md**: if `.claude/CLAUDE.local.md` exists in the main repo (active overrides), copy it into the worktree directory at setup time. It is gitignored and not auto-present in worktrees.
 - **Worktree — sm-staging command**: always pass the branch name explicitly: `sm-staging worktree-block-name`. Never call `sm-staging` without arguments when in a worktree context.
 - **Worktree cleanup after production deploy**: after `sm-deploy` confirms the worktree branch is in production, instruct user to run `sm-cleanup worktree-block-name` to delete both local and remote branch.
-- **DB environments**: staging Supabase project (`gjwkvgfwkdwzqlvudgqr`) and production (`nyajqcjqmgxctlqighql`) are fully separate isolated projects. Local dev (main repo + all worktrees) and `staff-staging.peerpetual.it` always target staging. `staff.peerpetual.it` targets production. Production credentials must never appear in any local `.env.local` or worktree.
-- **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Do not rely on memory or partial exploration. The user must never need to ask for a deeper analysis — it is your responsibility to deliver a complete file list from the start.
+- **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Deliver a complete file list from the start.
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **PRD sync is a hard gate — no exceptions**: `docs/prd/prd.md` must be updated and the GDoc Changelog entry must be appended **before closing any block**, whether full pipeline or fast-lane. This step cannot be deferred, skipped due to time pressure, or merged with another block's update. A block is not complete until both `docs/prd/prd.md` and the GDoc reflect its functional changes (or it is explicitly confirmed that no PRD section was affected).
 - **Even if the plan is pre-written**: still execute phase by phase with the gates. A pre-written plan replaces only Phase 1, it does not compress subsequent phases.
@@ -394,7 +376,4 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Concise output**: always report only the build/test summary line. Paste details only on error.
 - **Keep MEMORY.md compact**: project-root MEMORY.md and auto-memory MEMORY.md must both stay under ~150 active lines. Beyond that: extract topics into separate files and link.
 - **Migrations — staging only during development**: every `supabase/migrations/*.sql` must be applied immediately after writing, but **exclusively to the staging DB** (`project_id: "gjwkvgfwkdwzqlvudgqr"`). Never pass `project_id: "nyajqcjqmgxctlqighql"` during Phase 2. Production DB is updated once, in Phase 8 step 7 pre-deploy, by re-executing the same SQL. If `execute_sql` is called with the production project_id outside of Phase 8 step 7, it is a process error — stop and flag it.
-- **FK check before PostgREST joins**: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f'`. If FK absent: two-step query.
-- **Locators from real JSX**: before writing every e2e locator, read the component (Read tool). Identify unique classes for each target element — never assume from memory.
-- **Playwright UAT**: CSS class selectors (e.g. `span.text-green-300`) for status badges. Never `getByText()` for status values.
 - **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5. After compact completes, re-read `.claude/CLAUDE.local.md` to restore any active session overrides before resuming.
