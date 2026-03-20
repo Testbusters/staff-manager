@@ -2,7 +2,8 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `049_content_tipo_capitalize.sql` (2026-03-16).
+> Last synced: migration `051_p4m_templates.sql` (2026-03-18).
+> Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
 
@@ -219,3 +220,452 @@ tickets
 | `documents` | `collaborator_id` | same |
 | `tickets` | `creator_user_id` | `.eq('creator_user_id', userId)` — direct auth.users FK |
 | `notifications` | `user_id` | `.eq('user_id', userId)` |
+
+---
+
+
+## Column specs
+
+> Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
+> Last refreshed: 2026-03-20.
+> Run `node scripts/refresh-db-map.mjs` after each migration block.
+
+### `user_profiles`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `user_id` | uuid | NO | — | → auth.users.id |
+| `role` | text | NO | — | — |
+| `is_active` | boolean | NO | `true` | — |
+| `member_status` | text | NO | `'attivo'` | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `must_change_password` | boolean | NO | `false` | — |
+| `onboarding_completed` | boolean | NO | `false` | — |
+| `can_publish_announcements` | boolean | YES | `true` | — |
+| `theme_preference` | character varying | YES | `'dark'` | — |
+| `skip_contract_on_onboarding` | boolean | NO | `false` | — |
+
+### `collaborators`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `user_id` | uuid | NO | — | → auth.users.id |
+| `nome` | text | YES | — | — |
+| `cognome` | text | YES | — | — |
+| `codice_fiscale` | text | YES | — | — |
+| `partita_iva` | text | YES | — | — |
+| `data_nascita` | date | YES | — | — |
+| `indirizzo` | text | YES | — | — |
+| `telefono` | text | YES | — | — |
+| `email` | text | NO | — | — |
+| `iban` | text | YES | — | — |
+| `note` | text | YES | — | — |
+| `tshirt_size` | text | YES | — | — |
+| `foto_profilo_url` | text | YES | — | — |
+| `data_ingresso` | date | YES | — | — |
+| `sono_un_figlio_a_carico` | boolean | YES | `false` | — |
+| `figli_dettaglio` | jsonb | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `luogo_nascita` | text | YES | — | — |
+| `comune` | text | YES | — | — |
+| `tipo_contratto` | text | YES | — | — |
+| `provincia_nascita` | text | YES | — | — |
+| `provincia_residenza` | text | YES | — | — |
+| `civico_residenza` | text | YES | — | — |
+| `importo_lordo_massimale` | numeric | YES | — | — |
+| `username` | text | YES | — | — |
+| `intestatario_pagamento` | text | YES | — | — |
+| `data_fine_contratto` | date | YES | — | — |
+| `approved_lordo_ytd` | numeric | NO | `0` | — |
+| `approved_year` | integer | NO | `EXTRACT(year FROM CURRENT_DATE)` | — |
+
+### `communities`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `name` | text | NO | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `is_active` | boolean | NO | `true` | — |
+
+### `collaborator_communities`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `community_id` | uuid | NO | — | → communities.id |
+
+### `user_community_access`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `user_id` | uuid | NO | — | → auth.users.id |
+| `community_id` | uuid | NO | — | → communities.id |
+
+### `compensations`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `community_id` | uuid | YES | — | → communities.id |
+| `nome_servizio_ruolo` | text | NO | — | — |
+| `data_competenza` | date | YES | — | — |
+| `importo_lordo` | numeric | YES | — | — |
+| `ritenuta_acconto` | numeric | YES | — | — |
+| `importo_netto` | numeric | YES | — | — |
+| `stato` | text | NO | `'IN_ATTESA'` | — |
+| `payment_reference` | text | YES | — | — |
+| `info_specifiche` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `updated_at` | timestamp with time zone | YES | `now()` | — |
+| `competenza` | text | YES | — | → compensation_competenze.key |
+| `exported_at` | timestamp with time zone | YES | — | — |
+| `receipt_document_id` | uuid | YES | — | → documents.id |
+| `approved_by` | uuid | YES | — | → auth.users.id |
+| `approved_at` | timestamp with time zone | YES | — | — |
+| `rejection_note` | text | YES | — | — |
+| `liquidated_at` | timestamp with time zone | YES | — | — |
+| `liquidated_by` | uuid | YES | — | → auth.users.id |
+
+### `compensation_history`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `compensation_id` | uuid | NO | — | → compensations.id |
+| `stato_precedente` | text | YES | — | — |
+| `stato_nuovo` | text | NO | — | — |
+| `changed_by` | uuid | YES | — | → auth.users.id |
+| `role_label` | text | NO | — | — |
+| `note` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+
+### `compensation_attachments`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `compensation_id` | uuid | NO | — | → compensations.id |
+| `file_url` | text | NO | — | — |
+| `file_name` | text | NO | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+
+### `compensation_competenze`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `key` | text | NO | — | — |
+| `label` | text | NO | — | — |
+| `active` | boolean | NO | `true` | — |
+| `sort_order` | integer | NO | `0` | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `expense_reimbursements`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `community_id` | uuid | NO | — | → communities.id |
+| `categoria` | text | NO | — | — |
+| `descrizione` | text | YES | — | — |
+| `data_spesa` | date | NO | — | — |
+| `importo` | numeric | NO | — | — |
+| `stato` | text | NO | `'INVIATO'` | — |
+| `payment_reference` | text | YES | — | — |
+| `note_interne` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `updated_at` | timestamp with time zone | YES | `now()` | — |
+| `exported_at` | timestamp with time zone | YES | — | — |
+| `receipt_document_id` | uuid | YES | — | → documents.id |
+| `approved_by` | uuid | YES | — | → auth.users.id |
+| `approved_at` | timestamp with time zone | YES | — | — |
+| `rejection_note` | text | YES | — | — |
+| `liquidated_at` | timestamp with time zone | YES | — | — |
+| `liquidated_by` | uuid | YES | — | → auth.users.id |
+
+### `expense_history`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `reimbursement_id` | uuid | NO | — | → expense_reimbursements.id |
+| `stato_precedente` | text | YES | — | — |
+| `stato_nuovo` | text | NO | — | — |
+| `changed_by` | uuid | YES | — | → auth.users.id |
+| `role_label` | text | NO | — | — |
+| `note` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+
+### `expense_attachments`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `reimbursement_id` | uuid | NO | — | → expense_reimbursements.id |
+| `file_url` | text | NO | — | — |
+| `file_name` | text | NO | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+
+### `documents`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `community_id` | uuid | YES | — | → communities.id |
+| `tipo` | text | NO | — | — |
+| `anno` | integer | YES | — | — |
+| `file_original_url` | text | NO | — | — |
+| `file_original_name` | text | NO | — | — |
+| `stato_firma` | text | NO | `'DA_FIRMARE'` | — |
+| `file_firmato_url` | text | YES | — | — |
+| `file_firmato_name` | text | YES | — | — |
+| `requested_at` | timestamp with time zone | YES | `now()` | — |
+| `signed_at` | timestamp with time zone | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `titolo` | text | NO | `''` | — |
+| `macro_type` | text | YES | — | — |
+
+### `contract_templates`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `tipo` | text | NO | — | — |
+| `file_url` | text | NO | — | — |
+| `file_name` | text | NO | — | — |
+| `uploaded_by` | uuid | YES | — | → auth.users.id |
+| `uploaded_at` | timestamp with time zone | YES | `now()` | — |
+
+### `tickets`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `creator_user_id` | uuid | NO | — | → auth.users.id |
+| `community_id` | uuid | YES | — | → communities.id |
+| `categoria` | text | NO | — | — |
+| `oggetto` | text | NO | — | — |
+| `stato` | text | NO | `'APERTO'` | — |
+| `priority` | text | NO | `'NORMALE'` | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `updated_at` | timestamp with time zone | YES | `now()` | — |
+| `last_message_at` | timestamp with time zone | YES | — | — |
+| `last_message_author_name` | text | YES | — | — |
+| `last_message_author_role` | text | YES | — | — |
+
+### `ticket_messages`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `ticket_id` | uuid | NO | — | → tickets.id |
+| `author_user_id` | uuid | NO | — | → auth.users.id |
+| `message` | text | NO | — | — |
+| `attachment_url` | text | YES | — | — |
+| `attachment_name` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+
+### `communications`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `titolo` | text | NO | — | — |
+| `contenuto` | text | NO | — | — |
+| `pinned` | boolean | YES | `false` | — |
+| `published_at` | timestamp with time zone | YES | `now()` | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `expires_at` | timestamp with time zone | YES | — | — |
+| `file_urls` | text[] | NO | `'{}'[]` | — |
+| `community_ids` | uuid[] | NO | `'{}'[]` | — |
+
+### `events`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `titolo` | text | NO | — | — |
+| `descrizione` | text | YES | — | — |
+| `start_datetime` | timestamp with time zone | YES | — | — |
+| `end_datetime` | timestamp with time zone | YES | — | — |
+| `location` | text | YES | — | — |
+| `luma_url` | text | YES | — | — |
+| `luma_embed_url` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `tipo` | text | YES | — | — |
+| `file_url` | text | YES | — | — |
+| `community_ids` | uuid[] | NO | `'{}'[]` | — |
+
+### `opportunities`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `titolo` | text | NO | — | — |
+| `tipo` | text | NO | `'ALTRO'` | — |
+| `descrizione` | text | NO | — | — |
+| `requisiti` | text | YES | — | — |
+| `scadenza_candidatura` | date | YES | — | — |
+| `link_candidatura` | text | YES | — | — |
+| `file_url` | text | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `community_ids` | uuid[] | NO | `'{}'[]` | — |
+
+### `resources`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `titolo` | text | NO | — | — |
+| `descrizione` | text | YES | — | — |
+| `link` | text | YES | — | — |
+| `file_url` | text | YES | — | — |
+| `tag` | text[] | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `categoria` | text | NO | `'ALTRO'` | — |
+| `community_ids` | uuid[] | NO | `'{}'[]` | — |
+
+### `discounts`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `titolo` | text | NO | — | — |
+| `descrizione` | text | YES | — | — |
+| `codice_sconto` | text | YES | — | — |
+| `link` | text | YES | — | — |
+| `valid_from` | date | YES | — | — |
+| `valid_to` | date | YES | — | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+| `fornitore` | text | NO | `''` | — |
+| `logo_url` | text | YES | — | — |
+| `file_url` | text | YES | — | — |
+| `community_ids` | uuid[] | NO | `'{}'[]` | — |
+| `brand` | text | NO | `'testbusters'` | — |
+
+### `notifications`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `user_id` | uuid | NO | — | → auth.users.id |
+| `tipo` | text | NO | — | — |
+| `titolo` | text | NO | — | — |
+| `messaggio` | text | YES | — | — |
+| `entity_type` | text | YES | — | — |
+| `entity_id` | uuid | YES | — | — |
+| `read` | boolean | YES | `false` | — |
+| `created_at` | timestamp with time zone | YES | `now()` | — |
+
+### `notification_settings`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `event_key` | text | NO | — | — |
+| `recipient_role` | text | NO | — | — |
+| `label` | text | NO | — | — |
+| `inapp_enabled` | boolean | NO | `true` | — |
+| `email_enabled` | boolean | NO | `false` | — |
+
+### `email_templates`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `key` | text | NO | — | — |
+| `label` | text | NO | — | — |
+| `event_group` | text | NO | — | — |
+| `has_highlight` | boolean | NO | `true` | — |
+| `subject` | text | NO | `''` | — |
+| `body_before` | text | NO | `''` | — |
+| `highlight_rows` | jsonb | NO | `'[]'` | — |
+| `body_after` | text | NO | `''` | — |
+| `cta_label` | text | NO | `'Vai all''app'` | — |
+| `available_markers` | text[] | NO | `'{}'[]` | — |
+| `updated_at` | timestamp with time zone | YES | `now()` | — |
+
+### `email_layout_config`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `brand_color` | text | NO | `'#E8320A'` | — |
+| `logo_url` | text | NO | `''` | — |
+| `header_title` | text | NO | `'Staff Manager'` | — |
+| `footer_address` | text | NO | `'Via Marco Ulpio Traiano 17, 20149 Milano'` | — |
+| `footer_legal` | text | NO | `''` | — |
+| `updated_at` | timestamp with time zone | YES | `now()` | — |
+
+### `email_events`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `resend_email_id` | text | YES | — | — |
+| `recipient` | text | NO | — | — |
+| `subject` | text | YES | — | — |
+| `event_type` | text | NO | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `export_runs`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `exported_at` | timestamp with time zone | NO | `now()` | — |
+| `exported_by` | uuid | NO | — | → auth.users.id |
+| `collaborator_count` | integer | NO | `0` | — |
+| `compensation_count` | integer | NO | `0` | — |
+| `expense_count` | integer | NO | `0` | — |
+| `storage_path` | text | YES | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+| `duration_ms` | integer | YES | — | — |
+
+### `import_runs`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `tipo` | text | NO | — | — |
+| `executed_by` | uuid | YES | — | → auth.users.id |
+| `imported` | integer | NO | `0` | — |
+| `skipped` | integer | NO | `0` | — |
+| `errors` | integer | NO | `0` | — |
+| `detail_json` | jsonb | YES | — | — |
+| `duration_ms` | integer | YES | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+| `storage_path` | text | YES | — | — |
+
+### `feedback`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `user_id` | uuid | NO | — | → auth.users.id |
+| `role` | text | NO | — | — |
+| `categoria` | text | NO | — | — |
+| `pagina` | text | NO | `''` | — |
+| `messaggio` | text | NO | — | — |
+| `screenshot_path` | text | YES | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+| `stato` | text | NO | `'nuovo'` | — |
+
+### `app_errors`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `message` | text | NO | — | — |
+| `stack` | text | YES | — | — |
+| `url` | text | YES | — | — |
+| `user_id` | uuid | YES | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |

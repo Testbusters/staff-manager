@@ -55,7 +55,8 @@
 
 | Email | Type | Role | Status |
 |---|---|---|---|
-| `collaboratore@test.com` | Playwright | collaboratore | as-is |
+| `collaboratore@test.com` | Playwright (production only) | collaboratore | not present on staging |
+| `collaboratore_tb_test@test.com` | Playwright (staging) | collaboratore | replaces collaboratore@test.com on staging |
 | `responsabile_cittadino@test.com` | Playwright | responsabile_cittadino | to create |
 | `responsabile_compensi@test.com` | Playwright | responsabile_compensi | renamed from `responsabile@test.com` |
 | `responsabile_servizi_individuali@test.com` | Playwright | responsabile_servizi_individuali | to create |

@@ -75,7 +75,11 @@ The branch prefix determines which pipeline Claude follows automatically. If the
    - Empty states and loading states
    - Mobile breakpoint if relevant
 
-2. **HTML standalone preview** *(optional)* — Path A: `frontend-design` → self-contained HTML (inline Tailwind CDN) → paste into CodePen, iterate. Path B: v0.dev → `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real APIs. Either way: approved preview = visual contract for Phase 2; generated code is reference only — rewrite following project conventions (`npx v0 add` output may be used as a starting point after review).
+2. **Design context + HTML preview** *(optional)* — Three paths, in order of preference:
+   - **Path A — Figma MCP**: use `get_variable_defs` on the Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`) to pull real design tokens, then generate the component with `frontend-design`. This produces code aligned with the actual design system.
+   - **Path B — frontend-design standalone**: `frontend-design` skill → self-contained HTML (inline Tailwind CDN) → iterate in-session. Use when Figma context is not needed.
+   - **Path C — v0.dev**: `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real APIs. Use for complex interactive components not easily generated inline. Output is reference only — rewrite following project conventions.
+   Either way: approved preview = visual contract for Phase 2; generated code is reference only.
 
 3. **UX rationale** — for each layout decision, state explicitly:
    - What mental model it maps to (inbox, pipeline, kanban, wizard…)
@@ -243,7 +247,7 @@ Only after explicit confirmation:
    - **Google Docs sync** (presentation layer): after updating `docs/prd/prd.md`, append a Changelog entry to the GDoc (Doc ID: `1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o`). Use the auth pattern from `lib/google-sheets.ts` (GOOGLE_SERVICE_ACCOUNT_JSON, scope `https://www.googleapis.com/auth/documents`). The entry goes in section "VII — Changelog" and must include: version date, block name, one-line summary of changes. Do NOT rewrite the whole document — append only.
    - **Minimum scope**: even if the block is purely technical (bug fix, refactor), if it changes observable system behaviour, update the PRD. If no PRD section is affected (e.g. pure internal refactor with zero functional change), skip the GDoc append but still verify `docs/prd/prd.md` is current.
 2c. If the block added/removed a route, changed role access to an existing route, modified member_status restrictions, or updated sidebar items: update `docs/sitemap.md`. Sync with `lib/nav.ts`, `proxy.ts`, and the relevant `page.tsx` guards. Also update the **Layout**, **Componenti chiave**, and **loading.tsx** columns for any page whose structure changed (new Tabs, Sheet, Tiptap added/removed; loading.tsx created/deleted).
-2d. If the block applied a migration that adds/modifies tables, columns, FKs, indexes, or RLS policies: update `docs/db-map.md` — Tables section (add/update rows), FK Graph (add new FK lines), Indexes section, RLS Summary. Mandatory — `skill-db` uses this as authoritative schema reference.
+2d. If the block applied a migration that adds/modifies tables, columns, FKs, indexes, or RLS policies: update `docs/db-map.md` — Tables section (add/update rows), FK Graph (add new FK lines), Indexes section, RLS Summary. Then run `node scripts/refresh-db-map.mjs` to regenerate the Column specs section from the live staging schema. Mandatory — `skill-db` uses this as authoritative schema reference.
 3. Update `README.md` (Project Structure + test counts).
 4. Update `MEMORY.md` (project root) **only if** new lessons emerged that are not already documented. Avoid duplications.
    - If project-root MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.

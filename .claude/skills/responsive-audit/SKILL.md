@@ -55,7 +55,7 @@ Full mode: BP1 + BP2 + BP3.
 ## Step 4 — Route matrix
 
 ### Collab session routes
-Login with `collaboratore_test@test.com` / `Testbusters123`.
+Login with `collaboratore_tb_test@test.com` / `Testbusters123`.
 
 | Route | Tabs/states to check |
 |---|---|

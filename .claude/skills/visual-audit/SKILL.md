@@ -106,7 +106,7 @@ Score scale: **1** = poor · **2** = needs work · **3** = acceptable · **4** =
 ```
 
 Credentials:
-- collaboratore: `collaboratore_test@test.com`
+- collaboratore: `collaboratore_tb_test@test.com`
 - responsabile: `responsabile_compensi_test@test.com`
 - admin: `admin_test@test.com`
 
@@ -246,7 +246,8 @@ After the report:
 
 > "Vuoi che approfondisca o che generi proposte visive concrete? Posso:
 >
-> - **Mockup**: invocare `/frontend-design` per generare un'alternativa migliorata di qualsiasi pagina (HTML standalone, fedele al design system)
+> - **Mockup via Figma MCP**: leggere le Foundation TB direttamente da Figma (`get_variable_defs` su file `p9kUAQ2qNVg4PojTBEkSmC`) e generare un'alternativa migliorata fedele al design system reale
+> - **Mockup standalone**: invocare `/frontend-design` per generare un'alternativa migliorata (HTML standalone, fedele ai token del progetto)
 > - **Fix mirato**: applicare direttamente i miglioramenti che non richiedono decisioni di design (es. spaziatura padding, pesi tipografici, token mancanti)
 > - **Dark mode pass**: concentrarmi esclusivamente sul miglioramento del tema scuro su tutte le pagine
 > - **Singola pagina**: analisi approfondita di una pagina specifica con wireframe comparativo before/after"

@@ -52,6 +52,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | UI1 | G4: 6 bare `<p>` empty states in import sections and constrained UI contexts (NotificationBell, TicketDetailModal) — replace with `<EmptyState>` | LOW |
 | UI2 | S2: 7 native `<button>` elements — filter chips in CompensationList/ExpenseList/ApprovazioniRimborsi/ApprovazioniCompensazioni + MonitoraggioSection (×2) + SignaturePad (×2) | LOW |
 | UI3 | S4: Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files — consolidate | LOW |
+| UI4 | `docs/ui-components.md` Dialog/Sheet/Tabs snippets use hardcoded dark classes (`bg-gray-900`, `border-gray-800`, `data-[state=active]:bg-gray-800`) instead of semantic tokens (`bg-card`, `border-border`, etc.) — update snippets to token-based equivalents | LOW |
 
 ---
 
