@@ -627,3 +627,37 @@ Replaces the two stacked vertical sections (COMPENSI + RIMBORSI) with horizontal
 
 - `components/NotificationBell.tsx`: add `prevUnreadRef` to detect new arrivals; on count increase → play Web Audio API sine-wave ping (880→1174 Hz, 0.5s) + trigger `.bell-pulse` animation on bell emoji.
 - `app/globals.css`: add `@keyframes bell-pulse` + `.bell-pulse` class.
+
+---
+
+## Block Banner — Community-specific banner
+
+**Approved: 2026-03-21**
+
+### Overview
+A community-specific informational banner rendered at the top of the app layout, visible only to `collaboratore` role. Admins manage content and visibility from a dedicated tab in `/impostazioni`.
+
+### Rules
+- Banner is **community-specific**: TB collaboratori see the TB banner; P4M collaboratori see the P4M banner.
+- Only `collaboratore` role sees the banner in the app layout. `responsabile_compensi` does NOT see it.
+- Admin manages banners from `/impostazioni?tab=banner` (new tab). Admin does NOT see the banner in the layout.
+- Dismiss: localStorage-based, session-agnostic. Key: `banner_dismissed_{communityId}_{updatedAt}`. Updating banner content resets dismiss for all users automatically.
+- Banner appears between the persistent AppHeader and `<main>` content area.
+
+### DB
+`communities` table — 5 new columns (migration 052):
+- `banner_content TEXT` — Tiptap HTML rich text
+- `banner_active BOOLEAN NOT NULL DEFAULT false`
+- `banner_link_url TEXT` — optional CTA link URL
+- `banner_link_label TEXT` — optional CTA link label
+- `banner_updated_at TIMESTAMPTZ NOT NULL DEFAULT now()` — used for dismiss key versioning
+
+### Components
+- `components/banner/CommunityBanner.tsx` — client component: dismiss logic, `RichTextDisplay`, optional CTA `<a>` link, dismiss `Button`
+- `components/settings/BannerManager.tsx` — admin: one `Card` per community with `Switch` (active toggle), `RichTextEditor`, link URL/label `Input` fields, Salva `Button`
+
+### API
+`PATCH /api/admin/banner/[communityId]` — admin-only, updates banner fields + sets `banner_updated_at = now()`
+
+### Layout
+`app/(app)/layout.tsx`: when `role === 'collaboratore'`, fetch community banner via service client (2-step: collaborator_communities → communities). Render `<CommunityBanner>` if `banner_active && banner_content`.

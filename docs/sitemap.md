@@ -118,7 +118,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/collaboratori/[id]` | `app/(app)/collaboratori/[id]/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, Avatar | ✅ | Profile detail + edit + document history | `UI` `UX` |
 | `/export` | `app/(app)/export/page.tsx` | admin | `tabs` | Tabs, Form, Table (preview + history) | ✅ | CSV/XLSX export of compensations and reimbursements | `UI` `UX` |
 | `/import` | `app/(app)/import/page.tsx` | admin | `import-panel` | Tabs, Table (preview), Dialog, EmptyState | ✅ | Bulk import UI for collaboratori, contratti, CU | `UI` `UX` |
-| `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog | ✅ | Community config, notification settings, contract templates, email template management | `UI` `UX` |
+| `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch | ✅ | Community config, notification settings, contract templates, email template management, community banners | `UI` `UX` |
 | `/monitoraggio` | `app/(app)/monitoraggio/page.tsx` | admin | `tabs` | Tabs, Badge, Table, auto-refresh | ✅ | System monitoring: access logs, emails, DB performance, app errors | `UI` `UX` |
 | `/feedback` | `app/(app)/feedback/page.tsx` | admin | `full-list` | Table, EmptyState | ✅ | User feedback/suggestions | `UI` `UX` |
 
