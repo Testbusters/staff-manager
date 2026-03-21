@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import Sidebar from '@/components/Sidebar';
 import FeedbackButton from '@/components/FeedbackButton';
 import NotificationBell from '@/components/NotificationBell';
+import CommunityBanner from '@/components/banner/CommunityBanner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeSync } from '@/components/ThemeSync';
@@ -27,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: collaborator } = await supabase
     .from('collaborators')
-    .select('nome, cognome, foto_profilo_url')
+    .select('id, nome, cognome, foto_profilo_url')
     .eq('user_id', user.id)
     .single();
 
@@ -38,6 +40,37 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     : user.email ?? 'Utente';
 
   const dbTheme = profile.theme_preference ?? 'dark';
+
+  // Fetch community banner for collaboratori only
+  type BannerData = { communityId: string; content: string; linkUrl: string | null; linkLabel: string | null; updatedAt: string } | null;
+  let bannerData: BannerData = null;
+  if (role === 'collaboratore' && collaborator?.id) {
+    const svc = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: cc } = await svc
+      .from('collaborator_communities')
+      .select('community_id')
+      .eq('collaborator_id', collaborator.id)
+      .maybeSingle();
+    if (cc?.community_id) {
+      const { data: comm } = await svc
+        .from('communities')
+        .select('banner_active, banner_content, banner_link_url, banner_link_label, banner_updated_at')
+        .eq('id', cc.community_id)
+        .single();
+      if (comm?.banner_active && comm.banner_content) {
+        bannerData = {
+          communityId: cc.community_id,
+          content: comm.banner_content,
+          linkUrl: comm.banner_link_url ?? null,
+          linkLabel: comm.banner_link_label ?? null,
+          updatedAt: comm.banner_updated_at,
+        };
+      }
+    }
+  }
 
   return (
     <>
@@ -61,6 +94,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <div className="flex-1" />
               <NotificationBell />
             </header>
+            {bannerData && (
+              <CommunityBanner
+                communityId={bannerData.communityId}
+                content={bannerData.content}
+                linkUrl={bannerData.linkUrl}
+                linkLabel={bannerData.linkLabel}
+                updatedAt={bannerData.updatedAt}
+              />
+            )}
             <TooltipProvider delayDuration={300}>
               <main className="flex-1 overflow-y-auto">
                 {children}
