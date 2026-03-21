@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
-const PROJECT_REF = 'nyajqcjqmgxctlqighql';
-const MGMT_BASE   = 'https://api.supabase.com/v1';
+// Extract project ref from the Supabase URL so each environment queries its own project.
+// NEXT_PUBLIC_SUPABASE_URL = https://<ref>.supabase.co
+const PROJECT_REF = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+  .match(/\/\/([^.]+)\.supabase\.co/)?.[1] ?? 'nyajqcjqmgxctlqighql';
+const MGMT_BASE = 'https://api.supabase.com/v1';
 
 type RawLogEntry = {
   id?: string;
@@ -42,77 +45,76 @@ export async function GET(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const pat = process.env.SUPABASE_ACCESS_TOKEN;
-  if (!pat) return NextResponse.json({ error: 'SUPABASE_ACCESS_TOKEN not configured' }, { status: 500 });
-
   const { searchParams } = new URL(request.url);
   const daysRaw = parseInt(searchParams.get('days') ?? '7', 10);
   const days = [1, 7, 30].includes(daysRaw) ? daysRaw : 7;
 
-  const url = `${MGMT_BASE}/projects/${PROJECT_REF}/analytics/endpoints/logs.all`;
-
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${pat}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    return NextResponse.json({ error: `Supabase Logs API error: ${res.status} ${text}` }, { status: 502 });
-  }
-
-  const body = await res.json() as { result?: RawLogEntry[] };
-  const rawLogs = body.result ?? [];
-
-  // Cutoff in microseconds (API timestamp is in µs)
-  const cutoffUs = (Date.now() - days * 24 * 60 * 60 * 1000) * 1000;
-
-  const parsed = rawLogs
-    .filter((e) => (e.timestamp ?? 0) >= cutoffUs)
-    .map((e) => {
-      const req = e.metadata?.[0]?.request?.[0];
-      const path = req?.path ?? '';
-      // Exclude admin API calls (used internally by this route itself)
-      if (!path.startsWith('/auth/v1/') || path.startsWith('/auth/v1/admin/')) return null;
-
-      const userId  = req?.sb?.[0]?.auth_user ?? '';
-      const ip      = req?.headers?.[0]?.cf_connecting_ip ?? '';
-      const ts      = new Date(Math.floor((e.timestamp ?? 0) / 1000)).toISOString();
-
-      return { id: e.id ?? ts, created_at: ts, userId, email: '', event_type: pathToEventType(path), ip_address: ip, role: '' };
-    })
-    .filter((e): e is NonNullable<typeof e> => e !== null);
-
-  if (parsed.length === 0) {
-    return NextResponse.json({ events: [], total: 0 });
-  }
-
-  // Enrich with email + role
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const userIds = [...new Set(parsed.map((e) => e.userId).filter(Boolean))];
-  if (userIds.length > 0) {
-    const { data: authUsers } = await svc.auth.admin.listUsers({ perPage: 1000 });
-    const idToEmail: Record<string, string> = {};
-    for (const u of authUsers?.users ?? []) {
-      if (u.email) idToEmail[u.id] = u.email;
-    }
+  // Primary source: get_recent_auth_events() reads auth.audit_log_entries (SECURITY DEFINER).
+  // Requires "Enable Auth Logging" in Supabase Dashboard > Authentication > Logs.
+  // Falls back to Management API edge logs (real-time only, no history) when table is empty.
+  const { data: rpcRows } = await svc.rpc('get_recent_auth_events', { days });
 
-    const { data: profiles } = await svc
-      .from('user_profiles')
-      .select('user_id, role')
-      .in('user_id', userIds);
-    const idToRole: Record<string, string> = {};
-    for (const p of profiles ?? []) idToRole[p.user_id] = p.role;
+  type ParsedEvent = { id: string; created_at: string; userId: string; email: string; event_type: string; ip_address: string; role: string };
 
-    for (const e of parsed) {
-      e.email = idToEmail[e.userId] ?? '';
-      e.role  = idToRole[e.userId] ?? '';
+  let parsed: ParsedEvent[];
+
+  if (rpcRows && rpcRows.length > 0) {
+    parsed = (rpcRows as Array<{ id: string; created_at: string; email: string; event_type: string; ip_address: string }>)
+      .map((r) => ({
+        id: r.id,
+        created_at: r.created_at,
+        userId: '',
+        email: r.email ?? '',
+        event_type: r.event_type ?? '',
+        ip_address: r.ip_address ?? '',
+        role: '',
+      }));
+  } else {
+    // Fallback: Management API edge logs (covers only the last few minutes)
+    const pat = process.env.SUPABASE_ACCESS_TOKEN;
+    if (!pat) return NextResponse.json({ events: [], total: 0 });
+
+    const url = `${MGMT_BASE}/projects/${PROJECT_REF}/analytics/endpoints/logs.all`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${pat}`, 'Content-Type': 'application/json' },
+    });
+
+    const rawLogs: RawLogEntry[] = res.ok ? ((await res.json() as { result?: RawLogEntry[] }).result ?? []) : [];
+    const cutoffUs = (Date.now() - days * 24 * 60 * 60 * 1000) * 1000;
+
+    parsed = rawLogs
+      .filter((e) => (e.timestamp ?? 0) >= cutoffUs)
+      .map((e) => {
+        const req = e.metadata?.[0]?.request?.[0];
+        const path = req?.path ?? '';
+        if (!path.startsWith('/auth/v1/') || path.startsWith('/auth/v1/admin/')) return null;
+        const userId = req?.sb?.[0]?.auth_user ?? '';
+        const ip = req?.headers?.[0]?.cf_connecting_ip ?? '';
+        const ts = new Date(Math.floor((e.timestamp ?? 0) / 1000)).toISOString();
+        return { id: e.id ?? ts, created_at: ts, userId, email: '', event_type: pathToEventType(path), ip_address: ip, role: '' };
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null);
+
+    // Enrich fallback events with email + role from user IDs
+    const userIds = [...new Set(parsed.map((e) => e.userId).filter(Boolean))];
+    if (userIds.length > 0) {
+      const { data: authUsers } = await svc.auth.admin.listUsers({ perPage: 1000 });
+      const idToEmail: Record<string, string> = {};
+      for (const u of authUsers?.users ?? []) { if (u.email) idToEmail[u.id] = u.email; }
+
+      const { data: profiles } = await svc.from('user_profiles').select('user_id, role').in('user_id', userIds);
+      const idToRole: Record<string, string> = {};
+      for (const p of profiles ?? []) idToRole[p.user_id] = p.role;
+
+      for (const e of parsed) {
+        e.email = idToEmail[e.userId] ?? '';
+        e.role  = idToRole[e.userId] ?? '';
+      }
     }
   }
 
