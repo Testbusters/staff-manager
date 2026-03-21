@@ -118,6 +118,7 @@ function buildCtaButton(label: string, brandColor: string, href?: string): strin
 }
 
 function buildLayout(bodyContent: string, cfg: EmailLayoutConfig): string {
+  const logoSrc = cfg.logo_url.startsWith('/') ? `${APP_URL}${cfg.logo_url}` : cfg.logo_url;
   return `<!DOCTYPE html>
 <html lang="it">
 <head>
@@ -132,7 +133,7 @@ function buildLayout(bodyContent: string, cfg: EmailLayoutConfig): string {
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
           <tr>
             <td style="background:${cfg.brand_color};padding:28px 40px;text-align:center;">
-              <img src="${cfg.logo_url}" width="56" height="56" alt="Logo" style="display:inline-block;border-radius:50%;" />
+              <img src="${logoSrc}" width="56" height="56" alt="Logo" style="display:inline-block;border-radius:50%;" />
               <div style="color:#ffffff;font-size:13px;font-weight:600;letter-spacing:0.05em;margin-top:10px;text-transform:uppercase;">${cfg.header_title}</div>
             </td>
           </tr>
