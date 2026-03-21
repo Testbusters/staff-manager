@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 053 | `053_banner_new_tab.sql` | 2026-03-21 | ADD COLUMN `banner_link_new_tab BOOLEAN NOT NULL DEFAULT false` on `communities` |
 | 052 | `052_community_banners.sql` | 2026-03-21 | ADD COLUMN `banner_content TEXT`, `banner_active BOOLEAN DEFAULT false`, `banner_link_url TEXT`, `banner_link_label TEXT`, `banner_updated_at TIMESTAMPTZ DEFAULT now()` on `communities` |
 | 051 | `051_p4m_templates.sql` | 2026-03-18 | Extend CHECK on `contract_templates.tipo` to include `OCCASIONALE_P4M` + `RICEVUTA_PAGAMENTO_P4M`; extend CHECK on `collaborators.tipo_contratto` with same 4 values |
 | 050 | `050_revert_to_pending.sql` | 2026-03-13 | ADD `revert_to_pending` event to `notification_settings`; seed E13 email template for APPROVATO→IN_ATTESA transition |
