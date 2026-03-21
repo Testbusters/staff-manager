@@ -42,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const dbTheme = profile.theme_preference ?? 'dark';
 
   // Fetch community banner for collaboratori only
-  type BannerData = { communityId: string; content: string; linkUrl: string | null; linkLabel: string | null; updatedAt: string } | null;
+  type BannerData = { communityId: string; content: string; linkUrl: string | null; linkLabel: string | null; linkNewTab: boolean; updatedAt: string } | null;
   let bannerData: BannerData = null;
   if (role === 'collaboratore' && collaborator?.id) {
     const svc = createServiceClient(
@@ -57,7 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     if (cc?.community_id) {
       const { data: comm } = await svc
         .from('communities')
-        .select('banner_active, banner_content, banner_link_url, banner_link_label, banner_updated_at')
+        .select('banner_active, banner_content, banner_link_url, banner_link_label, banner_link_new_tab, banner_updated_at')
         .eq('id', cc.community_id)
         .single();
       if (comm?.banner_active && comm.banner_content) {
@@ -66,6 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           content: comm.banner_content,
           linkUrl: comm.banner_link_url ?? null,
           linkLabel: comm.banner_link_label ?? null,
+          linkNewTab: comm.banner_link_new_tab ?? false,
           updatedAt: comm.banner_updated_at,
         };
       }
@@ -86,6 +87,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             role={role}
           />
           <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+            {bannerData && (
+              <CommunityBanner
+                communityId={bannerData.communityId}
+                content={bannerData.content}
+                linkUrl={bannerData.linkUrl}
+                linkLabel={bannerData.linkLabel}
+                linkNewTab={bannerData.linkNewTab}
+                updatedAt={bannerData.updatedAt}
+              />
+            )}
             {/* AppHeader — persistent across all viewports */}
             <header className="flex items-center h-12 px-4 border-b border-border flex-shrink-0">
               <span className="md:hidden">
@@ -94,15 +105,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <div className="flex-1" />
               <NotificationBell />
             </header>
-            {bannerData && (
-              <CommunityBanner
-                communityId={bannerData.communityId}
-                content={bannerData.content}
-                linkUrl={bannerData.linkUrl}
-                linkLabel={bannerData.linkLabel}
-                updatedAt={bannerData.updatedAt}
-              />
-            )}
             <TooltipProvider delayDuration={300}>
               <main className="flex-1 overflow-y-auto">
                 {children}

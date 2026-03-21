@@ -90,7 +90,7 @@ export default async function ImpostazioniPage({
   const bannerCommunities = activeTab === 'banner'
     ? await serviceClient
         .from('communities')
-        .select('id, name, banner_active, banner_content, banner_link_url, banner_link_label')
+        .select('id, name, banner_active, banner_content, banner_link_url, banner_link_label, banner_link_new_tab')
         .eq('is_active', true)
         .order('name')
         .then((r) => r.data ?? [])
@@ -251,6 +251,7 @@ export default async function ImpostazioniPage({
             banner_content: string | null;
             banner_link_url: string | null;
             banner_link_label: string | null;
+            banner_link_new_tab: boolean;
           }[]}
         />
       )}
