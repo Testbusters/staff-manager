@@ -32,8 +32,12 @@ export default function CommunityBanner({ communityId, content, linkUrl, linkLab
   }
 
   return (
-    <div className="flex items-start gap-3 px-4 py-2.5 bg-brand/10 border-b border-brand/20 flex-shrink-0">
-      <div className="flex-1 min-w-0">
+    <div
+      role="alert"
+      aria-live="polite"
+      className="flex items-start gap-3 px-4 py-2.5 bg-brand/10 border-b border-brand/20 border-l-4 border-l-brand/40 flex-shrink-0 animate-in slide-in-from-top-2 duration-300"
+    >
+      <div className="flex-1 min-w-0 max-h-24 overflow-y-auto">
         <RichTextDisplay html={content} className="[&_p]:mb-0 [&_p]:leading-snug" />
         {linkUrl && (
           <a
@@ -50,10 +54,10 @@ export default function CommunityBanner({ communityId, content, linkUrl, linkLab
         variant="ghost"
         size="icon"
         aria-label="Chiudi banner"
-        className="shrink-0 h-6 w-6 text-muted-foreground hover:text-foreground"
+        className="shrink-0 h-8 w-8 text-muted-foreground hover:text-foreground"
         onClick={dismiss}
       >
-        <X className="h-3.5 w-3.5" />
+        <X className="h-4 w-4" />
       </Button>
     </div>
   );
