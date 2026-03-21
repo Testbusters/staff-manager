@@ -49,6 +49,7 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 - For broad codebase searches (≥2 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context and reduce cost.
 - **All clarification questions must use the `AskUserQuestion` tool** — never present open questions as inline text. Group all questions for the block into a single `AskUserQuestion` call and resolve them before the STOP gate.
 - Expected output: feature summary, **complete** file list verified by dependency scan, open questions.
+- **Scope confirmation gate**: if the requirements were presented as a rough perimeter, or the user explicitly said not to start planning until the scope is confirmed, use `AskUserQuestion` to ask "Il perimetro del blocco è completo?" before presenting the summary. Do NOT present the final plan until the user confirms yes.
 - *** STOP — present requirements summary and file list. Wait for explicit confirmation before proceeding. ***
 
 **Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or touching >5 files)*
@@ -160,7 +161,7 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 **Phase 4b — Visual baseline + structural check** ⏸ SUSPENDED
 > Suspended for the same reason as Phase 4 above. Re-enable together with Phase 4 after Fase 9.
 
-**Phase 5b — Test data setup** *(before smoke test)*
+**Phase 5b — Test data setup** *(MANDATORY — must complete before Phase 5c)*
 - Determine the test user(s) from the role scope of the block:
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
@@ -172,11 +173,8 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 - Leave test data in DB for the smoke test. Clean up after Phase 5c only if the records would break other tests.
 
 **Phase 5c — Manual smoke test** *(before the formal checklist)*
-- **Step 0 — deploy to staging**: before smoke testing, merge the feature branch to staging so the test runs against the real Vercel preview deploy, not localhost.
-  - Run `sm-staging` from iTerm (merges `feature/block-name` → `staging`, pushes, triggers Vercel preview deploy).
-  - Wait ~1–2 min for the Vercel deploy to complete (check the deploy status at `staff-staging.peerpetual.it` or Vercel dashboard).
-  - If a bug is found during smoke test: fix on the `feature/` branch, re-run `sm-staging`, re-test.
-- **Step 1 — smoke test on staging**: open `https://staff-staging.peerpetual.it` and use the staging test accounts:
+- **Run locally — feature branches never merge to staging before Phase 8**: smoke test always runs against `http://localhost:3000` with `npm run dev` running. If the dev server is not running, instruct the user to start it first.
+- **Step 1 — smoke test on localhost**: open `http://localhost:3000` and use the staging test accounts:
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
   - Admin → `admin_test@test.com`
@@ -190,6 +188,14 @@ The branch prefix determines which pipeline Claude follows automatically. If the
   3. Confirm: correct `to` address, expected `subject`, `last_event: "delivered"` (not `bounced` or `complained`).
   4. If the email has a CTA link: confirm the `APP_URL` env var produced a correct absolute URL (not `localhost`) by inspecting the HTML body via `resend_get_email`.
   - Do NOT send emails to real user addresses during smoke tests — use `@test.com` or `@test.local` addresses only.
+
+**Phase 5d — Block-scoped quality audit** *(for blocks with UI changes — runs on localhost)*
+- Run `/ui-audit` scoped to the block's new/modified routes only (token compliance, shadcn usage, empty states, loading.tsx). Do not run full-site scan.
+- Run `/visual-audit` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
+- Run `/ux-audit` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
+- Run `/responsive-audit` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
+- Fix all **Critical** issues before Phase 6. Flag **Major** issues in the Phase 6 checklist with planned resolution. Log **Minor** issues in `docs/refactoring-backlog.md`.
+- Output per skill: one-paragraph summary only — do not paste full reports.
 
 **Phase 6 — Outcome checklist + confirmation**
 Present this checklist filled with actual results, then wait for explicit confirmation before proceeding to Phase 8:
@@ -205,6 +211,10 @@ Present this checklist filled with actual results, then wait for explicit confir
 - [ ] HTTP integration (Bruno CLI): N/N passed *(if Phase 3c executed)*
 - [ ] Playwright e2e: N/N passed *(⏸ suspended if CLAUDE.local.md active)*
 - [ ] Visual baseline + axe-core: passed *(if Phase 4b executed)*
+- [ ] ui-audit: no Critical issues *(if Phase 5d executed)*
+- [ ] visual-audit: no Critical issues *(if Phase 5d executed)*
+- [ ] ux-audit: no Critical issues *(if Phase 5d executed)*
+- [ ] responsive-audit: PASS *(if collab/responsabile routes modified)*
 
 ### UI Design System compliance *(skip if block has no UI changes)*
 - [ ] No hardcoded `bg-blue-*` on interactive elements (use `bg-brand hover:bg-brand/90`)
@@ -244,7 +254,24 @@ Only after explicit confirmation:
 2e. If the block changed role permissions for any entity, added a new action to an existing role, or modified member_status restrictions: update `docs/prd/01-rbac-matrix.md` — the relevant entity section. If the block introduced a new role: add a column to every table in that document.
 2f. **PRD update — MANDATORY in every block, no exceptions (full pipeline and fast-lane alike).**
    - **Source of truth** (`docs/prd/prd.md`): update the relevant section(s) directly in the Markdown file whenever the block introduces a new feature area, changes architecture, adds an integration, modifies RBAC, or updates a workflow. Commit this file in Commit 2 (docs).
-   - **Google Docs sync** (presentation layer): after updating `docs/prd/prd.md`, append a Changelog entry to the GDoc (Doc ID: `1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o`). Use the auth pattern from `lib/google-sheets.ts` (GOOGLE_SERVICE_ACCOUNT_JSON, scope `https://www.googleapis.com/auth/documents`). The entry goes in section "VII — Changelog" and must include: version date, block name, one-line summary of changes. Do NOT rewrite the whole document — append only.
+   - **Google Docs sync** (presentation layer): after updating `docs/prd/prd.md`, append a Changelog entry to the GDoc (Doc ID: `1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o`). The entry goes in section "VII — Changelog" and must include: version date, block name, one-line summary of changes. Do NOT rewrite the whole document — append only. Use **exactly** this command (run from project root — `require('dotenv').config` is mandatory, `GOOGLE_SERVICE_ACCOUNT_JSON` is not in the shell env):
+     ```
+     cd ~/Projects/staff-manager && node -e "
+     require('dotenv').config({ path: '.env.local' });
+     const { google } = require('googleapis');
+     const svc = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+     const auth = new google.auth.GoogleAuth({ credentials: svc, scopes: ['https://www.googleapis.com/auth/documents'] });
+     const docs = google.docs({ version: 'v1', auth });
+     const DOC_ID = '1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o';
+     const text = '\nDATE  |  vX.Y  |  Block Name: one-line summary.\n';
+     (async () => {
+       const doc = await docs.documents.get({ documentId: DOC_ID });
+       const endIndex = doc.data.body.content.at(-1).endIndex - 1;
+       await docs.documents.batchUpdate({ documentId: DOC_ID, requestBody: { requests: [{ insertText: { location: { index: endIndex }, text } }] } });
+       console.log('GDoc changelog appended');
+     })().catch(e => { console.error(e.message); process.exit(1); });
+     "
+     ```
    - **Minimum scope**: even if the block is purely technical (bug fix, refactor), if it changes observable system behaviour, update the PRD. If no PRD section is affected (e.g. pure internal refactor with zero functional change), skip the GDoc append but still verify `docs/prd/prd.md` is current.
 2c. If the block added/removed a route, changed role access to an existing route, modified member_status restrictions, or updated sidebar items: update `docs/sitemap.md`. Sync with `lib/nav.ts`, `proxy.ts`, and the relevant `page.tsx` guards. Also update the **Layout**, **Componenti chiave**, and **loading.tsx** columns for any page whose structure changed (new Tabs, Sheet, Tiptap added/removed; loading.tsx created/deleted).
 2d. If the block applied a migration that adds/modifies tables, columns, FKs, indexes, or RLS policies: update `docs/db-map.md` — Tables section (add/update rows), FK Graph (add new FK lines), Indexes section, RLS Summary. Then run `node scripts/refresh-db-map.mjs` to regenerate the Column specs section from the live staging schema. Mandatory — `skill-db` uses this as authoritative schema reference.
@@ -257,7 +284,7 @@ Only after explicit confirmation:
    - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b.
    - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
 7. **Branch promotion sequence** (after all commits are on `feature/` branch):
-   - **staging**: if `sm-staging` was already run in Phase 5c, just ensure the feature branch's latest commits are included — re-run `sm-staging` if any commits were added after the Phase 5c merge.
+   - **staging (requires explicit user approval)**: present the branch name and commit count, then ask: "Confermo il merge di `[branch]` su staging e il deploy su Vercel preview?" Wait for explicit yes before proceeding. Then run: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge [branch] --no-ff && git push origin staging`. Wait ~1–2 min for Vercel preview deploy; verify at `https://staff-staging.peerpetual.it`.
    - **production migrations (pre-deploy — mandatory if block has migrations)**: before running `sm-deploy`, apply every migration from this block to the production DB using `mcp__claude_ai_Supabase__execute_sql` with `project_id: "nyajqcjqmgxctlqighql"`. Read each `supabase/migrations/NNN_*.sql` file added in this block and execute it. Verify with a SELECT query. This is the **only moment** production migrations are applied — never during Phase 2.
    - **production**: run `sm-deploy` from iTerm to merge `staging → main` and trigger the production deploy on `staff.peerpetual.it`.
    - Verify the production deploy completes without errors (Vercel dashboard or direct URL check).
@@ -311,10 +338,10 @@ Branch prefix `fix/` activates this pipeline automatically.
 - No intermediate docs update unless `CLAUDE.md` genuinely needs a pattern correction.
 
 **FL-2 — Deploy to staging + smoke**
+- Ask user: "Confermo il merge di `[fix-branch]` su staging?" Wait for explicit yes before proceeding.
 - Run: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git -C ~/Projects/staff-manager merge <fix-branch> --no-ff -m "fix: merge <fix-branch> into staging" && git -C ~/Projects/staff-manager push origin staging`
-- Alternatively instruct user: `sm-staging fix/description` from iTerm.
 - Wait for Vercel preview deploy (~1–2 min). Open `https://staff-staging.peerpetual.it`.
-- Verify the fix in 1–3 steps. If broken: fix on the `fix/` branch, re-merge to staging.
+- Verify the fix in 1–3 steps. If broken: fix on the `fix/` branch, ask approval again, re-merge.
 
 **FL-3 — Promote to production**
 - Instruct user: `sm-deploy` from iTerm (or run git merge commands directly).
@@ -363,6 +390,7 @@ Activate when stakeholders introduce changes to the functional scope that impact
 
 - **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, Node.js scripts, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline. Note: use Node.js `https.request` (not `curl`) for Supabase Management API calls — `curl` fails with PAT due to shell interpolation.
 - **Branch discipline**: never commit directly to `main` or `staging`. All development happens on `feature/block-name`, `fix/description`, or `worktree-block-name` branches. Promotions only via `sm-staging <branch>` (→staging, Vercel preview) and `sm-deploy` (staging→main, Vercel production). Both are shell functions in `~/.zshrc` — instruct the user to run them from iTerm. Claude can also run the underlying git commands directly (see below).
+- **Feature branch isolation (hard rule)**: feature branches must never be merged to staging before Phase 8. No `sm-staging`, `git push origin staging`, or git merge into staging is permitted during Phases 1–7. Smoke tests (Phase 5c) always run on localhost. Staging deploy happens exactly once, in Phase 8 step 7, under explicit user approval. Fast Lane (fix/) branches: same rule — FL-2 staging deploy also requires explicit user confirmation before execution.
 - **Promoting branches from Claude**: `sm-staging` and `sm-deploy` are zsh functions — not available in Claude's Bash subprocess. Claude must use git commands directly: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge <branch> --no-ff && git push origin staging`. Always use `-C ~/Projects/staff-manager` to target the main repo, even when running inside a worktree directory.
 - **Worktree — always from staging**: worktrees must always be created from the `staging` branch, never from `main`. Command: `git worktree add .claude/worktrees/block-name -b worktree-block-name staging`. If `EnterWorktree` is used, confirm the base branch is `staging` before proceeding.
 - **Environment isolation (hard rule — all services)**: every local `.env.local` and every worktree must use exclusively staging credentials across all services — Supabase (`gjwkvgfwkdwzqlvudgqr`), Resend (staging API key + webhook secret), `APP_URL` (`https://staff-staging.peerpetual.it`), Google Sheets (staging sheet IDs). The sole authorised source is `~/.envs/staff-manager.staging.env`. Never copy production credentials into any local env. If `~/.envs/staff-manager.staging.env` does not exist, stop and instruct the user to run `smenv-save staging` from the main repo before continuing.
