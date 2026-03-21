@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const PROJECT_REF = 'nyajqcjqmgxctlqighql';
-const MGMT_BASE   = 'https://api.supabase.com/v1';
+// Extract project ref from env so each environment queries its own Supabase project.
+const PROJECT_REF = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+  .match(/\/\/([^.]+)\.supabase\.co/)?.[1] ?? 'nyajqcjqmgxctlqighql';
+const MGMT_BASE = 'https://api.supabase.com/v1';
 
 type SupabaseLogService = 'api' | 'auth' | 'database';
 
