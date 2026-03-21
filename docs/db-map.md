@@ -15,7 +15,7 @@
 |---|---|---|---|
 | `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione` |
 | `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento` | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year |
-| `communities` | Community entities | `id`, `name` (UNIQUE), `is_active` | Reference table — small, static |
+| `communities` | Community entities | `id`, `name` (UNIQUE), `is_active`, `banner_content`, `banner_active`, `banner_link_url`, `banner_link_label`, `banner_link_new_tab`, `banner_updated_at` | Banner fields added in migrations 052+053. `banner_updated_at` used as dismiss-key version for localStorage. |
 | `collaborator_communities` | Collaborator → Community membership (1:1 per migration 044) | `collaborator_id` (UNIQUE), `community_id` | UNIQUE on `collaborator_id` — each collaborator belongs to exactly 1 community |
 | `user_community_access` | Responsabile → Community access | `user_id`, `community_id` | UNIQUE `(user_id, community_id)`. Used for RBAC joins in RLS policies |
 

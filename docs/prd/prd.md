@@ -274,6 +274,7 @@ FR-SET-02: The system shall allow the Amministrazione to manage the list of avai
 FR-SET-03: The system shall allow the Amministrazione to upload and manage the document templates used for contract and receipt generation. Four template slots are available — one contract and one receipt per community (Testbusters and Peer4Med) — each independently uploadable and replaceable. Template selection at generation time is determined by the collaboratore's community membership.
 FR-SET-04: The system shall provide an operational monitoring dashboard for the Amministrazione, displaying system health indicators, user access logs, email delivery reports, database performance metrics, and application error records.
 FR-SET-05: The system shall allow the Amministrazione to assign community management access to Responsabili, defining which communities each Responsabile is authorised to manage.
+FR-SET-06: The system shall allow the Amministrazione to configure a community-specific informational banner, visible to collaboratori as the first element of the app layout (above the notification header). Each community has an independent banner with rich-text content, an optional CTA link (with configurable label and new-tab behaviour), and an active/inactive toggle. Collaboratori can dismiss the banner; the dismissed state persists in localStorage and is automatically reset when the banner content is updated by an administrator.
 
 ## Part V — Open Questions
 The following items require product decisions before they can be incorporated into the requirements:
@@ -313,6 +314,7 @@ Rationale: Stakeholders and team members need a navigable, readable document tha
 Impact: The development pipeline includes a synchronisation step in Phase 8 that updates this document when significant product changes are made.
 
 ## Part VII — Changelog
+2026-03-21  |  v1.3  |  Block Banner: added FR-SET-06 (community-specific dismissable banner for collaboratori — rich text, optional CTA link with new-tab option, localStorage-versioned dismiss, admin-managed per community in /impostazioni).
 2026-03-18  |  v1.2  |  P4M Community Logic: added FR-COMP-10 (community-aware withholding tax — TB = 20%, P4M = 60% taxable base × 20%); updated FR-SET-03 (four document template slots, one contract + one receipt per community). Community-aware logic applied at all compensation and receipt touchpoints.
 2026-03-15  |  v1.1  |  Full rewrite: narrative language, functional requirements (FR-*), glossary, out of scope, decision log. Structured for dual audience: stakeholders and development team.
 2026-03-13  |  v1.0  |  Initial creation. Technical reference structure compiled from internal development context files.
