@@ -103,6 +103,7 @@ function buildHighlight(rows: { label: string; value: string }[], data: Record<s
 }
 
 function buildBodyText(text: string): string {
+  if (text.trimStart().startsWith('<')) return text;
   return `<p style="margin:0 0 8px;font-size:14px;color:#374151;line-height:1.6;">${text}</p>`;
 }
 

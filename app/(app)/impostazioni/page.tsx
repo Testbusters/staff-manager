@@ -149,10 +149,10 @@ export default async function ImpostazioniPage({
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
-  const narrowContent = activeTab !== 'template_mail' && activeTab !== 'monitoraggio' && activeTab !== 'banner';
+  const narrowContent = activeTab === 'utenti';
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6">
       <div className="md:hidden mb-4">
         <Alert>
           <Monitor className="h-4 w-4" />
