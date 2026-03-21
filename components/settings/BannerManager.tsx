@@ -38,7 +38,19 @@ function useBannerState(community: Community): [BannerState, React.Dispatch<Reac
 function CommunityBannerCard({ community }: { community: Community }) {
   const [state, setState] = useBannerState(community);
 
+  const isContentEmpty = !state.content.replace(/<[^>]*>/g, '').trim();
+  const isUrlInvalid = !!state.linkUrl && !state.linkUrl.startsWith('http') && !state.linkUrl.startsWith('/');
+  const canSave = !state.saving && !(state.active && isContentEmpty) && !isUrlInvalid;
+
   async function handleSave() {
+    if (state.active && isContentEmpty) {
+      toast.error('Inserisci un contenuto prima di attivare il banner');
+      return;
+    }
+    if (isUrlInvalid) {
+      toast.error('URL non valido — usa https://... o un percorso relativo /...');
+      return;
+    }
     setState((s) => ({ ...s, saving: true }));
     try {
       const res = await fetch(`/api/admin/banner/${community.id}`, {
@@ -70,11 +82,14 @@ function CommunityBannerCard({ community }: { community: Community }) {
               {state.active ? 'Banner attivo — visibile ai collaboratori' : 'Banner inattivo — non visibile'}
             </p>
           </div>
-          <Switch
-            checked={state.active}
-            onCheckedChange={(v) => setState((s) => ({ ...s, active: v }))}
-            aria-label={`Attiva banner ${community.name}`}
-          />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Attivo</span>
+            <Switch
+              checked={state.active}
+              onCheckedChange={(v) => setState((s) => ({ ...s, active: v }))}
+              aria-label={`Attiva banner ${community.name}`}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-5 py-4 space-y-4">
@@ -89,11 +104,17 @@ function CommunityBannerCard({ community }: { community: Community }) {
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Link CTA (opzionale)</p>
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              placeholder="URL (es. https://... o /percorso)"
-              value={state.linkUrl}
-              onChange={(e) => setState((s) => ({ ...s, linkUrl: e.target.value }))}
-            />
+            <div>
+              <Input
+                placeholder="URL (es. https://... o /percorso)"
+                value={state.linkUrl}
+                onChange={(e) => setState((s) => ({ ...s, linkUrl: e.target.value }))}
+                className={isUrlInvalid ? 'border-destructive' : ''}
+              />
+              {isUrlInvalid && (
+                <p className="text-xs text-destructive mt-1">URL non valido — usa https://... o /percorso</p>
+              )}
+            </div>
             <Input
               placeholder="Etichetta link (es. Scopri di più)"
               value={state.linkLabel}
@@ -105,7 +126,7 @@ function CommunityBannerCard({ community }: { community: Community }) {
           <Button
             className="bg-brand hover:bg-brand/90 text-white"
             onClick={handleSave}
-            disabled={state.saving}
+            disabled={!canSave}
           >
             {state.saving ? 'Salvataggio…' : 'Salva'}
           </Button>
