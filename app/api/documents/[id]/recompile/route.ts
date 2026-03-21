@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { buildContractVars, buildReceiptVars, generateDocumentFromTemplate } from '@/lib/document-generation';
+import { calcRitenuta, getContractTemplateTipo, getReceiptTemplateTipo } from '@/lib/ritenuta';
 import type { ContractTemplateType } from '@/lib/types';
 
 export async function POST(
@@ -45,19 +46,26 @@ export async function POST(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Fetch full collaborator data
-  const { data: collab } = await svc
-    .from('collaborators')
-    .select('nome, cognome, codice_fiscale, data_nascita, luogo_nascita, comune, indirizzo, civico_residenza, data_fine_contratto')
-    .eq('id', doc.collaborator_id)
-    .single();
+  // Fetch full collaborator data + community
+  const [collabRes, ccRes] = await Promise.all([
+    svc.from('collaborators')
+      .select('nome, cognome, codice_fiscale, data_nascita, luogo_nascita, comune, indirizzo, civico_residenza, data_fine_contratto')
+      .eq('id', doc.collaborator_id)
+      .single(),
+    svc.from('collaborator_communities')
+      .select('communities(name)')
+      .eq('collaborator_id', doc.collaborator_id)
+      .maybeSingle(),
+  ]);
 
-  if (!collab) return NextResponse.json({ error: 'Collaboratore non trovato' }, { status: 404 });
+  if (!collabRes.data) return NextResponse.json({ error: 'Collaboratore non trovato' }, { status: 404 });
+  const collab = collabRes.data;
+  const communityName = (ccRes.data?.communities as unknown as { name: string } | null)?.name ?? '';
 
-  // Map document tipo to template type
+  // Map document tipo to community-aware template type
   const templateType: ContractTemplateType | null =
-    doc.tipo === 'CONTRATTO_OCCASIONALE' ? 'OCCASIONALE'
-    : doc.tipo === 'RICEVUTA_PAGAMENTO' ? 'RICEVUTA_PAGAMENTO'
+    doc.tipo === 'CONTRATTO_OCCASIONALE' ? getContractTemplateTipo(communityName)
+    : doc.tipo === 'RICEVUTA_PAGAMENTO' ? getReceiptTemplateTipo(communityName)
     : null;
 
   if (!templateType) {
@@ -66,16 +74,16 @@ export async function POST(
 
   let vars: Record<string, string>;
 
-  if (templateType === 'RICEVUTA_PAGAMENTO') {
+  if (doc.tipo === 'RICEVUTA_PAGAMENTO') {
     // For receipts, aggregate the collaborator's LIQUIDATO items without a receipt
     const [compsRes, expsRes] = await Promise.all([
-      svc.from('compensations').select('importo_lordo, ritenuta_acconto').eq('collaborator_id', doc.collaborator_id).eq('stato', 'LIQUIDATO').is('receipt_document_id', null),
+      svc.from('compensations').select('importo_lordo').eq('collaborator_id', doc.collaborator_id).eq('stato', 'LIQUIDATO').is('receipt_document_id', null),
       svc.from('expense_reimbursements').select('importo').eq('collaborator_id', doc.collaborator_id).eq('stato', 'LIQUIDATO').is('receipt_document_id', null),
     ]);
     const lordoCompensi = (compsRes.data ?? []).reduce((s, c) => s + (c.importo_lordo ?? 0), 0);
     const lordoRimborsi = (expsRes.data ?? []).reduce((s, e) => s + (e.importo ?? 0), 0);
     const totaleLordo = lordoCompensi + lordoRimborsi;
-    const ritenuta = lordoCompensi * 0.2; // 20% withholding on compensi only
+    const ritenuta = calcRitenuta(communityName, lordoCompensi);
     const netto = totaleLordo - ritenuta;
     vars = buildReceiptVars(collab, { lordo_compensi: lordoCompensi, lordo_rimborsi: lordoRimborsi, totale_lordo: totaleLordo, ritenuta, netto });
   } else {

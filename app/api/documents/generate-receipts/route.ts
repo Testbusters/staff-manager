@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { buildReceiptVars, generateDocumentFromTemplate } from '@/lib/document-generation';
+import { calcRitenuta, getReceiptTemplateTipo } from '@/lib/ritenuta';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { sendEmail } from '@/lib/email';
 import { getNotificationSettings } from '@/lib/notification-helpers';
@@ -22,6 +23,7 @@ async function generateReceiptForCollab(
   collabId: string,
   totals: { lordo_compensi: number; lordo_rimborsi: number; totale_lordo: number; ritenuta: number; netto: number },
   settings: Map<string, { inapp_enabled: boolean; email_enabled: boolean }>,
+  communityName: string,
 ): Promise<{ document_id: string | null; error: string | null }> {
   const { data: collab } = await svc
     .from('collaborators')
@@ -32,7 +34,8 @@ async function generateReceiptForCollab(
   if (!collab) return { document_id: null, error: 'Collaboratore non trovato' };
 
   const vars = buildReceiptVars(collab, totals);
-  const pdfBuffer = await generateDocumentFromTemplate(svc, 'RICEVUTA_PAGAMENTO', vars);
+  const receiptTipo = getReceiptTemplateTipo(communityName);
+  const pdfBuffer = await generateDocumentFromTemplate(svc, receiptTipo, vars);
   if (!pdfBuffer) return { document_id: null, error: 'Template ricevuta non disponibile' };
 
   const docId = crypto.randomUUID();
@@ -148,11 +151,25 @@ export async function POST(request: Request) {
       entry.lordoRimborsi += e.importo ?? 0;
     }
 
+    // Fetch community for each collaborator (community-aware ritenuta + template)
+    const collabIds = [...byCollab.keys()];
+    const { data: ccRows } = await svc
+      .from('collaborator_communities')
+      .select('collaborator_id, communities(name)')
+      .in('collaborator_id', collabIds);
+    const communityByCollab = new Map<string, string>(
+      (ccRows ?? []).map((r: { collaborator_id: string; communities: unknown }) => [
+        r.collaborator_id,
+        (r.communities as { name: string } | null)?.name ?? '',
+      ])
+    );
+
     let generated = 0;
     const errors: string[] = [];
 
     for (const [collabId, data] of byCollab.entries()) {
-      const ritenuta = data.lordoCompensi * 0.2;
+      const communityName = communityByCollab.get(collabId) ?? '';
+      const ritenuta = calcRitenuta(communityName, data.lordoCompensi);
       const totaleLordo = data.lordoCompensi + data.lordoRimborsi;
       const netto = totaleLordo - ritenuta;
 
@@ -162,7 +179,7 @@ export async function POST(request: Request) {
         totale_lordo: totaleLordo,
         ritenuta,
         netto,
-      }, settings);
+      }, settings, communityName);
 
       if (error || !document_id) {
         errors.push(`${collabId}: ${error ?? 'unknown'}`);
@@ -211,7 +228,15 @@ export async function POST(request: Request) {
     isComp = false;
   }
 
-  const ritenuta = lordoCompensi * 0.2;
+  // Fetch community for single collaborator
+  const { data: ccSingle } = await svc
+    .from('collaborator_communities')
+    .select('communities(name)')
+    .eq('collaborator_id', collabId)
+    .maybeSingle();
+  const communityName = (ccSingle?.communities as unknown as { name: string } | null)?.name ?? '';
+
+  const ritenuta = calcRitenuta(communityName, lordoCompensi);
   const totaleLordo = lordoCompensi + lordoRimborsi;
   const netto = totaleLordo - ritenuta;
 
@@ -221,7 +246,7 @@ export async function POST(request: Request) {
     totale_lordo: totaleLordo,
     ritenuta,
     netto,
-  }, settings);
+  }, settings, communityName);
 
   if (error || !document_id) {
     return NextResponse.json({ error: error ?? 'Errore generazione ricevuta' }, { status: 500 });

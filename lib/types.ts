@@ -47,16 +47,24 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 };
 
 // ── Contract template ─────────────────────────────────────────
-export type ContractTemplateType = 'OCCASIONALE' | 'RICEVUTA_PAGAMENTO';
+export type ContractTemplateType =
+  | 'OCCASIONALE'
+  | 'RICEVUTA_PAGAMENTO'
+  | 'OCCASIONALE_P4M'
+  | 'RICEVUTA_PAGAMENTO_P4M';
 
 export const CONTRACT_TEMPLATE_LABELS: Record<ContractTemplateType, string> = {
-  OCCASIONALE:         'Contratto occasionale',
-  RICEVUTA_PAGAMENTO:  'Ricevuta di pagamento',
+  OCCASIONALE:              'Contratto Testbusters',
+  RICEVUTA_PAGAMENTO:       'Ricevuta Testbusters',
+  OCCASIONALE_P4M:          'Contratto Peer4Med',
+  RICEVUTA_PAGAMENTO_P4M:   'Ricevuta Peer4Med',
 };
 
 export const CONTRACT_TEMPLATE_DOCUMENT_TYPE: Record<ContractTemplateType, DocumentType> = {
-  OCCASIONALE:        'CONTRATTO_OCCASIONALE',
-  RICEVUTA_PAGAMENTO: 'RICEVUTA_PAGAMENTO',
+  OCCASIONALE:             'CONTRATTO_OCCASIONALE',
+  RICEVUTA_PAGAMENTO:      'RICEVUTA_PAGAMENTO',
+  OCCASIONALE_P4M:         'CONTRATTO_OCCASIONALE',
+  RICEVUTA_PAGAMENTO_P4M:  'RICEVUTA_PAGAMENTO',
 };
 
 export interface ContractTemplate {

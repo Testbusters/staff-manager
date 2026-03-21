@@ -98,8 +98,8 @@
   --sidebar-accent-foreground: var(--base-950);
   --sidebar-border: var(--base-200);
   --sidebar-ring: var(--base-800);
-  /* Brand — Testbusters blue, stable across themes */
-  --brand: oklch(0.546 0.245 262.881);
+  /* Brand — Testbusters red #ff3300, stable across themes */
+  --brand: oklch(0.628 0.258 29.2);
   --brand-foreground: oklch(1 0 0);
   /* Link — blue with good contrast in light mode */
   --link: oklch(0.488 0.243 264.376);

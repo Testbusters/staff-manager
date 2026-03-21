@@ -60,22 +60,35 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 
 **Phase 1.6 — Visual & UX Design** *(MANDATORY for any block with UI/UX impact — cannot be skipped)*
 
-**Triggers**: new page route or full-page redesign, new layout pattern or navigation structure, changed information architecture (sections/tabs/panels), complex interactive pattern (multi-step flow, bulk actions, split views).
+**Triggers — this phase is required when the block:**
+- Creates a new page route or full-page redesign
+- Introduces a new layout pattern, component hierarchy, or navigation structure
+- Changes the information architecture of an existing page (sections, tabs, panels)
+- Adds a complex interactive pattern (multi-step flow, bulk actions, split views)
 
-**Execute in order:**
+**When triggered, always execute in this order:**
 
-1. **ASCII wireframe** — invoke `frontend-design` skill. Must show: full page layout with named regions, column structure for tables/lists, action placement, empty/loading states, mobile breakpoint if relevant.
+1. **ASCII wireframe** — invoke the `frontend-design` skill with an explicit ASCII wireframe request. The wireframe must show:
+   - Full page layout with named regions
+   - Column structure for tables/lists
+   - Action placement and grouping
+   - Empty states and loading states
+   - Mobile breakpoint if relevant
 
-2. **HTML standalone preview** *(optional, higher fidelity)* — choose one path:
-   - **Path A — frontend-design → CodePen** (layout + visual tone): ask for a self-contained HTML file (inline Tailwind via CDN) → paste into CodePen → iterate with plain-text corrections.
-   - **Path B — v0.dev → npx v0 add** (component fidelity, shadcn-native): prompt v0.dev with the ASCII wireframe → iterate in live preview → `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real API calls.
-   Both paths: approved preview = visual contract for Phase 2. Generated code is reference only (exception: `npx v0 add` output may be used as starting point after review).
+2. **Design context + HTML preview** *(optional)* — Three paths, in order of preference:
+   - **Path A — Figma MCP**: use `get_variable_defs` on the Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`) to pull real design tokens, then generate the component with `frontend-design`. This produces code aligned with the actual design system.
+   - **Path B — frontend-design standalone**: `frontend-design` skill → self-contained HTML (inline Tailwind CDN) → iterate in-session. Use when Figma context is not needed.
+   - **Path C — v0.dev**: `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real APIs. Use for complex interactive components not easily generated inline. Output is reference only — rewrite following project conventions.
+   Either way: approved preview = visual contract for Phase 2; generated code is reference only.
 
-3. **UX rationale**: state the mental model (inbox/pipeline/kanban/wizard), why competing alternatives were discarded, the single most important UX improvement.
+3. **UX rationale** — for each layout decision, state explicitly:
+   - What mental model it maps to (inbox, pipeline, kanban, wizard…)
+   - Why competing alternatives were discarded
+   - The single most important UX improvement over the current state
 
-4. **Design system mapping**: map every wireframe region to the correct shadcn component and token. No region should be "TBD".
+4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
 
-5. **STOP — present wireframe + UX rationale + component map. Wait for explicit approval before Phase 2. The approved wireframe/preview is the implementation contract.**
+5. **STOP — present wireframe (+ CodePen link or description if HTML preview was used) + UX rationale + component map. Wait for explicit approval before proceeding to Phase 2. The approved wireframe/preview is the implementation contract — Phase 2 must match it.**
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
 - Use `EnterPlanMode` to present the complete approved plan in structured, locked form.
@@ -100,7 +113,7 @@ The branch prefix determines which pipeline Claude follows automatically. If the
   10. **Theme verification**: for any new UI element, toggle the sidebar theme (light ↔ dark) and confirm no visual anomalies before committing. Semantic tokens are the primary protection — any hardcoded color on structural elements will break one of the two themes.
   Full rules in CLAUDE.md § "UI Design System — MANDATORY RULES".
 - Do not add unrequested features. No unrequested refactoring.
-- **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the remote DB — use `mcp__claude_ai_Supabase__execute_sql` (preferred, no shell interpolation issues) or Node.js `https.request` as fallback (`curl` fails with PAT due to shell interpolation) + verify with a SELECT query + add a row to `docs/migrations-log.md`. **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
+- **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the **staging DB only** (`gjwkvgfwkdwzqlvudgqr`) — use `mcp__claude_ai_Supabase__execute_sql` with `project_id: "gjwkvgfwkdwzqlvudgqr"` (preferred, no shell interpolation issues) or Node.js `https.request` as fallback. Verify with a SELECT query + add a row to `docs/migrations-log.md`. **Never apply to production (`nyajqcjqmgxctlqighql`) during development** — production migrations run exclusively in Phase 8 step 7 pre-deploy (see below). **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
 - **PostgREST join syntax** (`table!relation`, `!inner`): verify FK existence before using it. If FK absent → two-step query (separate fetches + in-memory merge). Verification query: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f';`
 - **DROP CONSTRAINT before UPDATE** (migrations): if a column has a CHECK constraint and the UPDATE sets a value not allowed by the current constraint (e.g. renaming an enum value), the UPDATE fails. Pattern inside a single migration: (1) `ALTER TABLE t DROP CONSTRAINT c;` (2) `UPDATE t SET col = new_val WHERE ...;` (3) `ALTER TABLE t ADD CONSTRAINT c CHECK (...);` — all three statements in the same migration file so they run atomically.
@@ -176,7 +189,6 @@ The branch prefix determines which pipeline Claude follows automatically. If the
   2. Wait ~5s, then call `resend_list_emails` with `limit: 5` to retrieve recent sends.
   3. Confirm: correct `to` address, expected `subject`, `last_event: "delivered"` (not `bounced` or `complained`).
   4. If the email has a CTA link: confirm the `APP_URL` env var produced a correct absolute URL (not `localhost`) by inspecting the HTML body via `resend_get_email`.
-  - Resend MCP is configured project-locally in `/Users/MarcoG/.claude.json`. Tools available: `resend_list_emails`, `resend_get_email`, `resend_send_email` (for ad-hoc test sends), and others.
   - Do NOT send emails to real user addresses during smoke tests — use `@test.com` or `@test.local` addresses only.
 
 **Phase 6 — Outcome checklist + confirmation**
@@ -235,7 +247,7 @@ Only after explicit confirmation:
    - **Google Docs sync** (presentation layer): after updating `docs/prd/prd.md`, append a Changelog entry to the GDoc (Doc ID: `1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o`). Use the auth pattern from `lib/google-sheets.ts` (GOOGLE_SERVICE_ACCOUNT_JSON, scope `https://www.googleapis.com/auth/documents`). The entry goes in section "VII — Changelog" and must include: version date, block name, one-line summary of changes. Do NOT rewrite the whole document — append only.
    - **Minimum scope**: even if the block is purely technical (bug fix, refactor), if it changes observable system behaviour, update the PRD. If no PRD section is affected (e.g. pure internal refactor with zero functional change), skip the GDoc append but still verify `docs/prd/prd.md` is current.
 2c. If the block added/removed a route, changed role access to an existing route, modified member_status restrictions, or updated sidebar items: update `docs/sitemap.md`. Sync with `lib/nav.ts`, `proxy.ts`, and the relevant `page.tsx` guards. Also update the **Layout**, **Componenti chiave**, and **loading.tsx** columns for any page whose structure changed (new Tabs, Sheet, Tiptap added/removed; loading.tsx created/deleted).
-2d. If the block applied a migration that adds/modifies tables, columns, FKs, indexes, or RLS policies: update `docs/db-map.md` — Tables section (add/update rows), FK Graph (add new FK lines), Indexes section, RLS Summary. Mandatory — `skill-db` uses this as authoritative schema reference.
+2d. If the block applied a migration that adds/modifies tables, columns, FKs, indexes, or RLS policies: update `docs/db-map.md` — Tables section (add/update rows), FK Graph (add new FK lines), Indexes section, RLS Summary. Then run `node scripts/refresh-db-map.mjs` to regenerate the Column specs section from the live staging schema. Mandatory — `skill-db` uses this as authoritative schema reference.
 3. Update `README.md` (Project Structure + test counts).
 4. Update `MEMORY.md` (project root) **only if** new lessons emerged that are not already documented. Avoid duplications.
    - If project-root MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.
@@ -246,6 +258,7 @@ Only after explicit confirmation:
    - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
 7. **Branch promotion sequence** (after all commits are on `feature/` branch):
    - **staging**: if `sm-staging` was already run in Phase 5c, just ensure the feature branch's latest commits are included — re-run `sm-staging` if any commits were added after the Phase 5c merge.
+   - **production migrations (pre-deploy — mandatory if block has migrations)**: before running `sm-deploy`, apply every migration from this block to the production DB using `mcp__claude_ai_Supabase__execute_sql` with `project_id: "nyajqcjqmgxctlqighql"`. Read each `supabase/migrations/NNN_*.sql` file added in this block and execute it. Verify with a SELECT query. This is the **only moment** production migrations are applied — never during Phase 2.
    - **production**: run `sm-deploy` from iTerm to merge `staging → main` and trigger the production deploy on `staff.peerpetual.it`.
    - Verify the production deploy completes without errors (Vercel dashboard or direct URL check).
    - Do NOT run `git push origin main` manually — always use `sm-deploy` to ensure staging is the promotion source.
@@ -256,7 +269,7 @@ After git push, before closing the session:
 - Execute checks **C4 through C11** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
 - **Phase complete only when all 11 checks pass** — not when the review "seems thorough".
-- **Final commit + push**: if any context file was modified during C1–C11 (CLAUDE.md, MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
+- **Final commit + push**: if any context file was modified during C1–C11 (CLAUDE.md, project-root MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
   ```
   git add <modified context files>
   git commit -m "chore(context): post-block context review fixes"
@@ -358,8 +371,7 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Worktree — CLAUDE.local.md**: if `.claude/CLAUDE.local.md` exists in the main repo (active overrides), copy it into the worktree directory at setup time. It is gitignored and not auto-present in worktrees.
 - **Worktree — sm-staging command**: always pass the branch name explicitly: `sm-staging worktree-block-name`. Never call `sm-staging` without arguments when in a worktree context.
 - **Worktree cleanup after production deploy**: after `sm-deploy` confirms the worktree branch is in production, instruct user to run `sm-cleanup worktree-block-name` to delete both local and remote branch.
-- **DB environments**: staging Supabase project (`gjwkvgfwkdwzqlvudgqr`) and production (`nyajqcjqmgxctlqighql`) are fully separate isolated projects. Local dev (main repo + all worktrees) and `staff-staging.peerpetual.it` always target staging. `staff.peerpetual.it` targets production. Production credentials must never appear in any local `.env.local` or worktree.
-- **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Do not rely on memory or partial exploration. The user must never need to ask for a deeper analysis — it is your responsibility to deliver a complete file list from the start.
+- **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Deliver a complete file list from the start.
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **PRD sync is a hard gate — no exceptions**: `docs/prd/prd.md` must be updated and the GDoc Changelog entry must be appended **before closing any block**, whether full pipeline or fast-lane. This step cannot be deferred, skipped due to time pressure, or merged with another block's update. A block is not complete until both `docs/prd/prd.md` and the GDoc reflect its functional changes (or it is explicitly confirmed that no PRD section was affected).
 - **Even if the plan is pre-written**: still execute phase by phase with the gates. A pre-written plan replaces only Phase 1, it does not compress subsequent phases.
@@ -367,7 +379,5 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context from verbosity and reduce cost.
 - **Concise output**: always report only the build/test summary line. Paste details only on error.
 - **Keep MEMORY.md compact**: project-root MEMORY.md and auto-memory MEMORY.md must both stay under ~150 active lines. Beyond that: extract topics into separate files and link.
-- **Immediate migration**: every `supabase/migrations/*.sql` must be applied to the remote DB immediately after writing (Node.js Management API + SELECT verification + `docs/migrations-log.md` entry). Never leave a written migration unapplied before tests.
-- **FK check before PostgREST joins**: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f'`. If FK absent: two-step query.
-- **Locators from real JSX**: before writing every e2e locator, read the component (Read tool). Identify unique classes for each target element — never assume from memory.
+- **Migrations — staging only during development**: every `supabase/migrations/*.sql` must be applied immediately after writing, but **exclusively to the staging DB** (`project_id: "gjwkvgfwkdwzqlvudgqr"`). Never pass `project_id: "nyajqcjqmgxctlqighql"` during Phase 2. Production DB is updated once, in Phase 8 step 7 pre-deploy, by re-executing the same SQL. If `execute_sql` is called with the production project_id outside of Phase 8 step 7, it is a process error — stop and flag it.
 - **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5. After compact completes, re-read `.claude/CLAUDE.local.md` to restore any active session overrides before resuming.

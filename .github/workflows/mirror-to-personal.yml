@@ -1,0 +1,21 @@
+name: Mirror to marcoguillermaz/staff-manager
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to personal mirror
+        run: |
+          git remote add personal-mirror https://marcoguillermaz:${{ secrets.PERSONAL_MIRROR_PAT }}@github.com/marcoguillermaz/staff-manager.git
+          git push personal-mirror ${{ github.ref_name }} --force

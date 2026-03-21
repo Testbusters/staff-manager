@@ -46,7 +46,10 @@ const RICEVUTA_MARKERS = [
 const sectionCls = 'rounded-2xl bg-card border border-border';
 const sectionHeader = 'px-5 py-4 border-b border-border';
 
-const TEMPLATE_TIPOS: ContractTemplateType[] = ['OCCASIONALE', 'RICEVUTA_PAGAMENTO'];
+const COMMUNITY_GROUPS: { label: string; tipos: ContractTemplateType[] }[] = [
+  { label: 'Testbusters', tipos: ['OCCASIONALE', 'RICEVUTA_PAGAMENTO'] },
+  { label: 'Peer4Med',    tipos: ['OCCASIONALE_P4M', 'RICEVUTA_PAGAMENTO_P4M'] },
+];
 
 export default function ContractTemplateManager({ templates: initial }: Props) {
   const [templates, setTemplates] = useState<Template[]>(initial);
@@ -78,7 +81,7 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Template slots */}
+      {/* Template slots — grouped by community */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
           <h2 className="text-sm font-medium text-foreground">Template documenti</h2>
@@ -87,46 +90,55 @@ export default function ContractTemplateManager({ templates: initial }: Props) {
             Solo file PDF.
           </p>
         </div>
-        <div className="p-5 space-y-3">
-          {TEMPLATE_TIPOS.map((tipo) => {
-            const tpl = templateMap[tipo];
-            const isUploading = uploading === tipo;
-            return (
-              <div key={tipo} className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS[tipo]}</p>
-                  {tpl ? (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {tpl.file_name} · {new Date(tpl.uploaded_at).toLocaleDateString('it-IT')}
-                    </p>
-                  ) : (
-                    <Alert variant="default" className="mt-0.5 py-2"><AlertDescription className="text-xs">Nessun template contratto caricato. Carica un template per abilitare la generazione automatica.</AlertDescription></Alert>
-                  )}
-                </div>
-                <label className={`ml-4 flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer
-                  ${isUploading
-                    ? 'bg-accent text-muted-foreground pointer-events-none'
-                    : tpl
-                      ? 'bg-accent hover:bg-muted text-foreground'
-                      : 'bg-brand hover:bg-brand/90 text-white'
-                  }`}
-                >
-                  {isUploading ? 'Caricamento…' : tpl ? 'Sostituisci' : 'Carica'}
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    disabled={isUploading}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleUpload(tipo, file);
-                      e.target.value = '';
-                    }}
-                  />
-                </label>
+        <div className="p-5 space-y-6">
+          {COMMUNITY_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                {group.label}
+              </p>
+              <div className="space-y-3">
+                {group.tipos.map((tipo) => {
+                  const tpl = templateMap[tipo];
+                  const isUploading = uploading === tipo;
+                  return (
+                    <div key={tipo} className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS[tipo]}</p>
+                        {tpl ? (
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {tpl.file_name} · {new Date(tpl.uploaded_at).toLocaleDateString('it-IT')}
+                          </p>
+                        ) : (
+                          <Alert variant="default" className="mt-0.5 py-2"><AlertDescription className="text-xs">Nessun template caricato. Carica un PDF per abilitare la generazione automatica.</AlertDescription></Alert>
+                        )}
+                      </div>
+                      <label className={`ml-4 flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer
+                        ${isUploading
+                          ? 'bg-accent text-muted-foreground pointer-events-none'
+                          : tpl
+                            ? 'bg-accent hover:bg-muted text-foreground'
+                            : 'bg-brand hover:bg-brand/90 text-white'
+                        }`}
+                      >
+                        {isUploading ? 'Caricamento…' : tpl ? 'Sostituisci' : 'Carica'}
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          disabled={isUploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUpload(tipo, file);
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
 

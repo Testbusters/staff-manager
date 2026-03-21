@@ -11,8 +11,9 @@ import ContractTemplateManager from '@/components/impostazioni/ContractTemplateM
 import NotificationSettingsManager from '@/components/impostazioni/NotificationSettingsManager';
 import EmailTemplateManager from '@/components/impostazioni/EmailTemplateManager';
 import MonitoraggioSection from '@/components/impostazioni/MonitoraggioSection';
+import BannerManager from '@/components/settings/BannerManager';
 
-type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail' | 'monitoraggio';
+type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail' | 'monitoraggio' | 'banner';
 
 export default async function ImpostazioniPage({
   searchParams,
@@ -40,6 +41,7 @@ export default async function ImpostazioniPage({
     : tab === 'notifiche' ? 'notifiche'
     : tab === 'template_mail' ? 'template_mail'
     : tab === 'monitoraggio' ? 'monitoraggio'
+    : tab === 'banner' ? 'banner'
     : 'utenti';
 
   const serviceClient = createServiceClient(
@@ -81,6 +83,16 @@ export default async function ImpostazioniPage({
         .from('contract_templates')
         .select('id, tipo, file_name, uploaded_at')
         .order('tipo')
+        .then((r) => r.data ?? [])
+    : [];
+
+  // Fetch banner communities for the banner tab
+  const bannerCommunities = activeTab === 'banner'
+    ? await serviceClient
+        .from('communities')
+        .select('id, name, banner_active, banner_content, banner_link_url, banner_link_label, banner_link_new_tab')
+        .eq('is_active', true)
+        .order('name')
         .then((r) => r.data ?? [])
     : [];
 
@@ -137,7 +149,7 @@ export default async function ImpostazioniPage({
         : 'bg-muted text-muted-foreground hover:bg-accent'
     }`;
 
-  const narrowContent = activeTab !== 'template_mail' && activeTab !== 'monitoraggio';
+  const narrowContent = activeTab !== 'template_mail' && activeTab !== 'monitoraggio' && activeTab !== 'banner';
 
   return (
     <div className="p-6 max-w-4xl">
@@ -166,6 +178,7 @@ export default async function ImpostazioniPage({
         <Link href="?tab=notifiche" className={tabCls('notifiche')}>Notifiche</Link>
         <Link href="?tab=template_mail" className={tabCls('template_mail')}>Template mail</Link>
         <Link href="?tab=monitoraggio" className={tabCls('monitoraggio')}>Monitoraggio</Link>
+        <Link href="?tab=banner" className={tabCls('banner')}>Banner</Link>
       </div>
 
       {/* Content — narrow (max-w-3xl) for simple tabs, full-width for mail+monitoring */}
@@ -198,7 +211,7 @@ export default async function ImpostazioniPage({
 
       {activeTab === 'contratti' && (
         <ContractTemplateManager
-          templates={contractTemplates as { id: string; tipo: 'OCCASIONALE' | 'RICEVUTA_PAGAMENTO'; file_name: string; uploaded_at: string }[]}
+          templates={contractTemplates as { id: string; tipo: 'OCCASIONALE' | 'RICEVUTA_PAGAMENTO' | 'OCCASIONALE_P4M' | 'RICEVUTA_PAGAMENTO_P4M'; file_name: string; uploaded_at: string }[]}
         />
       )}
 
@@ -227,6 +240,20 @@ export default async function ImpostazioniPage({
 
       {activeTab === 'monitoraggio' && (
         <MonitoraggioSection />
+      )}
+
+      {activeTab === 'banner' && (
+        <BannerManager
+          communities={bannerCommunities as {
+            id: string;
+            name: string;
+            banner_active: boolean;
+            banner_content: string | null;
+            banner_link_url: string | null;
+            banner_link_label: string | null;
+            banner_link_new_tab: boolean;
+          }[]}
+        />
       )}
 
       {activeTab === 'template_mail' && emailLayoutConfig && (

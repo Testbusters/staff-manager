@@ -65,7 +65,7 @@ Severity scale:
 ### Priority 1 flows (always run in standard mode)
 
 #### F1 — Collaboratore: apertura rimborso
-**Role**: collab · **Credential**: collaboratore_test@test.com / Testbusters123
+**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
 **Steps**:
 1. Login → `/`
 2. Navigate to `/rimborsi`
@@ -78,7 +78,7 @@ Severity scale:
 **Evaluate**: D1 (can user find the CTA?), D3 (success toast present?), D5 (how many fields?), D6 (what if required field missing — validation message clear?)
 
 #### F2 — Collaboratore: consultazione comunicazioni
-**Role**: collab · **Credential**: collaboratore_test@test.com / Testbusters123
+**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
 **Steps**:
 1. Navigate to `/comunicazioni`
 2. Click first communication card
@@ -88,7 +88,7 @@ Severity scale:
 **Evaluate**: D4 (is there a back affordance?), D2 (does detail page match eventi/[id] and opportunita/[id] patterns?)
 
 #### F3 — Collaboratore: apertura ticket
-**Role**: collab · **Credential**: collaboratore_test@test.com / Testbusters123
+**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
 **Steps**:
 1. Navigate to `/ticket`
 2. Click "Nuovo ticket"
@@ -111,7 +111,7 @@ Severity scale:
 **Evaluate**: D2 (is the read-only constraint clearly communicated?), D4 (is the active tab visually clear?), D5 (info density per row appropriate?)
 
 #### F5 — Collaboratore: dashboard orientation
-**Role**: collab · **Credential**: collaboratore_test@test.com / Testbusters123
+**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
 **Steps**:
 1. Login → `/`
 2. Observe dashboard: what is shown first?
@@ -265,7 +265,8 @@ Order by severity, then by impact (flows affected):
 After the report:
 
 > "Vuoi approfondire qualche finding specifico? Posso:
-> - Proporre il design dettagliato per un fix (wireframe ASCII o componenti)
+> - **Design via Figma MCP**: leggere le Foundation TB (`get_variable_defs` su file `p9kUAQ2qNVg4PojTBEkSmC`) e proporre un redesign del flusso critico fedele al design system reale
+> - **Wireframe ASCII**: proporre il design dettagliato per un fix via `/frontend-design`
 > - Eseguire un flow aggiuntivo (elenca il flow con i passi)
 > - Comparare due sezioni specifiche per consistenza
 > - Generare una checklist di fix da integrare nel backlog (`docs/refactoring-backlog.md`)"

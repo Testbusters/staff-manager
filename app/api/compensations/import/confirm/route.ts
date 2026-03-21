@@ -4,8 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { fetchPendingRows, markRowsProcessed } from '@/lib/google-sheets';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
-
-const RITENUTA_RATE = 0.2;
+import { calcRitenuta } from '@/lib/ritenuta';
 const VALID_COMPETENZE = ['corsi', 'produzione_materiale', 'sb', 'extra'];
 
 function parseDate(raw: string): string | null {
@@ -91,6 +90,19 @@ export async function POST() {
     (collabData ?? []).map((c: { id: string; username: string }) => [c.username, c.id])
   );
 
+  // Bulk-fetch community names for each collaborator
+  const collabIds = (collabData ?? []).map((c: { id: string }) => c.id);
+  const { data: ccRows } = await serviceClient
+    .from('collaborator_communities')
+    .select('collaborator_id, communities(name)')
+    .in('collaborator_id', collabIds);
+  const communityByCollab = new Map<string, string>(
+    (ccRows ?? []).map((r: { collaborator_id: string; communities: unknown }) => [
+      r.collaborator_id,
+      (r.communities as { name: string } | null)?.name ?? '',
+    ])
+  );
+
   type ValidRow = {
     rowIndex: number;
     collaborator_id: string;
@@ -128,13 +140,15 @@ export async function POST() {
     }
 
     const lordo = importo_lordo!;
+    const communityName = communityByCollab.get(collaborator_id!) ?? '';
+    const ritenuta_acconto = calcRitenuta(communityName, lordo);
     validRows.push({
       rowIndex: raw.rowIndex,
       collaborator_id: collaborator_id!,
       data_competenza: data_competenza!,
       importo_lordo: lordo,
-      ritenuta_acconto: Math.round(lordo * RITENUTA_RATE * 100) / 100,
-      importo_netto: Math.round(lordo * (1 - RITENUTA_RATE) * 100) / 100,
+      ritenuta_acconto,
+      importo_netto: Math.round((lordo - ritenuta_acconto) * 100) / 100,
       nome_servizio_ruolo: raw.nome_servizio_ruolo || null,
       info_specifiche: raw.info_specifiche && raw.info_specifiche !== '-' ? raw.info_specifiche : null,
       competenza,

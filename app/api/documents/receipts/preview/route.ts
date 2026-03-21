@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { ReceiptPreviewItem } from '@/lib/types';
+import { calcRitenuta } from '@/lib/ritenuta';
 
 export async function GET() {
   const supabase = await createClient();
@@ -59,18 +60,25 @@ export async function GET() {
     return NextResponse.json({ items: [], pending_approvato_count: pendingCount });
   }
 
-  // Fetch collaborator names
+  // Fetch collaborator names + community for community-aware ritenuta
   const collabIds = [...byCollab.keys()];
-  const { data: collabs } = await svc
-    .from('collaborators')
-    .select('id, nome, cognome')
-    .in('id', collabIds);
+  const [collabsRes, ccRes] = await Promise.all([
+    svc.from('collaborators').select('id, nome, cognome').in('id', collabIds),
+    svc.from('collaborator_communities').select('collaborator_id, communities(name)').in('collaborator_id', collabIds),
+  ]);
 
-  const collabMap = new Map((collabs ?? []).map((c) => [c.id, c]));
+  const collabMap = new Map((collabsRes.data ?? []).map((c) => [c.id, c]));
+  const communityByCollab = new Map<string, string>(
+    (ccRes.data ?? []).map((r: { collaborator_id: string; communities: unknown }) => [
+      r.collaborator_id,
+      (r.communities as { name: string } | null)?.name ?? '',
+    ])
+  );
 
   const items: ReceiptPreviewItem[] = [...byCollab.entries()].map(([collabId, totals]) => {
     const collab = collabMap.get(collabId);
-    const ritenuta = totals.lordoCompensi * 0.2;
+    const communityName = communityByCollab.get(collabId) ?? '';
+    const ritenuta = calcRitenuta(communityName, totals.lordoCompensi);
     const totaleLordo = totals.lordoCompensi + totals.lordoRimborsi;
     const netto = totaleLordo - ritenuta;
     return {

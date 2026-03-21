@@ -5,6 +5,12 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 053 | `053_banner_new_tab.sql` | 2026-03-21 | ADD COLUMN `banner_link_new_tab BOOLEAN NOT NULL DEFAULT false` on `communities` |
+| 052 | `052_community_banners.sql` | 2026-03-21 | ADD COLUMN `banner_content TEXT`, `banner_active BOOLEAN DEFAULT false`, `banner_link_url TEXT`, `banner_link_label TEXT`, `banner_updated_at TIMESTAMPTZ DEFAULT now()` on `communities` |
+| 051 | `051_p4m_templates.sql` | 2026-03-18 | Extend CHECK on `contract_templates.tipo` to include `OCCASIONALE_P4M` + `RICEVUTA_PAGAMENTO_P4M`; extend CHECK on `collaborators.tipo_contratto` with same 4 values |
+| 050 | `050_revert_to_pending.sql` | 2026-03-13 | ADD `revert_to_pending` event to `notification_settings`; seed E13 email template for APPROVATO→IN_ATTESA transition |
+| 049 | `049_content_tipo_capitalize.sql` | 2026-03-13 | Normalize content tipo/categoria values from UPPER_SNAKE_CASE to Capitalized across all content tables |
+| 048 | `048_content_tipo_update.sql` | 2026-03-13 | Update content tipo/categoria values to new definitions; remap removed values to Altro |
 | 047 | `047_import_runs_storage.sql` | 2026-03-12 | ADD COLUMN `storage_path text` on `import_runs`; CREATE private bucket `imports` (10 MB, xlsx only); admin-only SELECT + INSERT storage policies |
 | 046 | `046_theme_default_dark.sql` | 2026-03-10 | (theme default) |
 | 045 | `045_monitoring_ext.sql` | 2026-03-10 | CREATE TABLE `app_errors` (admin RLS); CREATE FUNCTION `get_top_queries()` / `get_table_stats()` / `reset_query_stats()` (SECURITY DEFINER, pg_stat_statements in extensions schema) |

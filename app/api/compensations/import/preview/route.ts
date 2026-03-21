@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { fetchPendingRows } from '@/lib/google-sheets';
-
-const RITENUTA_RATE = 0.2;
+import { calcRitenuta } from '@/lib/ritenuta';
 const VALID_COMPETENZE = ['corsi', 'produzione_materiale', 'sb', 'extra'];
 
 function parseDate(raw: string): string | null {
@@ -85,6 +84,19 @@ async function validateRows(serviceClient: any) {
     (collabData ?? []).map((c: { id: string; username: string }) => [c.username, c.id])
   );
 
+  // Bulk-fetch community names for each collaborator
+  const collabIds = (collabData ?? []).map((c: { id: string }) => c.id);
+  const { data: ccRows } = await serviceClient
+    .from('collaborator_communities')
+    .select('collaborator_id, communities(name)')
+    .in('collaborator_id', collabIds);
+  const communityByCollab = new Map<string, string>(
+    (ccRows ?? []).map((r: { collaborator_id: string; communities: unknown }) => [
+      r.collaborator_id,
+      (r.communities as { name: string } | null)?.name ?? '',
+    ])
+  );
+
   const rows: PreviewRow[] = [];
   const errors: RowError[] = [];
 
@@ -111,7 +123,8 @@ async function validateRows(serviceClient: any) {
     }
 
     const lordo = importo_lordo!;
-    const ritenuta = Math.round(lordo * RITENUTA_RATE * 100) / 100;
+    const communityName = communityByCollab.get(collaborator_id!) ?? '';
+    const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
     rows.push({
