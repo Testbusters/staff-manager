@@ -8,6 +8,7 @@ const bodySchema = z.object({
   banner_active: z.boolean(),
   banner_link_url: z.string().optional(),
   banner_link_label: z.string().optional(),
+  banner_link_new_tab: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -35,7 +36,7 @@ export async function PATCH(
   }
 
   const { communityId } = await params;
-  const { banner_content, banner_active, banner_link_url, banner_link_label } = parsed.data;
+  const { banner_content, banner_active, banner_link_url, banner_link_label, banner_link_new_tab } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,6 +50,7 @@ export async function PATCH(
       banner_active,
       banner_link_url: banner_link_url ?? null,
       banner_link_label: banner_link_label ?? null,
+      banner_link_new_tab: banner_link_new_tab ?? false,
       banner_updated_at: new Date().toISOString(),
     })
     .eq('id', communityId);

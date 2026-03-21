@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
 interface Community {
@@ -15,6 +17,7 @@ interface Community {
   banner_content: string | null;
   banner_link_url: string | null;
   banner_link_label: string | null;
+  banner_link_new_tab: boolean;
 }
 
 interface BannerState {
@@ -22,6 +25,7 @@ interface BannerState {
   content: string;
   linkUrl: string;
   linkLabel: string;
+  newTab: boolean;
   saving: boolean;
 }
 
@@ -31,6 +35,7 @@ function useBannerState(community: Community): [BannerState, React.Dispatch<Reac
     content: community.banner_content ?? '',
     linkUrl: community.banner_link_url ?? '',
     linkLabel: community.banner_link_label ?? '',
+    newTab: community.banner_link_new_tab,
     saving: false,
   });
 }
@@ -61,6 +66,7 @@ function CommunityBannerCard({ community }: { community: Community }) {
           banner_active: state.active,
           banner_link_url: state.linkUrl || undefined,
           banner_link_label: state.linkLabel || undefined,
+          banner_link_new_tab: state.newTab,
         }),
       });
       if (!res.ok) throw new Error();
@@ -78,9 +84,12 @@ function CommunityBannerCard({ community }: { community: Community }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium text-foreground">{community.name}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {state.active ? 'Banner attivo — visibile ai collaboratori' : 'Banner inattivo — non visibile'}
-            </p>
+            <div className="mt-1">
+              {state.active
+                ? <Badge variant="outline" className="text-xs border-green-500 text-green-600">Attivo</Badge>
+                : <Badge variant="outline" className="text-xs text-muted-foreground">Inattivo</Badge>
+              }
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Attivo</span>
@@ -120,6 +129,16 @@ function CommunityBannerCard({ community }: { community: Community }) {
               value={state.linkLabel}
               onChange={(e) => setState((s) => ({ ...s, linkLabel: e.target.value }))}
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`new-tab-${community.id}`}
+              checked={state.newTab}
+              onCheckedChange={(v) => setState((s) => ({ ...s, newTab: !!v }))}
+            />
+            <label htmlFor={`new-tab-${community.id}`} className="text-xs text-muted-foreground cursor-pointer select-none">
+              Apri in nuovo tab
+            </label>
           </div>
         </div>
         <div className="flex justify-end">

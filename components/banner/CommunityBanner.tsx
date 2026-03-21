@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { ArrowRight, ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import RichTextDisplay from '@/components/ui/RichTextDisplay';
 
@@ -10,10 +10,11 @@ interface Props {
   content: string;
   linkUrl: string | null;
   linkLabel: string | null;
+  linkNewTab: boolean;
   updatedAt: string;
 }
 
-export default function CommunityBanner({ communityId, content, linkUrl, linkLabel, updatedAt }: Props) {
+export default function CommunityBanner({ communityId, content, linkUrl, linkLabel, linkNewTab, updatedAt }: Props) {
   const [visible, setVisible] = useState(false);
 
   const dismissKey = `banner_dismissed_${communityId}_${updatedAt}`;
@@ -42,11 +43,12 @@ export default function CommunityBanner({ communityId, content, linkUrl, linkLab
         {linkUrl && (
           <a
             href={linkUrl}
-            target={linkUrl.startsWith('http') ? '_blank' : undefined}
-            rel={linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
-            className="inline-block mt-1 text-xs font-medium text-link hover:text-link/80 underline"
+            target={linkNewTab ? '_blank' : undefined}
+            rel={linkNewTab ? 'noopener noreferrer' : undefined}
+            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 text-xs font-semibold bg-brand hover:bg-brand/90 text-white rounded-md transition-colors"
           >
             {linkLabel || 'Scopri di più'}
+            {linkNewTab ? <ExternalLink className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
           </a>
         )}
       </div>
