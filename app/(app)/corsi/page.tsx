@@ -18,6 +18,7 @@ import { GraduationCap } from 'lucide-react';
 import { getCorsoStato } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
+import CorsiFilterBar from '@/components/corsi/CorsiFilterBar';
 
 const STATO_BADGE: Record<CorsoStato, string> = {
   programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -114,38 +115,7 @@ export default async function CorsiPage({
         </Link>
       </div>
 
-      {/* Filter bar */}
-      <form className="flex gap-3 mb-6 flex-wrap">
-        <select
-          name="community"
-          defaultValue={communityFilter ?? ''}
-          className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
-        >
-          <option value="">Tutte le community</option>
-          {(communities ?? []).map((c: { id: string; name: string }) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <select
-          name="stato"
-          defaultValue={statoFilter ?? ''}
-          className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground"
-        >
-          <option value="">Tutti gli stati</option>
-          <option value="programmato">Programmato</option>
-          <option value="attivo">Attivo</option>
-          <option value="concluso">Concluso</option>
-        </select>
-        <input
-          name="q"
-          defaultValue={q ?? ''}
-          placeholder="Cerca per nome o codice…"
-          className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground min-w-[220px]"
-        />
-        <Button type="submit" variant="outline" className="h-9">
-          Filtra
-        </Button>
-      </form>
+      <CorsiFilterBar communities={(communities ?? []) as { id: string; name: string }[]} />
 
       {corsi.length === 0 ? (
         <EmptyState
