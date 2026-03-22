@@ -118,7 +118,10 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/collaboratori/[id]` | `app/(app)/collaboratori/[id]/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, Avatar | ✅ | Profile detail + edit + document history | `UI` `UX` |
 | `/export` | `app/(app)/export/page.tsx` | admin | `tabs` | Tabs, Form, Table (preview + history) | ✅ | CSV/XLSX export of compensations and reimbursements | `UI` `UX` |
 | `/import` | `app/(app)/import/page.tsx` | admin | `import-panel` | Tabs, Table (preview), Dialog, EmptyState | ✅ | Bulk import UI for collaboratori, contratti, CU | `UI` `UX` |
-| `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch | ✅ | Community config, notification settings, contract templates, email template management, community banners | `UI` `UX` |
+| `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch, BlacklistManager, AllegatiCorsiManager | ✅ | Community config, notification settings, contract templates, email template management, community banners, blacklist management, allegati corsi | `UI` `UX` |
+| `/corsi` | `app/(app)/corsi/page.tsx` | admin + resp.cittadino | `full-list` | Table, Badge, EmptyState, CorsiFilterBar | ✅ | Admin: full list with filters (community, stato, search). Resp.cittadino: placeholder (corsi-3). Collab: redirect `/`. | `UI` `UX` |
+| `/corsi/nuovo` | `app/(app)/corsi/nuovo/page.tsx` | admin | `form` | CorsoForm, Select, Input, Button | ✅ | Create new corso. Admin-only. | `UI` `UX` |
+| `/corsi/[id]` | `app/(app)/corsi/[id]/page.tsx` | admin | `tabs` | Tabs, CorsoForm, LezioniTab, CandidatureCittaTab | ✅ | 3 tabs: Dettaglio (edit), Lezioni (add/edit/delete), Candidature città (only if citta=null) | `UI` `UX` |
 | `/monitoraggio` | `app/(app)/monitoraggio/page.tsx` | admin | `tabs` | Tabs, Badge, Table, auto-refresh | ✅ | System monitoring: access logs, emails, DB performance, app errors | `UI` `UX` |
 | `/feedback` | `app/(app)/feedback/page.tsx` | admin | `full-list` | Table, EmptyState | ✅ | User feedback/suggestions | `UI` `UX` |
 
@@ -142,11 +145,13 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | Documenti | — | ✅ (read) | ✅ |
 | Export | — | — | ✅ |
 | Contenuti | — | ✅ (read) | ✅ |
+| Corsi | ✅ (corsi-2) | — | ✅ |
 | Impostazioni | — | — | ✅ |
 | Monitoraggio | — | — | ✅ |
 | Feedback | — | — | ✅ |
 
-> `responsabile_cittadino` and `responsabile_servizi_individuali` have no nav items defined yet.
+> `responsabile_cittadino` nav defined in corsi-1 (4 items: Home, Candidatura e Assegnazione, Valutazione Corsi, Creazione Eventi). Pages for resp.cittadino implemented in corsi-3.
+> `responsabile_servizi_individuali` has no nav items defined yet.
 
 ---
 
@@ -234,6 +239,12 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Key interactions**: Collab — view status, reopen if RIFIUTATO. Admin — approve/reject/liquidate with optional rejection note Dialog.
 - **Empty states**: Timeline section uses EmptyState when no history entries exist yet.
 - **Responsive notes**: Detail card fields and timeline should stack cleanly in a single column on mobile.
+
+### `/corsi/[id]`
+- **Tabs / states**: 3 URL-driven tabs (`?tab=dettaglio|lezioni|candidature`). Dettaglio: CorsoForm in edit mode. Lezioni: table + Sheet (add/edit) + AlertDialog (delete). Candidature città: only shown when `corso.citta = null`; manual city assignment via Select.
+- **Key interactions**: Admin — edit corso metadata, add/edit/delete lezioni, assign città from candidature. Resp.cittadino — read-only in corsi-1 (full access in corsi-3).
+- **Empty states**: Lezioni tab uses EmptyState when no lezioni exist yet. Candidature città shows empty state when no candidature submitted yet.
+- **Responsive notes**: Admin-only route — desktop usage only.
 
 ### `/opportunita`
 - **Tabs / states**: 2 tabs — Opportunità · Sconti (two content types rendered in one page for collab). Each tab: card feed with EmptyState.

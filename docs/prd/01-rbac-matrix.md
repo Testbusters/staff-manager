@@ -138,7 +138,33 @@
 
 ---
 
-## 7. User Management
+## 7. Corsi
+
+> Note: `responsabile_cittadino` role is in scope for Corsi. Only the actions confirmed in corsi-1 are listed; future blocks will expand.
+
+| Action | `collaboratore` | `responsabile_cittadino` | `responsabile_compensi` | `amministrazione` | Notes |
+|---|---|---|---|---|---|
+| View corso list | ✅* (corsi-2) | ✅* | ❌ | ✅ | Collab: own assignments only. Resp.citt: own community |
+| View corso detail | ✅* (corsi-2) | ✅* | ❌ | ✅ | — |
+| Create corso | ❌ | ❌ | ❌ | ✅ | Admin-only |
+| Edit corso (all fields) | ❌ | ❌ | ❌ | ✅ | Admin-only |
+| Edit corso (city assignment) | ❌ | ✅* (corsi-3) | ❌ | ✅ | Resp.citt: own community only |
+| Delete corso | ❌ | ❌ | ❌ | ✅ | Cascades to lezioni → assegnazioni/candidature |
+| Add / edit / delete lezione | ❌ | ❌ | ❌ | ✅ | Admin-only |
+| View lezioni | ✅* (corsi-2) | ✅* | ❌ | ✅ | — |
+| Submit candidatura (lezione) | ✅ (corsi-2) | ❌ | ❌ | ❌ | Collab: docente_lezione or qa_lezione |
+| Submit candidatura (città) | ❌ | ✅ (corsi-3) | ❌ | ❌ | Resp.citt: citta_corso type |
+| Manage assegnazioni | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD (corsi-2+) |
+| View blacklist | ❌ | ✅ | ❌ | ✅ | Read-only for resp.citt |
+| Manage blacklist | ❌ | ❌ | ❌ | ✅ | Admin: add/remove |
+| View allegati globali | ✅ | ✅ | ✅ | ✅ | All authenticated |
+| Manage allegati globali | ❌ | ❌ | ❌ | ✅ | Admin: upload/replace |
+
+**Contract**: `docs/contracts/corsi-fields.md`
+
+---
+
+## 8. User Management (was §7)
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|

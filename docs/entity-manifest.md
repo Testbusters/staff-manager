@@ -21,6 +21,7 @@
 | [Document](#document) | `documents`, `contract_templates` | `docs/contracts/document-fields.md` | DA_FIRMARE → FIRMATO \| NON_RICHIESTO |
 | [Ticket](#ticket) | `tickets` | `docs/contracts/ticket-fields.md` | APERTO → IN_LAVORAZIONE → CHIUSO |
 | [Content (5 types)](#content) | `communications`, `events`, `resources`, `opportunities`, `discounts` | `docs/contracts/content-fields.md` | publish / expiry only |
+| [Corsi](#corsi) | `corsi`, `lezioni`, `assegnazioni`, `candidature`, `blacklist`, `allegati_globali` | `docs/contracts/corsi-fields.md` | stato: programmato/attivo/concluso (computed) |
 
 ---
 
@@ -127,3 +128,22 @@
 **Notification triggers**: E10 (comunicazione), E11 (evento), E12 (contenuto by gender)
 **Key surfaces**: `/contenuti` (all roles, filtered by type tab)
 **Notes**: Tiptap 3 editor (always `immediatelyRender: false`). Expiry logic on events/discounts/opportunities.
+
+---
+
+## Corsi
+
+**Tables**: `corsi`, `lezioni`, `assegnazioni`, `candidature`, `blacklist`, `allegati_globali`
+**Contract**: `docs/contracts/corsi-fields.md`
+
+| Role | Corsi (read) | Corsi (create/edit/delete) | Lezioni (write) | Blacklist | Allegati globali |
+|---|---|---|---|---|---|
+| `collaboratore` | ✅ (own assignments — corsi-2) | ❌ | ❌ | ❌ | ❌ |
+| `responsabile_cittadino` | ✅ (own community — corsi-3) | ❌ | ❌ | ✅ (view) | ✅ (view) |
+| `responsabile_compensi` | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `amministrazione` | ✅ (all) | ✅ | ✅ | ✅ (full) | ✅ (full) |
+
+**Stato**: computed from `data_inizio`/`data_fine` via `getCorsoStato()` — no physical column.
+**Notification triggers**: none in corsi-1 (corsi-4)
+**Key surfaces**: `/corsi` (admin list), `/corsi/nuovo` (create), `/corsi/[id]` (detail tabs), `/impostazioni?tab=blacklist`, `/impostazioni?tab=allegati_corsi`
+**Notes**: `lezioni.ore` is a GENERATED ALWAYS AS column (computed from orario_inizio/orario_fine). `candidature` requires exactly one of `lezione_id` or `corso_id`. `blacklist` enforces UNIQUE on `collaborator_id`. `allegati_globali` enforces UNIQUE on `(tipo, community_id)` — use UPSERT for updates.

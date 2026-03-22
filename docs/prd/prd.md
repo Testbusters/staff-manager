@@ -234,6 +234,18 @@ FR-CONT-05: The system shall support expiry dates on time-sensitive content type
 FR-CONT-06: Upon publication, the system shall send an in-app notification and an email to all collaboratori targeted by the content.
 FR-CONT-07: The system shall allow the Amministrazione to publish reference materials (resources) for fiscal and administrative guidance, which can be filtered by topic tag.
 
+### 13b. Course Management (Corsi)
+Staff Manager includes a dedicated section for managing training courses (corsi) across both communities. Each corso aggregates a series of individual lessons (lezioni), with assignments of collaboratori as docenti, co-coordinators (cocoda), or Q&A operators. The Amministrazione manages courses, while collaboratori apply for teaching roles (in subsequent blocks).
+
+FR-CORSI-01: The system shall allow the Amministrazione to create, edit, and delete corsi, including all scheduling and operational metadata (dates, modality, links, capacity limits, city).
+FR-CORSI-02: The system shall compute the stato of each corso (programmato, attivo, concluso) from its data_inizio and data_fine — it is never stored as a column.
+FR-CORSI-03: The system shall allow the Amministrazione to add, edit, and delete lezioni within a corso. The duration (ore) of each lezione shall be computed automatically from the scheduled start and end times.
+FR-CORSI-04: The system shall display corsi in a filterable list (by community, stato, and free text search) accessible to the Amministrazione.
+FR-CORSI-05: The system shall allow the Amministrazione to manage a blacklist of collaboratori who are barred from teaching assignments. Only one blacklist entry per collaboratore is permitted.
+FR-CORSI-06: The system shall allow the Amministrazione to manage global attachment files (allegati globali) of two types — docenza and cocoda — one per community, available for download by all authenticated users.
+FR-CORSI-07: The Responsabile Cittadino role shall have a dedicated navigation structure for the Corsi section. The specific page access and actions for this role are defined in subsequent blocks (corsi-3).
+FR-CORSI-08: Collaboratori shall be able to view and apply for available teaching roles in subsequent blocks (corsi-2).
+
 ## Part IV — Cross-Cutting Features
 ### 14. User Management & Onboarding
 Staff Manager operates on a strictly invite-only model. New accounts may only be created by the Amministrazione; there is no self-service registration path. The onboarding flow is designed to ensure that every collaboratore provides complete and verified profile information before gaining access to the full portal.
@@ -317,6 +329,7 @@ Rationale: Stakeholders and team members need a navigable, readable document tha
 Impact: The development pipeline includes a synchronisation step in Phase 8 that updates this document when significant product changes are made.
 
 ## Part VII — Changelog
+2026-03-22  |  v1.5  |  Block corsi-1 (Foundation + Admin CRUD): added §13b Course Management (FR-CORSI-01 through FR-CORSI-08). New DB tables: corsi, lezioni, assegnazioni, candidature, blacklist, allegati_globali. Admin CRUD for corsi/lezioni; blacklist and allegati_corsi in /impostazioni. Responsabile Cittadino nav defined. Collab + resp.cittadino views deferred to corsi-2/corsi-3.
 2026-03-22  |  v1.4  |  Delete IN_ATTESA: added FR-COMP-11 (responsabile_compensi can delete pending compensations with confirmation dialog, list + detail touchpoints) and FR-REIMB-08 (same capability for reimbursements).
 2026-03-21  |  v1.3  |  Block Banner: added FR-SET-06 (community-specific dismissable banner for collaboratori — rich text, optional CTA link with new-tab option, localStorage-versioned dismiss, admin-managed per community in /impostazioni).
 2026-03-18  |  v1.2  |  P4M Community Logic: added FR-COMP-10 (community-aware withholding tax — TB = 20%, P4M = 60% taxable base × 20%); updated FR-SET-03 (four document template slots, one contract + one receipt per community). Community-aware logic applied at all compensation and receipt touchpoints.
