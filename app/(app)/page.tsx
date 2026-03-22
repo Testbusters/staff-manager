@@ -219,6 +219,107 @@ export default async function DashboardPage() {
 
   const role = profile?.role ?? '';
 
+  // ── RESPONSABILE CITTADINO DASHBOARD ─────────────────────
+  if (role === 'responsabile_cittadino') {
+    const svc = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    const [{ data: rcProfile }, { data: ownCollab }] = await Promise.all([
+      svc.from('user_profiles').select('citta_responsabile').eq('user_id', user.id).single(),
+      svc.from('collaborators').select('nome, cognome, foto_profilo_url').eq('user_id', user.id).maybeSingle(),
+    ]);
+
+    const cittaResp = rcProfile?.citta_responsabile as string | null;
+
+    const [
+      { data: mieiCorsi },
+      { data: ownCandidature },
+    ] = await Promise.all([
+      cittaResp
+        ? svc.from('corsi').select('id').eq('citta', cittaResp)
+        : Promise.resolve({ data: [] as { id: string }[] }),
+      svc.from('candidature').select('id, corso_id, stato').eq('city_user_id', user.id).eq('tipo', 'citta_corso').neq('stato', 'ritirata'),
+    ]);
+
+    const corsiIds = (mieiCorsi ?? []).map((c: { id: string }) => c.id);
+
+    // Pending docente/qa candidature for their city's corsi
+    let pendingCandidatureCount = 0;
+    if (corsiIds.length > 0) {
+      const { data: lezioni } = await svc.from('lezioni').select('id').in('corso_id', corsiIds);
+      const lezioniIds = (lezioni ?? []).map((l: { id: string }) => l.id);
+      if (lezioniIds.length > 0) {
+        const { count } = await svc.from('candidature')
+          .select('id', { count: 'exact', head: true })
+          .in('lezione_id', lezioniIds)
+          .eq('stato', 'in_attesa');
+        pendingCandidatureCount = count ?? 0;
+      }
+    }
+
+    const nome = ownCollab?.nome ?? 'Responsabile';
+    const corsiCount = (mieiCorsi ?? []).length;
+    const candidatureSottomesseCount = (ownCandidature ?? []).length;
+
+    return (
+      <div className="p-6 space-y-6">
+        {/* Hero */}
+        <div className="flex items-center gap-4">
+          {ownCollab?.foto_profilo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={ownCollab.foto_profilo_url} alt="avatar" className="h-12 w-12 rounded-full object-cover" />
+          ) : (
+            <div className="h-12 w-12 rounded-full bg-brand/20 flex items-center justify-center text-brand font-semibold text-lg">
+              {nome.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">
+              Ciao, {ownCollab?.nome ?? 'Responsabile'}!
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {cittaResp ? `Responsabile cittadino · ${cittaResp}` : 'Responsabile cittadino · città non configurata'}
+            </p>
+          </div>
+        </div>
+
+        {/* KPI cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className={`${sectionCls} p-4`}>
+            <p className="text-xs text-muted-foreground mb-1">I miei corsi</p>
+            <p className="text-2xl font-semibold text-foreground">{corsiCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">{cittaResp ?? '—'}</p>
+          </div>
+          <div className={`${sectionCls} p-4`}>
+            <p className="text-xs text-muted-foreground mb-1">Candidature da approvare</p>
+            <p className="text-2xl font-semibold text-foreground">{pendingCandidatureCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">docente / Q&A in attesa</p>
+          </div>
+          <div className={`${sectionCls} p-4`}>
+            <p className="text-xs text-muted-foreground mb-1">Candidature inviate</p>
+            <p className="text-2xl font-semibold text-foreground">{candidatureSottomesseCount}</p>
+            <p className="text-xs text-muted-foreground mt-1">corsi senza città</p>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className={`${sectionCls} p-4`}>
+          <p className="text-sm font-medium text-foreground mb-3">Azioni rapide</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/corsi/assegnazione" className="inline-flex items-center gap-2 rounded-lg bg-brand hover:bg-brand/90 text-white text-sm px-4 py-2 transition">
+              Candidatura e Assegnazione
+            </Link>
+            <Link href="/corsi/valutazioni" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card hover:bg-muted/60 text-foreground text-sm px-4 py-2 transition">
+              Valutazione Corsi
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── RESPONSABILE DASHBOARD ────────────────────────────────
   if (role === 'responsabile_compensi') {
     const svc = createServiceClient(

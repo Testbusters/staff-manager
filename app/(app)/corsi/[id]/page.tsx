@@ -174,20 +174,15 @@ export default async function CorsoDetailPage({
       ? await svc.from('candidature').select('*').in('lezione_id', lezioniIds).neq('stato', 'ritirata')
       : { data: [] };
 
-    // Fetch collaborator names for candidature
+    // Fetch collaborator names directly from collaborators table
     const collabIds = [...new Set((candidature ?? []).map((c: { collaborator_id: string | null }) => c.collaborator_id).filter(Boolean) as string[])];
-    const collabs = collabIds.length > 0
-      ? (await svc.from('collaborators').select('id, user_id').in('id', collabIds)).data ?? []
-      : [];
-    const userIds = collabs.map((c: { user_id: string }) => c.user_id);
-    const profiles = userIds.length > 0
-      ? (await svc.from('user_profiles').select('user_id, nome, cognome').in('user_id', userIds)).data ?? []
+    const collabRows = collabIds.length > 0
+      ? (await svc.from('collaborators').select('id, nome, cognome').in('id', collabIds)).data ?? []
       : [];
 
     const collabMap: Record<string, { nome: string; cognome: string }> = {};
-    for (const c of collabs) {
-      const p = profiles.find((p: { user_id: string }) => p.user_id === c.user_id);
-      if (p) collabMap[c.id] = { nome: p.nome, cognome: p.cognome };
+    for (const c of collabRows) {
+      collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '' };
     }
 
     return (

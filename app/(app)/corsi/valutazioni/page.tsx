@@ -76,20 +76,15 @@ export default async function CorsiValutazioniPage() {
     ? await svc.from('assegnazioni').select('id, lezione_id, collaborator_id, ruolo, valutazione').in('lezione_id', lezioniIds)
     : { data: [] };
 
-  // Fetch collaborator names
+  // Fetch collaborator names directly from collaborators table
   const collabIds = [...new Set((assegnazioni ?? []).map((a: { collaborator_id: string }) => a.collaborator_id))];
-  const collabs = collabIds.length > 0
-    ? (await svc.from('collaborators').select('id, user_id').in('id', collabIds)).data ?? []
-    : [];
-  const userIds = collabs.map((c: { user_id: string }) => c.user_id);
-  const uprof = userIds.length > 0
-    ? (await svc.from('user_profiles').select('user_id, nome, cognome').in('user_id', userIds)).data ?? []
+  const collabRows = collabIds.length > 0
+    ? (await svc.from('collaborators').select('id, nome, cognome').in('id', collabIds)).data ?? []
     : [];
 
   const collabMap: Record<string, { nome: string; cognome: string }> = {};
-  for (const c of collabs) {
-    const p = uprof.find((p: { user_id: string }) => p.user_id === c.user_id);
-    if (p) collabMap[c.id] = { nome: p.nome, cognome: p.cognome };
+  for (const c of collabRows) {
+    collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '' };
   }
 
   // Build per-corso, per-collab groups
