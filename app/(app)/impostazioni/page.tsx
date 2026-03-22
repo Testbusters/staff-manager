@@ -13,8 +13,10 @@ import NotificationSettingsManager from '@/components/impostazioni/NotificationS
 import EmailTemplateManager from '@/components/impostazioni/EmailTemplateManager';
 import MonitoraggioSection from '@/components/impostazioni/MonitoraggioSection';
 import BannerManager from '@/components/settings/BannerManager';
+import BlacklistManager from '@/components/impostazioni/BlacklistManager';
+import AllegatiCorsiManager from '@/components/impostazioni/AllegatiCorsiManager';
 
-type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail' | 'monitoraggio' | 'banner';
+type Tab = 'utenti' | 'community' | 'collaboratori' | 'contratti' | 'notifiche' | 'template_mail' | 'monitoraggio' | 'banner' | 'blacklist' | 'allegati_corsi';
 
 export default async function ImpostazioniPage({
   searchParams,
@@ -43,6 +45,8 @@ export default async function ImpostazioniPage({
     : tab === 'template_mail' ? 'template_mail'
     : tab === 'monitoraggio' ? 'monitoraggio'
     : tab === 'banner' ? 'banner'
+    : tab === 'blacklist' ? 'blacklist'
+    : tab === 'allegati_corsi' ? 'allegati_corsi'
     : 'utenti';
 
   const serviceClient = createServiceClient(
@@ -84,6 +88,23 @@ export default async function ImpostazioniPage({
         .from('contract_templates')
         .select('id, tipo, file_name, uploaded_at')
         .order('tipo')
+        .then((r) => r.data ?? [])
+    : [];
+
+  // Fetch communities for allegati_corsi tab
+  const allegatiCommunities = activeTab === 'allegati_corsi'
+    ? await serviceClient
+        .from('communities')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name')
+        .then((r) => r.data ?? [])
+    : [];
+
+  const allegatiGlobali = activeTab === 'allegati_corsi'
+    ? await serviceClient
+        .from('allegati_globali')
+        .select('*')
         .then((r) => r.data ?? [])
     : [];
 
@@ -188,6 +209,8 @@ export default async function ImpostazioniPage({
         <Link href="?tab=template_mail" className={tabCls('template_mail')}>Template mail</Link>
         <Link href="?tab=monitoraggio" className={tabCls('monitoraggio')}>Monitoraggio</Link>
         <Link href="?tab=banner" className={tabCls('banner')}>Banner</Link>
+        <Link href="?tab=blacklist" className={tabCls('blacklist')}>Blacklist</Link>
+        <Link href="?tab=allegati_corsi" className={tabCls('allegati_corsi')}>Allegati Corsi</Link>
       </div>
 
       {/* Content — narrow (max-w-3xl) for simple tabs, full-width for mail+monitoring */}
@@ -279,6 +302,24 @@ export default async function ImpostazioniPage({
             banner_link_url: string | null;
             banner_link_label: string | null;
             banner_link_new_tab: boolean;
+          }[]}
+        />
+      )}
+
+      {activeTab === 'blacklist' && (
+        <BlacklistManager />
+      )}
+
+      {activeTab === 'allegati_corsi' && (
+        <AllegatiCorsiManager
+          communities={allegatiCommunities as { id: string; name: string }[]}
+          initialAllegati={allegatiGlobali as {
+            id: string;
+            tipo: 'docenza' | 'cocoda';
+            community_id: string;
+            file_url: string;
+            nome_file: string;
+            updated_at: string;
           }[]}
         />
       )}
