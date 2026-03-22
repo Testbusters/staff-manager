@@ -661,3 +661,43 @@ A community-specific informational banner rendered at the top of the app layout,
 
 ### Layout
 `app/(app)/layout.tsx`: when `role === 'collaboratore'`, fetch community banner via service client (2-step: collaborator_communities → communities). Render `<CommunityBanner>` if `banner_active && banner_content`.
+
+---
+
+## Block corsi-2 — Collaboratore View + Candidature
+
+### Scope
+Activates the collaboratore-facing `/corsi` route (previously redirecting to `/`). Collaboratori can browse their community's active/upcoming corsi and submit/withdraw candidature for individual lezioni.
+
+### Requirements confirmed
+- `/corsi` lists corsi for the collaboratore's own community only (via `collaborator_communities`)
+- Only `programmato` and `attivo` corsi shown (concluso filtered out, stato computed)
+- `/corsi/[id]` shows corso info header (links, modalita, citta) + lezioni table
+- Each lezione row has Docente and Q&A candidatura buttons
+- No slot limits — any collab can apply
+- Withdrawal allowed only while `stato = in_attesa`
+- Blacklisted collabs see the page but all candidatura buttons are disabled (yellow alert shown)
+- Assegnazioni shown as "Assegnato · Ruolo" badge in the lezioni row (no separate section)
+- No filter by materie
+
+### Out of scope (deferred to corsi-3)
+- Responsabile_cittadino view
+- Admin acceptance/rejection of candidature
+- Assegnazione management
+
+### Migration 056
+Two RLS policies on `candidature`:
+- `candidature_collab_insert`: collaboratore INSERT own candidature (tipo docente/qa only)
+- `candidature_collab_update_own`: collaboratore UPDATE own → `stato = 'ritirata'` only
+
+### API Routes
+- `POST /api/candidature`: blacklist check → duplicate check (same lezione+tipo, not ritirata) → insert
+- `PATCH /api/candidature/[id]`: ownership check → stato=in_attesa guard → set ritirata
+
+### Pages modified
+- `app/(app)/corsi/page.tsx`: removed collab redirect; added collab SSR branch (community fetch via `collaborator_communities`, corso list filtered to programmato/attivo)
+- `app/(app)/corsi/[id]/page.tsx`: added collab SSR branch (7 fetches: collab, community, blacklist, corso, lezioni, own candidature, own+all assegnazioni)
+
+### New components
+- `CorsiListCollab.tsx`: card grid with stato badge, modalita/citta badges, date range
+- `LezioniTabCollab.tsx`: table with DropdownMenu candidatura, AlertDialog withdraw confirm, optimistic state, blacklist alert

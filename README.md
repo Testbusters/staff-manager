@@ -18,7 +18,7 @@ Internal admin portal for managing collaborators across Testbusters and Peer4Med
 | Rich text | Tiptap 3 |
 | Charts | Recharts |
 | Export | SheetJS (xlsx) + native CSV |
-| Testing | Vitest (302 unit/API tests) + Playwright (e2e, currently suspended) |
+| Testing | Vitest (313 unit/API tests) + Playwright (e2e, currently suspended) |
 
 ---
 
@@ -85,7 +85,7 @@ lib/
 
 proxy.ts          Auth middleware: active check → must_change_password → onboarding → app
 supabase/migrations/  055 migrations applied in sequence (see docs/migrations-log.md)
-__tests__/        302 Vitest tests (unit + API schema validation)
+__tests__/        313 Vitest tests (unit + API schema validation)
 e2e/              Playwright specs (suspended — see CLAUDE.local.md)
 docs/             Product specs, implementation checklist, migration log, sitemap
 ```
