@@ -15,6 +15,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify token identity
+        env:
+          MIRROR_TOKEN: ${{ secrets.PERSONAL_MIRROR_PAT }}
+        run: |
+          echo "Token account: $(curl -s -H "Authorization: Bearer ${MIRROR_TOKEN}" https://api.github.com/user | python3 -c "import sys,json; print(json.load(sys.stdin).get('login','ERROR'))")"
+
       - name: Push to personal mirror
         env:
           MIRROR_TOKEN: ${{ secrets.PERSONAL_MIRROR_PAT }}
