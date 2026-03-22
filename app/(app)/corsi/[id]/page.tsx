@@ -5,6 +5,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CorsoForm from '@/components/corsi/CorsoForm';
 import LezioniTab from '@/components/corsi/LezioniTab';
 import CandidatureCittaTab from '@/components/corsi/CandidatureCittaTab';
+import LezioniTabCollab from '@/components/corsi/LezioniTabCollab';
 import { getCorsoStato } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
@@ -34,9 +35,11 @@ export default async function CorsoDetailPage({
     .eq('user_id', user.id)
     .single();
 
-  if (!profile?.is_active || profile.role !== 'amministrazione') redirect('/');
+  if (!profile?.is_active) redirect('/');
 
   const { id } = await params;
+  const role = profile.role as string;
+
   const { tab } = await searchParams;
   const activeTab: Tab = tab === 'lezioni' ? 'lezioni'
     : tab === 'candidature_citta' ? 'candidature_citta'
@@ -46,6 +49,96 @@ export default async function CorsoDetailPage({
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  // collaboratore branch
+  if (role === 'collaboratore') {
+    const { data: collab } = await svc
+      .from('collaborators')
+      .select('id, community_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!collab) notFound();
+
+    const [
+      { data: blacklistEntry },
+      { data: corso },
+      { data: lezioni },
+    ] = await Promise.all([
+      svc.from('blacklist').select('id').eq('collaborator_id', collab.id).maybeSingle(),
+      svc.from('corsi').select('*').eq('id', id).eq('community_id', collab.community_id).maybeSingle(),
+      svc.from('lezioni').select('*').eq('corso_id', id).order('data').order('orario_inizio'),
+    ]);
+
+    if (!corso) notFound();
+
+    const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
+    const lezioniIds = (lezioni ?? []).map((l: { id: string }) => l.id);
+
+    const [
+      { data: ownCandidature },
+      { data: ownAssegnazioni },
+      { data: allAssegnazioni },
+    ] = await Promise.all([
+      lezioniIds.length > 0
+        ? svc.from('candidature').select('*').eq('collaborator_id', collab.id).in('lezione_id', lezioniIds)
+        : Promise.resolve({ data: [] }),
+      lezioniIds.length > 0
+        ? svc.from('assegnazioni').select('*').eq('collaborator_id', collab.id).in('lezione_id', lezioniIds)
+        : Promise.resolve({ data: [] }),
+      lezioniIds.length > 0
+        ? svc.from('assegnazioni').select('*').in('lezione_id', lezioniIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    return (
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Link href="/corsi" className="text-sm text-link hover:text-link/80">← Corsi</Link>
+            </div>
+            <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground font-mono">{corso.codice_identificativo}</span>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+                {CORSO_STATO_LABELS[stato]}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {corso.modalita === 'online' ? 'Online' : 'In aula'}
+                {corso.citta ? ` · ${corso.citta}` : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Link group */}
+        {(corso.link_lw || corso.link_zoom || corso.link_telegram_corsisti || corso.link_qa_assignments || corso.link_questionari || corso.link_emergenza) && (
+          <div className="flex flex-wrap gap-3 mb-6 text-sm">
+            {corso.link_lw && <a href={corso.link_lw} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">LW</a>}
+            {corso.link_zoom && <a href={corso.link_zoom} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Zoom</a>}
+            {corso.link_telegram_corsisti && <a href={corso.link_telegram_corsisti} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Telegram</a>}
+            {corso.link_qa_assignments && <a href={corso.link_qa_assignments} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Q&A Assignments</a>}
+            {corso.link_questionari && <a href={corso.link_questionari} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Questionari</a>}
+            {corso.link_emergenza && <a href={corso.link_emergenza} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Emergenza</a>}
+          </div>
+        )}
+
+        <LezioniTabCollab
+          lezioni={lezioni ?? []}
+          corsoId={id}
+          maxDocenti={corso.max_docenti_per_lezione}
+          maxQA={corso.max_qa_per_lezione}
+          ownCandidature={ownCandidature ?? []}
+          ownAssegnazioni={ownAssegnazioni ?? []}
+          allAssegnazioni={allAssegnazioni ?? []}
+          isBlacklisted={!!blacklistEntry}
+        />
+      </div>
+    );
+  }
+
+  if (role !== 'amministrazione') redirect('/');
 
   const { data: corso, error } = await svc
     .from('corsi')
