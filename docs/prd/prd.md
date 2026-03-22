@@ -177,6 +177,7 @@ FR-COMP-07: Upon liquidation, the system shall automatically generate and archiv
 FR-COMP-08: The system shall allow the Amministrazione to approve or liquidate multiple pending compensation records simultaneously through a bulk action in the Work Queue. The annual earnings limit check applies individually to each record during bulk approval.
 FR-COMP-09: The system shall support import of compensation records from an external spreadsheet, providing a validation preview before any records are committed to the database.
 FR-COMP-10: The system shall apply a community-specific withholding tax rate when calculating compensation net amounts. Testbusters collaborators are subject to a 20% withholding on gross earnings (ritenuta = gross × 0.20). Peer4Med collaborators are subject to a reduced taxable base with a 20% rate applied to 60% of gross earnings (ritenuta = gross × 0.60 × 0.20). This rate must be applied consistently at creation, import, receipt preview, receipt generation, and document recompilation.
+FR-COMP-11: The system shall allow the Responsabile Compensi to permanently delete compensation records that are in Pending (IN_ATTESA) status. Deletion is not permitted for records in any other status (APPROVATO, LIQUIDATO, RIFIUTATO). A confirmation dialog must be shown before the action is committed. The delete action is available on both the list view (/approvazioni) and the record detail page (/compensi/[id]).
 
 ### 10. Reimbursement Management
 The reimbursement module allows collaboratori to submit expense claims for costs they have personally incurred on behalf of the community — travel expenses, material purchases, and similar out-of-pocket items. Unlike compensations, reimbursements are self-submitted by the collaboratore and are accompanied by supporting documentation uploaded at the time of submission.
@@ -187,6 +188,7 @@ FR-REIMB-01: The system shall allow collaboratori to create reimbursement reques
 FR-REIMB-02: Every reimbursement request shall be created in the Pending (IN_ATTESA) status by the collaboratore.
 FR-REIMB-03: The system shall allow the collaboratore to edit their reimbursement request — including updating attachments — for as long as the request remains in Pending status. Editing is not permitted once the record has been approved or rejected.
 FR-REIMB-04: The system shall allow the Responsabile Compensi to view reimbursement requests submitted by collaboratori in their assigned community. The Responsabile Compensi may not approve, reject, or liquidate reimbursements.
+FR-REIMB-08: The system shall allow the Responsabile Compensi to permanently delete reimbursement records that are in Pending (IN_ATTESA) status, following the same rules as FR-COMP-11. The delete action is available on both the list view (/approvazioni?tab=rimborsi) and the record detail page (/rimborsi/[id]).
 FR-REIMB-05: The system shall restrict the authority to approve, reject, and liquidate reimbursement requests exclusively to the Amministrazione role.
 FR-REIMB-06: The same rejection and reopen rules that apply to compensations shall apply to reimbursements: rejection requires a written reason; the collaboratore may reopen a rejected request, returning it to Pending status.
 FR-REIMB-07: Upon liquidation, the system shall automatically generate and archive a payment receipt document for the reimbursement.
@@ -314,6 +316,7 @@ Rationale: Stakeholders and team members need a navigable, readable document tha
 Impact: The development pipeline includes a synchronisation step in Phase 8 that updates this document when significant product changes are made.
 
 ## Part VII — Changelog
+2026-03-22  |  v1.4  |  Delete IN_ATTESA: added FR-COMP-11 (responsabile_compensi can delete pending compensations with confirmation dialog, list + detail touchpoints) and FR-REIMB-08 (same capability for reimbursements).
 2026-03-21  |  v1.3  |  Block Banner: added FR-SET-06 (community-specific dismissable banner for collaboratori — rich text, optional CTA link with new-tab option, localStorage-versioned dismiss, admin-managed per community in /impostazioni).
 2026-03-18  |  v1.2  |  P4M Community Logic: added FR-COMP-10 (community-aware withholding tax — TB = 20%, P4M = 60% taxable base × 20%); updated FR-SET-03 (four document template slots, one contract + one receipt per community). Community-aware logic applied at all compensation and receipt touchpoints.
 2026-03-15  |  v1.1  |  Full rewrite: narrative language, functional requirements (FR-*), glossary, out of scope, decision log. Structured for dual audience: stakeholders and development team.
