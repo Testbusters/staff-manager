@@ -298,6 +298,8 @@ export interface Collaborator {
   data_fine_contratto: string | null;
   sono_un_figlio_a_carico: boolean;
   importo_lordo_massimale: number | null;
+  citta: string | null;
+  materie_insegnate: string[] | null;
   figli_dettaglio: Record<string, unknown> | null;
   created_at: string;
 }

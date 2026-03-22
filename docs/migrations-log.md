@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 054 | `054_materie_citta.sql` | 2026-03-22 | CREATE TABLE `lookup_options` (type/community/nome/sort_order, RLS); seed 22 città × 2 communities, 5 materie × 2 communities; ADD COLUMN `citta TEXT NOT NULL` + `materie_insegnate TEXT[] NOT NULL DEFAULT '{}'` on `collaborators`; backfill existing rows with `citta='Roma'`, `materie_insegnate=ARRAY['Logica']` |
 | 053 | `053_banner_new_tab.sql` | 2026-03-21 | ADD COLUMN `banner_link_new_tab BOOLEAN NOT NULL DEFAULT false` on `communities` |
 | 052 | `052_community_banners.sql` | 2026-03-21 | ADD COLUMN `banner_content TEXT`, `banner_active BOOLEAN DEFAULT false`, `banner_link_url TEXT`, `banner_link_label TEXT`, `banner_updated_at TIMESTAMPTZ DEFAULT now()` on `communities` |
 | 051 | `051_p4m_templates.sql` | 2026-03-18 | Extend CHECK on `contract_templates.tipo` to include `OCCASIONALE_P4M` + `RICEVUTA_PAGAMENTO_P4M`; extend CHECK on `collaborators.tipo_contratto` with same 4 values |

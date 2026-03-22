@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -53,6 +53,8 @@ interface CollabData {
   importo_lordo_massimale: number | null;
   intestatario_pagamento: string | null;
   username: string | null;
+  citta: string | null;
+  materie_insegnate: string[] | null;
 }
 
 interface CollaboratoreDetailProps {
@@ -117,6 +119,21 @@ export default function CollaboratoreDetail({
     collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '',
   );
   const [fIntestatario, setFIntestatario]         = useState(collab.intestatario_pagamento ?? '');
+  const [fCitta, setFCitta]                       = useState(collab.citta ?? '');
+  const [fMaterieInsegnate, setFMaterieInsegnate] = useState<string[]>(collab.materie_insegnate ?? []);
+
+  // Lookup options (fetched lazily when edit modal opens)
+  const [cittaOptions, setCittaOptions]     = useState<{ id: string; nome: string }[]>([]);
+  const [materiaOptions, setMateriaOptions] = useState<{ id: string; nome: string }[]>([]);
+
+  useEffect(() => {
+    if (!editModalOpen || role !== 'amministrazione') return;
+    const comm = communityNames[0]?.toLowerCase().replace(/\s+/g, '') || 'testbusters';
+    fetch(`/api/lookup-options?type=citta&community=${comm}`)
+      .then((r) => r.json()).then((d) => setCittaOptions(d.options ?? [])).catch(() => {});
+    fetch(`/api/lookup-options?type=materia&community=${comm}`)
+      .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
+  }, [editModalOpen, role, communityNames]);
 
   const openEditModal = () => {
     setFNome(collab.nome ?? '');
@@ -135,6 +152,8 @@ export default function CollaboratoreDetail({
     setFSonoFiglio(collab.sono_un_figlio_a_carico);
     setFMassimale(collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '');
     setFIntestatario(collab.intestatario_pagamento ?? '');
+    setFCitta(collab.citta ?? '');
+    setFMaterieInsegnate(collab.materie_insegnate ?? []);
     setEditModalOpen(true);
   };
 
@@ -164,6 +183,8 @@ export default function CollaboratoreDetail({
 
     if (role === 'amministrazione') {
       body.intestatario_pagamento = fIntestatario.trim() || null;
+      if (fCitta) body.citta = fCitta;
+      if (fMaterieInsegnate.length > 0) body.materie_insegnate = fMaterieInsegnate;
     }
 
     if (fUsername.trim().length >= 3) body.username = fUsername.trim();
@@ -306,6 +327,18 @@ export default function CollaboratoreDetail({
               <dd className="text-foreground text-sm">
                 {collab.importo_lordo_massimale.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
               </dd>
+            </div>
+          )}
+          {collab.citta && (
+            <div>
+              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">Città</dt>
+              <dd className="text-foreground text-sm">{collab.citta}</dd>
+            </div>
+          )}
+          {collab.materie_insegnate && collab.materie_insegnate.length > 0 && (
+            <div>
+              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">Materie insegnate</dt>
+              <dd className="text-foreground text-sm">{collab.materie_insegnate.join(', ')}</dd>
             </div>
           )}
         </dl>
@@ -520,17 +553,58 @@ export default function CollaboratoreDetail({
 
             {/* Admin-only */}
             {role === 'amministrazione' && (
-              <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">
-                  Intestatario del conto bancario
-                </label>
-                <Input
-                  placeholder="Mario Rossi"
-                  value={fIntestatario}
-                  onChange={(e) => setFIntestatario(e.target.value)}
-                  maxLength={100}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-[11px] text-muted-foreground mb-1">
+                    Intestatario del conto bancario
+                  </label>
+                  <Input
+                    placeholder="Mario Rossi"
+                    value={fIntestatario}
+                    onChange={(e) => setFIntestatario(e.target.value)}
+                    maxLength={100}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-muted-foreground mb-1">Città</label>
+                  <Select value={fCitta || undefined} onValueChange={setFCitta}>
+                    <SelectTrigger><SelectValue placeholder="— Seleziona città —" /></SelectTrigger>
+                    <SelectContent>
+                      {cittaOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-muted-foreground mb-1">Materie insegnate</label>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {materiaOptions.map((opt) => {
+                      const active = fMaterieInsegnate.includes(opt.nome);
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() =>
+                            setFMaterieInsegnate((prev) =>
+                              active ? prev.filter((m) => m !== opt.nome) : [...prev, opt.nome],
+                            )
+                          }
+                          className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition ${
+                            active
+                              ? 'bg-brand text-white border-brand'
+                              : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                          }`}
+                        >
+                          {opt.nome}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Actions */}

@@ -7,6 +7,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CreateUserForm from '@/components/impostazioni/CreateUserForm';
 import CommunityManager from '@/components/impostazioni/CommunityManager';
 import MemberStatusManager from '@/components/impostazioni/MemberStatusManager';
+import LookupOptionsManager from '@/components/impostazioni/LookupOptionsManager';
 import ContractTemplateManager from '@/components/impostazioni/ContractTemplateManager';
 import NotificationSettingsManager from '@/components/impostazioni/NotificationSettingsManager';
 import EmailTemplateManager from '@/components/impostazioni/EmailTemplateManager';
@@ -95,6 +96,14 @@ export default async function ImpostazioniPage({
         .order('name')
         .then((r) => r.data ?? [])
     : [];
+
+  // Fetch lookup_options for the collaboratori tab
+  const [lookupCitta, lookupMaterie] = activeTab === 'collaboratori'
+    ? await Promise.all([
+        serviceClient.from('lookup_options').select('id, type, community, nome, sort_order').eq('type', 'citta').order('sort_order').then((r) => r.data ?? []),
+        serviceClient.from('lookup_options').select('id, type, community, nome, sort_order').eq('type', 'materia').order('sort_order').then((r) => r.data ?? []),
+      ])
+    : [[], []];
 
   // Fetch data for active tab
   const communities = activeTab === 'community' || activeTab === 'utenti'
@@ -206,7 +215,25 @@ export default async function ImpostazioniPage({
       )}
 
       {activeTab === 'collaboratori' && (
-        <MemberStatusManager />
+        <div className="space-y-6">
+          <MemberStatusManager />
+          <LookupOptionsManager
+            type="citta"
+            label="Città"
+            initialOptions={{
+              testbusters: lookupCitta.filter((o: { community: string }) => o.community === 'testbusters') as { id: string; nome: string; sort_order: number }[],
+              peer4med:    lookupCitta.filter((o: { community: string }) => o.community === 'peer4med') as { id: string; nome: string; sort_order: number }[],
+            }}
+          />
+          <LookupOptionsManager
+            type="materia"
+            label="Materie"
+            initialOptions={{
+              testbusters: lookupMaterie.filter((o: { community: string }) => o.community === 'testbusters') as { id: string; nome: string; sort_order: number }[],
+              peer4med:    lookupMaterie.filter((o: { community: string }) => o.community === 'peer4med') as { id: string; nome: string; sort_order: number }[],
+            }}
+          />
+        </div>
       )}
 
       {activeTab === 'contratti' && (

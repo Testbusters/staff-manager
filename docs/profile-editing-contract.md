@@ -39,6 +39,8 @@
 | `tshirt_size` | ✅ required | ✅ | ✅ | ✅ |
 | `sono_un_figlio_a_carico` | ✅ | ✅ | ✅ | ✅ |
 | `importo_lordo_massimale` | — | ✅ | ✅ | ✅ |
+| `citta` | ✅ required | ✅ | ✅ (admin only) | ❌ read-only |
+| `materie_insegnate` | ✅ required (≥1) | ✅ (≥1) | ✅ (admin only) | ❌ read-only |
 | `email` | — | ✅ (via auth API) | — | ❌ |
 | `foto_profilo_url` | — | ✅ (avatar upload) | — | ✅ (own avatar via dashboard) |
 | `community_ids` | — | ✅ (PATCH /api/profile/communities, ≥1 required) | ❌ | ❌ |
