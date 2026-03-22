@@ -173,7 +173,7 @@ export default function ApprovazioniCompensazioni({
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-destructive hover:bg-destructive/90 text-white"
+            variant="destructive"
           >
             {isDeleting ? 'Eliminazione...' : 'Elimina'}
           </AlertDialogAction>

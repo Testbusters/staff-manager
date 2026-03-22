@@ -152,7 +152,7 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              variant="destructive"
             >
               {isDeleting ? 'Eliminazione...' : 'Elimina'}
             </AlertDialogAction>

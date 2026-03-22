@@ -431,7 +431,7 @@ export default function MemberStatusManager() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPendingStatus(null)}>Annulla</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 text-white"
+              variant="destructive"
               onClick={confirmDowngrade}
             >
               Conferma
