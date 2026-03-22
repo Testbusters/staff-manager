@@ -5,6 +5,12 @@ on:
     branches:
       - main
       - staging
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to mirror (main or staging)
+        required: true
+        default: main
 
 jobs:
   mirror:
@@ -22,4 +28,4 @@ jobs:
           MIRROR_TOKEN: ${{ secrets.PERSONAL_MIRROR_PAT }}
         run: |
           git remote add personal-mirror "https://marcoguillermaz:${MIRROR_TOKEN}@github.com/marcoguillermaz/staff-manager.git"
-          git push personal-mirror ${{ github.ref_name }} --force
+          git push personal-mirror ${{ github.ref_name || inputs.branch }} --force
