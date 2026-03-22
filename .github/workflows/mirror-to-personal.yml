@@ -16,6 +16,8 @@ jobs:
           fetch-depth: 0
 
       - name: Push to personal mirror
+        env:
+          MIRROR_TOKEN: ${{ secrets.PERSONAL_MIRROR_PAT }}
         run: |
-          git remote add personal-mirror https://x-access-token:${{ secrets.PERSONAL_MIRROR_PAT }}@github.com/marcoguillermaz-spec/staff-manager.git
-          git push personal-mirror ${{ github.ref_name }} --force
+          git remote add personal-mirror https://github.com/marcoguillermaz-spec/staff-manager.git
+          git -c "http.extraHeader=Authorization: Bearer ${MIRROR_TOKEN}" push personal-mirror ${{ github.ref_name }} --force
