@@ -10,6 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import CompensationEditModal from './CompensationEditModal';
 import { toast } from 'sonner';
 
@@ -35,9 +45,34 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const canEdit =
     (role === 'amministrazione' || role === 'responsabile_compensi') &&
     stato === 'IN_ATTESA';
+
+  const canDelete = role === 'responsabile_compensi' && stato === 'IN_ATTESA';
+
+  async function handleDelete() {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/compensations/${compensationId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? "Errore durante l'eliminazione");
+      } else {
+        toast.success('Compenso eliminato');
+        router.push('/approvazioni');
+      }
+    } catch {
+      toast.error('Errore di rete');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  }
 
   const perform = async (action: CompensationAction, extra?: Record<string, unknown>) => {
     setLoading(action);
@@ -82,7 +117,7 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
     actions.push({ action: 'reopen', label: 'Riapri', variant: 'secondary', onClick: () => perform('reopen') });
   }
 
-  if (actions.length === 0 && !canEdit) return null;
+  if (actions.length === 0 && !canEdit && !canDelete) return null;
 
   return (
     <>
@@ -98,6 +133,15 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
                 disabled={loading !== null}
               >
                 Modifica
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={loading !== null}
+              >
+                Elimina
               </Button>
             )}
             {actions.map((a) => (
@@ -156,6 +200,30 @@ export default function ActionPanel({ compensationId, stato, role, compensation 
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete modal */}
+      <AlertDialog open={showDeleteModal} onOpenChange={(open) => { if (!open) setShowDeleteModal(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina compenso</AlertDialogTitle>
+            <AlertDialogDescription>
+              Stai per eliminare questo compenso
+              {compensation.nome_servizio_ruolo ? ` — ${compensation.nome_servizio_ruolo}` : ''}.
+              Questa operazione è irreversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              {isDeleting ? 'Eliminazione...' : 'Elimina'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit modal */}
       <CompensationEditModal

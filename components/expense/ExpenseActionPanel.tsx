@@ -10,6 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 interface ExpenseActionPanelProps {
@@ -29,6 +39,10 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
   // Mark liquidated modal
   const [showLiquidatedModal, setShowLiquidatedModal] = useState(false);
   const [paymentReference, setPaymentReference] = useState('');
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const perform = async (action: ExpenseAction, extra?: Record<string, unknown>) => {
     setLoading(action);
@@ -57,6 +71,27 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
     onClick: () => void;
   }> = [];
 
+  const canDelete = role === 'responsabile_compensi' && stato === 'IN_ATTESA';
+
+  async function handleDelete() {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/expenses/${expenseId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? "Errore durante l'eliminazione");
+      } else {
+        toast.success('Rimborso eliminato');
+        router.push('/approvazioni?tab=rimborsi');
+      }
+    } catch {
+      toast.error('Errore di rete');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  }
+
   // responsabile_compensi cannot approve, reject, or liquidate — admin only
   if (role !== 'responsabile_compensi') {
     if (canExpenseTransition(role, stato, 'approve').ok) {
@@ -70,7 +105,7 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
     }
   }
 
-  if (actions.length === 0) return null;
+  if (actions.length === 0 && !canDelete) return null;
 
   return (
     <>
@@ -79,6 +114,15 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Azioni</p>
 
           <div className="flex flex-wrap gap-2">
+            {canDelete && (
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={loading !== null}
+              >
+                Elimina
+              </Button>
+            )}
             {actions.map((a) => (
               <Button
                 key={a.action}
@@ -93,6 +137,28 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete modal */}
+      <AlertDialog open={showDeleteModal} onOpenChange={(open) => { if (!open) setShowDeleteModal(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina rimborso</AlertDialogTitle>
+            <AlertDialogDescription>
+              Stai per eliminare questo rimborso. Questa operazione è irreversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              {isDeleting ? 'Eliminazione...' : 'Elimina'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Reject modal */}
       <Dialog open={showRejectModal} onOpenChange={(v) => { if (!v) { setShowRejectModal(false); setRejectNote(''); } }}>
