@@ -32,6 +32,9 @@
 | Edit data_ingresso | ❌ | ❌ | ✅ | Admin-only |
 | Edit tipo_contratto | ❌ | ❌ | ✅ | Admin-only |
 | Edit importo_lordo_massimale | ✅* | ✅* | ✅ | Collab/resp: own record only via profile API |
+| Edit citta | ✅ | ❌ | ✅ | Self-edit (/api/profile) and admin (/api/admin/collaboratori/[id]/profile). Resp: read-only |
+| Edit materie_insegnate | ✅ | ❌ | ✅ | Self-edit (/api/profile) and admin (/api/admin/collaboratori/[id]/profile). Resp: read-only. Min 1 required |
+| Manage lookup_options (città/materie lists) | ❌ | ❌ | ✅ | Admin-only via /api/admin/lookup-options. GET available to all authenticated |
 | Invite (create) new user | ❌ | ❌ | ✅ | Invite-only flow, email+password shown in UI |
 | Deactivate / change member_status | ❌ | ❌ | ✅ | Includes uscente_con_compenso / uscente_senza_compenso |
 | Reset password | ❌ | ❌ | ✅ | Via admin panel |

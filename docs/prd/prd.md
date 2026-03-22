@@ -159,8 +159,9 @@ FR-PROF-03: After onboarding, the system shall allow collaboratori to self-edit 
 FR-PROF-04: The system shall restrict access to the IBAN and payment account holder name fields to the collaboratore (own record only) and the Amministrazione. The Responsabile Compensi may not read or modify these fields.
 FR-PROF-05: The system shall enforce a unique, immutable username per collaborator. The username serves as the lookup key in all bulk compensation import operations.
 FR-PROF-06: The system shall associate each collaborator with exactly one community. Community assignment is managed exclusively by the Amministrazione.
-FR-PROF-07: The system shall allow the Responsabile Compensi to view and edit the profile fields of collaborators belonging to their assigned community, with the exception of IBAN, payment account holder name, contract start date, and contract type.
-FR-PROF-08: The system shall allow the Amministrazione to manage all profile fields for any collaborator, including fiscal details, payment information, contract start date, and contract type.
+FR-PROF-07: The system shall allow the Responsabile Compensi to view and edit the profile fields of collaborators belonging to their assigned community, with the exception of IBAN, payment account holder name, contract start date, contract type, città, and materie insegnate.
+FR-PROF-08: The system shall allow the Amministrazione to manage all profile fields for any collaborator, including fiscal details, payment information, contract start date, contract type, città, and materie insegnate.
+FR-PROF-09: The profile shall capture the collaboratore's city of teaching activity (città) and the subjects they teach (materie insegnate). Both fields are mandatory at onboarding and during self-edit. Valid values are managed by the Amministrazione via a community-specific lookup table (lookup_options) and vary between Testbusters and Peer4Med communities. The Responsabile Compensi may read but not modify these fields.
 
 ### 9. Compensation Management
 The compensation module manages the complete lifecycle of payment records from initial creation through to final liquidation. A compensation represents a payment due to a collaboratore for work performed within a defined competency area — such as training delivery, content production, or other contractually defined activities.
