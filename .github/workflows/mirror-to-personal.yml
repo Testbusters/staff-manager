@@ -19,5 +19,5 @@ jobs:
         env:
           MIRROR_TOKEN: ${{ secrets.PERSONAL_MIRROR_PAT }}
         run: |
-          git remote add personal-mirror https://github.com/marcoguillermaz/staff-manager.git
-          git -c "http.extraHeader=Authorization: Bearer ${MIRROR_TOKEN}" push personal-mirror ${{ github.ref_name }} --force
+          git remote add personal-mirror "https://marcoguillermaz:${MIRROR_TOKEN}@github.com/marcoguillermaz/staff-manager.git"
+          git push personal-mirror ${{ github.ref_name }} --force
