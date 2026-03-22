@@ -36,6 +36,7 @@ export default async function ProfiloPage({
         comune, provincia_residenza, data_ingresso,
         telefono, indirizzo, civico_residenza, iban, intestatario_pagamento, tshirt_size,
         foto_profilo_url, sono_un_figlio_a_carico, importo_lordo_massimale,
+        citta, materie_insegnate,
         collaborator_communities ( communities ( id, name ) )
       `)
       .eq('user_id', user.id)
@@ -65,6 +66,9 @@ export default async function ProfiloPage({
   );
 
   const allCommunities = (allCommunitiesData ?? []) as { id: string; name: string }[];
+
+  // Derive community slug for lookup_options API
+  const communitySlug = communities[0]?.name?.toLowerCase().replace(/\s+/g, '') ?? 'testbusters';
 
   const role = profile?.role ?? '';
   if (role === 'responsabile_compensi') redirect('/');
@@ -98,6 +102,7 @@ export default async function ProfiloPage({
           collaborator={collaborator ?? null}
           role={role}
           email={user.email ?? ''}
+          community={communitySlug}
           communities={communities}
           allCommunities={allCommunities}
           guidaFigli={guidaFigliRow ?? null}
@@ -126,6 +131,7 @@ export default async function ProfiloPage({
             collaborator={collaborator ?? null}
             role={role}
             email={user.email ?? ''}
+            community={communitySlug}
             communities={communities}
             allCommunities={allCommunities}
             guidaFigli={guidaFigliRow ?? null}

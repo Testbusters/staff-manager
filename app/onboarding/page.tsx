@@ -25,11 +25,24 @@ export default async function OnboardingPage() {
 
   const { data: collab } = await admin
     .from('collaborators')
-    .select('nome, cognome, username, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, telefono, iban, intestatario_pagamento, tshirt_size, sono_un_figlio_a_carico, tipo_contratto')
+    .select('id, nome, cognome, username, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, telefono, iban, intestatario_pagamento, tshirt_size, sono_un_figlio_a_carico, tipo_contratto')
     .eq('user_id', user.id)
     .maybeSingle();
 
   const tipoContratto = (collab?.tipo_contratto ?? null) as ContractTemplateType | null;
+
+  // Fetch community slug for lookup_options
+  let communitySlug = 'testbusters';
+  if (collab?.id) {
+    const { data: ccData } = await admin
+      .from('collaborator_communities')
+      .select('communities(name)')
+      .eq('collaborator_id', collab.id)
+      .maybeSingle();
+    const rawComm = ccData?.communities as { name: string } | { name: string }[] | null | undefined;
+    const commName = (Array.isArray(rawComm) ? rawComm[0]?.name : rawComm?.name) ?? '';
+    if (commName) communitySlug = commName.toLowerCase().replace(/\s+/g, '');
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -42,6 +55,7 @@ export default async function OnboardingPage() {
           prefill={collab ?? null}
           tipoContratto={tipoContratto}
           tipoLabel={tipoContratto ? CONTRACT_TEMPLATE_LABELS[tipoContratto] : null}
+          community={communitySlug}
         />
       </div>
     </div>

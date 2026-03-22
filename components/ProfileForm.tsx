@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Check, AlertTriangle, ChevronDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS } from '@/lib/types';
@@ -36,14 +36,19 @@ type Collaborator = {
   foto_profilo_url: string | null;
   sono_un_figlio_a_carico: boolean;
   importo_lordo_massimale: number | null;
+  citta: string | null;
+  materie_insegnate: string[] | null;
 };
 
 type GuideContent = { titolo: string; descrizione: string | null } | null;
+
+type LookupOption = { id: string; nome: string };
 
 type Props = {
   collaborator: Collaborator | null;
   role: string;
   email: string;
+  community: string;
   communities: { id: string; name: string }[];
   allCommunities: { id: string; name: string }[];
   guidaFigli: GuideContent;
@@ -96,7 +101,7 @@ function GuideBox({ guide }: { guide: GuideContent }) {
   );
 }
 
-export default function ProfileForm({ collaborator, role, email, communities, allCommunities, guidaFigli }: Props) {
+export default function ProfileForm({ collaborator, role, email, community, communities, allCommunities, guidaFigli }: Props) {
   // Editable personal data
   const [emailVal, setEmailVal]       = useState(email);
   const [nome, setNome]               = useState(collaborator?.nome ?? '');
@@ -130,12 +135,30 @@ export default function ProfileForm({ collaborator, role, email, communities, al
     communities[0]?.id ?? '',
   );
 
+  // Activity — città + materie
+  const [citta, setCitta]                   = useState(collaborator?.citta ?? '');
+  const [materieInsegnate, setMaterieInsegnate] = useState<string[]>(collaborator?.materie_insegnate ?? []);
+  const [cittaOptions, setCittaOptions]     = useState<LookupOption[]>([]);
+  const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
+
   const [loading, setLoading]           = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const comm = community || 'testbusters';
+    fetch(`/api/lookup-options?type=citta&community=${comm}`)
+      .then((r) => r.json()).then((d) => setCittaOptions(d.options ?? [])).catch(() => {});
+    fetch(`/api/lookup-options?type=materia&community=${comm}`)
+      .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
+  }, [community]);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!citta) { toast.error('Seleziona la tua città.'); return; }
+    if (materieInsegnate.length === 0) { toast.error('Seleziona almeno una materia insegnata.'); return; }
+
     setLoading(true);
 
     const emailTrimmed = emailVal.trim().toLowerCase();
@@ -160,6 +183,8 @@ export default function ProfileForm({ collaborator, role, email, communities, al
         tshirt_size:               tshirt || null,
         sono_un_figlio_a_carico:   sonoFiglio,
         importo_lordo_massimale:   massimale !== '' ? parseFloat(massimale) : null,
+        citta,
+        materie_insegnate:         materieInsegnate,
       }),
     });
 
@@ -625,6 +650,64 @@ export default function ProfileForm({ collaborator, role, email, communities, al
         </div>
       </div>
 
+
+      {/* Attività — città + materie */}
+      <div className={sectionCls}>
+        <div className={sectionHeader}>
+          <h2 className="text-sm font-medium text-foreground">Attività</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Città e materie che insegni.</p>
+        </div>
+        <div className="p-5 space-y-5">
+          <div>
+            <label className={labelCls}>
+              Città <span className="text-destructive">*</span>
+            </label>
+            <Select value={citta || undefined} onValueChange={setCitta} disabled={loading}>
+              <SelectTrigger>
+                <SelectValue placeholder="— Seleziona città —" />
+              </SelectTrigger>
+              <SelectContent>
+                {cittaOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className={labelCls}>
+              Materie insegnate <span className="text-destructive">*</span>
+            </label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {materiaOptions.map((opt) => {
+                const active = materieInsegnate.includes(opt.nome);
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={loading}
+                    onClick={() =>
+                      setMaterieInsegnate((prev) =>
+                        active ? prev.filter((m) => m !== opt.nome) : [...prev, opt.nome],
+                      )
+                    }
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                      active
+                        ? 'bg-brand text-white border-brand'
+                        : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                    }`}
+                  >
+                    {opt.nome}
+                  </button>
+                );
+              })}
+            </div>
+            {materieInsegnate.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1.5">Seleziona almeno una materia.</p>
+            )}
+          </div>
+        </div>
+      </div>
 
       <Button
         type="submit"

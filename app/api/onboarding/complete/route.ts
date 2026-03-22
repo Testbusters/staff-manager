@@ -26,6 +26,8 @@ const schema = z.object({
   tshirt_size:         z.string().min(1),
   sono_un_figlio_a_carico:   z.boolean(),
   importo_lordo_massimale:   z.number().min(0).max(5000).nullable().optional(),
+  citta:                     z.string().min(1),
+  materie_insegnate:         z.array(z.string().min(1)).min(1),
 });
 
 
@@ -92,6 +94,8 @@ export async function POST(request: Request) {
     tshirt_size:               d.tshirt_size,
     sono_un_figlio_a_carico:   d.sono_un_figlio_a_carico,
     importo_lordo_massimale:   d.importo_lordo_massimale ?? null,
+    citta:                     d.citta,
+    materie_insegnate:         d.materie_insegnate,
   };
 
   if (existingCollab) {
