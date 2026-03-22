@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Wallet } from 'lucide-react';
+import { Trash2, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { Compensation, CompensationStatus } from '@/lib/types';
 import { COMPENSATION_STATUS_LABELS } from '@/lib/types';
@@ -10,6 +12,17 @@ import StatusBadge from './StatusBadge';
 import ImportSection from './ImportSection';
 import { Card, CardContent } from '@/components/ui/card';
 import { DataTable, type ColumnDef } from '@/components/ui/data-table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 type CompensationRow = Compensation & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -55,8 +68,11 @@ export default function ApprovazioniCompensazioni({
   compensations: CompensationRow[];
   kpi: Kpi;
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [filterStato, setFilterStato] = useState<CompensationStatus | 'ALL'>('ALL');
+  const [toDelete, setToDelete] = useState<CompensationRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = compensations
     .filter((c) => filterStato === 'ALL' || c.stato === filterStato)
@@ -66,6 +82,26 @@ export default function ApprovazioniCompensazioni({
       const name = `${c.collaborators?.nome ?? ''} ${c.collaborators?.cognome ?? ''}`.toLowerCase();
       return name.includes(q);
     });
+
+  async function handleDelete() {
+    if (!toDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/compensations/${toDelete.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? 'Errore durante l\'eliminazione');
+      } else {
+        toast.success('Compenso eliminato');
+        router.refresh();
+      }
+    } catch {
+      toast.error('Errore di rete');
+    } finally {
+      setIsDeleting(false);
+      setToDelete(null);
+    }
+  }
 
   const columns: ColumnDef<CompensationRow>[] = [
     {
@@ -98,9 +134,52 @@ export default function ApprovazioniCompensazioni({
       header: 'Stato',
       cell: ({ row }) => <StatusBadge stato={row.original.stato} />,
     },
+    {
+      id: 'azioni',
+      header: '',
+      cell: ({ row }) =>
+        row.original.stato === 'IN_ATTESA' ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Elimina compenso"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={(e) => { e.preventDefault(); setToDelete(row.original); }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : null,
+    },
   ];
 
+  const deleteName = toDelete?.collaborators
+    ? `${toDelete.collaborators.nome} ${toDelete.collaborators.cognome}`
+    : 'questo collaboratore';
+
   return (
+    <>
+    <AlertDialog open={!!toDelete} onOpenChange={(open) => { if (!open) setToDelete(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Elimina compenso</AlertDialogTitle>
+          <AlertDialogDescription>
+            Stai per eliminare il compenso di <strong>{deleteName}</strong>
+            {toDelete?.nome_servizio_ruolo ? ` — ${toDelete.nome_servizio_ruolo}` : ''}.
+            Questa operazione è irreversibile.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Annulla</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive hover:bg-destructive/90 text-white"
+          >
+            {isDeleting ? 'Eliminazione...' : 'Elimina'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <div className="space-y-6">
       {/* KPI cards — 3 unified cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -176,5 +255,6 @@ export default function ApprovazioniCompensazioni({
         </Card>
       )}
     </div>
+    </>
   );
 }
