@@ -19,6 +19,7 @@ import { getCorsoStato } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
 import CorsiFilterBar from '@/components/corsi/CorsiFilterBar';
+import CorsiListCollab from '@/components/corsi/CorsiListCollab';
 
 const STATO_BADGE: Record<CorsoStato, string> = {
   programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -44,8 +45,69 @@ export default async function CorsiPage({
   if (!profile?.is_active) redirect('/pending');
   const role = profile.role as string;
 
-  // collaboratore → redirect to coming soon until corsi-2
-  if (role === 'collaboratore') redirect('/');
+  // collaboratore → show own community corsi list
+  if (role === 'collaboratore') {
+    const svc = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    const { data: collab } = await svc
+      .from('collaborators')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    const { data: collabCommunity } = collab
+      ? await svc
+          .from('collaborator_communities')
+          .select('community_id')
+          .eq('collaborator_id', collab.id)
+          .single()
+      : { data: null };
+
+    if (!collabCommunity?.community_id) {
+      return (
+        <div className="p-6">
+          <EmptyState
+            icon={GraduationCap}
+            title="Nessun corso disponibile"
+            description="Non sei ancora associato a una community."
+          />
+        </div>
+      );
+    }
+
+    const communityId = collabCommunity.community_id;
+
+    const { data: community } = await svc
+      .from('communities')
+      .select('name')
+      .eq('id', communityId)
+      .single();
+
+    const { data: corsiRaw } = await svc
+      .from('corsi')
+      .select('*')
+      .eq('community_id', communityId)
+      .order('data_inizio', { ascending: true });
+
+    const corsi = (corsiRaw ?? [])
+      .map((c) => ({ ...c, stato: getCorsoStato(c.data_inizio, c.data_fine) as CorsoStato }))
+      .filter((c) => c.stato !== 'concluso');
+
+    return (
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold text-foreground">Corsi</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Corsi disponibili per {community?.name ?? 'la tua community'}.
+          </p>
+        </div>
+        <CorsiListCollab corsi={corsi} />
+      </div>
+    );
+  }
 
   // responsabile_cittadino → placeholder until corsi-3
   if (role === 'responsabile_cittadino') {

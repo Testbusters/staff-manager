@@ -494,3 +494,23 @@ export interface BlacklistEntry {
   created_at: string;
   collaborator?: { username: string | null; nome: string | null; cognome: string | null };
 }
+
+export interface Candidatura {
+  id: string;
+  tipo: CandidaturaTipo;
+  lezione_id: string | null;
+  corso_id: string | null;
+  collaborator_id: string | null;
+  city_user_id: string | null;
+  stato: CandidaturaStato;
+  created_at: string;
+}
+
+export interface Assegnazione {
+  id: string;
+  lezione_id: string;
+  collaborator_id: string;
+  ruolo: AssegnazioneRuolo;
+  valutazione: number | null;
+  created_at: string;
+}

@@ -244,7 +244,9 @@ FR-CORSI-04: The system shall display corsi in a filterable list (by community, 
 FR-CORSI-05: The system shall allow the Amministrazione to manage a blacklist of collaboratori who are barred from teaching assignments. Only one blacklist entry per collaboratore is permitted.
 FR-CORSI-06: The system shall allow the Amministrazione to manage global attachment files (allegati globali) of two types — docenza and cocoda — one per community, available for download by all authenticated users.
 FR-CORSI-07: The Responsabile Cittadino role shall have a dedicated navigation structure for the Corsi section. The specific page access and actions for this role are defined in subsequent blocks (corsi-3).
-FR-CORSI-08: Collaboratori shall be able to view and apply for available teaching roles in subsequent blocks (corsi-2).
+FR-CORSI-08: Collaboratori shall be able to view corsi available in their own community (stato: programmato or attivo) and submit candidature for individual lezioni as Docente or Q&A. Candidature in stato in_attesa may be withdrawn by the collaboratore at any time.
+FR-CORSI-09: Collaboratori on the blacklist shall be able to view the Corsi section but all candidatura submission actions shall be disabled, with a visible notice explaining the restriction.
+FR-CORSI-10: When a collaboratore has been assigned to a lezione (via assegnazioni), this shall be displayed as a badge in the lezioni view. Assigned collaboratori cannot submit new candidature for the same lezione.
 
 ## Part IV — Cross-Cutting Features
 ### 14. User Management & Onboarding
@@ -329,6 +331,7 @@ Rationale: Stakeholders and team members need a navigable, readable document tha
 Impact: The development pipeline includes a synchronisation step in Phase 8 that updates this document when significant product changes are made.
 
 ## Part VII — Changelog
+2026-03-22  |  v1.6  |  Block corsi-2 (Collaboratore View + Candidature): updated FR-CORSI-08 (collaboratore can view community corsi and submit/withdraw candidature); added FR-CORSI-09 (blacklist restricts candidature submission with visible notice) and FR-CORSI-10 (assegnazioni displayed as badge in lezioni view). Migration 056: RLS policies for collaboratore candidature INSERT + UPDATE (withdraw only).
 2026-03-22  |  v1.5  |  Block corsi-1 (Foundation + Admin CRUD): added §13b Course Management (FR-CORSI-01 through FR-CORSI-08). New DB tables: corsi, lezioni, assegnazioni, candidature, blacklist, allegati_globali. Admin CRUD for corsi/lezioni; blacklist and allegati_corsi in /impostazioni. Responsabile Cittadino nav defined. Collab + resp.cittadino views deferred to corsi-2/corsi-3.
 2026-03-22  |  v1.4  |  Delete IN_ATTESA: added FR-COMP-11 (responsabile_compensi can delete pending compensations with confirmation dialog, list + detail touchpoints) and FR-REIMB-08 (same capability for reimbursements).
 2026-03-21  |  v1.3  |  Block Banner: added FR-SET-06 (community-specific dismissable banner for collaboratori — rich text, optional CTA link with new-tab option, localStorage-versioned dismiss, admin-managed per community in /impostazioni).
