@@ -9,6 +9,7 @@ on:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    if: github.repository == 'Testbusters/staff-manager'
     steps:
       - name: Checkout full history
         uses: actions/checkout@v4
