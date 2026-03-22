@@ -4,13 +4,12 @@ CRITICAL: these are non-negotiable process constraints. They apply to EVERY deve
 
 ## Which pipeline to use
 
-| Work type | Branch prefix | Pipeline |
+| Work type | Branch / worktree | Pipeline |
 |---|---|---|
-| Functional block (new feature, redesign, migration) | `feature/block-name` | Full pipeline — Phases 0 → 8.5 |
+| Functional block (new feature, redesign, migration) | worktree `worktree-block-name` | Full pipeline — Phases 0 → 8.5 |
 | Mini fix / bugfix / 1–3 file correction | `fix/description` | **Fast Lane** — see section below |
-| Worktree block (parallel development) | `worktree-block-name` | Full pipeline — with worktree-specific rules in Cross-Cutting |
 
-The branch prefix determines which pipeline Claude follows automatically. If the current branch starts with `fix/`, use the Fast Lane. Otherwise, use the full pipeline.
+All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, branch `worktree-block-name`). If the current context is a `fix/` branch, use the Fast Lane. Otherwise, use the full pipeline with worktree setup.
 
 ---
 
@@ -25,7 +24,16 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 - Check `MEMORY.md` (project root): read the **Active plan** section (if present) to re-align on in-progress sessions, then **Lessons/Patterns** for patterns relevant to the current block. The auto-memory is injected automatically — no explicit read needed.
 - If context was compressed (summary): read `docs/implementation-checklist.md` to re-align on current state.
 - Do not re-read files already in the current context — use the already-acquired line reference.
-- **Branch check**: run `git branch --show-current`. If the result is `main` or `staging`, stop immediately — do NOT start development on those branches. Instruct the user to run `sm-start block-name` from iTerm (or `git checkout staging && git pull && git checkout -b feature/block-name`) before proceeding. Development always starts on a `feature/block-name` branch.
+- **Worktree setup** *(functional blocks — skip for Fast Lane `fix/` branches)*:
+  1. **Propose name**: use `AskUserQuestion` to propose a worktree name in the format `worktree-[block-name]` and wait for explicit user approval. Do NOT create the worktree before the name is confirmed.
+  2. **Create worktree**: `git -C ~/Projects/staff-manager worktree add .claude/worktrees/[block-name] -b worktree-[block-name] staging`
+  3. **Environment setup** (mandatory, in this order):
+     - `cp ~/.envs/staff-manager.staging.env ~/Projects/staff-manager/.claude/worktrees/[block-name]/.env.local`
+     - `cp ~/Projects/staff-manager/CLAUDE.md ~/Projects/staff-manager/.claude/worktrees/[block-name]/`
+     - If `.claude/CLAUDE.local.md` exists: `cp ~/Projects/staff-manager/.claude/CLAUDE.local.md ~/Projects/staff-manager/.claude/worktrees/[block-name]/.claude/`
+     - `node_modules` and `.next` are **auto-symlinked** by `EnterWorktree` via `settings.json` (`worktree.symlinkDirectories`). No manual `ln -s` needed.
+  4. **Enter worktree**: use the `EnterWorktree` tool to switch the active context to the new worktree directory. All subsequent file operations run inside the worktree.
+- **For Fast Lane (`fix/`)**: confirm current branch starts with `fix/`. If on `main` or `staging`: stop — instruct user to run `sm-fix description`. No worktree needed.
 
 **Phase 1 — Requirements**
 - **Rename session file**: at the start of Phase 1, once the block name is determined, rename `.claude/session/block-new-session.md` → `.claude/session/block-[name].md`. If the file was already named correctly (resumed session), skip this step.
@@ -35,8 +43,40 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 - Check `docs/refactoring-backlog.md`: if there are entries that intersect the current block, include them in the work plan or flag them explicitly.
 - **Consult `docs/entity-manifest.md`**: for any block touching a domain entity (profile, compensation, reimbursement, document, ticket, content), look up the entity and read its linked contract file in `docs/contracts/`. Every surface and entry point listed there is a mandatory candidate for the file list. This is a **functional** dependency check — distinct from and complementary to the code-level scan below. If the block introduces a brand-new entity (new DB table + CRUD surface), propose creating a new contract file in `docs/contracts/` and a new entry in `entity-manifest.md` before proceeding to Phase 1.5.
 - **Consult `docs/prd/01-rbac-matrix.md`**: for any block touching role permissions, RBAC rules, member_status restrictions, or adding a new role/entity. The matrix is the cross-cutting authority — entity contracts describe field-level detail, the RBAC matrix is the role-level overview.
-- Summarize the block's requirements concisely.
-- **Dependency scan** (mandatory when the block touches existing routes, components, or pages — cannot be skipped): before declaring the file list, grep/glob for ALL usages of affected entities. Minimum checks:
+- Summarize the block's requirements concisely based on the doc reads above.
+- **Scope confirmation gate — always mandatory**: apply the **Interaction Protocol** (CLAUDE.md § Plan-then-Confirm) using the structured sweep below. First, select the tier based on block signals from the doc reads, declare it explicitly, and allow the user to override before proceeding.
+
+  **Tier selection (auto, after doc reads):**
+  - **Tier 1 — Standard Sweep**: ≤5 files, single entity, no migration, no new pattern, no cross-role change.
+  - **Tier 2 — EARS + Deep Sweep**: >5 files, OR new entity, OR migration, OR multi-role change, OR new integration, OR full redesign.
+
+  Work through every dimension of the selected tier. Note "clear" if no ambiguity; include open items in the `AskUserQuestion` call. The user — not Claude — declares when the scope is complete. Do NOT proceed to the dependency scan until an execution keyword is received.
+
+  **Tier 1 — Standard Sweep:**
+  - **Roles & permissions**: which roles are in scope? Any implicit inclusion or exclusion?
+  - **Data**: entities read/written? Cascading effects? Silent data loss possible?
+  - **Triggers**: what user action or system event activates this? Any secondary trigger?
+  - **Error conditions**: invalid input, missing data, concurrent edits — behavior defined?
+  - **UI states**: empty, error, loading covered?
+  - **Integrations**: emails, notifications, external systems affected?
+  - **Reversibility**: any irreversible operation? Rollback path defined?
+  - **Explicit exclusions**: what is NOT being done that a reader might assume is included?
+
+  **Tier 2 — EARS + Deep Sweep:**
+  - **Triggers** `WHEN`: what event activates this? Secondary or implicit triggers?
+  - **Conditions** `IF/THEN`: what preconditions change behavior? Edge cases, concurrent edits?
+  - **States** `WHILE`: which entity states (`member_status`, record status) or user states (role, onboarding) affect behavior? All combinations covered?
+  - **Optional / role-gated** `WHERE`: what is conditional on role, community, or config? Role-specific variations not stated?
+  - **Roles & permissions**: any permission edge case (`uscente`, responsabile community mismatch)?
+  - **Data**: entities read/written? Cascading effects? Silent data loss possible?
+  - **UI states**: empty, error, loading, dark/light mode?
+  - **Integrations**: emails, notifications, GSheets, external systems triggered or suppressed?
+  - **Reversibility**: any irreversible operation? Rollback path defined?
+  - **Explicit exclusions**: what is NOT being done that a reader might assume is included?
+  - **Pre-mortem**: if this plan fails in Phase 2 due to scope ambiguity, what ambiguity caused it?
+
+  Compose one `AskUserQuestion` with all open items across dimensions.
+- **Dependency scan** (mandatory when the block touches existing routes, components, or pages — runs only after scope is confirmed): grep/glob for ALL usages of affected entities. Minimum checks:
   0. **Consult `docs/dependency-map.md` first**: look up the entity being modified. Every listed surface is a mandatory candidate for the file list. If the entity is not listed, add it to the map before proceeding.
   1. Every route being moved/repurposed/removed → `grep href="/route"` across all `.tsx`/`.ts`
   2. Every component being modified → find all import consumers
@@ -47,17 +87,15 @@ The branch prefix determines which pipeline Claude follows automatically. If the
   - **Always delegate the full dependency scan to the `dependency-scanner` custom agent** (`.claude/agents/dependency-scanner.md`) — the standard checklist (items 1–6) is inherently multi-query and must never run in the main context. Invoke via `Agent tool` with `subagent_type: "dependency-scanner"`. Fallback: generic Explore subagent with `model: "haiku"`.
   - An incomplete dependency scan = incomplete file list = rework discovered in Phase 2. This is a process error.
 - For broad codebase searches (≥2 independent Glob/Grep queries): use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context and reduce cost.
-- **All clarification questions must use the `AskUserQuestion` tool** — never present open questions as inline text. Group all questions for the block into a single `AskUserQuestion` call and resolve them before the STOP gate.
-- Expected output: feature summary, **complete** file list verified by dependency scan, open questions.
-- **Scope confirmation gate**: if the requirements were presented as a rough perimeter, or the user explicitly said not to start planning until the scope is confirmed, use `AskUserQuestion` to ask "Il perimetro del blocco è completo?" before presenting the summary. Do NOT present the final plan until the user confirms yes.
-- *** STOP — present requirements summary and file list. Wait for explicit confirmation before proceeding. ***
+- Expected output: feature summary, **complete** file list verified by dependency scan.
+- *** STOP — present requirements summary and file list. Any residual questions that emerged from the scan must be included here, not in a new `AskUserQuestion` call. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding. ***
 
 **Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or touching >5 files)*
 - Present a design outline: data flow, data structures involved, main trade-offs.
 - State any discarded alternatives and rationale.
 - For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
 - **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
-- *** STOP — wait for design confirmation before writing code. ***
+- *** STOP — wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before writing code. ***
 
 **Phase 1.6 — Visual & UX Design** *(MANDATORY for any block with UI/UX impact — cannot be skipped)*
 
@@ -76,10 +114,9 @@ The branch prefix determines which pipeline Claude follows automatically. If the
    - Empty states and loading states
    - Mobile breakpoint if relevant
 
-2. **Design context + HTML preview** *(optional)* — Three paths, in order of preference:
+2. **Design context + HTML preview** *(optional)* — Two paths, in order of preference:
    - **Path A — Figma MCP**: use `get_variable_defs` on the Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`) to pull real design tokens, then generate the component with `frontend-design`. This produces code aligned with the actual design system.
    - **Path B — frontend-design standalone**: `frontend-design` skill → self-contained HTML (inline Tailwind CDN) → iterate in-session. Use when Figma context is not needed.
-   - **Path C — v0.dev**: `npx v0@latest add https://v0.dev/t/[id]` → adapt props, remove mock data, wire real APIs. Use for complex interactive components not easily generated inline. Output is reference only — rewrite following project conventions.
    Either way: approved preview = visual contract for Phase 2; generated code is reference only.
 
 3. **UX rationale** — for each layout decision, state explicitly:
@@ -89,30 +126,17 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 
 4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
 
-5. **STOP — present wireframe (+ CodePen link or description if HTML preview was used) + UX rationale + component map. Wait for explicit approval before proceeding to Phase 2. The approved wireframe/preview is the implementation contract — Phase 2 must match it.**
+5. **STOP — present wireframe (+ CodePen link or description if HTML preview was used) + UX rationale + component map. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. The approved wireframe/preview is the implementation contract — Phase 2 must match it.**
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
-- Use `EnterPlanMode` to present the complete approved plan in structured, locked form.
-- Prompt the user to enable **auto-accept edits** in the Claude Code UI before proceeding.
-- Call `ExitPlanMode` once the user confirms auto-accept is enabled.
+- Use `EnterPlanMode` to present the complete approved plan in structured, locked form. Call `ExitPlanMode` after confirmation.
 - Run `/compact` immediately to reset context and preserve enough window for the full Phase 2 implementation.
 - Phase 2 begins only after `/compact` completes.
 
 **Phase 2 — Implementation**
 - **First action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
 - Write the code. Follow the project's Coding Conventions.
-- **UI components** — MANDATORY checklist before writing any UI code:
-  1. Native HTML elements (`<button>`, `<input>`, `<select>`, `<textarea>`, modal/backdrop): check `docs/ui-components.md` and use the mapped shadcn component instead.
-  2. **Buttons with primary action**: `bg-brand hover:bg-brand/90 text-white`. Never `bg-blue-*`.
-  3. **Link-style text**: `text-link hover:text-link/80`. Never `text-blue-400` or similar hardcoded pairs.
-  4. **List row hover**: `hover:bg-muted/60`. Never lower opacity.
-  5. **Empty list states**: use `<EmptyState icon={X} title="..." />` from `@/components/ui/empty-state`. Never a bare `<p className="text-center ...">`.
-  6. **New page routes** in `app/(app)/`: create a sibling `loading.tsx` with `<Skeleton>` placeholders mirroring the page layout.
-  7. **Icon-only buttons**: always `aria-label="..."`. Pagination `‹`/`›`: `aria-label="Pagina precedente"` / `"Pagina successiva"`.
-  8. **Nav data**: icon references in `lib/nav.ts` use `iconName: string`, never `icon: LucideIcon` — Lucide components cannot cross the Server→Client serialization boundary.
-  9. **Semantic tokens only**: `bg-card`, `bg-muted`, `bg-background`, `border-border`, `text-foreground`, `text-muted-foreground`. Hardcoded `gray-*`/`slate-*`/`zinc-*` only allowed for semantic badge color pairs (e.g. `bg-green-100 text-green-700`). Never use non-existent steps like `gray-850`.
-  10. **Theme verification**: for any new UI element, toggle the sidebar theme (light ↔ dark) and confirm no visual anomalies before committing. Semantic tokens are the primary protection — any hardcoded color on structural elements will break one of the two themes.
-  Full rules in CLAUDE.md § "UI Design System — MANDATORY RULES".
+- **UI components** — follow `CLAUDE.md § "UI Design System — MANDATORY RULES"` and `CLAUDE.md § "Known Patterns"` before writing any UI code. Key: shadcn components only (no native HTML elements), semantic tokens only, `loading.tsx` for new routes, `aria-label` on icon-only buttons, `iconName: string` in nav data.
 - Do not add unrequested features. No unrequested refactoring.
 - **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the **staging DB only** (`gjwkvgfwkdwzqlvudgqr`) — use `mcp__claude_ai_Supabase__execute_sql` with `project_id: "gjwkvgfwkdwzqlvudgqr"` (preferred, no shell interpolation issues) or Node.js `https.request` as fallback. Verify with a SELECT query + add a row to `docs/migrations-log.md`. **Never apply to production (`nyajqcjqmgxctlqighql`) during development** — production migrations run exclusively in Phase 8 step 7 pre-deploy (see below). **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
@@ -162,6 +186,9 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 > Suspended for the same reason as Phase 4 above. Re-enable together with Phase 4 after Fase 9.
 
 **Phase 5b — Test data setup** *(MANDATORY — must complete before Phase 5c)*
+- **Prerequisite — dev server**:
+  - **Worktree context**: start `npm run dev` automatically on the first available port. Port detection: check `lsof -ti:3000` — if non-empty, try 3001, 3002, … until a free port is found. Start in background: `PORT=NNNN npm run dev > /tmp/staff-dev.log 2>&1 &`. Wait ~15s, then verify: `curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN` must return 200 or 302. Declare the endpoint to the user before proceeding: **"Dev server started at `http://localhost:NNNN` — use this URL for smoke test steps."**
+  - **Main repo (non-worktree)**: default port is 3000. If not already running, instruct the user to start it (`npm run dev`) before inserting fixtures.
 - Determine the test user(s) from the role scope of the block:
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
@@ -173,8 +200,10 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 - Leave test data in DB for the smoke test. Clean up after Phase 5c only if the records would break other tests.
 
 **Phase 5c — Manual smoke test** *(before the formal checklist)*
-- **Run locally — feature branches never merge to staging before Phase 8**: smoke test always runs against `http://localhost:3000` with `npm run dev` running. If the dev server is not running, instruct the user to start it first.
-- **Step 1 — smoke test on localhost**: open `http://localhost:3000` and use the staging test accounts:
+- **Run locally — feature branches never merge to staging before Phase 8**: smoke test always runs against `http://localhost:[PORT]` with `npm run dev` running.
+  - **Worktree context**: use the port detected and declared in Phase 5b (server already running). Restate the endpoint at the top of this phase: **"Smoke test endpoint: `http://localhost:NNNN`"**.
+  - **Main repo (non-worktree)**: default port 3000. If not running, instruct the user to start it first.
+- **Step 1 — smoke test on localhost**: open the declared endpoint and use the staging test accounts:
   - Collaboratore → `collaboratore_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com`
   - Admin → `admin_test@test.com`
@@ -194,6 +223,7 @@ The branch prefix determines which pipeline Claude follows automatically. If the
 - Run `/visual-audit` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
 - Run `/ux-audit` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
 - Run `/responsive-audit` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
+- **Execution order**: `/ui-audit` is static by default — launch it concurrently with the first Playwright-based skill. `/visual-audit` → `/ux-audit` → `/responsive-audit` (if applicable) must run **sequentially** — they share the MCP Playwright session and cannot run in parallel without conflicts.
 - Fix all **Critical** issues before Phase 6. Flag **Major** issues in the Phase 6 checklist with planned resolution. Log **Minor** issues in `docs/refactoring-backlog.md`.
 - Output per skill: one-paragraph summary only — do not paste full reports.
 
@@ -239,7 +269,7 @@ SELECT …;
 - path/to/file.ts — description
 ```
 
-- *** STOP — do not declare the block complete, do not update any documents, do not move to the next block until the user responds with explicit confirmation. ***
+- *** STOP — do not declare the block complete, do not update any documents, do not move to the next block until the user responds with an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`). ***
 
 **Phase 8 — Block closure**
 Only after explicit confirmation:
@@ -279,16 +309,21 @@ Only after explicit confirmation:
 4. Update `MEMORY.md` (project root) **only if** new lessons emerged that are not already documented. Avoid duplications.
    - If project-root MEMORY.md exceeds ~150 active lines: extract the topic into a separate file and replace with a link.
 5. If structural or design issues emerged: open `docs/refactoring-backlog.md`, check for duplicates, add new entries ordered by topic.
-6. **Commit sequence** — each block produces up to 3 commits, all on the `feature/block-name` branch:
+6. **Commit sequence** — each block produces up to 3 commits, all on the `worktree-[block-name]` branch:
    - **Commit 1 — code** (already done in Phase 3): source files only.
    - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b.
    - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
-7. **Branch promotion sequence** (after all commits are on `feature/` branch):
+7. **Branch promotion sequence** (after all commits are on the worktree branch):
    - **staging (requires explicit user approval)**: present the branch name and commit count, then ask: "Confermo il merge di `[branch]` su staging e il deploy su Vercel preview?" Wait for explicit yes before proceeding. Then run: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge [branch] --no-ff && git push origin staging`. Wait ~1–2 min for Vercel preview deploy; verify at `https://staff-staging.peerpetual.it`.
    - **production migrations (pre-deploy — mandatory if block has migrations)**: before running `sm-deploy`, apply every migration from this block to the production DB using `mcp__claude_ai_Supabase__execute_sql` with `project_id: "nyajqcjqmgxctlqighql"`. Read each `supabase/migrations/NNN_*.sql` file added in this block and execute it. Verify with a SELECT query. This is the **only moment** production migrations are applied — never during Phase 2.
    - **production**: run `sm-deploy` from iTerm to merge `staging → main` and trigger the production deploy on `staff.peerpetual.it`.
    - Verify the production deploy completes without errors (Vercel dashboard or direct URL check).
    - Do NOT run `git push origin main` manually — always use `sm-deploy` to ensure staging is the promotion source.
+8. **Worktree cleanup** *(functional blocks only)*:
+   - *** STOP — before cleanup: ask "Confermo eliminazione worktree `worktree-[block-name]` locale e remoto?" Wait for explicit yes before proceeding. ***
+   - Remove local worktree: `git -C ~/Projects/staff-manager worktree remove .claude/worktrees/[block-name]`
+   - Delete remote branch: `git -C ~/Projects/staff-manager push origin --delete worktree-[block-name]`
+   - Use `ExitWorktree` tool if the active context is still inside the worktree before running cleanup.
 
 **Phase 8.5 — Context file review + compact**
 After git push, before closing the session:
@@ -330,9 +365,11 @@ Branch prefix `fix/` activates this pipeline automatically.
   - If none exists: create `.claude/session/fix-[description].md` with a one-line description of the fix and the current date. This file must exist before any code is written.
 - Confirm current branch starts with `fix/`. If not, stop and instruct user to run `sm-fix description`.
 - If on `main` or `staging`: stop — same rule as Phase 0 of the full pipeline.
+- **Escalation to full pipeline**: if the fix touches a shared type or utility with >5 import consumers, stop — notify the user and escalate to the full pipeline (worktree + Phase 1 scope gate). A fix with wide-impact shared changes is not a fast-lane operation.
 
 **FL-1 — Implement**
-- No requirements STOP gate. No dependency scan (unless a shared utility is touched — then do a quick grep).
+- **Scope confirmation (compact)**: before writing any code, apply the Interaction Protocol (CLAUDE.md § Plan-then-Confirm) in compact form — state the exact files to modify, the specific change in each, and flag any irreversible operation. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding.
+- No dependency scan (unless a shared utility is touched — then do a quick grep).
 - Write the fix. Run `npx tsc --noEmit`. Run `npx vitest run`. Must be green.
 - Commit: `git add … && git commit -m "fix(scope): description"`.
 - No intermediate docs update unless `CLAUDE.md` genuinely needs a pattern correction.
@@ -355,7 +392,7 @@ Branch prefix `fix/` activates this pipeline automatically.
   - If the outcome is ambiguous (deploy not yet verified, user hasn't confirmed the fix works): ask explicitly — `"Il fix è confermato in produzione — rimuovo il file di sessione?"` — before deleting.
 - Instruct user: `sm-cleanup fix/description` to delete the branch.
 
-> Fast Lane has no STOP gates — proceed autonomously unless the fix scope expands beyond 3 files or requires a migration, at which point escalate to the full pipeline and notify the user.
+> Fast Lane has one lightweight scope-confirm gate in FL-1 (Interaction Protocol, compact form). Proceed autonomously after execution keyword. Escalate to full pipeline if: scope expands beyond 3 files, a migration is required, or a shared utility with >5 consumers is touched.
 
 ---
 
@@ -388,17 +425,17 @@ Activate when stakeholders introduce changes to the functional scope that impact
 
 ## Cross-Cutting Rules
 
-- **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, Node.js scripts, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline. Note: use Node.js `https.request` (not `curl`) for Supabase Management API calls — `curl` fails with PAT due to shell interpolation.
-- **Branch discipline**: never commit directly to `main` or `staging`. All development happens on `feature/block-name`, `fix/description`, or `worktree-block-name` branches. Promotions only via `sm-staging <branch>` (→staging, Vercel preview) and `sm-deploy` (staging→main, Vercel production). Both are shell functions in `~/.zshrc` — instruct the user to run them from iTerm. Claude can also run the underlying git commands directly (see below).
-- **Feature branch isolation (hard rule)**: feature branches must never be merged to staging before Phase 8. No `sm-staging`, `git push origin staging`, or git merge into staging is permitted during Phases 1–7. Smoke tests (Phase 5c) always run on localhost. Staging deploy happens exactly once, in Phase 8 step 7, under explicit user approval. Fast Lane (fix/) branches: same rule — FL-2 staging deploy also requires explicit user confirmation before execution.
+- **Tool permissions**: the user has explicitly authorized autonomous execution of all commands (Bash, Node.js scripts, npx, tsc, vitest, playwright, git) **except** the explicit STOP gates. Proceed without asking for confirmation for any technical command required by the pipeline. Note: use Node.js `https.request` (not `curl`) for Supabase Management API calls — `curl` fails with PAT due to shell interpolation. **Scope**: autonomous execution applies within an already-confirmed Phase 2 block. For new requests, scope changes, architecture decisions, or modifications to pipeline.md / CLAUDE.md / memory files outside an active confirmed block: apply the plan-then-confirm protocol (CLAUDE.md § Interaction Protocol).
+- **Branch discipline**: never commit directly to `main` or `staging`. Functional blocks use dedicated worktrees (branch `worktree-block-name`). Fixes use `fix/description` branches. Promotions only via the git merge commands in Phase 8 step 7 (→staging) and `sm-deploy` (staging→main, Vercel production).
+- **Worktree isolation (hard rule)**: worktree branches must never be merged to staging before Phase 8 step 7. No `sm-staging`, `git push origin staging`, or git merge into staging is permitted during Phases 1–7. Smoke tests (Phase 5c) always run on localhost. Staging deploy happens exactly once, in Phase 8 step 7, under explicit user approval. Fast Lane (`fix/`) branches: same rule — FL-2 staging deploy also requires explicit user confirmation before execution.
 - **Promoting branches from Claude**: `sm-staging` and `sm-deploy` are zsh functions — not available in Claude's Bash subprocess. Claude must use git commands directly: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge <branch> --no-ff && git push origin staging`. Always use `-C ~/Projects/staff-manager` to target the main repo, even when running inside a worktree directory.
-- **Worktree — always from staging**: worktrees must always be created from the `staging` branch, never from `main`. Command: `git worktree add .claude/worktrees/block-name -b worktree-block-name staging`. If `EnterWorktree` is used, confirm the base branch is `staging` before proceeding.
-- **Environment isolation (hard rule — all services)**: every local `.env.local` and every worktree must use exclusively staging credentials across all services — Supabase (`gjwkvgfwkdwzqlvudgqr`), Resend (staging API key + webhook secret), `APP_URL` (`https://staff-staging.peerpetual.it`), Google Sheets (staging sheet IDs). The sole authorised source is `~/.envs/staff-manager.staging.env`. Never copy production credentials into any local env. If `~/.envs/staff-manager.staging.env` does not exist, stop and instruct the user to run `smenv-save staging` from the main repo before continuing.
+- **Worktree — always from staging**: worktrees must always be created from the `staging` branch, never from `main`. Base branch is verified automatically by the Phase 0 setup command. If `EnterWorktree` is used manually, confirm base branch is `staging` first.
+- **Environment isolation (hard rule — all services)**: see `CLAUDE.md § Known Patterns → HARD RULES`. Source: `~/.envs/staff-manager.staging.env`. If missing: stop and instruct user to run `smenv-save staging`.
 - **Worktree — migration numbering**: before creating a new migration inside a worktree, always check `ls ~/Projects/staff-manager/supabase/migrations/` (the main repo, not the worktree) to get the correct next number. Two parallel worktrees must not use the same migration number.
 - **Worktree — staging is serial**: if two worktrees are ready to merge simultaneously, they must merge to staging sequentially. Staging must be in a testable state at all times — never merge two unrelated worktree branches to staging at the same time without smoke-testing the first one first.
 - **Worktree — CLAUDE.local.md**: if `.claude/CLAUDE.local.md` exists in the main repo (active overrides), copy it into the worktree directory at setup time. It is gitignored and not auto-present in worktrees.
 - **Worktree — sm-staging command**: always pass the branch name explicitly: `sm-staging worktree-block-name`. Never call `sm-staging` without arguments when in a worktree context.
-- **Worktree cleanup after production deploy**: after `sm-deploy` confirms the worktree branch is in production, instruct user to run `sm-cleanup worktree-block-name` to delete both local and remote branch.
+- **Worktree cleanup**: handled in Phase 8 step 8 — local `git worktree remove` + remote branch delete — always under explicit user confirmation (STOP gate).
 - **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Deliver a complete file list from the start.
 - **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **PRD sync is a hard gate — no exceptions**: `docs/prd/prd.md` must be updated and the GDoc Changelog entry must be appended **before closing any block**, whether full pipeline or fast-lane. This step cannot be deferred, skipped due to time pressure, or merged with another block's update. A block is not complete until both `docs/prd/prd.md` and the GDoc reflect its functional changes (or it is explicitly confirmed that no PRD section was affected).
@@ -407,5 +444,5 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context from verbosity and reduce cost.
 - **Concise output**: always report only the build/test summary line. Paste details only on error.
 - **Keep MEMORY.md compact**: project-root MEMORY.md and auto-memory MEMORY.md must both stay under ~150 active lines. Beyond that: extract topics into separate files and link.
-- **Migrations — staging only during development**: every `supabase/migrations/*.sql` must be applied immediately after writing, but **exclusively to the staging DB** (`project_id: "gjwkvgfwkdwzqlvudgqr"`). Never pass `project_id: "nyajqcjqmgxctlqighql"` during Phase 2. Production DB is updated once, in Phase 8 step 7 pre-deploy, by re-executing the same SQL. If `execute_sql` is called with the production project_id outside of Phase 8 step 7, it is a process error — stop and flag it.
+- **Migrations — staging only during development**: see `CLAUDE.md § Known Patterns → HARD RULES`. Apply immediately after writing to `gjwkvgfwkdwzqlvudgqr` only. Production migrations run once in Phase 8 step 7 pre-deploy. Using production project_id outside Phase 8 step 7 is a hard process error — stop and flag it.
 - **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5. After compact completes, re-read `.claude/CLAUDE.local.md` to restore any active session overrides before resuming.

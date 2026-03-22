@@ -1,8 +1,9 @@
 ---
 name: skill-db
-description: Database schema and query quality audit for staff-manager. Reviews normalization, index coverage, RLS completeness, constraint gaps, N+1 query patterns in API routes, and data type choices. Uses docs/db-map.md as authoritative schema reference. Outputs findings to docs/backlog-refinement.md.
+description: Database schema and query quality audit for staff-manager. Reviews normalization, index coverage, RLS completeness, constraint gaps, N+1 query patterns in API routes, and data type choices. Uses docs/db-map.md as authoritative schema reference. Outputs findings to docs/refactoring-backlog.md.
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing a database quality audit of the staff-manager Supabase/PostgreSQL schema.
@@ -11,7 +12,7 @@ You are performing a database quality audit of the staff-manager Supabase/Postgr
 - `docs/db-map.md` is the authoritative schema reference. Read it first — do NOT query the live DB to discover schema unless verifying a specific detail.
 - `docs/sitemap.md` provides the API route inventory for checking query patterns.
 - Do NOT make schema changes. Audit only.
-- All findings go to `docs/backlog-refinement.md`.
+- All findings go to `docs/refactoring-backlog.md`.
 
 ---
 
@@ -24,7 +25,7 @@ Read `docs/db-map.md` in full. Note:
 - RLS summary and flagged gaps
 - Ownership patterns
 
-Also read `docs/refactoring-backlog.md` and current `docs/backlog-refinement.md` to avoid duplicate reporting.
+Read `docs/refactoring-backlog.md` to avoid duplicate reporting.
 
 Output: structured understanding of schema. Do not proceed until complete.
 
@@ -175,7 +176,7 @@ SELECT stato, COUNT(*) FROM tickets GROUP BY stato ORDER BY stato;
 
 ### Write to backlog
 
-For each finding with severity Medium or above, append to `docs/backlog-refinement.md`:
+For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
 - Assign ID: `DB-[n]`
 - Add row to priority index
 - Add full detail section

@@ -1,8 +1,9 @@
 ---
 name: skill-dev
-description: Code quality and technical debt audit for the staff-manager codebase. Identifies coupling, duplication, dead code, pattern inconsistencies, and missing or premature abstractions. Uses docs/sitemap.md as structural guide. Outputs findings to docs/backlog-refinement.md.
+description: Code quality and technical debt audit for the staff-manager codebase. Identifies coupling, duplication, dead code, pattern inconsistencies, and missing or premature abstractions. Uses docs/sitemap.md as structural guide. Outputs findings to docs/refactoring-backlog.md.
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing a code quality and technical debt audit of the staff-manager Next.js codebase.
@@ -11,7 +12,7 @@ You are performing a code quality and technical debt audit of the staff-manager 
 - `docs/sitemap.md` is the authoritative inventory of every page and component. Use it to build your file target list — do NOT scan the filesystem freely.
 - Do NOT make code changes. Audit only.
 - Do NOT report issues already in `docs/refactoring-backlog.md` — check for duplicates before adding.
-- All new findings go to `docs/backlog-refinement.md`.
+- All new findings go to `docs/refactoring-backlog.md`.
 
 ---
 
@@ -20,7 +21,7 @@ You are performing a code quality and technical debt audit of the staff-manager 
 Read in order:
 1. `docs/sitemap.md` — build target file list (page files + key components per route)
 2. `docs/refactoring-backlog.md` — note existing entries to avoid duplicate reporting
-3. `docs/backlog-refinement.md` — note existing entries to avoid duplicates
+3. `docs/refactoring-backlog.md` — note existing entries to avoid duplicates (same file, check last entries to avoid re-reporting)
 
 Output: structured file list (pages + components). Do not proceed until complete.
 
@@ -120,7 +121,7 @@ Read `lib/` directory listing. Flag any utilities that appear to have overlappin
 
 ### Write to backlog
 
-For each finding with severity Medium or above, append to `docs/backlog-refinement.md`:
+For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
 - Assign ID: `DEV-[n]` (increment from last DEV entry)
 - Add row to priority index table
 - Add full detail section

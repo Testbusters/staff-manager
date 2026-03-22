@@ -224,10 +224,11 @@ tickets
 ---
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-03-20.
+> Last refreshed: 2026-03-22.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -280,6 +281,8 @@ tickets
 | `data_fine_contratto` | date | YES | — | — |
 | `approved_lordo_ytd` | numeric | NO | `0` | — |
 | `approved_year` | integer | NO | `EXTRACT(year FROM CURRENT_DATE)` | — |
+| `citta` | text | NO | — | — |
+| `materie_insegnate` | text[] | NO | `'{}'[]` | — |
 
 ### `communities`
 
@@ -289,6 +292,12 @@ tickets
 | `name` | text | NO | — | — |
 | `created_at` | timestamp with time zone | YES | `now()` | — |
 | `is_active` | boolean | NO | `true` | — |
+| `banner_content` | text | YES | — | — |
+| `banner_active` | boolean | NO | `false` | — |
+| `banner_link_url` | text | YES | — | — |
+| `banner_link_label` | text | YES | — | — |
+| `banner_updated_at` | timestamp with time zone | NO | `now()` | — |
+| `banner_link_new_tab` | boolean | NO | `false` | — |
 
 ### `collaborator_communities`
 
@@ -669,3 +678,13 @@ tickets
 | `url` | text | YES | — | — |
 | `user_id` | uuid | YES | — | → auth.users.id |
 | `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `lookup_options`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `type` | text | NO | — | — |
+| `community` | text | NO | — | — |
+| `nome` | text | NO | — | — |
+| `sort_order` | integer | NO | `0` | — |

@@ -3,6 +3,7 @@ name: ui-audit
 description: Run a full UI/UX quality audit against the design system, responsive rules, and UX patterns. Uses docs/sitemap.md as the authoritative file inventory — no free-form filesystem search.
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing a UI/UX quality audit of the staff-manager Next.js app.

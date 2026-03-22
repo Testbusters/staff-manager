@@ -108,8 +108,9 @@ project root; this project uses `.claude/CLAUDE.local.md` (both paths are suppor
 Useful for: temporary suspensions (e.g. "skip Phase 4 and 5 during requirements revision"),
 personal preferences, machine-specific instructions.
 
-**Current content in this project**: Phase 4 (UAT) and Phase 5 (Playwright e2e) are suspended
-during the requirements revision cycle. Remove this file when the revision is complete.
+**Current content in this project**: temporary instructions active for the current work phase
+(e.g. phase suspensions, personal preferences). Read `.claude/CLAUDE.local.md` to see
+what is currently active. Remove or update when the temporary phase ends.
 
 **What belongs here**:
 - Temporary instructions active only during a specific phase of work

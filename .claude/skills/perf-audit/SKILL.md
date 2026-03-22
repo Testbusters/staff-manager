@@ -3,6 +3,7 @@ name: perf-audit
 description: Performance audit for the staff-manager web app. Checks bundle size, server/client component boundaries, unnecessary re-renders, image optimization, and N+1 query patterns in API routes. Internal app — Core Web Vitals scoring, SEO meta tags, sitemap.xml, OpenGraph, and Lighthouse public-facing metrics are out of scope.
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing a performance audit of the staff-manager Next.js application.
@@ -10,7 +11,7 @@ You are performing a performance audit of the staff-manager Next.js application.
 **Scope**: bundle size, server/client boundary, re-renders, image optimization, API query efficiency.
 **Out of scope**: Lighthouse scores, Core Web Vitals public metrics, SEO meta tags, sitemap.xml, OpenGraph, robots.txt — this is a private internal webapp, not indexed.
 **Do NOT make code changes. Audit only.**
-**All findings go to `docs/backlog-refinement.md`.**
+**All findings go to `docs/refactoring-backlog.md`.**
 
 ---
 
@@ -22,7 +23,7 @@ Read `docs/sitemap.md` — note:
 
 Read `docs/db-map.md` "Missing indexes" section — these are already flagged DB-side, skip them here (covered by `/skill-db`).
 
-Read current `docs/backlog-refinement.md` to avoid duplicates.
+Read current `docs/refactoring-backlog.md` to avoid duplicates.
 
 ---
 
@@ -154,7 +155,7 @@ Flag: heavy libs that are not lazily loaded and appear in the main bundle.
 
 ### Write to backlog
 
-For each finding with severity Medium or above, append to `docs/backlog-refinement.md`:
+For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
 - Assign ID: `PERF-[n]`
 - Add to priority index
 - Add full detail section

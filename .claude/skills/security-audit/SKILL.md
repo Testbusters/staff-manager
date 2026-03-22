@@ -3,6 +3,7 @@ name: security-audit
 description: Security review of the staff-manager API routes and data layer. Checks authentication guards, RLS completeness, Zod validation coverage, sensitive data exposure in responses, and HTTP security headers. Internal webapp — SEO, public visibility, and indexing concerns are out of scope.
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing a security audit of the staff-manager Next.js API and data layer.
@@ -10,7 +11,7 @@ You are performing a security audit of the staff-manager Next.js API and data la
 **Scope**: API routes, middleware, RLS policies, data validation, response shapes.
 **Out of scope**: SEO, robots.txt, public crawlability, OpenGraph, sitemap.xml — this is a private internal webapp.
 **Do NOT make code changes. Audit only.**
-**All findings go to `docs/backlog-refinement.md`.**
+**All findings go to `docs/refactoring-backlog.md`.**
 
 ---
 
@@ -20,7 +21,7 @@ Read `docs/sitemap.md`. Extract all API routes from the "API routes" section (or
 Also read:
 - `middleware.ts` or `proxy.ts` — understand the auth layer
 - `lib/auth.ts` or equivalent — understand session/token helpers
-- `docs/backlog-refinement.md` — avoid duplicates
+- `docs/refactoring-backlog.md` — avoid duplicates
 
 Output: complete list of API routes grouped by: Public (no auth), Protected (auth required), Admin-only, Role-specific.
 
@@ -149,7 +150,7 @@ Read `middleware.ts` or equivalent. Verify:
 
 ### Write to backlog
 
-For each Critical or High finding, append to `docs/backlog-refinement.md`:
+For each Critical or High finding, append to `docs/refactoring-backlog.md`:
 - Assign ID: `SEC-[n]`
 - Add to priority index
 - Add full detail section with exploit scenario

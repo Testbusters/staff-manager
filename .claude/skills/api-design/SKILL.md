@@ -3,6 +3,7 @@ name: api-design
 description: API design consistency review for staff-manager. Checks endpoint naming conventions, HTTP verb correctness, response shape consistency, error code standardization, pagination patterns, and input validation presence. Does not cover auth implementation (use /security-audit) or performance (use /perf-audit).
 user-invocable: true
 model: sonnet
+context: fork
 ---
 
 You are performing an API design consistency review of the staff-manager Next.js API routes.
@@ -10,7 +11,7 @@ You are performing an API design consistency review of the staff-manager Next.js
 **Scope**: endpoint naming, HTTP verbs, response shapes, error codes, pagination, validation.
 **Out of scope**: auth implementation → `/security-audit` | performance → `/perf-audit` | DB schema → `/skill-db`.
 **Do NOT make code changes. Audit only.**
-**All findings go to `docs/backlog-refinement.md`.**
+**All findings go to `docs/refactoring-backlog.md`.**
 
 ---
 
@@ -22,7 +23,7 @@ Read `docs/sitemap.md` API routes section. Build a complete list of all routes w
 - Expected request body shape (infer from sitemap or read the route file)
 - Expected response shape
 
-Also read current `docs/backlog-refinement.md` to avoid duplicates.
+Also read current `docs/refactoring-backlog.md` to avoid duplicates.
 
 ---
 
@@ -138,7 +139,7 @@ Check that validation failures return `status: 400` with a field-level error mes
 
 ### Write to backlog
 
-For each finding with severity Medium or above, append to `docs/backlog-refinement.md`:
+For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
 - Assign ID: `API-[n]`
 - Add to priority index
 - Add full detail section
