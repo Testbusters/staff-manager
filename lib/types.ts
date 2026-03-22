@@ -423,3 +423,74 @@ export interface ExpenseHistory {
   note: string | null;
   created_at: string;
 }
+
+// ── Corsi ──────────────────────────────────────────────────
+export type CorsoStato = 'programmato' | 'attivo' | 'concluso';
+export type AssegnazioneRuolo = 'docente' | 'cocoda' | 'qa';
+export type CandidaturaTipo = 'docente_lezione' | 'qa_lezione' | 'citta_corso';
+export type CandidaturaStato = 'in_attesa' | 'accettata' | 'ritirata';
+
+export const CORSO_STATO_LABELS: Record<CorsoStato, string> = {
+  programmato: 'Programmato',
+  attivo: 'Attivo',
+  concluso: 'Concluso',
+};
+
+export const ASSEGNAZIONE_RUOLO_LABELS: Record<AssegnazioneRuolo, string> = {
+  docente: 'Docente',
+  cocoda: 'CoCoDà',
+  qa: 'Q&A',
+};
+
+export interface Corso {
+  id: string;
+  nome: string;
+  codice_identificativo: string;
+  community_id: string;
+  modalita: 'online' | 'in_aula';
+  citta: string | null;
+  linea: string | null;
+  responsabile_doc: string | null;
+  licenza_zoom: string | null;
+  data_inizio: string;
+  data_fine: string;
+  max_docenti_per_lezione: number;
+  max_qa_per_lezione: number;
+  link_lw: string | null;
+  link_zoom: string | null;
+  link_telegram_corsisti: string | null;
+  link_qa_assignments: string | null;
+  link_questionari: string | null;
+  link_emergenza: string | null;
+  created_by: string;
+  created_at: string;
+  stato?: CorsoStato;
+}
+
+export interface Lezione {
+  id: string;
+  corso_id: string;
+  data: string;
+  orario_inizio: string;
+  orario_fine: string;
+  ore: number;
+  materia: string;
+  created_at: string;
+}
+
+export interface AllegatoGlobale {
+  id: string;
+  tipo: 'docenza' | 'cocoda';
+  community_id: string;
+  file_url: string;
+  nome_file: string;
+  updated_at: string;
+}
+
+export interface BlacklistEntry {
+  id: string;
+  collaborator_id: string;
+  note: string | null;
+  created_at: string;
+  collaborator?: { username: string | null; nome: string | null; cognome: string | null };
+}

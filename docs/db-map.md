@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `051_p4m_templates.sql` (2026-03-18).
+> Last synced: migration `055_corsi.sql` (2026-03-22).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -78,6 +78,17 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 |---|---|---|---|
 | `lookup_options` | Admin-managed lookup values for collaborator profile fields | `type` (`citta`\|`materia`), `community` (`testbusters`\|`peer4med`), `nome`, `sort_order` | UNIQUE `(type, community, nome)`. SELECT: all authenticated. ALL: `amministrazione` only. Used for città + materie_insegnate dropdowns — community-specific lists |
 
+### Corsi
+
+| Table | Purpose | Key columns | Notes |
+|---|---|---|---|
+| `corsi` | Master course record | `nome`, `codice_identificativo`, `community_id`, `modalita`, `citta` (nullable), `data_inizio`, `data_fine`, `max_docenti_per_lezione`, `max_qa_per_lezione`, `created_by` | `stato` (programmato/attivo/concluso) is COMPUTED — not a column. 12 link/metadata fields. |
+| `lezioni` | Individual lessons per corso | `corso_id`, `data`, `orario_inizio`, `orario_fine`, `ore` (GENERATED STORED), `materia` | `ore = ROUND(EXTRACT(EPOCH FROM orario_fine - orario_inizio) / 3600, 2)`. ON DELETE CASCADE from corsi |
+| `assegnazioni` | Collaborator × lezione × ruolo | `lezione_id`, `collaborator_id`, `ruolo` (docente/cocoda/qa), `valutazione` (nullable, 1.0–10.0), `created_by` | UNIQUE `(lezione_id, collaborator_id, ruolo)`. ON DELETE CASCADE from lezioni |
+| `candidature` | Applications (collab per-lezione or resp.cittadino per-corso) | `tipo` (docente_lezione/qa_lezione/citta_corso), `lezione_id` (nullable), `corso_id` (nullable), `collaborator_id` (nullable), `city_user_id` (nullable), `stato` | CHECK: exactly one of lezione_id or corso_id non-null. ON DELETE CASCADE from lezioni+corsi |
+| `blacklist` | Collaborators barred from teaching | `collaborator_id` (UNIQUE), `note`, `created_by` | UNIQUE on collaborator_id. Error 23505 on duplicate |
+| `allegati_globali` | Global attachment files per tipo × community | `tipo` (docenza/cocoda), `community_id`, `file_url`, `nome_file`, `updated_by` | UNIQUE `(tipo, community_id)`. Always use UPSERT. Stored in `corsi-allegati` bucket |
+
 ### Operations & Monitoring
 
 | Table | Purpose | Key columns | Notes |
@@ -126,6 +137,23 @@ expense_reimbursements
   ├── expense_history.reimbursement_id
   ├── expense_attachments.reimbursement_id
   └── documents.id ← expense_reimbursements.receipt_document_id
+
+corsi
+  ├── lezioni.corso_id (CASCADE)
+  └── candidature.corso_id (CASCADE, nullable)
+
+lezioni
+  ├── assegnazioni.lezione_id (CASCADE)
+  └── candidature.lezione_id (CASCADE, nullable)
+
+collaborators
+  ├── assegnazioni.collaborator_id (CASCADE)
+  ├── candidature.collaborator_id (CASCADE, nullable)
+  └── blacklist.collaborator_id (CASCADE, UNIQUE)
+
+communities
+  ├── corsi.community_id
+  └── allegati_globali.community_id
 
 compensation_competenze.key ← compensations.competenza
 
@@ -231,6 +259,7 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
@@ -252,6 +281,7 @@ tickets
 | `can_publish_announcements` | boolean | YES | `true` | — |
 | `theme_preference` | character varying | YES | `'dark'` | — |
 | `skip_contract_on_onboarding` | boolean | NO | `false` | — |
+| `citta_responsabile` | text | YES | — | — |
 
 ### `collaborators`
 
@@ -683,6 +713,92 @@ tickets
 | `stack` | text | YES | — | — |
 | `url` | text | YES | — | — |
 | `user_id` | uuid | YES | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `allegati_globali`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `tipo` | text | NO | — | — |
+| `community_id` | uuid | NO | — | → communities.id |
+| `file_url` | text | NO | — | — |
+| `nome_file` | text | NO | — | — |
+| `updated_by` | uuid | NO | — | → auth.users.id |
+| `updated_at` | timestamp with time zone | NO | `now()` | — |
+
+### `assegnazioni`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `lezione_id` | uuid | NO | — | → lezioni.id |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `ruolo` | text | NO | — | — |
+| `valutazione` | numeric | YES | — | — |
+| `created_by` | uuid | NO | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `blacklist`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `note` | text | YES | — | — |
+| `created_by` | uuid | NO | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `candidature`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `tipo` | text | NO | — | — |
+| `lezione_id` | uuid | YES | — | → lezioni.id |
+| `corso_id` | uuid | YES | — | → corsi.id |
+| `collaborator_id` | uuid | YES | — | → collaborators.id |
+| `city_user_id` | uuid | YES | — | → auth.users.id |
+| `stato` | text | NO | `'in_attesa'` | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `corsi`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `nome` | text | NO | — | — |
+| `codice_identificativo` | text | NO | — | — |
+| `community_id` | uuid | NO | — | → communities.id |
+| `modalita` | text | NO | — | — |
+| `citta` | text | YES | — | — |
+| `linea` | text | YES | — | — |
+| `responsabile_doc` | text | YES | — | — |
+| `licenza_zoom` | text | YES | — | — |
+| `data_inizio` | date | NO | — | — |
+| `data_fine` | date | NO | — | — |
+| `max_docenti_per_lezione` | integer | NO | `8` | — |
+| `max_qa_per_lezione` | integer | NO | `6` | — |
+| `link_lw` | text | YES | — | — |
+| `link_zoom` | text | YES | — | — |
+| `link_telegram_corsisti` | text | YES | — | — |
+| `link_qa_assignments` | text | YES | — | — |
+| `link_questionari` | text | YES | — | — |
+| `link_emergenza` | text | YES | — | — |
+| `created_by` | uuid | NO | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `lezioni`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `corso_id` | uuid | NO | — | → corsi.id |
+| `data` | date | NO | — | — |
+| `orario_inizio` | time without time zone | NO | — | — |
+| `orario_fine` | time without time zone | NO | — | — |
+| `ore` | numeric | YES | — | — |
+| `materia` | text | NO | — | — |
 | `created_at` | timestamp with time zone | NO | `now()` | — |
 
 ### `lookup_options`

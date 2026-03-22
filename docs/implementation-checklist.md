@@ -359,6 +359,28 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ---
 
+## Block corsi-1 — Corsi: Foundation + Admin CRUD ✅
+
+> Requirement: `docs/requirements.md` — Block corsi-1
+> Dependencies: migration 055; lookup_options (054)
+
+| Sub-block | Status | Notes |
+|---|---|---|
+| corsi-1a — Migration 055 | ✅ | 6 new tables: corsi, lezioni, assegnazioni, candidature, blacklist, allegati_globali; ADD COLUMN citta_responsabile on user_profiles; seed Simulazione materia; RLS on all tables |
+| corsi-1b — lib/types.ts + lib/corsi-utils.ts | ✅ | CorsoStato, AssegnazioneRuolo, CandidaturaTipo, CandidaturaStato types + labels; Corso/Lezione/AllegatoGlobale/BlacklistEntry interfaces; getCorsoStato() utility; MATERIA_COLORS map |
+| corsi-1c — lib/nav.ts | ✅ | Collaboratore: Corsi active (was comingSoon); responsabile_cittadino: 4-item nav; admin: Corsi added before Impostazioni |
+| corsi-1d — API routes (7) | ✅ | /api/corsi GET+POST, /api/corsi/[id] GET+PATCH+DELETE, /api/corsi/[id]/lezioni GET+POST, /api/corsi/[id]/lezioni/[lid] PATCH+DELETE, /api/admin/blacklist GET+POST, /api/admin/blacklist/[id] DELETE, /api/admin/allegati-corsi GET+POST |
+| corsi-1e — Pages (3) | ✅ | /corsi (admin list + resp.cittadino placeholder + collab redirect), /corsi/nuovo (create form), /corsi/[id] (3-tab: Dettaglio/Lezioni/Candidature città); loading.tsx for all 3 |
+| corsi-1f — Components (7) | ✅ | CorsoForm, LezioniTab, CandidatureCittaTab, CorsiFilterBar (shadcn), BlacklistManager, AllegatiCorsiManager; impostazioni/page.tsx extended with blacklist+allegati_corsi tabs |
+| corsi-1g — Tests | ✅ | 13/13 vitest (proxy redirect ×2, getCorsoStato unit ×3, DB corsi insert/read ×2, lezioni ore generated column ×2, blacklist uniqueness ×3, candidature constraint ×1) |
+
+### Log
+| Date | Files | Test results | Notes |
+|---|---|---|---|
+| 2026-03-22 | 22 new, 5 modified | tsc ✅ · build ✅ · vitest 13/13 ✅ | Foundation: 6 DB tables, 7 API routes, 3 admin pages, 7 UI components. CorsiFilterBar uses shadcn (no native HTML). Phase 4/4b/5d suspended per CLAUDE.local.md |
+
+---
+
 ## Legend
 
 | Symbol | Meaning |
