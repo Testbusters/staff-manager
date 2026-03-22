@@ -1,6 +1,6 @@
 # Sitemap — Staff Manager
 
-Last updated: 2026-03-13
+Last updated: 2026-03-22
 
 Columns: **Route** | **Page file** | **Roles** | **Layout** | **Componenti chiave** | **loading.tsx** | **Access notes** | **Audit**
 
@@ -119,9 +119,11 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/export` | `app/(app)/export/page.tsx` | admin | `tabs` | Tabs, Form, Table (preview + history) | ✅ | CSV/XLSX export of compensations and reimbursements | `UI` `UX` |
 | `/import` | `app/(app)/import/page.tsx` | admin | `import-panel` | Tabs, Table (preview), Dialog, EmptyState | ✅ | Bulk import UI for collaboratori, contratti, CU | `UI` `UX` |
 | `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch, BlacklistManager, AllegatiCorsiManager | ✅ | Community config, notification settings, contract templates, email template management, community banners, blacklist management, allegati corsi | `UI` `UX` |
-| `/corsi` | `app/(app)/corsi/page.tsx` | admin + resp.cittadino | `full-list` | Table, Badge, EmptyState, CorsiFilterBar | ✅ | Admin: full list with filters (community, stato, search). Resp.cittadino: placeholder (corsi-3). Collab: redirect `/`. | `UI` `UX` |
+| `/corsi` | `app/(app)/corsi/page.tsx` | admin + resp.cittadino + collab | `full-list` | Table, Badge, EmptyState, CorsiFilterBar, CorsiListCollab | ✅ | Admin: full list with filters. Resp.cittadino: redirect → /corsi/assegnazione. Collab: own community list (programmato/attivo only). | `UI` `R` `UX` |
+| `/corsi/assegnazione` | `app/(app)/corsi/assegnazione/page.tsx` | resp.cittadino | `full-list` | AssegnazioneRespCittPage, Badge, Button, AlertDialog | ✅ | Two sections: corsi senza città (candidatura citta_corso) + I miei corsi (citta = citta_responsabile). Empty state + alert if citta_responsabile null. | `UI` `R` `UX` |
+| `/corsi/valutazioni` | `app/(app)/corsi/valutazioni/page.tsx` | resp.cittadino | `full-list` | ValutazioniRespCittPage, Input, Button, Badge | ✅ | Per-corso, per-collaboratore×corso valutazione (1–10) input. Bulk update via PATCH /api/corsi/[id]/valutazioni. | `UI` `R` `UX` |
 | `/corsi/nuovo` | `app/(app)/corsi/nuovo/page.tsx` | admin | `form` | CorsoForm, Select, Input, Button | ✅ | Create new corso. Admin-only. | `UI` `UX` |
-| `/corsi/[id]` | `app/(app)/corsi/[id]/page.tsx` | admin | `tabs` | Tabs, CorsoForm, LezioniTab, CandidatureCittaTab | ✅ | 3 tabs: Dettaglio (edit), Lezioni (add/edit/delete), Candidature città (only if citta=null) | `UI` `UX` |
+| `/corsi/[id]` | `app/(app)/corsi/[id]/page.tsx` | admin + resp.cittadino + collab | `tabs` | Tabs, CorsoForm, LezioniTab, CandidatureCittaTab, LezioniTabCollab, LezioniTabRespCitt | ✅ | Admin: 3 tabs (Dettaglio/Lezioni/Candidature città). Resp.citt: lezioni list with Accetta/Rifiuta per candidatura. Collab: lezioni list with candidatura actions. | `UI` `R` `UX` |
 | `/monitoraggio` | `app/(app)/monitoraggio/page.tsx` | admin | `tabs` | Tabs, Badge, Table, auto-refresh | ✅ | System monitoring: access logs, emails, DB performance, app errors | `UI` `UX` |
 | `/feedback` | `app/(app)/feedback/page.tsx` | admin | `full-list` | Table, EmptyState | ✅ | User feedback/suggestions | `UI` `UX` |
 
@@ -146,11 +148,13 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | Export | — | — | ✅ |
 | Contenuti | — | ✅ (read) | ✅ |
 | Corsi | ✅ (corsi-2) | — | ✅ |
+| Candidatura e Assegnazione | — | ✅ (resp.citt) | — |
+| Valutazione Corsi | — | ✅ (resp.citt) | — |
 | Impostazioni | — | — | ✅ |
 | Monitoraggio | — | — | ✅ |
 | Feedback | — | — | ✅ |
 
-> `responsabile_cittadino` nav defined in corsi-1 (4 items: Home, Candidatura e Assegnazione, Valutazione Corsi, Creazione Eventi). Pages for resp.cittadino implemented in corsi-3.
+> `responsabile_cittadino` nav defined in corsi-1 (4 items: Home, Candidatura e Assegnazione, Valutazione Corsi, Creazione Eventi). Pages fully implemented in corsi-3.
 > `responsabile_servizi_individuali` has no nav items defined yet.
 
 ---
