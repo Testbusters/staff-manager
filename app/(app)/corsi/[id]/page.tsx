@@ -54,11 +54,19 @@ export default async function CorsoDetailPage({
   if (role === 'collaboratore') {
     const { data: collab } = await svc
       .from('collaborators')
-      .select('id, community_id')
+      .select('id')
       .eq('user_id', user.id)
       .single();
 
     if (!collab) notFound();
+
+    const { data: collabCommunity } = await svc
+      .from('collaborator_communities')
+      .select('community_id')
+      .eq('collaborator_id', collab.id)
+      .single();
+
+    const communityId = collabCommunity?.community_id ?? null;
 
     const [
       { data: blacklistEntry },
@@ -66,7 +74,9 @@ export default async function CorsoDetailPage({
       { data: lezioni },
     ] = await Promise.all([
       svc.from('blacklist').select('id').eq('collaborator_id', collab.id).maybeSingle(),
-      svc.from('corsi').select('*').eq('id', id).eq('community_id', collab.community_id).maybeSingle(),
+      communityId
+        ? svc.from('corsi').select('*').eq('id', id).eq('community_id', communityId).maybeSingle()
+        : Promise.resolve({ data: null }),
       svc.from('lezioni').select('*').eq('corso_id', id).order('data').order('orario_inizio'),
     ]);
 

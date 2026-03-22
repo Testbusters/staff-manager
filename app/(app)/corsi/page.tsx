@@ -54,11 +54,19 @@ export default async function CorsiPage({
 
     const { data: collab } = await svc
       .from('collaborators')
-      .select('id, community_id')
+      .select('id')
       .eq('user_id', user.id)
       .single();
 
-    if (!collab?.community_id) {
+    const { data: collabCommunity } = collab
+      ? await svc
+          .from('collaborator_communities')
+          .select('community_id')
+          .eq('collaborator_id', collab.id)
+          .single()
+      : { data: null };
+
+    if (!collabCommunity?.community_id) {
       return (
         <div className="p-6">
           <EmptyState
@@ -70,16 +78,18 @@ export default async function CorsiPage({
       );
     }
 
+    const communityId = collabCommunity.community_id;
+
     const { data: community } = await svc
       .from('communities')
       .select('name')
-      .eq('id', collab.community_id)
+      .eq('id', communityId)
       .single();
 
     const { data: corsiRaw } = await svc
       .from('corsi')
       .select('*')
-      .eq('community_id', collab.community_id)
+      .eq('community_id', communityId)
       .order('data_inizio', { ascending: true });
 
     const corsi = (corsiRaw ?? [])
