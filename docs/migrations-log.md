@@ -5,6 +5,9 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 057 | `057_corsi3_rls.sql` | 2026-03-22 | CREATE POLICY `candidature_cittadino_insert` (resp.citt citta_corso INSERT); CREATE POLICY `candidature_cittadino_withdraw` (resp.citt own citta_corso → ritirata); CREATE POLICY `candidature_review` (admin + resp.citt can set docente/qa candidatura stato to accettata\|ritirata, resp.citt scoped to citta_responsabile via nested subquery); CREATE POLICY `assegnazioni_valutazione_update` (resp.citt can UPDATE valutazione on assegnazioni for their city's corsi) |
+| 056 | `056_candidature_collab_rls.sql` | 2026-03-22 | CREATE POLICY `candidature_collab_insert` (collaboratore INSERT docente_lezione\|qa_lezione, ownership via get_my_collaborator_id()); CREATE POLICY `candidature_collab_update_own` (collaboratore UPDATE own candidatura → ritirata only) |
+| 055 | `055_corsi.sql` | 2026-03-22 | CREATE TABLE `corsi` + `lezioni` (ore generated) + `assegnazioni` + `candidature` + `blacklist` + `allegati_globali`; RLS policies for admin (full access) + collab (SELECT own community + candidature) + anon (deny all) |
 | 054 | `054_materie_citta.sql` | 2026-03-22 | CREATE TABLE `lookup_options` (type/community/nome/sort_order, RLS); seed 22 città × 2 communities, 5 materie × 2 communities; ADD COLUMN `citta TEXT NOT NULL` + `materie_insegnate TEXT[] NOT NULL DEFAULT '{}'` on `collaborators`; backfill existing rows with `citta='Roma'`, `materie_insegnate=ARRAY['Logica']` |
 | 053 | `053_banner_new_tab.sql` | 2026-03-21 | ADD COLUMN `banner_link_new_tab BOOLEAN NOT NULL DEFAULT false` on `communities` |
 | 052 | `052_community_banners.sql` | 2026-03-21 | ADD COLUMN `banner_content TEXT`, `banner_active BOOLEAN DEFAULT false`, `banner_link_url TEXT`, `banner_link_label TEXT`, `banner_updated_at TIMESTAMPTZ DEFAULT now()` on `communities` |

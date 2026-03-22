@@ -109,18 +109,7 @@ export default async function CorsiPage({
     );
   }
 
-  // responsabile_cittadino → placeholder until corsi-3
-  if (role === 'responsabile_cittadino') {
-    return (
-      <div className="p-6">
-        <EmptyState
-          icon={GraduationCap}
-          title="Sezione in arrivo"
-          description="L'area corsi per il responsabile cittadino sarà disponibile a breve."
-        />
-      </div>
-    );
-  }
+  if (role === 'responsabile_cittadino') redirect('/corsi/assegnazione');
 
   if (role !== 'amministrazione') redirect('/');
 

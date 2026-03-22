@@ -6,6 +6,7 @@ import CorsoForm from '@/components/corsi/CorsoForm';
 import LezioniTab from '@/components/corsi/LezioniTab';
 import CandidatureCittaTab from '@/components/corsi/CandidatureCittaTab';
 import LezioniTabCollab from '@/components/corsi/LezioniTabCollab';
+import LezioniTabRespCitt from '@/components/corsi/LezioniTabRespCitt';
 import { getCorsoStato } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
@@ -143,6 +144,71 @@ export default async function CorsoDetailPage({
           ownAssegnazioni={ownAssegnazioni ?? []}
           allAssegnazioni={allAssegnazioni ?? []}
           isBlacklisted={!!blacklistEntry}
+        />
+      </div>
+    );
+  }
+
+  // responsabile_cittadino branch
+  if (role === 'responsabile_cittadino') {
+    const { data: upProfile } = await svc
+      .from('user_profiles')
+      .select('citta_responsabile')
+      .eq('user_id', user.id)
+      .single();
+
+    const cittaResp = upProfile?.citta_responsabile ?? null;
+    if (!cittaResp) notFound();
+
+    const [{ data: corso }, { data: lezioni }] = await Promise.all([
+      svc.from('corsi').select('*').eq('id', id).eq('citta', cittaResp).maybeSingle(),
+      svc.from('lezioni').select('*').eq('corso_id', id).order('data').order('orario_inizio'),
+    ]);
+
+    if (!corso) notFound();
+
+    const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
+    const lezioniIds = (lezioni ?? []).map((l: { id: string }) => l.id);
+
+    const { data: candidature } = lezioniIds.length > 0
+      ? await svc.from('candidature').select('*').in('lezione_id', lezioniIds).neq('stato', 'ritirata')
+      : { data: [] };
+
+    // Fetch collaborator names directly from collaborators table
+    const collabIds = [...new Set((candidature ?? []).map((c: { collaborator_id: string | null }) => c.collaborator_id).filter(Boolean) as string[])];
+    const collabRows = collabIds.length > 0
+      ? (await svc.from('collaborators').select('id, nome, cognome').in('id', collabIds)).data ?? []
+      : [];
+
+    const collabMap: Record<string, { nome: string; cognome: string }> = {};
+    for (const c of collabRows) {
+      collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '' };
+    }
+
+    return (
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Link href="/corsi/assegnazione" className="text-sm text-link hover:text-link/80">← Corsi</Link>
+            </div>
+            <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground font-mono">{corso.codice_identificativo}</span>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+                {CORSO_STATO_LABELS[stato]}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {corso.modalita === 'online' ? 'Online' : 'In aula'} · {corso.citta}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <LezioniTabRespCitt
+          lezioni={lezioni ?? []}
+          candidature={candidature ?? []}
+          collabMap={collabMap}
         />
       </div>
     );
