@@ -383,6 +383,48 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ---
 
+## Block corsi-2 — Collaboratore View + Candidature ✅
+
+> Requirement: `docs/requirements.md` — Block corsi-2
+> Dependencies: corsi-1 (tables), migration 056
+
+| Sub-block | Status | Notes |
+|---|---|---|
+| corsi-2a — Migration 056 | ✅ | `candidature_collab_insert` (docente/qa INSERT, ownership via get_my_collaborator_id()); `candidature_collab_update_own` (UPDATE own → stato=ritirata) |
+| corsi-2b — API routes (2) | ✅ | POST /api/candidature (blacklist check + duplicate check + insert, 201); PATCH /api/candidature/[id] (ownership + in_attesa guard → ritirata, 200) |
+| corsi-2c — Components (2) | ✅ | CorsiListCollab.tsx (card grid, stato badge, programmato/attivo filter); LezioniTabCollab.tsx (table + DropdownMenu candidatura + AlertDialog withdraw + optimistic state + blacklist alert) |
+| corsi-2d — Pages (2) | ✅ | corsi/page.tsx collab branch (community via collaborator_communities, render CorsiListCollab); corsi/[id]/page.tsx collab branch (7 fetches: collab, community, blacklist, corso, lezioni, own candidature, own+all assegnazioni; link group display) |
+| corsi-2e — lib/types.ts | ✅ | Added Candidatura + Assegnazione interfaces |
+| corsi-2f — Tests | ✅ | 9/9 vitest (__tests__/api/candidature.test.ts): 401 no session, 403 wrong role, 201 insert, 409 duplicate, 403 blacklisted, 200 withdraw own, 409 already ritirata, 403 other collab |
+
+### Log
+| Date | Files | Test results | Notes |
+|---|---|---|---|
+| 2026-03-22 | 5 new, 3 modified | tsc ✅ · build ✅ · vitest 9/9 ✅ | Community fetched from collaborator_communities (not collaborators.community_id which doesn't exist). e2e ⏸ suspended |
+
+---
+
+## Block corsi-3 — Responsabile Cittadino ✅
+
+> Requirement: `docs/requirements.md` — Block corsi-3
+> Dependencies: corsi-2 (tables + collab RLS), migration 057
+
+| Sub-block | Status | Notes |
+|---|---|---|
+| corsi-3a — Migration 057 | ✅ | 4 RLS policies: `candidature_cittadino_insert` (citta_corso INSERT); `candidature_cittadino_withdraw` (own citta_corso → ritirata); `candidature_review` (docente/qa accept/reject scoped to citta_responsabile); `assegnazioni_valutazione_update` (valutazione UPDATE scoped to citta_responsabile) |
+| corsi-3b — API routes (3) | ✅ | POST /api/candidature extended with resp.citt citta_corso branch; PATCH /api/candidature/[id] extended with resp.citt + admin review branch; NEW PATCH /api/corsi/[id]/valutazioni (bulk valutazione update per collaboratore×corso) |
+| corsi-3c — Pages (4) | ✅ | corsi/page.tsx (resp.citt → redirect /corsi/assegnazione); corsi/[id]/page.tsx resp.citt branch + LezioniTabRespCitt; /corsi/assegnazione (loading.tsx); /corsi/valutazioni (loading.tsx) |
+| corsi-3d — Components (3) | ✅ | AssegnazioneRespCittPage (optimistic candidatura submit/withdraw, AlertDialog); LezioniTabRespCitt (per-lezione candidature Accetta/Rifiuta); ValutazioniRespCittPage (score input per collab×corso, save per row) |
+| corsi-3e — Dashboard | ✅ | app/(app)/page.tsx resp.citt branch: hero (avatar+nome+città), 3 KPIs (I miei corsi / Candidature da approvare / Candidature inviate), quick actions. No financial widgets. |
+| corsi-3f — Tests | ✅ | 6/6 vitest (__tests__/api/candidature-corsi3.test.ts): accept, reject, bulk valutazione, citta_corso insert, 403 wrong city, 401 no session |
+
+### Log
+| Date | Files | Test results | Notes |
+|---|---|---|---|
+| 2026-03-22 | 8 new, 5 modified | tsc ✅ · build ✅ · vitest 6/6 ✅ | collabMap from collaborators.nome/cognome directly (not via user_profiles). assegnazioni.created_by + corsi.created_by NOT NULL. lezioni.ore generated — never insert explicitly. e2e ⏸ suspended |
+
+---
+
 ## Legend
 
 | Symbol | Meaning |

@@ -4,7 +4,7 @@
 > or adding a new entity surface, verify alignment against this matrix before declaring the file list.
 > Update this document in Phase 8 (step 2e) whenever a block changes role permissions.
 >
-> Roles not yet fully defined: `responsabile_cittadino`, `responsabile_servizi_individuali` — omitted until spec is confirmed.
+> `responsabile_cittadino` fully defined (corsi-1/2/3). `responsabile_servizi_individuali` — not yet in scope.
 
 ---
 
@@ -140,21 +140,25 @@
 
 ## 7. Corsi
 
-> Note: `responsabile_cittadino` role is in scope for Corsi. Only the actions confirmed in corsi-1 are listed; future blocks will expand.
+> Fully defined across corsi-1 (foundation), corsi-2 (collab candidature), corsi-3 (resp.citt landing, review, valutazioni).
 
 | Action | `collaboratore` | `responsabile_cittadino` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|---|
-| View corso list | ✅* (corsi-2) | ✅* | ❌ | ✅ | Collab: own assignments only. Resp.citt: own community |
-| View corso detail | ✅* (corsi-2) | ✅* | ❌ | ✅ | — |
+| View corso list | ✅ | ✅ | ❌ | ✅ | Collab: own community (programmato/attivo). Resp.citt: /corsi/assegnazione |
+| View corso detail | ✅ | ✅ | ❌ | ✅ | Resp.citt: scoped to citta_responsabile |
 | Create corso | ❌ | ❌ | ❌ | ✅ | Admin-only |
 | Edit corso (all fields) | ❌ | ❌ | ❌ | ✅ | Admin-only |
-| Edit corso (city assignment) | ❌ | ✅* (corsi-3) | ❌ | ✅ | Resp.citt: own community only |
+| Edit corso (city assignment) | ❌ | ❌ | ❌ | ✅ | Admin assigns città from candidature città tab |
 | Delete corso | ❌ | ❌ | ❌ | ✅ | Cascades to lezioni → assegnazioni/candidature |
 | Add / edit / delete lezione | ❌ | ❌ | ❌ | ✅ | Admin-only |
-| View lezioni | ✅* (corsi-2) | ✅* | ❌ | ✅ | — |
-| Submit candidatura (lezione) | ✅ (corsi-2) | ❌ | ❌ | ❌ | Collab: docente_lezione or qa_lezione |
-| Submit candidatura (città) | ❌ | ✅ (corsi-3) | ❌ | ❌ | Resp.citt: citta_corso type |
-| Manage assegnazioni | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD (corsi-2+) |
+| View lezioni | ✅ | ✅ | ❌ | ✅ | — |
+| Submit candidatura (lezione) | ✅ | ❌ | ❌ | ❌ | Collab: docente_lezione or qa_lezione; blacklist + duplicate check |
+| Withdraw candidatura (lezione) | ✅ | ❌ | ❌ | ❌ | Collab: own in_attesa only |
+| Submit candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: citta_corso type; per corso |
+| Withdraw candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: own in_attesa only |
+| Review candidatura (lezione) | ❌ | ✅ | ❌ | ✅ | Resp.citt: corsi where citta = citta_responsabile; stato → accettata or ritirata |
+| Manage assegnazioni | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD |
+| Set valutazione | ❌ | ✅ | ❌ | ❌ | Resp.citt: assegnazioni for their city's corsi; score 1–10 |
 | View blacklist | ❌ | ✅ | ❌ | ✅ | Read-only for resp.citt |
 | Manage blacklist | ❌ | ❌ | ❌ | ✅ | Admin: add/remove |
 | View allegati globali | ✅ | ✅ | ✅ | ✅ | All authenticated |

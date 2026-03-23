@@ -18,7 +18,7 @@ Internal admin portal for managing collaborators across Testbusters and Peer4Med
 | Rich text | Tiptap 3 |
 | Charts | Recharts |
 | Export | SheetJS (xlsx) + native CSV |
-| Testing | Vitest (321 unit/API tests) + Playwright (e2e, currently suspended) |
+| Testing | Vitest (319 unit/API tests) + Playwright (e2e, currently suspended) |
 
 ---
 
@@ -84,8 +84,8 @@ lib/
   password.ts     generatePassword() — shared across invite + admin reset flows
 
 proxy.ts          Auth middleware: active check → must_change_password → onboarding → app
-supabase/migrations/  055 migrations applied in sequence (see docs/migrations-log.md)
-__tests__/        321 Vitest tests (unit + API schema validation)
+supabase/migrations/  057 migrations applied in sequence (see docs/migrations-log.md)
+__tests__/        319 Vitest tests (unit + API schema validation)
 e2e/              Playwright specs (suspended — see CLAUDE.local.md)
 docs/             Product specs, implementation checklist, migration log, sitemap
 ```
