@@ -701,3 +701,38 @@ Two RLS policies on `candidature`:
 ### New components
 - `CorsiListCollab.tsx`: card grid with stato badge, modalita/citta badges, date range
 - `LezioniTabCollab.tsx`: table with DropdownMenu candidatura, AlertDialog withdraw confirm, optimistic state, blacklist alert
+
+---
+
+## Block corsi-dashboard — Dashboard + Profile Corsi Gaps
+
+### Scope
+Closes G1–G7 identified in post-release compliance review of corsi-1/2/3.
+
+### Requirements confirmed
+- **G1** — Dashboard collab hero: read-only chips `materie_insegnate`. Gray "Non configurato" chip if array empty. No click action.
+- **G2** — Dashboard collab: new "Corsi" section below the 4 existing KPI cards. 6 boxes:
+  - Corsi assegnati docente: assegnazioni tipo=docente, lezione.data >= today, corso.stato IN (programmato, attivo)
+  - Corsi svolti docente: assegnazioni tipo=docente, lezione.data < today, valutazione IS NOT NULL
+  - Valutazione media docente: AVG(assegnazioni.valutazione) WHERE tipo=docente AND valutazione IS NOT NULL
+  - Valutazione media CoCoDà: AVG(assegnazioni.valutazione) WHERE tipo=cocoda AND valutazione IS NOT NULL
+  - Q&A assegnati: count assegnazioni tipo=qa, lezione.data >= today, corso programmato/attivo; ore = "--" (deferred to corsi-4)
+  - Q&A svolti: count assegnazioni tipo=qa, lezione.data < today, valutazione IS NOT NULL; ore = "--"
+  - All boxes → /corsi on click (no filter)
+- **G3** — Dashboard collab: "Prossimi eventi" box showing national future events (city events deferred to eventi-citta block)
+- **G4** — Profilo page collab: hero card at top with avatar, nome/cognome, community, materie chips row (last row in hero)
+- **G5/G7** — Dashboard resp.citt: add "Ultimi aggiornamenti" section (same DashboardUpdates component used in collab dashboard: Events / Comunicazioni e risorse / Opportunità e sconti tabs)
+- **G6** — LezioniTabCollab: show "X/Y" posti count per lezione row (X = assegnazioni of that tipo, Y = max)
+
+### Out of scope
+- City events in dashboard — deferred to eventi-citta block
+- Q&A ore — deferred to corsi-4 block
+- Nav changes — already correct from corsi-3
+
+### Files modified
+- `app/(app)/page.tsx`: collab branch (materie chips G1, KPI corsi G2, prossimi eventi G3), resp.citt branch (DashboardUpdates G5/G7)
+- `components/corsi/LezioniTabCollab.tsx`: posti count per row (G6)
+- `app/(app)/profilo/page.tsx`: hero card with materie chips (G4)
+
+### New components
+- `components/corsi/DashboardCorsiKpi.tsx`: 6 KPI cards client component

@@ -78,6 +78,12 @@ export default function LezioniTabCollab({
     return ownAssegnazioni.find((a) => a.lezione_id === lezioneId) ?? null;
   }
 
+  function getPostiCount(lezioneId: string, ruolo: 'docente' | 'qa') {
+    return allAssegnazioni.filter(
+      (a) => a.lezione_id === lezioneId && a.ruolo === ruolo,
+    ).length;
+  }
+
   async function submitCandidatura(lezioneId: string, tipo: CandidaturaTipo) {
     const key = `${lezioneId}:${tipo}`;
     setLoading(key);
@@ -140,8 +146,8 @@ export default function LezioniTabCollab({
               <TableHead>Ore</TableHead>
               <TableHead>Materia</TableHead>
               <TableHead>La tua partecipazione</TableHead>
-              <TableHead>Docente</TableHead>
-              <TableHead>Q&A</TableHead>
+              <TableHead>Docente <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
+              <TableHead>Q&A <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -150,6 +156,8 @@ export default function LezioniTabCollab({
               const candidaturaDocente = getOwnCandidatura(lezione.id, 'docente_lezione');
               const candidaturaQA = getOwnCandidatura(lezione.id, 'qa_lezione');
               const isAssigned = !!assegnazione;
+              const postiDocente = getPostiCount(lezione.id, 'docente');
+              const postiQA = getPostiCount(lezione.id, 'qa');
 
               const materiaColor = MATERIA_COLORS[lezione.materia] ?? 'bg-gray-500';
 
@@ -179,30 +187,40 @@ export default function LezioniTabCollab({
 
                   {/* Docente candidatura column */}
                   <TableCell>
-                    <CandidaturaCell
-                      candidatura={candidaturaDocente}
-                      tipo="docente_lezione"
-                      lezioneId={lezione.id}
-                      isBlacklisted={isBlacklisted}
-                      isAssigned={isAssigned}
-                      isLoading={loading === `${lezione.id}:docente_lezione` || loading === candidaturaDocente?.id}
-                      onSubmit={() => submitCandidatura(lezione.id, 'docente_lezione')}
-                      onWithdraw={() => setWithdrawTarget(candidaturaDocente)}
-                    />
+                    <div className="space-y-1">
+                      <CandidaturaCell
+                        candidatura={candidaturaDocente}
+                        tipo="docente_lezione"
+                        lezioneId={lezione.id}
+                        isBlacklisted={isBlacklisted}
+                        isAssigned={isAssigned}
+                        isLoading={loading === `${lezione.id}:docente_lezione` || loading === candidaturaDocente?.id}
+                        onSubmit={() => submitCandidatura(lezione.id, 'docente_lezione')}
+                        onWithdraw={() => setWithdrawTarget(candidaturaDocente)}
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        {postiDocente}/{maxDocenti} assegnati
+                      </p>
+                    </div>
                   </TableCell>
 
                   {/* Q&A candidatura column */}
                   <TableCell>
-                    <CandidaturaCell
-                      candidatura={candidaturaQA}
-                      tipo="qa_lezione"
-                      lezioneId={lezione.id}
-                      isBlacklisted={isBlacklisted}
-                      isAssigned={isAssigned}
-                      isLoading={loading === `${lezione.id}:qa_lezione` || loading === candidaturaQA?.id}
-                      onSubmit={() => submitCandidatura(lezione.id, 'qa_lezione')}
-                      onWithdraw={() => setWithdrawTarget(candidaturaQA)}
-                    />
+                    <div className="space-y-1">
+                      <CandidaturaCell
+                        candidatura={candidaturaQA}
+                        tipo="qa_lezione"
+                        lezioneId={lezione.id}
+                        isBlacklisted={isBlacklisted}
+                        isAssigned={isAssigned}
+                        isLoading={loading === `${lezione.id}:qa_lezione` || loading === candidaturaQA?.id}
+                        onSubmit={() => submitCandidatura(lezione.id, 'qa_lezione')}
+                        onWithdraw={() => setWithdrawTarget(candidaturaQA)}
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        {postiQA}/{maxQA} assegnati
+                      </p>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
