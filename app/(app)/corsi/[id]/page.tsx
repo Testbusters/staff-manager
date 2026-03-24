@@ -90,6 +90,8 @@ export default async function CorsoDetailPage({
       { data: ownCandidature },
       { data: ownAssegnazioni },
       { data: allAssegnazioni },
+      { data: community },
+      { data: allegati },
     ] = await Promise.all([
       lezioniIds.length > 0
         ? svc.from('candidature').select('*').eq('collaborator_id', collab.id).in('lezione_id', lezioniIds)
@@ -100,6 +102,8 @@ export default async function CorsoDetailPage({
       lezioniIds.length > 0
         ? svc.from('assegnazioni').select('*').in('lezione_id', lezioniIds)
         : Promise.resolve({ data: [] }),
+      svc.from('communities').select('name').eq('id', corso.community_id).single(),
+      svc.from('allegati_globali').select('id, tipo, file_url, nome_file').eq('community_id', corso.community_id),
     ]);
 
     return (
@@ -110,7 +114,7 @@ export default async function CorsoDetailPage({
               <Link href="/corsi" className="text-sm text-link hover:text-link/80">← Corsi</Link>
             </div>
             <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-sm text-muted-foreground font-mono">{corso.codice_identificativo}</span>
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
                 {CORSO_STATO_LABELS[stato]}
@@ -119,6 +123,12 @@ export default async function CorsoDetailPage({
                 {corso.modalita === 'online' ? 'Online' : 'In aula'}
                 {corso.citta ? ` · ${corso.citta}` : ''}
               </span>
+              {community?.name && (
+                <span className="text-xs text-muted-foreground">{community.name}</span>
+              )}
+              {corso.linea && (
+                <span className="text-xs text-muted-foreground">Linea: {corso.linea}</span>
+              )}
             </div>
           </div>
         </div>
@@ -132,6 +142,23 @@ export default async function CorsoDetailPage({
             {corso.link_qa_assignments && <a href={corso.link_qa_assignments} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Q&A Assignments</a>}
             {corso.link_questionari && <a href={corso.link_questionari} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Questionari</a>}
             {corso.link_emergenza && <a href={corso.link_emergenza} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Emergenza</a>}
+          </div>
+        )}
+
+        {/* Allegati docenza / CoCoD'à */}
+        {(allegati ?? []).length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-6">
+            {(allegati ?? []).map((a: { id: string; tipo: string; file_url: string; nome_file: string }) => (
+              <a
+                key={a.id}
+                href={a.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-link hover:bg-muted/60 transition-colors"
+              >
+                📎 {a.nome_file} ({a.tipo === 'docenza' ? 'Docenza' : "CoCoDà"})
+              </a>
+            ))}
           </div>
         )}
 

@@ -2,10 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, MapPin } from 'lucide-react';
+import { GraduationCap, MapPin, ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,11 +44,35 @@ interface OwnCandidatura {
   stato: string;
 }
 
+interface Lezione {
+  id: string;
+  corso_id: string;
+  data: string;
+  orario_inizio: string;
+  orario_fine: string;
+  materia: string;
+}
+
+interface CollabOption {
+  id: string;
+  nome: string;
+  cognome: string;
+}
+
+interface CocodaAssegnazione {
+  id: string;
+  lezione_id: string;
+  collaborator_id: string;
+}
+
 interface Props {
   corsiDisponibili: Corso[];
   mieiCorsi: Corso[];
   ownCandidature: OwnCandidatura[];
   cittaResp: string | null;
+  mieiCorsiLezioni: Lezione[];
+  collabsPerCocoda: CollabOption[];
+  cocodaAssegnazioni: CocodaAssegnazione[];
 }
 
 const STATO_BADGE: Record<CorsoStato, string> = {
@@ -50,12 +81,35 @@ const STATO_BADGE: Record<CorsoStato, string> = {
   concluso: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
 };
 
-export default function AssegnazioneRespCittPage({ corsiDisponibili, mieiCorsi, ownCandidature, cittaResp }: Props) {
+export default function AssegnazioneRespCittPage({
+  corsiDisponibili,
+  mieiCorsi,
+  ownCandidature,
+  cittaResp,
+  mieiCorsiLezioni,
+  collabsPerCocoda,
+  cocodaAssegnazioni: initialCocodaAssegnazioni,
+}: Props) {
   const [candidature, setCandidature] = useState<OwnCandidatura[]>(ownCandidature);
+  const [cocodaAssegnazioni, setCocodaAssegnazioni] = useState<CocodaAssegnazione[]>(initialCocodaAssegnazioni);
   const [loading, setLoading] = useState<string | null>(null);
+  const [expandedCorsoId, setExpandedCorsoId] = useState<string | null>(null);
+  const [selectedCollabMap, setSelectedCollabMap] = useState<Record<string, string>>({});
 
   const getCandidatura = (corsoId: string) =>
     candidature.find((c) => c.corso_id === corsoId);
+
+  // Group lezioni by corso
+  const lezioniByCorso = mieiCorsiLezioni.reduce<Record<string, Lezione[]>>((acc, l) => {
+    if (!acc[l.corso_id]) acc[l.corso_id] = [];
+    acc[l.corso_id].push(l);
+    return acc;
+  }, {});
+
+  const collabMap = new Map(collabsPerCocoda.map((c) => [c.id, c]));
+
+  const getCocodaAssegnazione = (lezioneId: string) =>
+    cocodaAssegnazioni.find((a) => a.lezione_id === lezioneId);
 
   async function submitCandidatura(corsoId: string) {
     setLoading(corsoId);
@@ -84,6 +138,30 @@ export default function AssegnazioneRespCittPage({ corsiDisponibili, mieiCorsi, 
       });
       if (res.ok) {
         setCandidature((prev) => prev.filter((c) => c.id !== candidaturaId));
+      }
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function assignCocoda(lezioneId: string) {
+    const collaboratorId = selectedCollabMap[lezioneId];
+    if (!collaboratorId) return;
+    setLoading(`assign-${lezioneId}`);
+    try {
+      const res = await fetch('/api/assegnazioni', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lezione_id: lezioneId, collaborator_id: collaboratorId, ruolo: 'cocoda' }),
+      });
+      if (res.ok) {
+        const { assegnazione } = await res.json();
+        setCocodaAssegnazioni((prev) => [...prev, assegnazione]);
+        setSelectedCollabMap((prev) => {
+          const next = { ...prev };
+          delete next[lezioneId];
+          return next;
+        });
       }
     } finally {
       setLoading(null);
@@ -187,13 +265,11 @@ export default function AssegnazioneRespCittPage({ corsiDisponibili, mieiCorsi, 
         )}
       </div>
 
-      {/* Section 2: I miei corsi */}
+      {/* Section 2: I miei corsi — with CoCoD'à accordion */}
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">
-          <span className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            I miei corsi
-          </span>
+        <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+          <MapPin className="h-4 w-4" />
+          I miei corsi
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
           Corsi assegnati alla tua città.
@@ -205,48 +281,118 @@ export default function AssegnazioneRespCittPage({ corsiDisponibili, mieiCorsi, 
             description={cittaResp ? `Nessun corso assegnato a ${cittaResp} al momento.` : 'Nessun corso assegnato.'}
           />
         ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
-            <table className="w-auto text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Codice</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Nome</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Modalità</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Stato</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Date</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {mieiCorsi.map((corso) => {
-                  const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
-                  return (
-                    <tr key={corso.id} className="border-b border-border last:border-0 hover:bg-muted/60">
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{corso.codice_identificativo}</td>
-                      <td className="px-4 py-3 font-medium">{corso.nome}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-xs">
-                          {corso.modalita === 'online' ? 'Online' : 'In aula'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
-                          {CORSO_STATO_LABELS[stato]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+          <div className="space-y-3">
+            {mieiCorsi.map((corso) => {
+              const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
+              const lezioni = lezioniByCorso[corso.id] ?? [];
+              const isExpanded = expandedCorsoId === corso.id;
+              const hasLezioni = lezioni.length > 0;
+              const hasCollabs = collabsPerCocoda.length > 0;
+              const canExpand = hasLezioni && hasCollabs;
+
+              return (
+                <div key={corso.id} className="rounded-2xl bg-card border border-border overflow-hidden">
+                  {/* Corso row */}
+                  <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/60">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{corso.codice_identificativo}</span>
+                      <span className="font-medium text-sm truncate">{corso.nome}</span>
+                      <Badge variant="outline" className="text-xs shrink-0">
+                        {corso.modalita === 'online' ? 'Online' : 'In aula'}
+                      </Badge>
+                      <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+                        {CORSO_STATO_LABELS[stato]}
+                      </span>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
                         {corso.data_inizio} → {corso.data_fine}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link href={`/corsi/${corso.id}`} className="text-link hover:text-link/80 text-sm">
-                          Apri
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
+                      <Link href={`/corsi/${corso.id}`} className="text-link hover:text-link/80 text-sm">
+                        Apri
+                      </Link>
+                      {canExpand && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 gap-1"
+                          onClick={() => setExpandedCorsoId(isExpanded ? null : corso.id)}
+                        >
+                          {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                          CoCoD&apos;à
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* CoCoD'à panel */}
+                  {isExpanded && (
+                    <div className="border-t border-border bg-muted/20 px-4 py-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-3">
+                        Assegnazione CoCoD&apos;à per lezione
+                      </p>
+                      <div className="space-y-2">
+                        {lezioni.map((lezione) => {
+                          const existing = getCocodaAssegnazione(lezione.id);
+                          const existingCollab = existing ? collabMap.get(existing.collaborator_id) : null;
+                          const isAssigning = loading === `assign-${lezione.id}`;
+
+                          return (
+                            <div key={lezione.id} className="flex items-center gap-3 flex-wrap">
+                              <span className="text-xs text-muted-foreground whitespace-nowrap w-24 shrink-0">
+                                {lezione.data}
+                              </span>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                {lezione.orario_inizio}–{lezione.orario_fine}
+                              </span>
+                              <Badge variant="outline" className="text-xs shrink-0">{lezione.materia}</Badge>
+                              {existing ? (
+                                <span className="text-xs text-muted-foreground">
+                                  Assegnato:{' '}
+                                  <strong>
+                                    {existingCollab
+                                      ? `${existingCollab.nome} ${existingCollab.cognome}`
+                                      : existing.collaborator_id}
+                                  </strong>
+                                </span>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    value={selectedCollabMap[lezione.id] ?? ''}
+                                    onValueChange={(val) =>
+                                      setSelectedCollabMap((prev) => ({ ...prev, [lezione.id]: val }))
+                                    }
+                                  >
+                                    <SelectTrigger className="h-7 text-xs w-48">
+                                      <SelectValue placeholder="Seleziona collaboratore" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {collabsPerCocoda.map((c) => (
+                                        <SelectItem key={c.id} value={c.id} className="text-xs">
+                                          {c.cognome} {c.nome}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <Button
+                                    size="sm"
+                                    className="bg-brand hover:bg-brand/90 text-white text-xs h-7"
+                                    disabled={!selectedCollabMap[lezione.id] || isAssigning}
+                                    onClick={() => assignCocoda(lezione.id)}
+                                  >
+                                    Assegna
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
