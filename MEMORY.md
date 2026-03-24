@@ -16,7 +16,7 @@ Core implementation complete. Two deferred blocks remain. Working on `staging` b
 | Step | Description | Status |
 |------|-------------|--------|
 | eventi-citta | City events for resp.citt + collab feed city filter (migration 059) | ✅ complete 2026-03-24 |
-| corsi-4 | Q&A ore KPI — total ore per collaboratore as Q&A (DashboardCorsiKpi addition) | 🔄 next |
+| corsi-4 | Q&A ore KPI — total ore per collaboratore as Q&A (DashboardCorsiKpi addition) | ✅ complete 2026-03-24 |
 
 ---
 
