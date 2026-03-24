@@ -220,6 +220,13 @@ tickets
 | `notifications` | own only (ALL) | Simple ownership |
 | `notification_settings` | all authenticated (SELECT), admin (UPDATE) | |
 | `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL) | Content tables — community filtering is in-memory in API, NOT in RLS |
+| `corsi` | all authenticated (SELECT), admin (ALL) | |
+| `lezioni` | all authenticated (SELECT), admin (ALL) | |
+| `assegnazioni` | all authenticated (SELECT), admin (ALL), resp.citt INSERT ruolo=cocoda for citta_responsabile corsi (migration 058), resp.citt UPDATE valutazione for citta_responsabile corsi | `assegnazioni_cocoda_insert`: lezione_id IN (lezioni of corsi where citta = citta_responsabile) |
+| `candidature` | collab (INSERT docente/qa, UPDATE own → ritirata), resp.citt (INSERT citta_corso, UPDATE own → ritirata, UPDATE docente/qa stato for citta corsi), admin (ALL) | Migrations 056 + 057 |
+| `blacklist` | admin (ALL), resp.citt (SELECT) | |
+| `allegati_globali` | all authenticated (SELECT), admin (ALL) | |
+| `lookup_options` | all authenticated (SELECT), admin (ALL) | |
 | `email_templates/email_layout_config` | admin only | Configuration tables |
 | `export_runs/import_runs` | admin only | |
 | `feedback` | any authenticated (INSERT), admin (SELECT/UPDATE/DELETE) | |
