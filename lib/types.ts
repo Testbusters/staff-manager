@@ -216,6 +216,7 @@ export interface ContentEvent {
   tipo: EventTipo | null;
   file_url: string | null;
   created_at: string;
+  citta: string | null;
 }
 
 export interface Opportunity {

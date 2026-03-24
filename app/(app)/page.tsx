@@ -1060,7 +1060,7 @@ export default async function DashboardPage() {
     docsQuery,
     supabase.from('tickets').select('id, oggetto, stato, priority').eq('creator_user_id', user.id),
     supabase.from('events')
-      .select('id, titolo, start_datetime, tipo, community_ids')
+      .select('id, titolo, start_datetime, tipo, community_ids, citta')
       .order('start_datetime', { ascending: true, nullsFirst: false })
       .limit(20),
     supabase.from('communications')
@@ -1448,8 +1448,16 @@ export default async function DashboardPage() {
       {/* Prossimi eventi */}
       {(() => {
         const today = new Date().toISOString();
-        const prossimiEventi = ((dashEvents ?? []) as { id: string; titolo: string; start_datetime: string | null; community_ids: string[] }[])
-          .filter((e) => e.start_datetime && e.start_datetime >= today && (e.community_ids.length === 0 || e.community_ids.some((id) => userCommunityIds.includes(id))))
+        const collabCitta = collaborator?.citta ?? null;
+        const prossimiEventi = ((dashEvents ?? []) as { id: string; titolo: string; start_datetime: string | null; community_ids: string[]; citta: string | null }[])
+          .filter((e) => {
+            if (!e.start_datetime || e.start_datetime < today) return false;
+            const communityMatch = e.community_ids.length === 0 || e.community_ids.some((id) => userCommunityIds.includes(id));
+            if (!communityMatch) return false;
+            // National events (citta null) always shown; city events shown only if collab citta matches
+            if (e.citta !== null && e.citta !== collabCitta) return false;
+            return true;
+          })
           .slice(0, 4);
         return prossimiEventi.length > 0 ? (
           <div className={sectionCls}>

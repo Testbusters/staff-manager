@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
+import {
+  getNotificationSettings,
+  getCollaboratoriForCommunities,
+  getCollaboratoriForCity,
+} from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 
-const WRITE_ROLES = ['amministrazione'];
+const WRITE_ROLES = ['amministrazione', 'responsabile_cittadino'];
 
 export async function GET() {
   const supabase = await createClient();
@@ -32,7 +36,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, is_active')
+    .select('role, is_active, citta_responsabile')
     .eq('user_id', user.id)
     .single();
 
@@ -60,6 +64,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
   }
 
+  // For responsabile_cittadino: auto-set citta and derive community_ids from their community
+  let eventCitta: string | null = null;
+  let effectiveCommunityIds = community_ids ?? [];
+
+  if (profile.role === 'responsabile_cittadino') {
+    if (!profile.citta_responsabile) {
+      return NextResponse.json({ error: 'Città responsabile non configurata' }, { status: 400 });
+    }
+    eventCitta = profile.citta_responsabile;
+
+    // Fetch resp.citt's community
+    const serviceClientTemp = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: collabRow } = await serviceClientTemp
+      .from('collaborators')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+    if (collabRow) {
+      const { data: cc } = await serviceClientTemp
+        .from('collaborator_communities')
+        .select('community_id')
+        .eq('collaborator_id', collabRow.id)
+        .single();
+      if (cc) effectiveCommunityIds = [cc.community_id];
+    }
+  }
+
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -75,9 +109,10 @@ export async function POST(request: Request) {
       location: location?.trim() || null,
       luma_url: luma_url?.trim() || null,
       luma_embed_url: luma_embed_url?.trim() || null,
-      community_ids: community_ids ?? [],
+      community_ids: effectiveCommunityIds,
       tipo: tipo?.trim() || null,
       file_url: file_url?.trim() || null,
+      citta: eventCitta,
     })
     .select()
     .single();
@@ -86,11 +121,14 @@ export async function POST(request: Request) {
 
   // Fire content notifications
   try {
-    const [settings, collaboratori] = await Promise.all([
-      getNotificationSettings(serviceClient),
-      getCollaboratoriForCommunities(community_ids ?? [], serviceClient),
-    ]);
+    const settings = await getNotificationSettings(serviceClient);
     const setting = settings.get('evento_pubblicato:collaboratore');
+
+    // City events notify only collabs in that city; national events use community filter
+    const collaboratori = eventCitta
+      ? await getCollaboratoriForCity(eventCitta, effectiveCommunityIds, serviceClient)
+      : await getCollaboratoriForCommunities(effectiveCommunityIds, serviceClient);
+
     if ((!setting || setting.inapp_enabled) && collaboratori.length > 0) {
       const notifs = collaboratori.map((c) =>
         buildContentNotification(c.user_id, 'event', data.id, titolo.trim()),

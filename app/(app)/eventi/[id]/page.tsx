@@ -100,11 +100,18 @@ export default async function EventDetailPage({
       </Link>
 
       <div className="space-y-3">
-        {event.tipo && (
-          <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[event.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
-            {TIPO_LABELS[event.tipo as EventTipo] ?? event.tipo}
-          </span>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {event.tipo && (
+            <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[event.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
+              {TIPO_LABELS[event.tipo as EventTipo] ?? event.tipo}
+            </span>
+          )}
+          {event.citta && (
+            <span className="inline-block rounded-full border border-border bg-muted px-3 py-0.5 text-xs font-medium text-muted-foreground">
+              📍 {event.citta}
+            </span>
+          )}
+        </div>
         <h1 className="text-2xl font-semibold text-foreground">{event.titolo}</h1>
       </div>
 

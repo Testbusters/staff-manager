@@ -347,7 +347,14 @@ export default function EventList({
       {events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((ev) => (
         <div key={ev.id} className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-sm font-semibold text-foreground">{ev.titolo}</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-foreground">{ev.titolo}</h3>
+              {ev.citta && (
+                <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  📍 {ev.citta}
+                </span>
+              )}
+            </div>
             {canWrite && (
               <div className="flex gap-2 shrink-0">
                 <Button variant="ghost" size="sm" onClick={() => setEditingId(ev.id)} className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground">Modifica</Button>
