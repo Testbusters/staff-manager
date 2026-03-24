@@ -223,7 +223,7 @@ Copy `.env.local.example` as a starting point. Never commit `.env.local` — it 
 
 ```bash
 # Unit + API schema tests (Vitest)
-npx vitest run              # all 321 tests
+npx vitest run              # all 319 tests
 npx vitest run __tests__/api/  # API schema tests only
 
 # Type check

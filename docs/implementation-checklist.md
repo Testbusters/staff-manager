@@ -2,13 +2,14 @@
 
 > Update this file at the end of every functional block (Phase 8 of the pipeline).
 > This is the source of truth for project status. Read before starting a new block.
-> Last updated 2026-03-22. Block corsi-3 ✅ (2026-03-22). Next: Functional Dependency Step 2 (RBAC Matrix).
+> Last updated 2026-03-24. Block corsi-dashboard ✅ (2026-03-24). Next: eventi-citta.
 
 ---
 
 ## Log
 
 | Data | Blocco | Stato | Test | Note |
+| 2026-03-24 | corsi-dashboard — Dashboard + Profile Corsi Gaps (G1–G7) | ✅ | tsc ✅, build ✅, vitest 317/319 ✅ (2 pre-existing failures — expense-form.test.ts ticket categories), e2e ⏸ | No migration. G1: materie_insegnate chips in collab dashboard hero. G2/G4: DashboardCorsiKpi (6 KPI cards — assegnatiDocente, svoltiDocente, valMediaDocente, valMediaCocoda, assegnatiQA, svoltiQA) computed from assegnazioni+lezioni+corsi state machine. G3: profilo hero card (initials/avatar, nome, community, materie chips) above tab bar. G5: "Prossimi eventi" box (national, start_datetime ≥ today, max 4, links to /eventi). G6: posti count "X/Y assegnati" below candidatura buttons in LezioniTabCollab (from allAssegnazioni already fetched). G7: resp.citt dashboard "Ultimi aggiornamenti" section with 4 tabs (DashboardUpdates) — events, comms+resources, opps+discounts, documents. NEW: components/corsi/DashboardCorsiKpi.tsx. MOD: app/(app)/page.tsx, app/(app)/profilo/page.tsx, components/corsi/LezioniTabCollab.tsx. |
 | 2026-03-22 | corsi-3 — Responsabile Cittadino view (assegnazione, candidature review, valutazioni) | ✅ | tsc ✅, build ✅, vitest 315/319 ✅ (4 pre-existing failures — corsi.test.ts proxy redirect ×2 + expense-form ticket categories ×2), 6 new candidature-corsi3 tests ✅, e2e ⏸ | Migration 057: 4 RLS policies for resp.citt — `candidature_cittadino_insert` (citta_corso INSERT), `candidature_cittadino_withdraw` (own citta_corso → ritirata), `candidature_review` (docente/qa accettata\|ritirata scoped to citta_responsabile), `assegnazioni_valutazione_update` (valutazione UPDATE scoped to citta_responsabile). NEW: PATCH /api/candidature/[id] extended with admin + resp.citt review branch; POST /api/candidature extended with resp.citt citta_corso branch; NEW PATCH /api/corsi/[id]/valutazioni (bulk valutazione update per collaboratore×corso). NEW routes: /corsi/assegnazione (landing — corsi senza città + I miei corsi) + /corsi/valutazioni (per-collab×corso score input). NEW components: AssegnazioneRespCittPage (optimistic candidatura submit/withdraw), LezioniTabRespCitt (candidatura Accetta/Rifiuta per lezione), ValutazioniRespCittPage (score input per collab×corso with save). MOD: corsi/page.tsx (resp.citt → redirect /corsi/assegnazione), corsi/[id]/page.tsx (resp.citt branch + LezioniTabRespCitt), app/(app)/page.tsx (resp.citt dashboard — city KPIs, no financial widgets). Bug fix: collabMap fetched from collaborators.nome/cognome directly (not via user_profiles which has no nome/cognome). |
 | 2026-03-22 | corsi-2 — Vista collaboratore + Candidature | ✅ | tsc ✅, build ✅, vitest 309/313 ✅ (4 pre-existing failures — corsi.test.ts proxy redirect ×2 + expense-form ticket categories ×2), 9 new candidature tests ✅, e2e ⏸ | Migration 056: RLS policies `candidature_collab_insert` + `candidature_collab_update_own`. NEW: POST /api/candidature (blacklist check + duplicate check + insert), PATCH /api/candidature/[id] (ownership + in_attesa guard → ritirata). NEW: CorsiListCollab.tsx (card grid, stato badge), LezioniTabCollab.tsx (table + DropdownMenu candidatura + AlertDialog withdraw + optimistic state). MOD: corsi/page.tsx (collab branch — fetch community via collaborator_communities, filter concluso, render CorsiListCollab). MOD: corsi/[id]/page.tsx (collab branch — 7 fetches: collab, community, blacklist, corso, lezioni, own candidature, own+all assegnazioni; link group display). MOD: lib/types.ts (+Candidatura +Assegnazione interfaces). Bug fix: community fetched from collaborator_communities (not collaborators.community_id which doesn't exist). |
 | 2026-03-22 | Fix — Delete IN_ATTESA compensations/reimbursements (responsabile_compensi) | ✅ | tsc ✅, build ✅, e2e ⏸ | No DB migration. DELETE handler on `DELETE /api/compensations/[id]` and `DELETE /api/expenses/[id]`: role check (responsabile_compensi\|amministrazione), stato guard (IN_ATTESA only), RLS-based community isolation, 422 on wrong stato, 204 on success. UI: trash icon on IN_ATTESA rows in ApprovazioniCompensazioni + ApprovazioniRimborsi (list); Elimina button in ActionPanel + ExpenseActionPanel (detail pages). All 4 touchpoints show AlertDialog confirmation before delete. On success: toast + router.refresh() (list) or router.push('/approvazioni') (detail). Applied directly on staging branch. FR-COMP-11, FR-REIMB-08. |
@@ -401,6 +402,22 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 | Date | Files | Test results | Notes |
 |---|---|---|---|
 | 2026-03-22 | 5 new, 3 modified | tsc ✅ · build ✅ · vitest 9/9 ✅ | Community fetched from collaborator_communities (not collaborators.community_id which doesn't exist). e2e ⏸ suspended |
+
+---
+
+## Block corsi-dashboard — Dashboard + Profile Corsi Gaps ✅
+
+> Requirement: `docs/requirements.md` — Block corsi-dashboard
+> Dependencies: corsi-1, corsi-2, corsi-3 (assegnazioni, candidature, valutazioni tables)
+
+| Sub-block | Status | Notes |
+|---|---|---|
+| G1 — Materie chips on dashboard | ✅ | collab dashboard hero: materie_insegnate chips, "Non configurato" fallback |
+| G2/G4 — DashboardCorsiKpi | ✅ | NEW components/corsi/DashboardCorsiKpi.tsx — 6 KPI cards (assegnati/svolti docente, val.media docente+CoCoDà, assegnati/svolti Q&A) with correct state-machine computation |
+| G3 — Profilo hero card | ✅ | profilo/page.tsx: hero card (initials/avatar, nome, community, materie chips) above tab bar |
+| G5 — Prossimi eventi box | ✅ | national events only, start_datetime ≥ today, max 4, links to /eventi |
+| G6 — Posti count on lezioni | ✅ | LezioniTabCollab: "X/Y assegnati" below each candidatura cell |
+| G7 — Resp.citt dashboard updates | ✅ | DashboardUpdates section (events/comms/opps/docs tabs) added to resp.citt dashboard branch |
 
 ---
 
