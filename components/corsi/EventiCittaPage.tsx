@@ -6,7 +6,6 @@ import { CalendarDays, MapPin, Plus, Pencil, Trash2 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -20,6 +19,14 @@ import {
 } from '@/components/ui/table';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import type { ContentEvent, EventTipo } from '@/lib/types';
+
+const TIPO_COLORS: Record<EventTipo, string> = {
+  Convention:       'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400',
+  Attivita_interna: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400',
+  Workshop:         'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400',
+  Formazione:       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400',
+  Altro:            'bg-muted border-border text-muted-foreground',
+};
 
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'Convention',       label: 'Convention' },
@@ -173,7 +180,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold text-foreground">
+          <h1 className="text-xl font-semibold text-foreground">
             Eventi di {citta}
           </h1>
         </div>
@@ -191,7 +198,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
           description="Crea il primo evento per questa città."
         />
       ) : (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="w-fit rounded-lg border border-border bg-card overflow-hidden">
           <Table className="w-auto">
             <TableHeader>
               <TableRow>
@@ -221,7 +228,9 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                   </TableCell>
                   <TableCell>
                     {ev.tipo ? (
-                      <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
+                      <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[ev.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
+                        {ev.tipo}
+                      </span>
                     ) : '—'}
                   </TableCell>
                   <TableCell className="text-right">
@@ -259,51 +268,53 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
               {editing ? 'Modifica evento' : `Nuovo evento — ${citta}`}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Titolo *</label>
-              <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dell'evento" required />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Tipo</label>
-              <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIPO_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={handleSave}>
+            <div className="space-y-4 pt-2 overflow-y-auto max-h-[60vh] pr-1">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Data inizio</label>
-                <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
+                <label className="text-sm font-medium text-foreground">Titolo *</label>
+                <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dell'evento" />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Data fine</label>
-                <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
+                <label className="text-sm font-medium text-foreground">Tipo</label>
+                <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIPO_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-foreground">Data inizio</label>
+                  <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-foreground">Data fine</label>
+                  <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">Luogo</label>
+                <Input value={form.location} onChange={set('location')} placeholder="Es. Online, Milano — Via Roma 1" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">Descrizione</label>
+                <RichTextEditor
+                  value={form.descrizione}
+                  onChange={(v) => setForm((f) => ({ ...f, descrizione: v }))}
+                  placeholder="Descrizione dell'evento"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">Link Luma</label>
+                <Input value={form.luma_url} onChange={set('luma_url')} placeholder="https://lu.ma/..." />
               </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Luogo</label>
-              <Input value={form.location} onChange={set('location')} placeholder="Es. Online, Milano — Via Roma 1" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Descrizione</label>
-              <RichTextEditor
-                value={form.descrizione}
-                onChange={(v) => setForm((f) => ({ ...f, descrizione: v }))}
-                placeholder="Descrizione dell'evento"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Link Luma</label>
-              <Input value={form.luma_url} onChange={set('luma_url')} placeholder="https://lu.ma/..." />
-            </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={closeDialog} disabled={saving}>
                 Annulla
               </Button>

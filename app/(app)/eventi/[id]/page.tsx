@@ -95,7 +95,7 @@ export default async function EventDetailPage({
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <Link href="/eventi" className="text-sm text-muted-foreground hover:text-foreground transition block mb-2">
+      <Link href="/eventi" className="text-sm text-link hover:text-link/80 transition block mb-2">
         ← Torna agli eventi
       </Link>
 
@@ -171,7 +171,7 @@ export default async function EventDetailPage({
             href={gcalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-3 text-sm text-foreground transition"
           >
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />Aggiungi a Google Calendar
           </a>

@@ -152,6 +152,11 @@ export default async function EventiPage({
                 {TIPO_LABELS[ev.tipo as EventTipo] ?? ev.tipo}
               </span>
             )}
+            {ev.citta && (
+              <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                📍 {ev.citta}
+              </span>
+            )}
             <h3 className={`text-sm font-semibold ${isPast ? 'text-muted-foreground' : 'text-foreground'}`}>
               {ev.titolo}
             </h3>
