@@ -201,15 +201,30 @@ export default async function CorsoDetailPage({
       ? await svc.from('candidature').select('*').in('lezione_id', lezioniIds).neq('stato', 'ritirata')
       : { data: [] };
 
-    // Fetch collaborator names directly from collaborators table
+    // Fetch collaborator names + metadata + blacklist
     const collabIds = [...new Set((candidature ?? []).map((c: { collaborator_id: string | null }) => c.collaborator_id).filter(Boolean) as string[])];
-    const collabRows = collabIds.length > 0
-      ? (await svc.from('collaborators').select('id, nome, cognome').in('id', collabIds)).data ?? []
-      : [];
+
+    const [blacklistResult, collabDetailsResult, qaCountResult] = await Promise.all([
+      svc.from('blacklist').select('collaborator_id'),
+      collabIds.length > 0
+        ? svc.from('collaborators').select('id, nome, cognome, materie_insegnate, citta').in('id', collabIds)
+        : Promise.resolve({ data: [] as { id: string; nome: string | null; cognome: string | null; materie_insegnate: string[] | null; citta: string | null }[] }),
+      collabIds.length > 0
+        ? svc.from('assegnazioni').select('collaborator_id').eq('ruolo', 'qa').not('valutazione', 'is', null).in('collaborator_id', collabIds)
+        : Promise.resolve({ data: [] as { collaborator_id: string }[] }),
+    ]);
+
+    const blacklistedIds = new Set((blacklistResult.data ?? []).map((b: { collaborator_id: string }) => b.collaborator_id));
 
     const collabMap: Record<string, { nome: string; cognome: string }> = {};
-    for (const c of collabRows) {
+    const collabMetadata: Record<string, { materie: string[]; citta: string; qaSvolti: number }> = {};
+    for (const c of collabDetailsResult.data ?? []) {
       collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '' };
+      collabMetadata[c.id] = {
+        materie: c.materie_insegnate ?? [],
+        citta: c.citta ?? '',
+        qaSvolti: (qaCountResult.data ?? []).filter((q) => q.collaborator_id === c.id).length,
+      };
     }
 
     return (
@@ -236,6 +251,10 @@ export default async function CorsoDetailPage({
           lezioni={lezioni ?? []}
           candidature={candidature ?? []}
           collabMap={collabMap}
+          maxDocenti={corso.max_docenti_per_lezione}
+          maxQA={corso.max_qa_per_lezione}
+          blacklistedIds={blacklistedIds}
+          collabMetadata={collabMetadata}
         />
       </div>
     );
