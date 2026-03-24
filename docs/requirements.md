@@ -736,3 +736,41 @@ Closes G1–G7 identified in post-release compliance review of corsi-1/2/3.
 
 ### New components
 - `components/corsi/DashboardCorsiKpi.tsx`: 6 KPI cards client component
+
+
+---
+
+## Block corsi-blocco4 — Blocco 4 Corsi Gap Fixes
+
+### Scope
+Gap fixes (G1–G6 + anomaly A1) identified during compliance review of the Blocco 4 Corsi raw requirements against corsi-1/2/3/corsi-dashboard.
+
+### Implemented
+
+- **G1** — Dashboard collab: Add `assegnatiCocoda` + `svoltiCocoda` KPI boxes (DashboardCorsiKpi: 6→8 boxes)
+- **A1+G2** — `/corsi` collab: 3 scrollable sections:
+  - Corsi assegnati (own assegnazioni, any stato)
+  - Corsi programmati — Docenza (community corsi, not concluso; in_aula filtered by `collaborators.citta = corsi.citta`; online = all)
+  - Q&A programmati (community corsi, not concluso, no city filter)
+- **G3** — `/corsi` collab: monthly calendar above sections, colored cells by ruolo (brand=docente, amber=cocoda, green=qa), prev/next navigation
+- **G4** — `/corsi/[id]` collab: display community name, `linea`, allegati docenza/CoCoD'à
+- **G5** — ✅ Already done in corsi-1 (`linea` field in CorsoForm at line 197)
+- **G6** — Resp.citt CoCoD'à direct assignment: migration 058 (RLS INSERT), POST /api/assegnazioni, CoCoD'à panel in `/corsi/assegnazione` per lezione with collab dropdown
+
+### Out of scope
+- CoCoD'à removal (not in requirements)
+- City filter for Q&A section (by spec Q&A has no city filter)
+- Allegati management (admin-only, already in admin panel)
+
+### Files
+- NEW: `supabase/migrations/058_assegnazioni_cocoda_rls.sql`
+- NEW: `app/api/assegnazioni/route.ts`
+- NEW: `components/corsi/CorsiCalendario.tsx`
+- NEW: `components/corsi/CorsiPageCollab.tsx`
+- MOD: `components/corsi/DashboardCorsiKpi.tsx`
+- MOD: `app/(app)/page.tsx`
+- MOD: `app/(app)/corsi/page.tsx`
+- MOD: `app/(app)/corsi/[id]/page.tsx`
+- MOD: `app/(app)/corsi/assegnazione/page.tsx`
+- MOD: `components/corsi/AssegnazioneRespCittPage.tsx`
+- NEW: `__tests__/api/assegnazioni.test.ts`

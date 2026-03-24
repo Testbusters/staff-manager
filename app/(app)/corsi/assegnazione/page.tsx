@@ -41,6 +41,23 @@ export default async function CorsiAssegnazionePage() {
     .eq('tipo', 'citta_corso')
     .neq('stato', 'ritirata');
 
+  // Fetch lezioni for miei corsi + collabs for CoCoD'à assignment
+  const mieiCorsiIds = (mieicitta_corsi ?? []).map((c: { id: string }) => c.id);
+  const [{ data: mieiCorsiLezioni }, { data: collabsPerCocoda }] = await Promise.all([
+    mieiCorsiIds.length > 0
+      ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, materia').in('corso_id', mieiCorsiIds).order('data').order('orario_inizio')
+      : Promise.resolve({ data: [] }),
+    cittaResp
+      ? svc.from('collaborators').select('id, nome, cognome').eq('citta', cittaResp).order('cognome')
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // Fetch existing cocoda assegnazioni for miei corsi lezioni
+  const lezioniIds = (mieiCorsiLezioni ?? []).map((l: { id: string }) => l.id);
+  const { data: cocodaAssegnazioni } = lezioniIds.length > 0
+    ? await svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'cocoda')
+    : { data: [] };
+
   if (!cittaResp) {
     return (
       <div className="p-6">
@@ -58,6 +75,9 @@ export default async function CorsiAssegnazionePage() {
               mieiCorsi={[]}
               ownCandidature={ownCandidature ?? []}
               cittaResp={null}
+              mieiCorsiLezioni={[]}
+              collabsPerCocoda={[]}
+              cocodaAssegnazioni={[]}
             />
           </div>
         )}
@@ -74,6 +94,9 @@ export default async function CorsiAssegnazionePage() {
         mieiCorsi={mieicitta_corsi ?? []}
         ownCandidature={ownCandidature ?? []}
         cittaResp={cittaResp}
+        mieiCorsiLezioni={mieiCorsiLezioni ?? []}
+        collabsPerCocoda={collabsPerCocoda ?? []}
+        cocodaAssegnazioni={cocodaAssegnazioni ?? []}
       />
     </div>
   );

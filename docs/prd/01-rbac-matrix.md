@@ -157,7 +157,8 @@
 | Submit candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: citta_corso type; per corso |
 | Withdraw candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: own in_attesa only |
 | Review candidatura (lezione) | ❌ | ✅ | ❌ | ✅ | Resp.citt: corsi where citta = citta_responsabile; stato → accettata or ritirata |
-| Manage assegnazioni | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD |
+| Assign CoCoD'à (assegnazione ruolo=cocoda) | ❌ | ✅ | ❌ | ✅ | Resp.citt: INSERT cocoda for lezioni of corsi in their citta (RLS policy assegnazioni_cocoda_insert). Admin: full CRUD. |
+| Manage assegnazioni (docente/qa/full) | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD |
 | Set valutazione | ❌ | ✅ | ❌ | ❌ | Resp.citt: assegnazioni for their city's corsi; score 1–10 |
 | View blacklist | ❌ | ✅ | ❌ | ✅ | Read-only for resp.citt |
 | Manage blacklist | ❌ | ❌ | ❌ | ✅ | Admin: add/remove |

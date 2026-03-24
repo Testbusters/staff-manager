@@ -10,6 +10,8 @@ interface CorsiKpiData {
   valMediaCocoda: number | null;
   assegnatiQA: number;
   svoltiQA: number;
+  assegnatiCocoda: number;
+  svoltiCocoda: number;
 }
 
 function KpiBox({
@@ -44,7 +46,7 @@ export default function DashboardCorsiKpi({ kpi }: { kpi: CorsiKpiData }) {
         <GraduationCap className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-medium text-foreground">Corsi</h2>
       </div>
-      <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <KpiBox
           label="Corsi assegnati (Docente)"
           value={kpi.assegnatiDocente}
@@ -56,7 +58,17 @@ export default function DashboardCorsiKpi({ kpi }: { kpi: CorsiKpiData }) {
           sub="con valutazione"
         />
         <KpiBox
-          label="Valutazione media docente"
+          label="CoCoDà assegnati"
+          value={kpi.assegnatiCocoda}
+          sub="programmato / attivo"
+        />
+        <KpiBox
+          label="CoCoDà svolti"
+          value={kpi.svoltiCocoda}
+          sub="con valutazione"
+        />
+        <KpiBox
+          label="Valutazione media Docente"
           value={kpi.valMediaDocente !== null ? kpi.valMediaDocente.toFixed(1) : '—'}
           sub="su 10"
           highlight={kpi.valMediaDocente !== null}
@@ -70,12 +82,12 @@ export default function DashboardCorsiKpi({ kpi }: { kpi: CorsiKpiData }) {
         <KpiBox
           label="Q&A assegnati"
           value={kpi.assegnatiQA}
-          sub="ore: —"
+          sub="programmato / attivo"
         />
         <KpiBox
           label="Q&A svolti"
           value={kpi.svoltiQA}
-          sub="ore: —"
+          sub="con valutazione"
         />
       </div>
     </div>

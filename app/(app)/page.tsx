@@ -1022,7 +1022,7 @@ export default async function DashboardPage() {
   // Fetch collaborator record
   const { data: collaborator } = await supabase
     .from('collaborators')
-    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale, approved_lordo_ytd, approved_year, foto_profilo_url, data_ingresso, materie_insegnate')
+    .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale, approved_lordo_ytd, approved_year, foto_profilo_url, data_ingresso, materie_insegnate, citta')
     .eq('user_id', user.id)
     .single();
 
@@ -1121,6 +1121,8 @@ export default async function DashboardPage() {
     valMediaCocoda: null as number | null,
     assegnatiQA: 0,
     svoltiQA: 0,
+    assegnatiCocoda: 0,
+    svoltiCocoda: 0,
   };
 
   if (collaborator?.id) {
@@ -1187,6 +1189,18 @@ export default async function DashboardPage() {
       }).length;
 
       corsiKpi.svoltiQA = qaAss.filter((a) => {
+        const l = lezioneMap.get(a.lezione_id);
+        return l && l.data < today && a.valutazione !== null;
+      }).length;
+
+      corsiKpi.assegnatiCocoda = cocotaAss.filter((a) => {
+        const l = lezioneMap.get(a.lezione_id);
+        if (!l) return false;
+        const stato = corsoStatoMap.get(l.corso_id) ?? '';
+        return l.data >= today && (stato === 'programmato' || stato === 'attivo');
+      }).length;
+
+      corsiKpi.svoltiCocoda = cocotaAss.filter((a) => {
         const l = lezioneMap.get(a.lezione_id);
         return l && l.data < today && a.valutazione !== null;
       }).length;

@@ -19,7 +19,7 @@ import { getCorsoStato } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
 import CorsiFilterBar from '@/components/corsi/CorsiFilterBar';
-import CorsiListCollab from '@/components/corsi/CorsiListCollab';
+import CorsiPageCollab from '@/components/corsi/CorsiPageCollab';
 
 const STATO_BADGE: Record<CorsoStato, string> = {
   programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -45,28 +45,24 @@ export default async function CorsiPage({
   if (!profile?.is_active) redirect('/pending');
   const role = profile.role as string;
 
-  // collaboratore → show own community corsi list
+  // collaboratore → 3-section view with calendar
   if (role === 'collaboratore') {
     const svc = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    const { data: collab } = await svc
+    const { data: collabRow } = await svc
       .from('collaborators')
-      .select('id')
+      .select('id, citta')
       .eq('user_id', user.id)
       .single();
 
-    const { data: collabCommunity } = collab
-      ? await svc
-          .from('collaborator_communities')
-          .select('community_id')
-          .eq('collaborator_id', collab.id)
-          .single()
+    const { data: collabComm } = collabRow
+      ? await svc.from('collaborator_communities').select('community_id').eq('collaborator_id', collabRow.id).single()
       : { data: null };
 
-    if (!collabCommunity?.community_id) {
+    if (!collabComm?.community_id) {
       return (
         <div className="p-6">
           <EmptyState
@@ -78,33 +74,55 @@ export default async function CorsiPage({
       );
     }
 
-    const communityId = collabCommunity.community_id;
+    const communityId = collabComm.community_id;
 
-    const { data: community } = await svc
-      .from('communities')
-      .select('name')
-      .eq('id', communityId)
-      .single();
+    const [{ data: community }, { data: corsiComunitaRaw }, { data: assegnazioniRaw }] = await Promise.all([
+      svc.from('communities').select('name').eq('id', communityId).single(),
+      svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine')
+        .eq('community_id', communityId).order('data_inizio', { ascending: true }),
+      collabRow?.id
+        ? svc.from('assegnazioni').select('lezione_id, ruolo').eq('collaborator_id', collabRow.id)
+        : Promise.resolve({ data: [] as { lezione_id: string; ruolo: string }[] }),
+    ]);
 
-    const { data: corsiRaw } = await svc
-      .from('corsi')
-      .select('*')
-      .eq('community_id', communityId)
-      .order('data_inizio', { ascending: true });
-
-    const corsi = (corsiRaw ?? [])
+    const corsiComunita = (corsiComunitaRaw ?? [])
       .map((c) => ({ ...c, stato: getCorsoStato(c.data_inizio, c.data_fine) as CorsoStato }))
       .filter((c) => c.stato !== 'concluso');
+
+    // Fetch lezioni + corsi for assigned lezioni (calendar + section 1)
+    const lezioneIds = [...new Set((assegnazioniRaw ?? []).map((a) => a.lezione_id))];
+    const [{ data: lezioniRaw }] = await Promise.all([
+      lezioneIds.length > 0
+        ? svc.from('lezioni').select('id, corso_id, data, orario_inizio').in('id', lezioneIds)
+        : Promise.resolve({ data: [] as { id: string; corso_id: string; data: string; orario_inizio: string }[] }),
+    ]);
+
+    const corsiAssegnatiIds = [...new Set((lezioniRaw ?? []).map((l) => l.corso_id))];
+    const { data: corsiAssegnatiRaw } = corsiAssegnatiIds.length > 0
+      ? await svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine').in('id', corsiAssegnatiIds)
+      : { data: [] as typeof corsiComunitaRaw };
+
+    const corsiAssegnati = (corsiAssegnatiRaw ?? []).map((c) => ({
+      ...c,
+      stato: getCorsoStato(c.data_inizio, c.data_fine) as CorsoStato,
+    }));
 
     return (
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-xl font-semibold text-foreground">Corsi</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Corsi disponibili per {community?.name ?? 'la tua community'}.
+            {community?.name ?? 'La tua community'}
           </p>
         </div>
-        <CorsiListCollab corsi={corsi} />
+        <CorsiPageCollab
+          communityName={community?.name ?? ''}
+          collabCitta={collabRow?.citta ?? null}
+          corsiAssegnati={corsiAssegnati}
+          corsiComunita={corsiComunita}
+          assegnazioni={assegnazioniRaw ?? []}
+          lezioni={lezioniRaw ?? []}
+        />
       </div>
     );
   }
