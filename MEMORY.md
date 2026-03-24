@@ -5,18 +5,16 @@
 
 ---
 
-## Active plan — Deferred blocks
+## Active plan
 
 ### Context
-Core implementation complete. Two deferred blocks remain. Working on `staging` branch directly
-(no worktrees needed for remaining small-scope blocks).
-
-### Steps — progress
+All defined blocks complete. No active in-progress work.
 
 | Step | Description | Status |
 |------|-------------|--------|
 | eventi-citta | City events for resp.citt + collab feed city filter (migration 059) | ✅ complete 2026-03-24 |
-| corsi-4 | Q&A ore KPI — total ore per collaboratore as Q&A (DashboardCorsiKpi addition) | ✅ complete 2026-03-24 |
+| corsi-4 | Q&A ore KPI — DashboardCorsiKpi addition | ✅ complete 2026-03-24 |
+| resp-citt-gaps | Resp.citt gap fixes: revoke, CoCoD'à rimuovi, blacklist, Q&A metadata, export CSV, E13/E14, cron (migration 060) | ✅ complete 2026-03-24 |
 
 ---
 
