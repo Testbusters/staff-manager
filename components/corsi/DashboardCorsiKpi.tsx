@@ -10,8 +10,14 @@ interface CorsiKpiData {
   valMediaCocoda: number | null;
   assegnatiQA: number;
   svoltiQA: number;
+  oreAssegnatiQA: number;
+  oreSvoltiQA: number;
   assegnatiCocoda: number;
   svoltiCocoda: number;
+}
+
+function fmtOre(ore: number): string {
+  return ore % 1 === 0 ? String(ore) : ore.toFixed(1);
 }
 
 function KpiBox({
@@ -82,12 +88,12 @@ export default function DashboardCorsiKpi({ kpi }: { kpi: CorsiKpiData }) {
         <KpiBox
           label="Q&A assegnati"
           value={kpi.assegnatiQA}
-          sub="programmato / attivo"
+          sub={kpi.oreAssegnatiQA > 0 ? `${fmtOre(kpi.oreAssegnatiQA)} ore · programmato / attivo` : 'programmato / attivo'}
         />
         <KpiBox
           label="Q&A svolti"
           value={kpi.svoltiQA}
-          sub="con valutazione"
+          sub={kpi.oreSvoltiQA > 0 ? `${fmtOre(kpi.oreSvoltiQA)} ore · con valutazione` : 'con valutazione'}
         />
       </div>
     </div>

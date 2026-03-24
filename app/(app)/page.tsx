@@ -1111,7 +1111,7 @@ export default async function DashboardPage() {
   );
 
   type AssRow = { id: string; ruolo: string; valutazione: number | null; lezione_id: string };
-  type LezRow = { id: string; data: string; corso_id: string };
+  type LezRow = { id: string; data: string; corso_id: string; ore: number | null };
   type CorsoRow = { id: string; stato_raw: string; data_inizio: string; data_fine: string };
 
   let corsiKpi = {
@@ -1121,6 +1121,8 @@ export default async function DashboardPage() {
     valMediaCocoda: null as number | null,
     assegnatiQA: 0,
     svoltiQA: 0,
+    oreAssegnatiQA: 0,
+    oreSvoltiQA: 0,
     assegnatiCocoda: 0,
     svoltiCocoda: 0,
   };
@@ -1134,7 +1136,7 @@ export default async function DashboardPage() {
     if ((ownAss ?? []).length > 0) {
       const lezioneIds = [...new Set((ownAss ?? []).map((a: AssRow) => a.lezione_id))];
       const [{ data: lezioniData }, ] = await Promise.all([
-        serviceClientCorsi.from('lezioni').select('id, data, corso_id').in('id', lezioneIds),
+        serviceClientCorsi.from('lezioni').select('id, data, corso_id, ore').in('id', lezioneIds),
       ]);
 
       const corsiIds = [...new Set((lezioniData ?? []).map((l: LezRow) => l.corso_id))];
@@ -1181,17 +1183,21 @@ export default async function DashboardPage() {
         ? Math.round((cocVals.reduce((s, v) => s + v, 0) / cocVals.length) * 10) / 10
         : null;
 
-      corsiKpi.assegnatiQA = qaAss.filter((a) => {
+      const qaAssegnati = qaAss.filter((a) => {
         const l = lezioneMap.get(a.lezione_id);
         if (!l) return false;
         const stato = corsoStatoMap.get(l.corso_id) ?? '';
         return l.data >= today && (stato === 'programmato' || stato === 'attivo');
-      }).length;
+      });
+      corsiKpi.assegnatiQA = qaAssegnati.length;
+      corsiKpi.oreAssegnatiQA = qaAssegnati.reduce((s, a) => s + (lezioneMap.get(a.lezione_id)?.ore ?? 0), 0);
 
-      corsiKpi.svoltiQA = qaAss.filter((a) => {
+      const qaSwolti = qaAss.filter((a) => {
         const l = lezioneMap.get(a.lezione_id);
         return l && l.data < today && a.valutazione !== null;
-      }).length;
+      });
+      corsiKpi.svoltiQA = qaSwolti.length;
+      corsiKpi.oreSvoltiQA = qaSwolti.reduce((s, a) => s + (lezioneMap.get(a.lezione_id)?.ore ?? 0), 0);
 
       corsiKpi.assegnatiCocoda = cocotaAss.filter((a) => {
         const l = lezioneMap.get(a.lezione_id);
