@@ -255,6 +255,18 @@ FR-CORSI-14: The Responsabile Cittadino shall be able to assign a CoCoD'à (co-c
 FR-CORSI-16: The collaboratore dashboard Q&A KPI boxes shall display both the count of upcoming/past Q&A assignments and the total hours (ore) for those assignments. Hours are computed by summing lezione.ore (a generated column derived from orario_inizio and orario_fine) for the filtered assignment set. If ore = 0, only the contextual label ("programmato / attivo" or "con valutazione") is shown.
 FR-CORSI-15: The collaboratore /corsi page shall present three clearly separated sections: (1) "I miei corsi" — corsi in which the collaboratore has at least one assegnazione; (2) "Docenza" — all community corsi available for docente candidature (in_aula filtered by city match if citta is set); (3) "Q&A" — all community corsi available for Q&A candidature. A monthly calendar widget (CorsiCalendario) shall be shown above the sections when the collaboratore has at least one assegnazione, displaying each lezione with colour coding by role (docente/cocoda/qa) and supporting month navigation.
 
+FR-CORSI-17: The Responsabile Cittadino shall be able to revoke an accepted candidatura (docente or Q&A) by setting its stato back to 'in_attesa', using a "Revoca" button visible on accettata rows in /corsi/[id]. The revoke action is guarded by an AlertDialog and implemented via PATCH /api/candidature/[id] with stato='in_attesa' (only valid when current stato is 'accettata').
+
+FR-CORSI-18: The Responsabile Cittadino shall be able to remove an existing CoCoD'à assegnazione from /corsi/assegnazione via a "Rimuovi" button with AlertDialog confirmation. The removal is implemented via DELETE /api/assegnazioni/[id] (ruolo check + city ownership check). After removal, the lezione row returns to the "select + Assegna" state.
+
+FR-CORSI-19: The /corsi/[id] page shall display, for each candidatura row visible to resp.citt: (a) a red "Blacklist" badge if the collaboratore is in the blacklist table; (b) for Q&A candidature, inline metadata chips (materie_insegnate, città, Q&A svolti count). Capacity limits (max_docenti_per_lezione, max_qa_per_lezione) shall be shown as outline badges above the candidature table.
+
+FR-CORSI-20: The /corsi/assegnazione page shall expose an "Export CSV" button per corso in the "I miei corsi" section. Clicking triggers a browser download of /api/assegnazioni/export?corso_id=UUID returning a CSV with columns: data, orario_inizio, orario_fine, materia, nome, cognome, ruolo. The export is scoped to the resp.citt's city.
+
+FR-CORSI-21: The system shall send an E13 assignment notification email to a collaboratore when: (a) their docente or Q&A candidatura is accepted by resp.citt or admin; (b) they are assigned as CoCoD'à by resp.citt. The email uses emailAssegnazioneCorsi() and is sent fire-and-forget.
+
+FR-CORSI-22: A Vercel cron job (GET /api/jobs/lesson-reminders, schedule 0 7 * * *) shall send E14 reminder emails to all collaboratori with assegnazioni on the next calendar day. Auth: Bearer CRON_SECRET. Emails are sent fire-and-forget per assegnazione.
+
 ## Part IV — Cross-Cutting Features
 ### 14. User Management & Onboarding
 Staff Manager operates on a strictly invite-only model. New accounts may only be created by the Amministrazione; there is no self-service registration path. The onboarding flow is designed to ensure that every collaboratore provides complete and verified profile information before gaining access to the full portal.
