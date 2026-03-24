@@ -51,6 +51,14 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | C2 | Corsi page date display: cards use raw ISO format (`2025-01-01`), table rows use `DD/MM/YYYY` — apply consistent `formatDate()` in `CorsiPageCollab` | LOW |
 | C3 | `AssegnazioneRespCittPage` section 1 uses native `<table>` instead of shadcn `<Table>` — migrate for component consistency | LOW |
 | C4 | CoCoD'à toggle button in `AssegnazioneRespCittPage` should show disabled state with Tooltip when `!hasLezioni` or `!hasCollabs` — explain why the feature is unavailable | LOW |
+| C5 | `/corsi` admin list — "Date" column truncated at right edge of viewport on standard 1280px screens; combine data_inizio/data_fine into a single column or reduce total column count | LOW |
+| C6 | `/corsi` admin list — "Apri" link text is barely distinguishable from foreground text in dark mode; verify it uses `text-link` token | LOW |
+| C7 | `/corsi/assegnazione` — H1/H2 heading weight compression on section-heavy page; "I miei corsi" H2 has map-pin icon, "Corsi disponibili" H2 has none — inconsistent | LOW |
+| C8 | `/corsi/valutazioni` — spinbox inputs lack "/10" range hint next to the field; user relies on column header alone for scale awareness | LOW |
+| C9 | `/corsi/[id]` — active tab style uses same `bg-brand` fill as primary CTA button ("Aggiungi lezione"); two competing focal points at the same visual level — consider underline/border-bottom active tab pattern | LOW |
+| C10 | `/corsi/nuovo` — "Annulla" button border invisible in light mode (outline variant stroke not rendering); investigate `border` token contrast in light theme | LOW |
+| C11 | `/corsi` collab list — "Corsi programmati — Docenza" and "Q&A programmati" sections show duplicates for collabs already assigned; add disambiguating subtitle or split into Assegnati/Disponibili tabs | LOW |
+| C12 | `/corsi/assegnazione` — "Azioni" column header absent in "Corsi disponibili" table; "I miei corsi" section has no column headers at all — apply consistent "Azioni" header pattern across both sections | LOW |
 | UX1 | Ticket form validation: global toast only, no inline `<FormMessage>` per field | LOW |
 | UX2 | Tab switching pattern inconsistency: `/comunicazioni` + `/approvazioni` use `<Link href="?tab=">` (URL-based, history entries), while `/compensi` uses Radix `<Tabs>` (state-based) — normalise to one pattern | LOW |
 | UI1 | G4: 6 bare `<p>` empty states in import sections and constrained UI contexts (NotificationBell, TicketDetailModal) — replace with `<EmptyState>` | LOW |
