@@ -198,7 +198,8 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
           description="Crea il primo evento per questa città."
         />
       ) : (
-        <div className="w-fit rounded-lg border border-border bg-card overflow-hidden">
+        <div className="w-full rounded-lg border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
           <Table className="w-auto">
             <TableHeader>
               <TableRow>
@@ -257,6 +258,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
 

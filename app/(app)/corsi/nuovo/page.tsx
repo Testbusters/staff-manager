@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CorsoForm from '@/components/corsi/CorsoForm';
@@ -34,6 +35,9 @@ export default async function NuovoCorsoPage() {
   return (
     <div className="p-6 max-w-3xl">
       <div className="mb-6">
+        <div className="mb-1">
+          <Link href="/corsi" className="text-sm text-link hover:text-link/80">← Corsi</Link>
+        </div>
         <h1 className="text-xl font-semibold text-foreground">Nuovo corso</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Compila i campi per creare un nuovo corso.

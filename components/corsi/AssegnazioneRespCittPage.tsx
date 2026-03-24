@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { GraduationCap, MapPin, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -124,6 +125,7 @@ export default function AssegnazioneRespCittPage({
       if (res.ok) {
         const { candidatura } = await res.json();
         setCandidature((prev) => [...prev, candidatura]);
+        toast.success('Candidatura città inviata');
       }
     } finally {
       setLoading(null);
@@ -197,7 +199,8 @@ export default function AssegnazioneRespCittPage({
             description="Non ci sono corsi senza città al momento."
           />
         ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
+            <div className="overflow-x-auto">
             <table className="w-auto text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
@@ -261,8 +264,9 @@ export default function AssegnazioneRespCittPage({
                           </div>
                         ) : (
                           <Button
+                            variant="outline"
                             size="sm"
-                            className="bg-brand hover:bg-brand/90 text-white text-xs h-7"
+                            className="text-xs h-7"
                             onClick={() => submitCandidatura(corso.id)}
                             disabled={loading === corso.id || !cittaResp}
                           >
@@ -275,6 +279,7 @@ export default function AssegnazioneRespCittPage({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

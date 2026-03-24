@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -96,6 +97,7 @@ export default function LezioniTabCollab({
       if (res.ok) {
         const { candidatura } = await res.json();
         setCandidature((prev) => [...prev, candidatura]);
+        toast.success('Candidatura inviata');
       }
     } finally {
       setLoading(null);
@@ -112,6 +114,7 @@ export default function LezioniTabCollab({
       if (res.ok) {
         const { candidatura } = await res.json();
         setCandidature((prev) => prev.map((c) => (c.id === id ? candidatura : c)));
+        toast.success('Candidatura ritirata');
       }
     } finally {
       setLoading(null);
@@ -137,7 +140,8 @@ export default function LezioniTabCollab({
         </div>
       )}
 
-      <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
+      <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
+        <div className="overflow-x-auto">
         <Table className="w-auto">
           <TableHeader>
             <TableRow>
@@ -227,6 +231,7 @@ export default function LezioniTabCollab({
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <AlertDialog open={!!withdrawTarget} onOpenChange={(open) => { if (!open) setWithdrawTarget(null); }}>

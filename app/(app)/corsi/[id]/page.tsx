@@ -232,7 +232,7 @@ export default async function CorsoDetailPage({
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Link href="/corsi/assegnazione" className="text-sm text-link hover:text-link/80">← Corsi</Link>
+              <Link href="/corsi/assegnazione" className="text-sm text-link hover:text-link/80">← Candidatura e Assegnazione</Link>
             </div>
             <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
             <div className="flex items-center gap-2 mt-1">

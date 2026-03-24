@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
       });
       if (res.ok) {
         setSaved((prev) => ({ ...prev, [key]: true }));
+        toast.success('Valutazione salvata');
       }
     } finally {
       setSaving((prev) => ({ ...prev, [key]: false }));
@@ -72,7 +74,8 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
             <Badge variant="outline" className="font-mono text-xs">{cv.corso.codice}</Badge>
           </div>
 
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
+            <div className="overflow-x-auto">
             <table className="w-auto text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
@@ -118,8 +121,9 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Button
+                            variant="outline"
                             size="sm"
-                            className="bg-brand hover:bg-brand/90 text-white text-xs h-7"
+                            className="text-xs h-7"
                             onClick={() => saveValutazione(cv.corso.id, collab.collaborator_id)}
                             disabled={isSaving || !isValid}
                           >
@@ -135,6 +139,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       ))}

@@ -66,15 +66,15 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-3">
-        <div className="grid grid-cols-7 mb-1">
+      <div className="p-3 overflow-x-auto">
+        <div className="grid grid-cols-7 mb-1 min-w-[280px]">
           {DAY_LABELS.map((d) => (
             <div key={d} className="text-center text-xs text-muted-foreground py-1 font-medium">
               {d}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-0.5">
+        <div className="grid grid-cols-7 gap-0.5 min-w-[280px]">
           {cells.map((day, i) => {
             if (!day) return <div key={i} className="min-h-[52px]" />;
             const dayEntries = lezioniByDay.get(day) ?? [];

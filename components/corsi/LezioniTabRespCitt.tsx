@@ -113,7 +113,7 @@ export default function LezioniTabRespCitt({
         const materiaStyle = MATERIA_COLORS[lezione.materia] ?? MATERIA_COLORS['default'];
 
         return (
-          <div key={lezione.id} className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div key={lezione.id} className="rounded-2xl bg-card border border-border overflow-hidden w-full">
             {/* Lezione header */}
             <div className="flex items-center gap-4 px-4 py-3 border-b border-border bg-muted/30">
               <span className="text-sm font-medium text-foreground">{lezione.data}</span>
@@ -130,6 +130,7 @@ export default function LezioniTabRespCitt({
                 Nessuna candidatura.
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table className="w-auto">
                 <TableHeader>
                   <TableRow>
@@ -288,6 +289,7 @@ export default function LezioniTabRespCitt({
                   })}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         );

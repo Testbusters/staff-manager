@@ -190,7 +190,7 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
                         variant="ghost"
                         size="sm"
                         aria-label="Elimina lezione"
-                        className="text-red-500 hover:text-red-600"
+                        className="text-destructive hover:text-destructive/80"
                         onClick={() => setDeleteId(l.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -268,7 +268,7 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 text-white"
+              variant="destructive"
               onClick={() => deleteId && handleDelete(deleteId)}
             >
               Elimina
