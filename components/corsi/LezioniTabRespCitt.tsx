@@ -40,6 +40,10 @@ interface Props {
   lezioni: Lezione[];
   candidature: Candidatura[];
   collabMap: Record<string, { nome: string; cognome: string }>;
+  maxDocenti: number;
+  maxQA: number;
+  blacklistedIds: Set<string>;
+  collabMetadata: Record<string, { materie: string[]; citta: string; qaSvolti: number }>;
 }
 
 const TIPO_LABEL: Record<string, string> = {
@@ -52,14 +56,22 @@ const STATO_BADGE: Record<string, string> = {
   accettata: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 };
 
-export default function LezioniTabRespCitt({ lezioni, candidature: initialCandidature, collabMap }: Props) {
+export default function LezioniTabRespCitt({
+  lezioni,
+  candidature: initialCandidature,
+  collabMap,
+  maxDocenti,
+  maxQA,
+  blacklistedIds,
+  collabMetadata,
+}: Props) {
   const [candidature, setCandidature] = useState<Candidatura[]>(initialCandidature);
   const [loading, setLoading] = useState<string | null>(null);
 
   const getCandidatureForLezione = (lezioneId: string) =>
     candidature.filter((c) => c.lezione_id === lezioneId);
 
-  async function reviewCandidatura(candidaturaId: string, stato: 'accettata' | 'ritirata') {
+  async function reviewCandidatura(candidaturaId: string, stato: 'accettata' | 'ritirata' | 'in_attesa') {
     setLoading(candidaturaId);
     try {
       const res = await fetch(`/api/candidature/${candidaturaId}`, {
@@ -90,6 +102,12 @@ export default function LezioniTabRespCitt({ lezioni, candidature: initialCandid
 
   return (
     <div className="space-y-6">
+      {/* Capacity info */}
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-xs">Docenti max: {maxDocenti}</Badge>
+        <Badge variant="outline" className="text-xs">Q&A max: {maxQA}</Badge>
+      </div>
+
       {lezioni.map((lezione) => {
         const lezioneCandidature = getCandidatureForLezione(lezione.id);
         const materiaStyle = MATERIA_COLORS[lezione.materia] ?? MATERIA_COLORS['default'];
@@ -126,9 +144,40 @@ export default function LezioniTabRespCitt({ lezioni, candidature: initialCandid
                     const nome = cand.collaborator_id
                       ? `${collabMap[cand.collaborator_id]?.nome ?? '—'} ${collabMap[cand.collaborator_id]?.cognome ?? ''}`.trim()
                       : '—';
+                    const isBlacklisted = cand.collaborator_id ? blacklistedIds.has(cand.collaborator_id) : false;
+                    const meta = cand.collaborator_id ? collabMetadata[cand.collaborator_id] : null;
+                    const isQA = cand.tipo === 'qa_lezione';
+
                     return (
                       <TableRow key={cand.id}>
-                        <TableCell className="font-medium text-sm">{nome}</TableCell>
+                        <TableCell className="font-medium text-sm">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span>{nome}</span>
+                              {isBlacklisted && (
+                                <Badge className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                  Blacklist
+                                </Badge>
+                              )}
+                            </div>
+                            {isQA && meta && (
+                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                {meta.materie.map((m) => (
+                                  <span
+                                    key={m}
+                                    className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ${MATERIA_COLORS[m] ?? MATERIA_COLORS['default']}`}
+                                  >
+                                    {m}
+                                  </span>
+                                ))}
+                                {meta.citta && (
+                                  <span className="text-muted-foreground text-xs">{meta.citta}</span>
+                                )}
+                                <span className="text-muted-foreground text-xs">Q&A svolti: {meta.qaSvolti}</span>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
                             {TIPO_LABEL[cand.tipo] ?? cand.tipo}
@@ -201,6 +250,37 @@ export default function LezioniTabRespCitt({ lezioni, candidature: initialCandid
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
+                          )}
+                          {cand.stato === 'accettata' && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-7"
+                                  disabled={loading === cand.id}
+                                >
+                                  Revoca
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Revoca candidatura?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Rimettere la candidatura di <strong>{nome}</strong> in attesa di revisione?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => reviewCandidatura(cand.id, 'in_attesa')}
+                                    disabled={loading === cand.id}
+                                  >
+                                    Revoca
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           )}
                         </TableCell>
                       </TableRow>

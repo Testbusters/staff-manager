@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { sendEmail } from '@/lib/email';
+import { emailAssegnazioneCorsi } from '@/lib/email-templates';
+import { getCollaboratorInfo } from '@/lib/notification-helpers';
 
 const schema = z.object({
   lezione_id: z.string().uuid(),
@@ -63,5 +66,27 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // E13: send assignment email for CoCoD'à fire-and-forget
+  try {
+    const info = await getCollaboratorInfo(collaborator_id, svc);
+    if (info?.email) {
+      const { data: lez } = await svc.from('lezioni').select('corso_id').eq('id', lezione_id).single();
+      if (lez) {
+        const { data: corso } = await svc.from('corsi').select('nome').eq('id', lez.corso_id).single();
+        if (corso) {
+          const { subject, html } = emailAssegnazioneCorsi({
+            nome: info.nome,
+            corso: corso.nome,
+            ruolo: "CoCoD'à",
+          });
+          sendEmail(info.email, subject, html).catch(() => {});
+        }
+      }
+    }
+  } catch {
+    // fire-and-forget — never block the response
+  }
+
   return NextResponse.json({ assegnazione: data }, { status: 201 });
 }

@@ -428,3 +428,55 @@ export function emailNuovoTicket(p: {
     html: layout(body),
   };
 }
+
+// ── E13 — Assegnazione corso (docente / Q&A / CoCoD'à) ────────
+export function emailAssegnazioneCorsi(p: {
+  nome: string;
+  corso: string;
+  ruolo: string;
+  link?: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`Sei stato assegnato come <strong>${p.ruolo}</strong> per il seguente corso.`)}
+    ${highlight([
+      { label: 'Corso', value: p.corso },
+      { label: 'Ruolo', value: p.ruolo },
+    ])}
+    ${bodyText('Accedi all\'app per consultare i dettagli del corso e le lezioni in programma.')}
+    ${ctaButton('Vai ai corsi', p.link ?? `${APP_URL}/corsi`)}
+  `;
+  return {
+    subject: `Sei stato assegnato come ${p.ruolo} — ${p.corso}`,
+    html: layout(body),
+  };
+}
+
+// ── E14 — Reminder lezione (24h prima) ────────────────────────
+export function emailReminderLezione(p: {
+  nome: string;
+  corso: string;
+  lezione_data: string;
+  orario: string;
+  materia: string;
+  ruolo: string;
+  link?: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`Ricordati che domani hai una lezione programmata come <strong>${p.ruolo}</strong>.`)}
+    ${highlight([
+      { label: 'Corso', value: p.corso },
+      { label: 'Materia', value: p.materia },
+      { label: 'Data', value: p.lezione_data },
+      { label: 'Orario', value: p.orario },
+      { label: 'Ruolo', value: p.ruolo },
+    ])}
+    ${bodyText('Accedi all\'app per consultare i materiali e i dettagli della lezione.')}
+    ${ctaButton('Vai ai corsi', p.link ?? `${APP_URL}/corsi`)}
+  `;
+  return {
+    subject: `Reminder: lezione domani — ${p.corso} (${p.materia})`,
+    html: layout(body),
+  };
+}

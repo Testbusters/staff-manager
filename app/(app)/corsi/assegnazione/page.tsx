@@ -52,11 +52,16 @@ export default async function CorsiAssegnazionePage() {
       : Promise.resolve({ data: [] }),
   ]);
 
-  // Fetch existing cocoda assegnazioni for miei corsi lezioni
+  // Fetch existing cocoda assegnazioni for miei corsi lezioni + blacklist
   const lezioniIds = (mieiCorsiLezioni ?? []).map((l: { id: string }) => l.id);
-  const { data: cocodaAssegnazioni } = lezioniIds.length > 0
-    ? await svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'cocoda')
-    : { data: [] };
+  const [cocodaResult, blacklistResult] = await Promise.all([
+    lezioniIds.length > 0
+      ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'cocoda')
+      : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
+    svc.from('blacklist').select('collaborator_id'),
+  ]);
+  const cocodaAssegnazioni = cocodaResult.data;
+  const blacklistedIds = new Set((blacklistResult.data ?? []).map((b: { collaborator_id: string }) => b.collaborator_id));
 
   if (!cittaResp) {
     return (
@@ -78,6 +83,7 @@ export default async function CorsiAssegnazionePage() {
               mieiCorsiLezioni={[]}
               collabsPerCocoda={[]}
               cocodaAssegnazioni={[]}
+              blacklistedIds={blacklistedIds}
             />
           </div>
         )}
@@ -97,6 +103,7 @@ export default async function CorsiAssegnazionePage() {
         mieiCorsiLezioni={mieiCorsiLezioni ?? []}
         collabsPerCocoda={collabsPerCocoda ?? []}
         cocodaAssegnazioni={cocodaAssegnazioni ?? []}
+        blacklistedIds={blacklistedIds}
       />
     </div>
   );

@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { sendEmail } from '@/lib/email';
+import { emailAssegnazioneCorsi } from '@/lib/email-templates';
+import { getCollaboratorInfo } from '@/lib/notification-helpers';
 
 const ReviewSchema = z.object({
-  stato: z.enum(['accettata', 'ritirata']),
+  stato: z.enum(['accettata', 'ritirata', 'in_attesa']),
 });
 
 export async function PATCH(
@@ -87,7 +90,7 @@ export async function PATCH(
 
   const { data: candidatura } = await svc
     .from('candidature')
-    .select('id, tipo, stato, city_user_id, lezione_id')
+    .select('id, tipo, stato, city_user_id, lezione_id, collaborator_id')
     .eq('id', id)
     .maybeSingle();
 
@@ -104,6 +107,11 @@ export async function PATCH(
     } else {
       return NextResponse.json({ error: 'Cannot review this candidatura type' }, { status: 403 });
     }
+  }
+
+  // Guard: in_attesa is only valid if current stato is accettata (revoke)
+  if (stato === 'in_attesa' && candidatura.stato !== 'accettata') {
+    return NextResponse.json({ error: 'Can only revert to in_attesa from accettata' }, { status: 409 });
   }
 
   // resp.citt: verify the lezione's corso belongs to their city
@@ -136,6 +144,35 @@ export async function PATCH(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // E13: send assignment email when candidatura is accepted
+  if (stato === 'accettata' && candidatura.collaborator_id) {
+    try {
+      const info = await getCollaboratorInfo(candidatura.collaborator_id, svc);
+      if (info?.email) {
+        const ruoloLabel = candidatura.tipo === 'qa_lezione' ? "Q&A" : 'Docente';
+
+        // Fetch corso name for the email
+        let corsoNome = '';
+        if (candidatura.lezione_id) {
+          const { data: lez } = await svc.from('lezioni').select('corso_id').eq('id', candidatura.lezione_id).single();
+          if (lez) {
+            const { data: c } = await svc.from('corsi').select('nome').eq('id', lez.corso_id).single();
+            corsoNome = c?.nome ?? '';
+          }
+        }
+
+        const { subject, html } = emailAssegnazioneCorsi({
+          nome: info.nome,
+          corso: corsoNome,
+          ruolo: ruoloLabel,
+        });
+        sendEmail(info.email, subject, html).catch(() => {});
+      }
+    } catch {
+      // fire-and-forget — never block the response
+    }
   }
 
   return NextResponse.json({ candidatura: data });

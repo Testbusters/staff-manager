@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, MapPin, ChevronDown, ChevronRight } from 'lucide-react';
+import { GraduationCap, MapPin, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -73,6 +73,7 @@ interface Props {
   mieiCorsiLezioni: Lezione[];
   collabsPerCocoda: CollabOption[];
   cocodaAssegnazioni: CocodaAssegnazione[];
+  blacklistedIds: Set<string>;
 }
 
 const STATO_BADGE: Record<CorsoStato, string> = {
@@ -89,6 +90,7 @@ export default function AssegnazioneRespCittPage({
   mieiCorsiLezioni,
   collabsPerCocoda,
   cocodaAssegnazioni: initialCocodaAssegnazioni,
+  blacklistedIds,
 }: Props) {
   const [candidature, setCandidature] = useState<OwnCandidatura[]>(ownCandidature);
   const [cocodaAssegnazioni, setCocodaAssegnazioni] = useState<CocodaAssegnazione[]>(initialCocodaAssegnazioni);
@@ -138,6 +140,18 @@ export default function AssegnazioneRespCittPage({
       });
       if (res.ok) {
         setCandidature((prev) => prev.filter((c) => c.id !== candidaturaId));
+      }
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function removeAssegnazione(assegnazioneId: string) {
+    setLoading(`remove-${assegnazioneId}`);
+    try {
+      const res = await fetch(`/api/assegnazioni/${assegnazioneId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setCocodaAssegnazioni((prev) => prev.filter((a) => a.id !== assegnazioneId));
       }
     } finally {
       setLoading(null);
@@ -311,6 +325,16 @@ export default function AssegnazioneRespCittPage({
                       <Link href={`/corsi/${corso.id}`} className="text-link hover:text-link/80 text-sm">
                         Apri
                       </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-7 gap-1"
+                        aria-label="Esporta assegnazioni CSV"
+                        onClick={() => { window.location.href = `/api/assegnazioni/export?corso_id=${corso.id}`; }}
+                      >
+                        <Download className="h-3 w-3" />
+                        Export
+                      </Button>
                       {canExpand && (
                         <Button
                           variant="outline"
@@ -347,14 +371,51 @@ export default function AssegnazioneRespCittPage({
                               </span>
                               <Badge variant="outline" className="text-xs shrink-0">{lezione.materia}</Badge>
                               {existing ? (
-                                <span className="text-xs text-muted-foreground">
-                                  Assegnato:{' '}
-                                  <strong>
-                                    {existingCollab
-                                      ? `${existingCollab.nome} ${existingCollab.cognome}`
-                                      : existing.collaborator_id}
-                                  </strong>
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    Assegnato:{' '}
+                                    <strong>
+                                      {existingCollab
+                                        ? `${existingCollab.nome} ${existingCollab.cognome}`
+                                        : existing.collaborator_id}
+                                    </strong>
+                                  </span>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-xs h-6"
+                                        disabled={loading === `remove-${existing.id}`}
+                                      >
+                                        Rimuovi
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Rimuovi CoCoD&apos;à?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Rimuovere l&apos;assegnazione di{' '}
+                                          <strong>
+                                            {existingCollab
+                                              ? `${existingCollab.nome} ${existingCollab.cognome}`
+                                              : 'questo collaboratore'}
+                                          </strong>{' '}
+                                          come CoCoD&apos;à?
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => removeAssegnazione(existing.id)}
+                                          disabled={loading === `remove-${existing.id}`}
+                                        >
+                                          Rimuovi
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
                               ) : (
                                 <div className="flex items-center gap-2">
                                   <Select
@@ -369,7 +430,7 @@ export default function AssegnazioneRespCittPage({
                                     <SelectContent>
                                       {collabsPerCocoda.map((c) => (
                                         <SelectItem key={c.id} value={c.id} className="text-xs">
-                                          {c.cognome} {c.nome}
+                                          {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠ Blacklist' : ''}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
