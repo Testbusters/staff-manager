@@ -200,9 +200,9 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
       ) : (
         <div className="w-full rounded-lg border border-border bg-card overflow-hidden">
           <div className="overflow-x-auto">
-          <Table className="w-auto">
+          <Table className="w-full">
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/40">
                 <TableHead>Data inizio</TableHead>
                 <TableHead>Titolo</TableHead>
                 <TableHead>Luogo</TableHead>

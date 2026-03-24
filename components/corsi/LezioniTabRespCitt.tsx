@@ -131,9 +131,9 @@ export default function LezioniTabRespCitt({
               </div>
             ) : (
               <div className="overflow-x-auto">
-              <Table className="w-auto">
+              <Table className="w-full">
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="bg-muted/40">
                     <TableHead className="text-xs">Collaboratore</TableHead>
                     <TableHead className="text-xs">Ruolo</TableHead>
                     <TableHead className="text-xs">Stato</TableHead>

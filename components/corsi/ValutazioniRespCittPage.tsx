@@ -5,6 +5,14 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface CollabValutazione {
   collaborator_id: string;
@@ -76,69 +84,69 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
 
           <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
             <div className="overflow-x-auto">
-            <table className="w-auto text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Collaboratore</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Valutazione (1–10)</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cv.collabs.map((collab) => {
-                  const key = saveKey(cv.corso.id, collab.collaborator_id);
-                  const isSaving = saving[key];
-                  const wasSaved = saved[key];
-                  const rawVal = values[cv.corso.id]?.[collab.collaborator_id] ?? '';
-                  const numVal = parseFloat(rawVal);
-                  const isValid = !isNaN(numVal) && numVal >= 1 && numVal <= 10;
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="text-xs">Collaboratore</TableHead>
+                    <TableHead className="text-xs">Valutazione (1–10)</TableHead>
+                    <TableHead className="text-xs"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cv.collabs.map((collab) => {
+                    const key = saveKey(cv.corso.id, collab.collaborator_id);
+                    const isSaving = saving[key];
+                    const wasSaved = saved[key];
+                    const rawVal = values[cv.corso.id]?.[collab.collaborator_id] ?? '';
+                    const numVal = parseFloat(rawVal);
+                    const isValid = !isNaN(numVal) && numVal >= 1 && numVal <= 10;
 
-                  return (
-                    <tr key={collab.collaborator_id} className="border-b border-border last:border-0">
-                      <td className="px-4 py-3 font-medium whitespace-nowrap">
-                        {collab.nome} {collab.cognome}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          type="number"
-                          min={1}
-                          max={10}
-                          step={0.5}
-                          value={rawVal}
-                          onChange={(e) =>
-                            setValues((prev) => ({
-                              ...prev,
-                              [cv.corso.id]: {
-                                ...prev[cv.corso.id],
-                                [collab.collaborator_id]: e.target.value,
-                              },
-                            }))
-                          }
-                          className="w-24 h-8 text-sm"
-                          placeholder="es. 8"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7"
-                            onClick={() => saveValutazione(cv.corso.id, collab.collaborator_id)}
-                            disabled={isSaving || !isValid}
-                          >
-                            {isSaving ? 'Salvataggio...' : 'Salva'}
-                          </Button>
-                          {wasSaved && !isSaving && (
-                            <span className="text-xs text-green-600 dark:text-green-400">✓</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <TableRow key={collab.collaborator_id}>
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {collab.nome} {collab.cognome}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            step={0.5}
+                            value={rawVal}
+                            onChange={(e) =>
+                              setValues((prev) => ({
+                                ...prev,
+                                [cv.corso.id]: {
+                                  ...prev[cv.corso.id],
+                                  [collab.collaborator_id]: e.target.value,
+                                },
+                              }))
+                            }
+                            className="w-24 h-8 text-sm"
+                            placeholder="es. 8"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7"
+                              onClick={() => saveValutazione(cv.corso.id, collab.collaborator_id)}
+                              disabled={isSaving || !isValid}
+                            >
+                              {isSaving ? 'Salvataggio...' : 'Salva'}
+                            </Button>
+                            {wasSaved && !isSaving && (
+                              <span className="text-xs text-green-600 dark:text-green-400">✓</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>

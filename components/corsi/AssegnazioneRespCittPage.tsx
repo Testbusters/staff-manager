@@ -25,6 +25,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { getCorsoStato } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
@@ -201,84 +209,84 @@ export default function AssegnazioneRespCittPage({
         ) : (
           <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
             <div className="overflow-x-auto">
-            <table className="w-auto text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Codice</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Nome</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Modalità</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Stato</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Date</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {corsiDisponibili.map((corso) => {
-                  const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
-                  const candidatura = getCandidatura(corso.id);
-                  return (
-                    <tr key={corso.id} className="border-b border-border last:border-0 hover:bg-muted/60">
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{corso.codice_identificativo}</td>
-                      <td className="px-4 py-3 font-medium">{corso.nome}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-xs">
-                          {corso.modalita === 'online' ? 'Online' : 'In aula'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
-                          {CORSO_STATO_LABELS[stato]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {corso.data_inizio} → {corso.data_fine}
-                      </td>
-                      <td className="px-4 py-3">
-                        {candidatura ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground italic">Candidatura inviata</span>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-xs h-7">
-                                  Ritira
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Ritira candidatura?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Sei sicuro di voler ritirare la candidatura per <strong>{corso.nome}</strong>?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => withdrawCandidatura(candidatura.id)}
-                                    disabled={loading === candidatura.id}
-                                  >
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="text-xs">Codice</TableHead>
+                    <TableHead className="text-xs">Nome</TableHead>
+                    <TableHead className="text-xs">Modalità</TableHead>
+                    <TableHead className="text-xs">Stato</TableHead>
+                    <TableHead className="text-xs">Date</TableHead>
+                    <TableHead className="text-xs"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {corsiDisponibili.map((corso) => {
+                    const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
+                    const candidatura = getCandidatura(corso.id);
+                    return (
+                      <TableRow key={corso.id} className="hover:bg-muted/60">
+                        <TableCell className="font-mono text-xs text-muted-foreground">{corso.codice_identificativo}</TableCell>
+                        <TableCell className="font-medium">{corso.nome}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {corso.modalita === 'online' ? 'Online' : 'In aula'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+                            {CORSO_STATO_LABELS[stato]}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          {corso.data_inizio} → {corso.data_fine}
+                        </TableCell>
+                        <TableCell>
+                          {candidatura ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground italic">Candidatura inviata</span>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="text-xs h-7">
                                     Ritira
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7"
-                            onClick={() => submitCandidatura(corso.id)}
-                            disabled={loading === corso.id || !cittaResp}
-                          >
-                            Candida città
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Ritira candidatura?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Sei sicuro di voler ritirare la candidatura per <strong>{corso.nome}</strong>?
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => withdrawCandidatura(candidatura.id)}
+                                      disabled={loading === candidatura.id}
+                                    >
+                                      Ritira
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7"
+                              onClick={() => submitCandidatura(corso.id)}
+                              disabled={loading === corso.id || !cittaResp}
+                            >
+                              Candida città
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}
@@ -441,8 +449,9 @@ export default function AssegnazioneRespCittPage({
                                     </SelectContent>
                                   </Select>
                                   <Button
+                                    variant="outline"
                                     size="sm"
-                                    className="bg-brand hover:bg-brand/90 text-white text-xs h-7"
+                                    className="text-xs h-7"
                                     disabled={!selectedCollabMap[lezione.id] || isAssigning}
                                     onClick={() => assignCocoda(lezione.id)}
                                   >
