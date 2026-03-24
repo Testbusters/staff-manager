@@ -18,7 +18,7 @@ Internal admin portal for managing collaborators across Testbusters and Peer4Med
 | Rich text | Tiptap 3 |
 | Charts | Recharts |
 | Export | SheetJS (xlsx) + native CSV |
-| Testing | Vitest (322 unit/API tests) + Playwright (e2e, currently suspended) |
+| Testing | Vitest (331 unit/API tests) + Playwright (e2e, currently suspended) |
 
 ---
 
@@ -223,7 +223,7 @@ Copy `.env.local.example` as a starting point. Never commit `.env.local` — it 
 
 ```bash
 # Unit + API schema tests (Vitest)
-npx vitest run              # all 319 tests
+npx vitest run              # all 331 tests
 npx vitest run __tests__/api/  # API schema tests only
 
 # Type check

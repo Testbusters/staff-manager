@@ -122,6 +122,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/corsi` | `app/(app)/corsi/page.tsx` | admin + resp.cittadino + collab | `full-list` | Table, Badge, EmptyState, CorsiFilterBar, CorsiPageCollab, CorsiCalendario | ✅ | Admin: full list with filters. Resp.cittadino: redirect → /corsi/assegnazione. Collab: 3-section view (I miei corsi / Docenza / Q&A) + monthly calendar; city filter for in_aula docenza. | `UI` `R` `UX` |
 | `/corsi/assegnazione` | `app/(app)/corsi/assegnazione/page.tsx` | resp.cittadino | `full-list` | AssegnazioneRespCittPage, Select, Badge, Button, AlertDialog | ✅ | Two sections: corsi senza città (candidatura citta_corso) + I miei corsi (accordion with CoCoD'à panel per corso; Select collab per lezione + Assegna). | `UI` `R` `UX` |
 | `/corsi/valutazioni` | `app/(app)/corsi/valutazioni/page.tsx` | resp.cittadino | `full-list` | ValutazioniRespCittPage, Input, Button, Badge | ✅ | Per-corso, per-collaboratore×corso valutazione (1–10) input. Bulk update via PATCH /api/corsi/[id]/valutazioni. | `UI` `R` `UX` |
+| `/corsi/eventi-citta` | `app/(app)/corsi/eventi-citta/page.tsx` | resp.cittadino | `full-list` | EventiCittaPage, Table, Dialog, AlertDialog, RichTextEditor | ✅ | Create/edit/delete city-scoped events. citta auto-set from resp.citt profile. Ownership enforced on PATCH/DELETE. | `UI` `R` `UX` |
 | `/corsi/nuovo` | `app/(app)/corsi/nuovo/page.tsx` | admin | `form` | CorsoForm, Select, Input, Button | ✅ | Create new corso. Admin-only. | `UI` `UX` |
 | `/corsi/[id]` | `app/(app)/corsi/[id]/page.tsx` | admin + resp.cittadino + collab | `tabs` | Tabs, CorsoForm, LezioniTab, CandidatureCittaTab, LezioniTabCollab, LezioniTabRespCitt | ✅ | Admin: 3 tabs (Dettaglio/Lezioni/Candidature città). Resp.citt: lezioni list with Accetta/Rifiuta per candidatura. Collab: lezioni list + candidatura actions + community name + linea + allegati docenza/cocoda. | `UI` `R` `UX` |
 | `/monitoraggio` | `app/(app)/monitoraggio/page.tsx` | admin | `tabs` | Tabs, Badge, Table, auto-refresh | ✅ | System monitoring: access logs, emails, DB performance, app errors | `UI` `UX` |
@@ -154,7 +155,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | Monitoraggio | — | — | ✅ |
 | Feedback | — | — | ✅ |
 
-> `responsabile_cittadino` nav defined in corsi-1 (4 items: Home, Candidatura e Assegnazione, Valutazione Corsi, Creazione Eventi). Pages fully implemented in corsi-3.
+> `responsabile_cittadino` nav defined in corsi-1 (4 items: Home, Candidatura e Assegnazione, Valutazione Corsi, Creazione Eventi). Corsi pages implemented in corsi-3. Creazione eventi page implemented in eventi-citta block.
 > `responsabile_servizi_individuali` has no nav items defined yet.
 
 ---

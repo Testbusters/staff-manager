@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 059 | `059_events_citta.sql` | 2026-03-24 | ADD COLUMN `citta TEXT NULL` on `events`; CREATE POLICY `events_respcitt_insert` (resp.citt INSERT city events where citta = citta_responsabile); CREATE POLICY `events_respcitt_update`; CREATE POLICY `events_respcitt_delete` |
 | 058 | `058_assegnazioni_cocoda_rls.sql` | 2026-03-24 | CREATE POLICY `assegnazioni_cocoda_insert` (responsabile_cittadino can INSERT cocoda assegnazioni for lezioni belonging to corsi assigned to their citta_responsabile) |
 | 057 | `057_corsi3_rls.sql` | 2026-03-22 | CREATE POLICY `candidature_cittadino_insert` (resp.citt citta_corso INSERT); CREATE POLICY `candidature_cittadino_withdraw` (resp.citt own citta_corso → ritirata); CREATE POLICY `candidature_review` (admin + resp.citt can set docente/qa candidatura stato to accettata\|ritirata, resp.citt scoped to citta_responsabile via nested subquery); CREATE POLICY `assegnazioni_valutazione_update` (resp.citt can UPDATE valutazione on assegnazioni for their city's corsi) |
 | 056 | `056_candidature_collab_rls.sql` | 2026-03-22 | CREATE POLICY `candidature_collab_insert` (collaboratore INSERT docente_lezione\|qa_lezione, ownership via get_my_collaborator_id()); CREATE POLICY `candidature_collab_update_own` (collaboratore UPDATE own candidatura → ritirata only) |

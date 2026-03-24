@@ -57,7 +57,7 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `communications` | News/announcements | `titolo`, `contenuto`, `pinned`, `published_at`, `expires_at`, `file_urls[]`, `community_ids[]` | |
-| `events` | Events | `titolo`, `tipo`, `start_datetime`, `end_datetime`, `luma_url`, `community_ids[]` | |
+| `events` | Events | `titolo`, `tipo`, `start_datetime`, `end_datetime`, `luma_url`, `community_ids[]`, `citta` | `citta NULL` = national; non-null = city-scoped (resp.citt can write own city only) |
 | `opportunities` | Job/project opportunities | `titolo`, `tipo`, `descrizione`, `requisiti`, `scadenza_candidatura`, `community_ids[]` | |
 | `resources` | Resources/guides | `titolo`, `categoria`, `tag[]`, `link`, `file_url`, `community_ids[]` | `tag` used for fiscal guides: `procedura-piva`, `detrazioni-figli` |
 | `discounts` | Discounts/benefits | `titolo`, `fornitore`, `brand`, `codice_sconto`, `valid_from`, `valid_to`, `community_ids[]` | `brand` values: `testbusters`, `peer4med` |
@@ -267,10 +267,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-03-22.
+> Last refreshed: 2026-03-24.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -555,6 +556,7 @@ tickets
 | `tipo` | text | YES | — | — |
 | `file_url` | text | YES | — | — |
 | `community_ids` | uuid[] | NO | `'{}'[]` | — |
+| `citta` | text | YES | — | — |
 
 ### `opportunities`
 
