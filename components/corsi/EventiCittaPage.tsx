@@ -198,16 +198,15 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
           description="Crea il primo evento per questa città."
         />
       ) : (
-        <div className="w-full rounded-lg border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-          <Table className="w-full">
+        <div className="w-fit rounded-lg border border-border bg-card overflow-hidden">
+          <Table className="w-auto">
             <TableHeader>
               <TableRow className="bg-muted/40">
                 <TableHead>Data inizio</TableHead>
                 <TableHead>Titolo</TableHead>
                 <TableHead>Luogo</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead className="text-right w-px whitespace-nowrap">Azioni</TableHead>
+                <TableHead>Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -216,7 +215,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                   <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                     {formatDate(ev.start_datetime)}
                   </TableCell>
-                  <TableCell className="text-sm font-medium text-foreground max-w-xs truncate">
+                  <TableCell className="text-sm font-medium text-foreground">
                     {ev.titolo}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -234,8 +233,8 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                       </span>
                     ) : '—'}
                   </TableCell>
-                  <TableCell className="text-right w-px whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell>
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="outline"
                         size="sm"
@@ -258,7 +257,6 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
               ))}
             </TableBody>
           </Table>
-          </div>
         </div>
       )}
 
