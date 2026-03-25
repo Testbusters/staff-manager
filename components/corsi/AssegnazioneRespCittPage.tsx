@@ -207,7 +207,7 @@ export default function AssegnazioneRespCittPage({
             description="Non ci sono corsi senza città al momento."
           />
         ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
               <Table className="w-auto">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
