@@ -74,7 +74,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="inline-flex flex-col gap-8">
       {corsiValutazioni.map((cv) => (
         <div key={cv.corso.id}>
           <div className="flex items-center gap-2 mb-3">
@@ -82,7 +82,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
             <Badge variant="outline" className="font-mono text-xs">{cv.corso.codice}</Badge>
           </div>
 
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
               <Table className="w-auto">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
