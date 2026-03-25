@@ -193,7 +193,7 @@ export default function AssegnazioneRespCittPage({
   }
 
   return (
-    <div className="space-y-10">
+    <div className="inline-flex flex-col gap-10">
       {/* Section 1: Corsi disponibili (no city) */}
       <div>
         <h2 className="text-base font-semibold text-foreground mb-3">Corsi disponibili</h2>
@@ -207,7 +207,7 @@ export default function AssegnazioneRespCittPage({
             description="Non ci sono corsi senza città al momento."
           />
         ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
               <Table className="w-auto">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
