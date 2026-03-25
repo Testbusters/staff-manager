@@ -207,7 +207,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                 <TableHead>Titolo</TableHead>
                 <TableHead>Luogo</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Azioni</TableHead>
+                <TableHead className="text-right w-px whitespace-nowrap">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,7 +234,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                       </span>
                     ) : '—'}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right w-px whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="outline"
