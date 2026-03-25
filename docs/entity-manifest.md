@@ -46,15 +46,15 @@
 **Tables**: `compensations`, `compensation_competenze`
 **Contract**: `docs/contracts/compensation-fields.md`
 
-| Role | Create | Read | Edit | Approve | Liquidate |
-|---|---|---|---|---|---|
-| `collaboratore` | ❌ | Own only | ❌ | ❌ | ❌ |
-| `responsabile_compensi` | ✅ | Community members | ❌ (post-create) | ❌ | ❌ |
-| `amministrazione` | ✅ | All | ✅ | ✅ | ✅ |
+| Role | Create | Read | Edit | Approve | Reject | Liquidate |
+|---|---|---|---|---|---|---|
+| `collaboratore` | ❌ | Own only | ❌ | ❌ | ❌ | ❌ |
+| `responsabile_compensi` | ✅ | Community members | ❌ (post-create) | ❌ | ✅* (rejection_note required) | ❌ |
+| `amministrazione` | ✅ | All | ✅ | ✅ | ✅ | ✅ |
 
 **State machine**: `IN_ATTESA → APPROVATO → LIQUIDATO`, `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`
 **Notification triggers**: creation (E3), approval (E4), rejection (E5), liquidation (E6)
-**Key surfaces**: `/coda-lavoro` (admin), `/compensi` (collab), `/compensi-rimborsi` (resp), `/import` (GSheet)
+**Key surfaces**: `/coda` (admin), `/compensi` (collab), `/approvazioni` (resp), `/import` (GSheet)
 **Notes**: `community_id` always null (since migration 030). `competenza` FK → `compensation_competenze.key`. Massimale check on approve.
 
 ---
@@ -72,7 +72,7 @@
 
 **State machine**: identical to Compensation
 **Notification triggers**: creation (E3b), approval (E4b), rejection (E5b), liquidation (E6b)
-**Key surfaces**: `/coda-lavoro` (admin), `/rimborsi` (collab), `/compensi-rimborsi` (resp)
+**Key surfaces**: `/coda` (admin), `/rimborsi` (collab), `/approvazioni` (resp)
 **Notes**: file attachments stored in `file_urls[]`. Rejection requires `rejection_note`.
 
 ---

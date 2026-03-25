@@ -23,7 +23,7 @@
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `compensations` | Compensation records | `collaborator_id`, `community_id` (nullable — always null for new), `stato`, `nome_servizio_ruolo`, `importo_lordo`, `ritenuta_acconto`, `importo_netto`, `competenza` (FK→comp_competenze.key), `receipt_document_id`, `approved_lordo_ytd` | State machine: `IN_ATTESA → INVIATO → APPROVATO → LIQUIDATO` or `→ RIFIUTATO` or `→ INTEGRAZIONI_RICHIESTE`. Ownership via `collaborator_id` (NOT `user_id`) |
+| `compensations` | Compensation records | `collaborator_id`, `community_id` (nullable — always null for new), `stato`, `nome_servizio_ruolo`, `importo_lordo`, `ritenuta_acconto`, `importo_netto`, `competenza` (FK→comp_competenze.key), `receipt_document_id`, `approved_lordo_ytd` | State machine: `IN_ATTESA → APPROVATO → LIQUIDATO` or `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`. Ownership via `collaborator_id` (NOT `user_id`) |
 | `compensation_history` | Audit log of state changes | `compensation_id`, `stato_precedente`, `stato_nuovo`, `changed_by`, `role_label` | Append-only |
 | `compensation_attachments` | Files attached to compensations | `compensation_id`, `file_url`, `file_name` | |
 | `compensation_competenze` | Lookup table for competenza types | `key` (UNIQUE), `label`, `active`, `sort_order` | `compensations.competenza` FK→ this table's `key` |
@@ -32,7 +32,7 @@
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `expense_reimbursements` | Reimbursement requests | `collaborator_id`, `community_id` (NOT NULL), `categoria`, `importo`, `stato`, `receipt_document_id` | State machine: `INVIATO → APPROVATO → LIQUIDATO` or `→ RIFIUTATO` or `→ INTEGRAZIONI_RICHIESTE`. Ownership via `collaborator_id` |
+| `expense_reimbursements` | Reimbursement requests | `collaborator_id`, `community_id` (NOT NULL), `categoria`, `importo`, `stato`, `receipt_document_id` | State machine: `IN_ATTESA → APPROVATO → LIQUIDATO` or `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`. Ownership via `collaborator_id` |
 | `expense_history` | Audit log of state changes | `reimbursement_id`, `stato_precedente`, `stato_nuovo`, `changed_by`, `role_label` | Append-only |
 | `expense_attachments` | Files attached to reimbursements | `reimbursement_id`, `file_url`, `file_name` | At least 1 required by business rule |
 

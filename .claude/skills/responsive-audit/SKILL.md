@@ -1,21 +1,35 @@
 ---
 name: responsive-audit
-description: Verify that all staff-manager pages render correctly across mobile, tablet, and desktop breakpoints. Scope limited to collab and responsabile routes (Admin excluded — desktop-only usage). Uses Playwright to take screenshots at 375px / 768px / 1024px per route. Produces a PASS/WARN/FAIL report per route × breakpoint. Requires npm run dev on localhost:3000.
+description: Verify that all staff-manager pages render correctly across mobile, tablet, and desktop breakpoints. Scope limited to collab and responsabile routes (Admin excluded — desktop-only usage). Uses Playwright to take screenshots at 320px / 375px / 768px / 1024px per route. Produces a PASS/WARN/FAIL report per route × breakpoint with WCAG 1.4.10 reflow compliance. Requires npm run dev on localhost:3000.
 user-invocable: true
-model: sonnet
+model: opus
 context: fork
-argument-hint: [quick|full]
+argument-hint: [quick|full|wcag] [target:page:<route>|target:role:<role>|target:section:<section>]
 allowed-tools: Read, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_resize, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_wait_for, mcp__playwright__browser_evaluate
 ---
 
-## Mode detection
+## Step 0 — Mode + target detection
 
-Check `$ARGUMENTS`:
-- Empty / not provided → **quick mode** (375px only, key routes per role)
-- `quick` → same as empty
-- `full` → all breakpoints (375px + 768px + 1024px), all R-flagged routes
+Parse `$ARGUMENTS`:
 
-Announce at start: `Running responsive-audit in [QUICK | FULL] mode.`
+**Mode** (controls breakpoints, route breadth, and WCAG checks):
+- `quick` (or empty) → BP1 (375px) only, key routes per role. No WCAG checks.
+- `full` → all breakpoints (375px + 768px + 1024px), all R-flagged routes. No WCAG checks.
+- `wcag` → adds BP0 (320px) to the active breakpoint set + WCAG 1.4.4 resize text step (Step 5b). Stackable: `full wcag` = all breakpoints + WCAG compliance checks.
+
+**Target** (filters the route list — applied on top of mode):
+- `target:page:/compensi` → only that exact route
+- `target:role:collab` → collab-accessible routes only
+- `target:role:resp` → responsabile_compensi routes only
+- `target:role:resp_citt` → responsabile_cittadino routes only
+- `target:section:corsi` → routes whose path contains "corsi"
+- `target:section:<name>` → routes whose path contains `<name>`
+- No target → all routes from the mode roster
+
+Mode and target are **independent** — `full wcag target:section:corsi` = all breakpoints + WCAG, corsi routes only.
+
+Announce at start:
+`Running responsive-audit in [QUICK | FULL | WCAG] mode — scope: [FULL | target: <resolved description>]`
 
 ---
 
@@ -26,9 +40,47 @@ Read `docs/sitemap.md`. Extract:
 - Test accounts from the "Test accounts" section
 - Sub-hierarchy notes from "Page sub-hierarchies" section (tabs, states, responsive notes)
 
+Apply target filter from Step 0 to produce the **working route list**.
+
 Hold in working memory:
-- Route list grouped by role session needed (collab routes, resp routes, shared routes)
+- Working route list grouped by role session needed (collab routes, resp routes, resp_citt routes, shared routes)
 - Responsive notes per page (from sitemap sub-hierarchies)
+- Which routes have calendar grids or dense multi-column layouts (check 'Componenti chiave' column for calendar/grid/accordion components)
+- Which routes have data tables (check 'Componenti chiave' for Table/DataTable components)
+
+---
+
+## Step 1.5 — Static pre-checks
+
+Run **before** launching the browser. These are zero-cost static checks that catch common patterns:
+
+**S1 — Viewport unit font trap**
+```
+Pattern: text-\[[0-9.]+vw\]|font-size.*[0-9]vw|fontSize.*vw
+Scope: app/**/*.tsx app/**/*.ts app/**/*.css
+```
+Flag any element with a `vw`-based font size without a `calc()` fallback.
+`font-size: Xvw` alone disables user zoom — WCAG 1.4.4 violation.
+Expected: 0 matches. Any match is Medium severity.
+
+**S2 — overflow:hidden on html/body**
+```
+Pattern: (html|body).*overflow.*hidden|overflow.*hidden.*(html|body)
+Scope: app/globals.css app/layout.tsx app/**/*.css
+```
+Flag any `overflow: hidden` applied directly to `<html>` or `<body>`.
+This masks horizontal scroll symptoms instead of fixing them and breaks `position: sticky`.
+Expected: 0 matches. Any match is Medium severity.
+
+**S3 — Images without max-width constraint**
+```
+Pattern: <img(?![^>]*className[^>]*(w-full|max-w|object-))
+Scope: app/**/*.tsx
+```
+Flag raw `<img>` tags without responsive width classes. All images should use Next.js `<Image>` (enforced by /ui-audit) or have `max-w-full` / `w-full`.
+Expected: 0 matches. Any match is Low severity.
+
+Log results as "Static pre-checks: S1 [PASS/FAIL N] · S2 [PASS/FAIL N] · S3 [PASS/FAIL N]" before proceeding.
 
 ---
 
@@ -37,55 +89,59 @@ Hold in working memory:
 Navigate to `http://localhost:3000`. If not reachable:
 > ❌ Dev server not running. Start with `npm run dev` then re-run `/responsive-audit`.
 
+Record the base URL.
+
 ---
 
 ## Step 3 — Breakpoint definitions
 
-| ID | Width | Height | Label | Priority |
+| ID | Width | Height | Label | When active |
 |---|---|---|---|---|
-| BP1 | 375px | 812px | Mobile S (iPhone SE) | Critical — always tested |
-| BP2 | 768px | 1024px | Tablet (iPad) | Full mode only |
-| BP3 | 1024px | 768px | Laptop S | Full mode only |
+| BP0 | 320px | 568px | WCAG Reflow (iPhone 5) | `wcag` mode only |
+| BP1 | 375px | 812px | Mobile S (iPhone SE) | Always (quick + full + wcag) |
+| BP2 | 768px | 1024px | Tablet (iPad) | `full` + `wcag full` only |
+| BP3 | 1024px | 768px | Laptop S | `full` + `wcag full` only |
 
 Quick mode: BP1 only.
 Full mode: BP1 + BP2 + BP3.
+WCAG mode (any): prepends BP0 to the active set.
+
+**WCAG reference:**
+- BP0 (320px) = WCAG 2.2 SC 1.4.10 Reflow threshold — vertical-scrolling content must not require horizontal scroll at 320 CSS pixel width
+- BP1 (375px) = real device baseline — not a WCAG threshold but the most common small mobile viewport
 
 ---
 
 ## Step 4 — Route matrix
 
+Apply the working route list from Step 1 (already filtered by target).
+
+**The definitive route list and per-route notes come from `docs/sitemap.md`** (Step 1). The examples below show the annotation format — do not treat them as an exhaustive or fixed list.
+
+For each route: check `docs/sitemap.md` 'Tabs/states' and 'Page sub-hierarchies' sections for tabs, sections, and components to verify at each breakpoint.
+
 ### Collab session routes
 Login with `collaboratore_tb_test@test.com` / `Testbusters123`.
 
-| Route | Tabs/states to check |
-|---|---|
-| `/` | Collab dashboard — DashboardUpdates widget (4 tabs visible?) |
-| `/profilo` | Tabs: Informazioni · Documenti · Sicurezza |
-| `/compensi` | List + pagination |
-| `/compensi/[id]` | Skip in quick mode (needs real ID) |
-| `/rimborsi` | List + pagination |
-| `/rimborsi/nuova` | Form fields + submit button |
-| `/comunicazioni` | Feed cards |
-| `/eventi` | Feed cards + date boxes |
-| `/opportunita` | Tabs: Opportunità · Sconti |
-| `/ticket` | List |
-| `/ticket/nuova` | Form |
-| `/notifiche` | List + filter buttons |
+Include all routes from sitemap.md with role `collab` or `multi-role` and `R` in the Audit column.
+For each route: note tabs and multi-section layouts from sitemap sub-hierarchies.
+For routes with calendar or grid components (identified from 'Componenti chiave' in sitemap): skip in quick mode unless specifically targeted.
 
-### Resp session routes
+### Resp session routes (responsabile_compensi)
 Login with `responsabile_compensi_test@test.com` / `Testbusters123`.
 
-| Route | Tabs/states to check |
-|---|---|
-| `/` | Resp dashboard — KPI strip + pending items |
-| `/approvazioni` | Tabs: Compensi · Rimborsi + table |
-| `/documenti` | List |
-| `/contenuti` | Tabs: 5 tabs visible on mobile? |
-| `/ticket` | Manager view list |
+Include all routes from sitemap.md with role `resp` or `multi-role` and `R` in the Audit column.
+
+### Resp cittadino session routes
+Login with `responsabile_cittadino_test@test.com` / `Testbusters123`.
+**Prerequisite**: if this account does not exist, skip this session block entirely and log:
+"Resp cittadino routes SKIPPED — test account not found. Create it before running this section."
+
+Include all routes from sitemap.md with role `resp.cittadino` or `multi-role` and `R` in the Audit column.
+For routes with dense tables and inline inputs (from 'Componenti chiave'): note overflow risk at BP0/BP1.
 
 ### Shared routes (test with collab session — already logged in)
-- `/profilo` (already in collab list above)
-- `/notifiche` (already in collab list above)
+Routes accessible to multiple roles — verify once with the collab session.
 
 ---
 
@@ -96,44 +152,180 @@ For each session × route × breakpoint:
 1. `browser_resize(width, height)` — set viewport
 2. `browser_navigate(url)`
 3. Wait 1500ms or until main content visible
-4. `browser_take_screenshot` — save with label `responsive/[route-slug]-[role]-[bp].png`
-5. `browser_evaluate` — run overflow check:
+4. **DOM preflight validation** — run before any screenshot:
+   ```js
+   ({
+     loaded: document.readyState === 'complete',
+     hasMain: (document.querySelector('main')?.innerText?.length ?? 0) > 30,
+     noError: !document.title.toLowerCase().includes('error') &&
+               !document.body.innerText.includes('Application error') &&
+               !document.body.innerText.includes('500'),
+     vpWidth: window.innerWidth
+   })
+   ```
+   If `hasMain === false` OR `noError === false`:
+   > ⚠️ Route [route] @ BP[N] failed preflight. Skipping — record as WARN in report.
+   If `vpWidth` does not match the requested width: log the discrepancy and proceed anyway.
+5. `browser_take_screenshot` — save with label `responsive/[route-slug]-[role]-[bp]`
+6. **Overflow check** (run immediately after screenshot):
    ```js
    (() => {
-     const body = document.body;
      const htmlW = document.documentElement.scrollWidth;
      const vpW = window.innerWidth;
-     return { hasHorizontalScroll: htmlW > vpW, overflowPx: Math.max(0, htmlW - vpW) };
+     const tables = Array.from(document.querySelectorAll('table'));
+     const tableOverflows = tables.map(t => ({
+       el: t.className.split(' ').slice(0,3).join('.'),
+       hasScrollWrapper: !!t.closest('[class*="overflow-x"]'),
+       overflowPx: Math.max(0, t.scrollWidth - vpW)
+     })).filter(t => t.overflowPx > 0);
+     return {
+       hasHorizontalScroll: htmlW > vpW,
+       overflowPx: Math.max(0, htmlW - vpW),
+       offendingElements: Array.from(document.querySelectorAll('*'))
+         .filter(el => el.scrollWidth > vpW)
+         .slice(0, 5)
+         .map(el => el.tagName + (el.className ? '.' + el.className.split(' ').slice(0,3).join('.') : '')),
+       tableOverflows
+     };
    })()
    ```
-6. `browser_snapshot` — ARIA snapshot for tap target size check
+7. **Tap target check** (BP0 + BP1 only — mobile breakpoints):
+   ```js
+   (() => {
+     const interactives = Array.from(document.querySelectorAll('button, a[href], [role="button"], input, select'));
+     const tooSmall = interactives
+       .map(el => {
+         const r = el.getBoundingClientRect();
+         return {
+           text: (el.textContent ?? el.getAttribute('aria-label') ?? '').slice(0,30).trim(),
+           tag: el.tagName,
+           w: Math.round(r.width),
+           h: Math.round(r.height),
+           ok: r.width >= 44 && r.height >= 44,
+           recommended: r.width >= 48 && r.height >= 48
+         };
+       })
+       .filter(x => !x.ok && x.w > 0 && x.h > 0);
+
+     // Spacing check — find pairs of adjacent interactives with gap < 8px
+     const rects = interactives.map(el => el.getBoundingClientRect());
+     const spacingViolations = [];
+     for (let i = 0; i < rects.length; i++) {
+       for (let j = i + 1; j < rects.length; j++) {
+         const a = rects[i], b = rects[j];
+         const hGap = Math.max(0, Math.max(a.left, b.left) - Math.min(a.right, b.right));
+         const vGap = Math.max(0, Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom));
+         const gap = Math.min(hGap === 0 ? Infinity : hGap, vGap === 0 ? Infinity : vGap);
+         if (gap < 8 && gap >= 0 && gap !== Infinity) {
+           spacingViolations.push({
+             a: (interactives[i].textContent ?? '').slice(0,20).trim(),
+             b: (interactives[j].textContent ?? '').slice(0,20).trim(),
+             gapPx: Math.round(gap)
+           });
+           if (spacingViolations.length >= 5) break;
+         }
+       }
+       if (spacingViolations.length >= 5) break;
+     }
+
+     return { tooSmall, spacingViolations };
+   })()
+   ```
+8. **Sidebar/nav collapse check** (BP0 + BP1 only):
+   ```js
+   (() => {
+     // Look for sidebar/nav that should be hidden at mobile
+     const sidebar = document.querySelector('aside, nav[class*="sidebar"], [data-sidebar], [class*="sidebar"]');
+     const sidebarVisible = sidebar
+       ? (getComputedStyle(sidebar).display !== 'none' &&
+          getComputedStyle(sidebar).visibility !== 'hidden' &&
+          getComputedStyle(sidebar).opacity !== '0' &&
+          sidebar.getBoundingClientRect().width > 100)
+       : null;
+     // Look for mobile menu trigger (hamburger)
+     const hamburger = document.querySelector(
+       '[aria-label*="menu" i], [aria-label*="nav" i], [aria-controls*="sidebar" i], button[class*="hamburger"], button[class*="mobile-menu"]'
+     );
+     return {
+       sidebarFound: !!sidebar,
+       sidebarVisibleAtMobile: sidebarVisible,
+       hamburgerFound: !!hamburger,
+       hamburgerText: hamburger ? (hamburger.getAttribute('aria-label') ?? hamburger.textContent?.slice(0,20)) : null
+     };
+   })()
+   ```
+9. `browser_snapshot` — ARIA snapshot for structural check
 
 ### Checks per screenshot
 
 **R1 — Horizontal overflow**
-`hasHorizontalScroll === true` → FAIL. Report `overflowPx` px overflow.
+`hasHorizontalScroll === true` → FAIL. Report `overflowPx` px overflow. Report `offendingElements` from the overflow check query above.
+At BP0: any horizontal scroll = WCAG 1.4.10 violation → FAIL (Critical).
 
 **R2 — Table overflow**
-From ARIA snapshot: if a `<table>` role element is present, verify its container does not produce horizontal scroll. Grep result for `scrollable` or check `overflow` CSS via evaluate.
+From `tableOverflows` array:
+- `hasScrollWrapper === false` AND `overflowPx > 0` → FAIL (raw table overflow, no scroll container)
+- `hasScrollWrapper === true` AND `overflowPx > 0` → WARN (deliberate scroll container present — verify scroll affordance is visible to user)
+Report the specific table class and overflow amount.
 
-**R3 — Text truncation**
-From screenshot: flag if text is cut off mid-word (ellipsis mid-sentence is acceptable if intentional `line-clamp`).
+**R3 — Text truncation (visual check)**
+From screenshot: flag if text is cut off mid-word (intentional `line-clamp` with ellipsis is acceptable, but text cut at viewport edge is not).
 
-**R4 — Tap target size**
-From ARIA snapshot: interactive elements (buttons, links) should have a minimum 44×44px touch target at mobile breakpoints. Check via:
-```js
-Array.from(document.querySelectorAll('button, a, [role="button"]')).map(el => {
-  const r = el.getBoundingClientRect();
-  return { text: el.textContent?.slice(0,30), w: Math.round(r.width), h: Math.round(r.height), ok: r.width >= 44 && r.height >= 44 };
-}).filter(x => !x.ok && x.w > 0)
-```
-Flag elements with w < 44 OR h < 44 that are primary interactive elements (exclude inline text links and icon-only utility buttons already covered by /ui-audit G9).
+**R4 — Tap target size** (BP0 + BP1 only)
+From `tooSmall` array: flag elements with `w < 44 OR h < 44`.
+Exclude: inline text links inside paragraphs, pagination numbers.
+Focus on: sidebar nav items, form submit buttons, tab bar items, action buttons in tables.
+Note: 44px is the minimum threshold (Apple HIG). Elements between 44-47px pass but do not meet the 48px Material Design recommendation — log as WARN if widespread.
 
 **R5 — Stacked layout**
-At BP1 (375px): grid/flex containers with `sm:grid-cols-2` or `md:grid-cols-3` should stack to single column. Visually verify from screenshot.
+At BP1: grid/flex containers with `sm:grid-cols-2` or `md:grid-cols-3` should stack to single column. Check from screenshot — if columns don't stack, flag.
 
 **R6 — Modal/dialog usability**
-If a Dialog is open: verify it does not overflow the viewport and has visible close affordance.
+If a Dialog is triggered: verify it does not overflow the viewport, has visible close affordance, and the confirm button is reachable without scrolling.
+
+**R7 — Calendar grids and dense multi-section layouts**
+Applies to routes with calendar or multi-column grid components — identified from `docs/sitemap.md` 'Componenti chiave' column.
+At BP0/BP1: any day/week calendar grid (7-column grids are high-risk at 320-375px) — verify it fits within the viewport without horizontal overflow.
+At BP0/BP1: pages with 3+ distinct stacked content sections — verify section headers do not overlap when stacking and content remains readable.
+
+**R8 — Tap target spacing** (BP0 + BP1 only)
+From `spacingViolations` array: flag pairs of interactive elements with gap < 8px.
+8px minimum spacing between touch targets — web.dev / Material Design 3 standard.
+Severity: WARN for occasional violations, FAIL if widespread on a primary flow (e.g. all table row action buttons touching).
+
+**R9 — Sidebar/nav collapse** (BP0 + BP1 only)
+From sidebar check:
+- `sidebarFound === true` AND `sidebarVisibleAtMobile === true` → FAIL. Desktop sidebar must collapse at mobile — if visible, it covers content area.
+- `sidebarFound === true` AND `sidebarVisibleAtMobile === false` AND `hamburgerFound === false` → WARN. Sidebar hidden but no visible mobile nav trigger found — user cannot navigate.
+- `sidebarFound === true` AND `sidebarVisibleAtMobile === false` AND `hamburgerFound === true` → PASS.
+- `sidebarFound === false` → log as "no sidebar detected" — verify visually from screenshot.
+
+---
+
+## Step 5b — WCAG 1.4.4 Resize Text check (wcag mode only)
+
+**Skip this step if `wcag` flag was not set.**
+
+Select 3 representative routes (one per role, all from the working route list): ideally a form-heavy page, a table-heavy page, and a content page.
+
+For each:
+1. `browser_resize(1280, 800)` — desktop viewport
+2. `browser_navigate(url)`
+3. Apply 200% font size via:
+   ```js
+   document.documentElement.style.fontSize = '200%';
+   return { applied: true, rootFontSize: getComputedStyle(document.documentElement).fontSize };
+   ```
+4. Wait 500ms for reflow
+5. Run overflow check (same query as Step 5 item 6)
+6. `browser_take_screenshot` — save as `responsive/[route-slug]-resize200`
+7. Check:
+   - `hasHorizontalScroll === true` → FAIL — WCAG 1.4.4 violation. Content lost or broken at 200% text size.
+   - Any interactive element no longer reachable (visually clipped) → FAIL
+   - Minor reflow/wrap changes → PASS (expected and acceptable)
+8. Reset: `document.documentElement.style.fontSize = ''`
+
+Log results in the WCAG compliance section of the report.
 
 ---
 
@@ -151,45 +343,64 @@ If a Dialog is open: verify it does not overflow the viewport and has visible cl
 ```
 
 ### Role switch
-When switching from collab to resp:
 1. `browser_navigate http://localhost:3000/login`
 2. If redirected to `/`: look for "Esci" in sidebar → click → confirm → wait for `/login`
-3. Login with resp credentials
+3. Login with target credentials
 
 ---
 
 ## Step 7 — Report
 
 ```
-## Responsive Audit — [DATE] — [MODE]
+## Responsive Audit — [DATE] — [MODE] — [TARGET]
 ### Reference: docs/sitemap.md (R-flagged routes)
-### Breakpoints tested: [BP1 only | BP1 + BP2 + BP3]
+### Breakpoints tested: [BP0 320px (WCAG) · ] BP1 375px [· BP2 768px · BP3 1024px]
 
-### Summary
+### Static pre-checks
+| Check | Result | Detail |
+|---|---|---|
+| S1 — vw font trap | PASS/FAIL N | [matches if any] |
+| S2 — overflow:hidden on html/body | PASS/FAIL N | [matches if any] |
+| S3 — Images without max-width | PASS/FAIL N | [matches if any] |
 
-| Route | Role | BP1 375px | BP2 768px | BP3 1024px | Issues |
-|---|---|---|---|---|---|
-| /  | collab | PASS/WARN/FAIL | — | — | [description] |
-| /rimborsi/nuova | collab | PASS/WARN/FAIL | — | — | |
-| ... | | | | | |
+### Route matrix
 
-Legend: PASS = no issues · WARN = minor (e.g. tap target slightly small) · FAIL = broken (overflow, truncation, unusable layout)
+| Route | Role | BP0 320px | BP1 375px | BP2 768px | BP3 1024px | Issues |
+|---|---|---|---|---|---|---|
+| / | collab | WCAG✅/❌ | PASS/WARN/FAIL | — | — | [description] |
+| /corsi | collab | — | PASS/WARN/FAIL | — | — | |
+| /corsi/assegnazione | resp_citt | — | PASS/WARN/FAIL | — | — | |
+| ... | | | | | | |
+
+Legend: PASS = no issues · WARN = minor (scroll container present, 44-47px targets, preflight skipped) · FAIL = broken (overflow, truncation, unusable layout) · WCAG✅ = passes 1.4.10 reflow · WCAG❌ = fails 1.4.10
 
 ### Violations detail
 
 For each WARN or FAIL:
 - **Route**: [url] — **Role**: [role] — **Breakpoint**: [bp]
 - **Check**: R[N] — [check name]
-- **Detail**: [description of the problem]
+- **Detail**: [description — include overflowPx and offendingElements for R1/R2; gap values for R8; sidebar state for R9]
 - **Screenshot**: [filename]
-- **Fix hint**: [suggested CSS fix — e.g. add overflow-x-hidden, add min-w-0, adjust grid breakpoint]
+- **Fix hint**: [suggested CSS fix]
+
+### WCAG compliance (wcag mode only)
+
+| Criterion | Check | Routes tested | Result |
+|---|---|---|---|
+| 1.4.10 Reflow | No horizontal scroll at 320px | All BP0 routes | PASS/FAIL N |
+| 1.4.4 Resize Text | No content loss at 200% zoom | [3 routes sampled] | PASS/FAIL N |
 
 ### Clean routes
 [List of PASS routes with one-line confirmation]
 
+### Skipped routes
+[List routes skipped due to missing test accounts or preflight failures]
+
 ### Responsive score
 - Total routes tested: N
 - PASS: N (N%) · WARN: N · FAIL: N
+- Critical (WCAG 1.4.10 violations at BP0): N
+- Static pre-check issues: S1 N · S2 N · S3 N
 ```
 
 ---
@@ -200,7 +411,9 @@ After the report:
 
 > "Vuoi che sistemi le violazioni responsive trovate? Posso intervenire su:
 > - Tutto in una volta
-> - Per breakpoint: mobile (BP1) · tablet (BP2) · laptop (BP3)
-> - Per check: overflow (R1+R2) · testo (R3) · tap target (R4) · layout (R5) · modal (R6)"
+> - Per breakpoint: mobile (BP0+BP1) · tablet (BP2) · laptop (BP3)
+> - Per check: overflow (R1+R2) · tap target (R4+R8) · layout stacking (R5) · sidebar collapse (R9) · modal (R6) · calendar/grid (R7)
+> - Per sezione funzionale: usa `target:section:<name>` al prossimo run
+> - WCAG compliance pass: correggo le violazioni 1.4.10 e 1.4.4 trovate in modalità `wcag`"
 
 **Do NOT apply any changes until confirmed.**

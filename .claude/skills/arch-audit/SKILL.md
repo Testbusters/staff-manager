@@ -4,6 +4,7 @@ description: Audit the Claude Code architecture files against latest Anthropic d
 user-invocable: true
 model: sonnet
 context: fork
+effort: high
 ---
 
 You are performing a weekly architecture compliance and internal consistency audit for the staff-manager project. Execute all steps below in order.
@@ -14,21 +15,30 @@ You are performing a weekly architecture compliance and internal consistency aud
 
 Launch a single research agent **(model: haiku)** to fetch ALL of the following URLs and extract key changes:
 
-- https://docs.anthropic.com/en/docs/claude-code/memory
-- https://docs.anthropic.com/en/docs/claude-code/settings
-- https://docs.anthropic.com/en/docs/claude-code/hooks
-- https://docs.anthropic.com/en/docs/claude-code/mcp
-- https://docs.anthropic.com/en/docs/claude-code/sub-agents
-- https://docs.anthropic.com/en/docs/claude-code/slash-commands
-- https://docs.anthropic.com/en/docs/claude-code/changelog
+- https://code.claude.com/docs/en/memory
+- https://code.claude.com/docs/en/settings
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/sub-agents
+- https://code.claude.com/docs/en/slash-commands
+- https://code.claude.com/docs/en/release-notes/overview
 - https://github.com/anthropics/claude-code/releases (latest 5 releases)
-- https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview
-- https://docs.anthropic.com/en/docs/claude-code/best-practices
+- https://docs.anthropic.com/en/docs/about-claude/models (latest model IDs and deprecation notices)
+- https://code.claude.com/docs/en/best-practices
 
 From each Claude Code source extract: new keys/features, deprecations, breaking changes, best practice updates.
+From the models page extract: current model IDs for Opus/Sonnet/Haiku, any deprecation dates announced.
 From the prompting guide sources extract: principles for system prompt design, instruction clarity, context management, and what Anthropic explicitly discourages in long instruction files.
 
-**URL resilience**: if any URL returns 404, note it in the report and try the base URL `https://docs.anthropic.com/en/docs/claude-code/` to locate the current path. Do not skip a topic because one URL failed — find the current equivalent page.
+**URL resilience**: if any URL returns 404, try the canonical base `https://code.claude.com/docs/en/` to locate the current path. Note in the report if a URL changed. Do not skip a topic because one URL failed — find the current equivalent page.
+
+**Expected current model IDs** (as of last research — verify against the models page):
+- Opus: `claude-opus-4-6`
+- Sonnet: `claude-sonnet-4-6`
+- Haiku: `claude-haiku-4-5-20251001`
+- Deprecated: `claude-3-haiku-*` and `claude-3-5-haiku-*` (deprecation: April 19, 2026)
+
+Flag any changes to this list in the report.
 
 ## Step 2 — Read current architecture files (run in parallel with Step 1)
 
@@ -41,7 +51,7 @@ Read these files in parallel while the Step 1 agent runs:
 - `.claude/cheatsheet.md`
 - `.claude/agents/dependency-scanner.md`
 - `~/.claude/projects/-Users-MarcoG-Projects-staff-manager/memory/MEMORY.md`
-- All `.claude/skills/*/SKILL.md` files (10 skills: arch-audit, api-design, perf-audit, security-audit, ui-audit, responsive-audit, ux-audit, visual-audit, skill-dev, skill-db)
+- All `.claude/skills/*/SKILL.md` files (11 skills: arch-audit, api-design, perf-audit, resend-verify, security-audit, ui-audit, responsive-audit, ux-audit, visual-audit, skill-dev, skill-db)
 
 ## Step 3 — Anthropic compliance gap analysis
 
@@ -52,6 +62,7 @@ Compare Step 1 findings against Step 2 state. For each gap found, classify it:
 - New settings keys that are clearly beneficial and low-risk (token efficiency, attribution)
 - Stale file paths or descriptions in files-guide.md
 - New hook events or agent frontmatter fields that improve existing patterns
+- Deprecated model IDs in SKILL.md files or settings.json
 
 **RECOMMEND** — list for user review, do not apply:
 - Structural changes (splitting files, new directories)
@@ -62,7 +73,7 @@ Compare Step 1 findings against Step 2 state. For each gap found, classify it:
 ## Step 3b — Internal ecosystem consistency checks
 
 **Execution strategy — two tiers**:
-- **Grep-tier** (pure pattern matching, no judgment): C2, C4, C6, C9, C10, C11, C12, C13, C14 — batch into a **single haiku subagent** that runs all commands and returns structured pass/fail results.
+- **Grep-tier** (pure pattern matching, no judgment): C2, C4, C6, C9, C10, C11, C12, C13, C14, C15, C16, C17 — batch into a **single haiku subagent** that runs all commands and returns structured pass/fail results.
 - **Judgment-tier** (require file reading + interpretation): C1, C3, C5, C7, C8 — run in main context using files already read in Step 2.
 
 **Grep-tier batch** — invoke one Agent with `model: "haiku"`, pass these exact commands, and receive one structured result:
@@ -78,6 +89,9 @@ Compare Step 1 findings against Step 2 state. For each gap found, classify it:
 | C12 | `grep -o "SessionStart\|PostCompact\|InstructionsLoaded" .claude/settings.json \| sort -u` | 3 lines |
 | C13 | `grep -rL --include="SKILL.md" "context: fork" .claude/skills/` | 0 files returned |
 | C14 | `git check-ignore -q CLAUDE.md && echo "PASS" \|\| echo "FAIL"` | PASS |
+| C15 | `wc -l CLAUDE.md \| awk '{print $1}'` | ≤200 |
+| C16 | `grep -rn "claude-3-haiku\|claude-3-5-haiku\|claude-3-opus\|claude-3-sonnet\|claude-3-5-sonnet" .claude/skills/ .claude/settings.json` | 0 matches |
+| C17 | `for f in .claude/skills/*/SKILL.md; do if grep -q "mcp__" "$f" && ! grep -q "allowed-tools:" "$f"; then echo "MISSING allowed-tools: $f"; fi; done` | 0 MISSING lines |
 
 Collect batch results, then run judgment-tier checks below. For each FAIL: classify as AUTO-FIX or RECOMMEND using the same criteria as Step 3.
 
@@ -111,9 +125,9 @@ Expected: at least one mention. Missing = FAIL.
 
 **C7 — Cross-file path references (dead pointers)**
 For each file path mentioned in CLAUDE.md and pipeline.md that is a docs/ or .claude/ path, verify the file exists.
-Check these paths: `docs/requirements.md`, `docs/implementation-checklist.md`, `docs/refactoring-backlog.md`, `docs/migrations-log.md`, `docs/entity-manifest.md`, `docs/prd/prd.md`, `docs/prd/01-rbac-matrix.md`, `docs/profile-editing-contract.md`, `docs/ui-components.md`, `docs/design-system.md`, `docs/sitemap.md`, `docs/dependency-map.md`, `docs/db-map.md`, `.claude/rules/pipeline.md`, `.claude/rules/context-review.md`, `.claude/agents/dependency-scanner.md`, `.claude/files-guide.md`, `.claude/cheatsheet.md`.
+Check these paths: `docs/requirements.md`, `docs/implementation-checklist.md`, `docs/refactoring-backlog.md`, `docs/migrations-log.md`, `docs/entity-manifest.md`, `docs/prd/prd.md`, `docs/prd/01-rbac-matrix.md`, `docs/profile-editing-contract.md`, `docs/ui-components.md`, `docs/design-system.md`, `docs/sitemap.md`, `docs/dependency-map.md`, `docs/db-map.md`, `docs/patterns-reference.md`, `.claude/rules/pipeline.md`, `.claude/rules/context-review.md`, `.claude/agents/dependency-scanner.md`, `.claude/files-guide.md`, `.claude/cheatsheet.md`.
 Also verify directories: `docs/contracts/` and `.claude/skills/`.
-Run: `ls docs/requirements.md docs/implementation-checklist.md docs/refactoring-backlog.md docs/migrations-log.md docs/entity-manifest.md docs/prd/prd.md docs/prd/01-rbac-matrix.md docs/profile-editing-contract.md docs/ui-components.md docs/design-system.md docs/sitemap.md docs/dependency-map.md docs/db-map.md .claude/rules/pipeline.md .claude/rules/context-review.md .claude/agents/dependency-scanner.md .claude/files-guide.md .claude/cheatsheet.md 2>&1 && ls -d docs/contracts/ .claude/skills/ 2>&1`
+Run: `ls docs/requirements.md docs/implementation-checklist.md docs/refactoring-backlog.md docs/migrations-log.md docs/entity-manifest.md docs/prd/prd.md docs/prd/01-rbac-matrix.md docs/profile-editing-contract.md docs/ui-components.md docs/design-system.md docs/sitemap.md docs/dependency-map.md docs/db-map.md docs/patterns-reference.md .claude/rules/pipeline.md .claude/rules/context-review.md .claude/agents/dependency-scanner.md .claude/files-guide.md .claude/cheatsheet.md 2>&1 && ls -d docs/contracts/ .claude/skills/ 2>&1`
 Expected: all paths resolve. Any "No such file or directory" = FAIL.
 
 **C8 — Interaction Protocol present in CLAUDE.md**
@@ -137,11 +151,26 @@ Run: `for skill_dir in .claude/skills/*/; do name=$(basename "$skill_dir"); grep
 Expected: all lines show "OK". Any "MISSING" = FAIL.
 AUTO-FIX: add a minimal row to the "Custom Skills" table in cheatsheet.md for any missing skill.
 
-**C12 — settings.json hook integrity**
+**C12 — settings.json hook integrity and hook type coverage**
 Check: `.claude/settings.json` must contain all 3 essential hooks: `SessionStart` (audit overdue reminder), `PostCompact` (CLAUDE.local.md restore reminder), `InstructionsLoaded` (debug log).
 Run: `grep -o "SessionStart\|PostCompact\|InstructionsLoaded" .claude/settings.json | sort -u`
 Expected: 3 lines (SessionStart, PostCompact, InstructionsLoaded). Any missing = FAIL.
 RECOMMEND if failing — do not auto-fix (hooks require verifying intent before restoring).
+
+Additionally (judgment check in main context): verify that the hook configurations use the appropriate hook type. Claude Code supports 4 hook types — `command`, `http`, `prompt`, and `agent`. For reference:
+- `command` — runs a shell command, captures stdout for injection
+- `http` — calls a URL endpoint with event data as JSON body
+- `prompt` — injects a text message into the conversation
+- `agent` — spawns an agent to handle the hook event
+Flag any hook that uses `command` type but would benefit from `prompt` type (simpler config, no shell needed for static reminders), or vice versa.
+
+Also flag any of the following new events from recent Claude Code releases that the project might benefit from adding:
+- `WorktreeCreate` / `WorktreeRemove` — auto-setup / teardown logic when worktrees change
+- `SubagentStart` / `SubagentStop` — logging or context injection for subagent calls
+- `PreCompact` — save critical in-progress state before context compression
+- `TaskCompleted` — post-completion summary or notification
+- `FileChanged` — lint/format trigger on file write
+These are RECOMMEND, not AUTO-FIX.
 
 **C13 — context: fork on all skills**
 Check: every skill SKILL.md must declare `context: fork` so audits run in an isolated context and do not pollute the main session window.
@@ -154,6 +183,27 @@ Check: `CLAUDE.md` must be listed in `.gitignore` (project convention: personal 
 Run: `git check-ignore -q CLAUDE.md && echo "PASS" || echo "FAIL"`
 Expected: "PASS" (exit 0 — file is ignored). "FAIL" = FAIL.
 RECOMMEND if failing — do not auto-fix (requires user to add `CLAUDE.md` to `.gitignore` explicitly).
+
+**C15 — CLAUDE.md line budget**
+Check: CLAUDE.md must stay within 200 lines. Beyond this threshold, Anthropic's own research shows instruction adherence degrades — lower-priority rules get silently ignored (hard auto-truncation at 200 lines per Claude Code docs).
+Run: `wc -l CLAUDE.md | awk '{print $1}'`
+Expected: ≤ 200. Any count above 200 = WARN.
+RECOMMEND if failing: invoke P1 and P5 to identify sections to remove or convert to `@import` references. Do not auto-fix — pruning requires judgment.
+
+**C16 — Deprecated model IDs**
+Check: no SKILL.md file or `.claude/settings.json` should reference model IDs from Claude 3 family (deprecated or retiring). Deprecated as of April 19, 2026: `claude-3-haiku-*`, `claude-3-5-haiku-*`. Also check for any `claude-3-opus-*` or `claude-3-sonnet-*` references (superseded by claude-4.x family).
+Run: `grep -rn "claude-3-haiku\|claude-3-5-haiku\|claude-3-opus\|claude-3-sonnet\|claude-3-5-sonnet" .claude/skills/ .claude/settings.json`
+Expected: 0 matches. Any match = FAIL.
+AUTO-FIX: replace deprecated model IDs with the current equivalents:
+- `claude-3-haiku-*` or `claude-3-5-haiku-*` → `claude-haiku-4-5-20251001`
+- `claude-3-opus-*` → `claude-opus-4-6`
+- `claude-3-sonnet-*` or `claude-3-5-sonnet-*` → `claude-sonnet-4-6`
+
+**C17 — `allowed-tools` frontmatter on MCP-dependent skills**
+Check: any SKILL.md that calls `mcp__*` tools in its instructions must declare those tools in `allowed-tools:` frontmatter. This ensures Claude requests the correct permissions upfront before the skill runs, preventing mid-execution permission prompts.
+Run: `for f in .claude/skills/*/SKILL.md; do if grep -q "mcp__" "$f" && ! grep -q "allowed-tools:" "$f"; then echo "MISSING allowed-tools: $f"; fi; done`
+Expected: 0 MISSING lines. Any match = FAIL.
+AUTO-FIX: for each failing skill, read the `mcp__*` tool names from its body and add `allowed-tools: [mcp__tool1, mcp__tool2, ...]` to its frontmatter after the `context:` line.
 
 ## Step 3c — Anthropic Prompting Guide compliance
 
@@ -183,7 +233,7 @@ Report: flagged instances with suggested sharper wording.
 **P3 — Structural redundancy across instruction files**
 Redundancy dilutes attention. If a rule appears in both CLAUDE.md and pipeline.md with no clear canonical source, Claude may apply it inconsistently — or the longer file may suppress the shorter one.
 
-Check: read "Known Patterns" in CLAUDE.md and "Cross-Cutting Rules" in pipeline.md side-by-side. Also check for overlap between context-review.md checks and arch-audit C1–C14.
+Check: read "Known Patterns" in CLAUDE.md and "Cross-Cutting Rules" in pipeline.md side-by-side. Also check for overlap between context-review.md checks and arch-audit C1–C17.
 
 Flag as WARN: any rule stated substantively in two files where one should be canonical.
 
@@ -195,7 +245,7 @@ Anthropic's principle: instruction complexity should be proportional to the actu
 Evaluate:
 - Are there phases (or sub-phases) whose STOP gate catches errors that have actually occurred in practice? Or are they theoretical?
 - Does the Fast Lane meaningfully simplify, or does it mostly duplicate the full pipeline?
-- Are there context-review checks (C1–C11) that have never caught a real issue — suggesting they address a risk that doesn't materialize?
+- Are there context-review checks (C1–C12) that have never caught a real issue — suggesting they address a risk that doesn't materialize?
 - Does the total length of pipeline.md + context-review.md stay within a range where Claude can hold the key constraints in working context?
 
 Report: any phase or check that appears to add friction without demonstrated value → RECOMMEND for review or consolidation. Note: do NOT recommend removing STOP gates without strong evidence of zero value — gates protect against irreversible actions.
@@ -244,23 +294,26 @@ AUTO-FIX: add shadcn MCP reference where missing. CLAUDE.md: in the shadcn/ui Co
 For each skill, verify `model:` frontmatter fits the task's reasoning requirement:
 - `model: haiku` appropriate for: mechanical structural checks, pure grep/pattern matching, URL text extraction, formatting validation
 - `model: sonnet` appropriate for: cross-file judgment, complex analysis, fix application, multi-dimension scoring
+- `model: opus` appropriate for: screenshot-based visual reasoning, multi-role journey simulation, live aesthetic scoring — requires vision + deep analysis
 
 Current expected state:
 | Skill | Expected | Rationale |
 |---|---|---|
 | arch-audit | sonnet | Complex judgment, cross-doc analysis, AUTO-FIX application |
 | ui-audit | sonnet | Design system judgment, visual compliance scoring |
-| ux-audit | sonnet | Multi-flow simulation, cognitive load assessment |
-| visual-audit | sonnet | 7-dimension aesthetic scoring, before/after judgment |
+| ux-audit | opus | Multi-flow simulation + live screenshot analysis — visual reasoning requires Opus |
+| visual-audit | opus | 7-dimension aesthetic scoring + screenshot analysis — visual reasoning requires Opus |
 | security-audit | sonnet | Exploit reasoning, authorization analysis |
 | api-design | sonnet | REST pattern judgment + internal haiku Explore agent |
 | perf-audit | sonnet | Bundle analysis, server/client boundary judgment + internal haiku Explore agent |
 | skill-dev | sonnet | Coupling/abstraction judgment + internal haiku Explore agent |
 | skill-db | sonnet | Schema normalization + RLS reasoning + internal haiku Explore agent |
-| responsive-audit | sonnet | Screenshot-based breakpoint judgment (Playwright required) |
+| responsive-audit | opus | Multi-viewport screenshot judgment — visual reasoning requires Opus |
+| resend-verify | sonnet | Delivery verification, MCP tool orchestration, template content inspection |
 
 Batch command: `grep -A1 "^name:" .claude/skills/*/SKILL.md | grep "model:"` — compare each result against the table above.
-FAIL: any skill using `model: haiku` as top-level model (only Explore *subagents within* skills should use haiku, not the skill itself). WARN: any skill using `model: opus` (unnecessarily expensive for these tasks).
+FAIL: any skill using `model: haiku` as top-level model (only Explore *subagents within* skills should use haiku, not the skill itself).
+WARN: any skill using `model: opus` **unless** it is one of the three visual/UX skills (`visual-audit`, `ux-audit`, `responsive-audit`) — these intentionally use Opus for screenshot-based visual reasoning. All other skills should use sonnet.
 
 ## Step 4 — Apply AUTO-FIX changes
 
@@ -279,6 +332,7 @@ Output a structured report in this exact format:
 ```
 ## Arch Audit — [DATE]
 ### Claude Code version checked: [version from changelog/releases]
+### Current model IDs verified: Opus=[id] · Sonnet=[id] · Haiku=[id]
 
 ### ✅ Auto-fixed ([N] changes)
 - [file]: [what changed and why]
@@ -289,7 +343,7 @@ Output a structured report in this exact format:
 ### ✓ Compliant (no action needed)
 - [area]: [brief confirmation]
 
-### Ecosystem consistency (C1–C14) — grep-tier via haiku batch, judgment-tier in main context
+### Ecosystem consistency (C1–C17) — grep-tier via haiku batch, judgment-tier in main context
 - C1 Deploy currency: [PASS/FAIL]
 - C2 Skill output refs: [PASS/FAIL — batch]
 - C3 files-guide static: [PASS/FAIL]
@@ -301,9 +355,12 @@ Output a structured report in this exact format:
 - C9 STOP gate count: [PASS/FAIL — actual count — batch]
 - C10 Worktree isolation: [PASS/FAIL — batch]
 - C11 Cheatsheet coverage: [PASS/FAIL — list missing skills if any — batch]
-- C12 Hook integrity: [PASS/FAIL — list missing hooks if any — batch]
+- C12 Hook integrity: [PASS/FAIL — list missing hooks if any + new events worth adding]
 - C13 context:fork coverage: [PASS/FAIL — list missing skills if any — batch]
 - C14 CLAUDE.md gitignored: [PASS/FAIL — batch]
+- C15 CLAUDE.md line budget: [PASS/WARN — actual line count — batch]
+- C16 Deprecated model IDs: [PASS/FAIL — list any found — batch]
+- C17 allowed-tools frontmatter: [PASS/FAIL — list missing skills if any — batch]
 
 ### Prompting compliance (P1–P5) — judgment-based, PASS/WARN only
 - P1 CLAUDE.md content type: [PASS/WARN — list any sections failing Anthropic's inclusion test]

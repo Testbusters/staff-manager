@@ -177,13 +177,8 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - `.bru` files are committed in `api-tests/`. Never commit Bruno environment files containing secrets (add to `.gitignore`).
 - Output: summary line only. If something fails: paste the failing request + response body, fix, re-run. Do not proceed with open failures.
 
-**Phase 4 — UAT definition + Playwright e2e** ⏸ SUSPENDED
-> Suspended via `.claude/CLAUDE.local.md`. Remove that file (with explicit user confirmation) to re-enable.
-> When re-enabling: use `data-*` attribute selectors (see CLAUDE.md "shadcn e2e selectors").
-> Never use `span.text-{color}` for status badges — Badge renders `<div>`, not `<span>`.
-
-**Phase 4b — Visual baseline + structural check** ⏸ SUSPENDED
-> Suspended for the same reason as Phase 4 above. Re-enable together with Phase 4 after Fase 9.
+**Phase 4 + 4b — UAT / Playwright e2e + Visual baseline** ⏸ SUSPENDED via `.claude/CLAUDE.local.md`
+> Re-enable together after Fase 9: remove CLAUDE.local.md (explicit user confirmation). When re-enabling: use `data-*` attribute selectors (CLAUDE.md "shadcn e2e selectors"). Never `span.text-{color}` — Badge renders `<div>`, not `<span>`.
 
 **Phase 5b — Test data setup** *(MANDATORY — must complete before Phase 5c)*
 - **Prerequisite — dev server**:
@@ -211,63 +206,33 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
 - **For blocks with UI changes**: run the smoke test once in light mode and once in dark mode (sidebar theme toggle). Confirm both themes render correctly.
-- **For blocks that trigger transactional emails** (invite, state transitions, ticket reply, content publish): use the Resend MCP to verify delivery after the triggering action. Standard verification sequence:
-  1. Perform the action in the browser (or via API call) using the test account.
-  2. Wait ~5s, then call `resend_list_emails` with `limit: 5` to retrieve recent sends.
-  3. Confirm: correct `to` address, expected `subject`, `last_event: "delivered"` (not `bounced` or `complained`).
-  4. If the email has a CTA link: confirm the `APP_URL` env var produced a correct absolute URL (not `localhost`) by inspecting the HTML body via `resend_get_email`.
-  - Do NOT send emails to real user addresses during smoke tests — use `@test.com` or `@test.local` addresses only.
+- **For blocks that trigger transactional emails** (invite, state transitions, ticket reply, content publish): run `/resend-verify` after the triggering action. The skill handles the full verification sequence (list → confirm delivery → CTA link check). Do NOT send emails to real user addresses — use `@test.com` or `@test.local` addresses only.
 
-**Phase 5d — Block-scoped quality audit** *(for blocks with UI changes — runs on localhost)*
-- Run `/ui-audit` scoped to the block's new/modified routes only (token compliance, shadcn usage, empty states, loading.tsx). Do not run full-site scan.
-- Run `/visual-audit` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
-- Run `/ux-audit` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
-- Run `/responsive-audit` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
-- **Execution order**: `/ui-audit` is static by default — launch it concurrently with the first Playwright-based skill. `/visual-audit` → `/ux-audit` → `/responsive-audit` (if applicable) must run **sequentially** — they share the MCP Playwright session and cannot run in parallel without conflicts.
-- Fix all **Critical** issues before Phase 6. Flag **Major** issues in the Phase 6 checklist with planned resolution. Log **Minor** issues in `docs/refactoring-backlog.md`.
+**Phase 5d — Block-scoped quality audit** *(two tracks — apply whichever match the block type; both may apply)*
+
+**Track A — UI audit** *(if block adds/modifies UI routes or components — runs on localhost)*
+- Run `/ui-audit target:page:<route>` scoped to the block's new/modified routes only (token compliance, shadcn usage, empty states, loading.tsx).
+- Run `/visual-audit target:page:<route>` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
+- Run `/ux-audit target:page:<route>` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
+- Run `/responsive-audit target:page:<route>` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
+- **Execution order**: `/ui-audit` is static — launch it concurrently with the first Playwright-based skill. `/visual-audit` → `/ux-audit` → `/responsive-audit` (if applicable) must run **sequentially** — they share the MCP Playwright session and cannot run in parallel without conflicts.
+
+**Track B — API/DB audit** *(if block creates/modifies API routes or applies migrations — static analysis, no dev server needed)*
+- Run `/security-audit target:section:<section>` if the block creates or modifies any API route (auth, Zod, RLS, cron secret, export roles, sensitive data exposure).
+- Run `/api-design target:section:<section>` if the block adds new API routes (verb correctness, response shape, status codes, ZodError `.issues` convention, pagination).
+- `/security-audit` and `/api-design` are both static — run them concurrently.
+- Run `/skill-db target:section:<section>` **only** if the block applies migrations (index coverage, RLS completeness, cascade behavior, data type choices).
+
+**Severity handling — both tracks**:
+- **Critical**: fix before Phase 6. Do not proceed with open Critical issues.
+- **Major**: flag in Phase 6 checklist with planned resolution sprint.
+- **Medium / Minor**: append to `docs/refactoring-backlog.md` immediately — assign the correct ID prefix (`PERF-`, `API-`, `DB-`, `DEV-`) and add to the priority index. Do not defer or accumulate silently.
 - Output per skill: one-paragraph summary only — do not paste full reports.
 
+**Server shutdown (worktree context only)**: after all Track A audits complete, stop the dev server started in Phase 5b: `kill $(lsof -ti:NNNN) 2>/dev/null || true` (replace NNNN with the port declared in Phase 5b). Track B audits may run after shutdown. **Main repo**: server was started by the user — do not stop it.
+
 **Phase 6 — Outcome checklist + confirmation**
-Present this checklist filled with actual results, then wait for explicit confirmation before proceeding to Phase 8:
-
-```
-## Block checklist — [Block Name]
-
-### Build & Test
-- [ ] tsc --noEmit: 0 errors
-- [ ] npm run build: success
-- [ ] Vitest unit: N/N passed
-- [ ] Vitest API: N/N passed *(if Phase 3b executed)*
-- [ ] HTTP integration (Bruno CLI): N/N passed *(if Phase 3c executed)*
-- [ ] Playwright e2e: N/N passed *(⏸ suspended if CLAUDE.local.md active)*
-- [ ] Visual baseline + axe-core: passed *(if Phase 4b executed)*
-- [ ] ui-audit: no Critical issues *(if Phase 5d executed)*
-- [ ] visual-audit: no Critical issues *(if Phase 5d executed)*
-- [ ] ux-audit: no Critical issues *(if Phase 5d executed)*
-- [ ] responsive-audit: PASS *(if collab/responsabile routes modified)*
-
-### UI Design System compliance *(skip if block has no UI changes)*
-- [ ] No hardcoded `bg-blue-*` on interactive elements (use `bg-brand hover:bg-brand/90`)
-- [ ] No hardcoded `text-blue-*` link pairs (use `text-link hover:text-link/80`)
-- [ ] Empty states use `<EmptyState>` component, not bare `<p>`
-- [ ] New page routes have a `loading.tsx` with Skeleton placeholders
-- [ ] Icon-only buttons have `aria-label`
-- [ ] No Lucide icon components in Server→Client data props (use `iconName: string`)
-- [ ] New UI verified in both light and dark mode (sidebar theme toggle)
-
-### Implemented features
-- [ ] [feature 1]: [outcome]
-
-### Manual verification
-Steps to verify manually with the appropriate test account:
-1. [step]
-
-### SQL verification queries
-SELECT …;
-
-### Created / modified files
-- path/to/file.ts — description
-```
+Present the checklist from `@docs/phase6-checklist-template.md` filled with actual results, then wait for explicit confirmation before proceeding to Phase 8.
 
 - *** STOP — do not declare the block complete, do not update any documents, do not move to the next block until the user responds with an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`). ***
 
@@ -284,24 +249,7 @@ Only after explicit confirmation:
 2e. If the block changed role permissions for any entity, added a new action to an existing role, or modified member_status restrictions: update `docs/prd/01-rbac-matrix.md` — the relevant entity section. If the block introduced a new role: add a column to every table in that document.
 2f. **PRD update — MANDATORY in every block, no exceptions (full pipeline and fast-lane alike).**
    - **Source of truth** (`docs/prd/prd.md`): update the relevant section(s) directly in the Markdown file whenever the block introduces a new feature area, changes architecture, adds an integration, modifies RBAC, or updates a workflow. Commit this file in Commit 2 (docs).
-   - **Google Docs sync** (presentation layer): after updating `docs/prd/prd.md`, append a Changelog entry to the GDoc (Doc ID: `1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o`). The entry goes in section "VII — Changelog" and must include: version date, block name, one-line summary of changes. Do NOT rewrite the whole document — append only. Use **exactly** this command (run from project root — `require('dotenv').config` is mandatory, `GOOGLE_SERVICE_ACCOUNT_JSON` is not in the shell env):
-     ```
-     cd ~/Projects/staff-manager && node -e "
-     require('dotenv').config({ path: '.env.local' });
-     const { google } = require('googleapis');
-     const svc = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-     const auth = new google.auth.GoogleAuth({ credentials: svc, scopes: ['https://www.googleapis.com/auth/documents'] });
-     const docs = google.docs({ version: 'v1', auth });
-     const DOC_ID = '1OtOQO8-6pjjaq2CrOaBh7ntT-nZ4haV_yvxCBZpL46o';
-     const text = '\nDATE  |  vX.Y  |  Block Name: one-line summary.\n';
-     (async () => {
-       const doc = await docs.documents.get({ documentId: DOC_ID });
-       const endIndex = doc.data.body.content.at(-1).endIndex - 1;
-       await docs.documents.batchUpdate({ documentId: DOC_ID, requestBody: { requests: [{ insertText: { location: { index: endIndex }, text } }] } });
-       console.log('GDoc changelog appended');
-     })().catch(e => { console.error(e.message); process.exit(1); });
-     "
-     ```
+   - **Google Docs sync** (presentation layer): after updating `docs/prd/prd.md`, append a Changelog entry to the GDoc. Use the script in `@.claude/rules/gdoc-append.md`. Entry format: `DATE  |  vX.Y  |  Block Name: one-line summary.`
    - **Minimum scope**: even if the block is purely technical (bug fix, refactor), if it changes observable system behaviour, update the PRD. If no PRD section is affected (e.g. pure internal refactor with zero functional change), skip the GDoc append but still verify `docs/prd/prd.md` is current.
 2c. If the block added/removed a route, changed role access to an existing route, modified member_status restrictions, or updated sidebar items: update `docs/sitemap.md`. Sync with `lib/nav.ts`, `proxy.ts`, and the relevant `page.tsx` guards. Also update the **Layout**, **Componenti chiave**, and **loading.tsx** columns for any page whose structure changed (new Tabs, Sheet, Tiptap added/removed; loading.tsx created/deleted).
 2d. If the block applied a migration that adds/modifies tables, columns, FKs, indexes, or RLS policies: update `docs/db-map.md` — Tables section (add/update rows), FK Graph (add new FK lines), Indexes section, RLS Summary. Then run `node scripts/refresh-db-map.mjs` to regenerate the Column specs section from the live staging schema. Mandatory — `skill-db` uses this as authoritative schema reference.
@@ -311,7 +259,7 @@ Only after explicit confirmation:
 5. If structural or design issues emerged: open `docs/refactoring-backlog.md`, check for duplicates, add new entries ordered by topic.
 6. **Commit sequence** — each block produces up to 3 commits, all on the `worktree-[block-name]` branch:
    - **Commit 1 — code** (already done in Phase 3): source files only.
-   - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b.
+   - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b + `docs/sitemap.md` if modified in 2c + `docs/db-map.md` if modified in 2d.
    - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
 7. **Branch promotion sequence** (after all commits are on the worktree branch):
    - **staging (requires explicit user approval)**: present the branch name and commit count, then ask: "Confermo il merge di `[branch]` su staging e il deploy su Vercel preview?" Wait for explicit yes before proceeding. Then run: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge [branch] --no-ff && git push origin staging`. Wait ~1–2 min for Vercel preview deploy; verify at `https://staff-staging.peerpetual.it`.
@@ -321,17 +269,17 @@ Only after explicit confirmation:
    - Do NOT run `git push origin main` manually — always use `sm-deploy` to ensure staging is the promotion source.
 8. **Worktree cleanup** *(functional blocks only)*:
    - *** STOP — before cleanup: ask "Confermo eliminazione worktree `worktree-[block-name]` locale e remoto?" Wait for explicit yes before proceeding. ***
+   - **Exit worktree first (mandatory)**: call `ExitWorktree` to switch the active context back to the main repo (`~/Projects/staff-manager`) BEFORE running any removal command. If Claude's shell CWD is still inside the worktree directory when `git worktree remove` runs, the directory is deleted and all subsequent Bash commands fail with "Working directory no longer exists".
    - Remove local worktree: `git -C ~/Projects/staff-manager worktree remove .claude/worktrees/[block-name]`
    - Delete remote branch: `git -C ~/Projects/staff-manager push origin --delete worktree-[block-name]`
-   - Use `ExitWorktree` tool if the active context is still inside the worktree before running cleanup.
 
 **Phase 8.5 — Context file review + compact**
 After git push, before closing the session:
 - **C1–C3** (pure grep checks — no reasoning required): delegate to a **Haiku subagent** via the Agent tool with `model: "haiku"`. Pass the exact grep commands from `context-review.md` and the relevant file paths in the prompt. Collect results; apply any fix in the main session if needed.
-- Execute checks **C4 through C11** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
+- Execute checks **C4 through C12** from `.claude/rules/context-review.md` in order (in the main session — these require judgment).
 - Apply any fix found before moving to the next check.
-- **Phase complete only when all 11 checks pass** — not when the review "seems thorough".
-- **Final commit + push**: if any context file was modified during C1–C11 (CLAUDE.md, project-root MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
+- **Phase complete only when all 12 checks pass** — not when the review "seems thorough".
+- **Final commit + push**: if any context file was modified during C1–C12 (CLAUDE.md, project-root MEMORY.md, pipeline.md, context-review.md), commit those changes and push:
   ```
   git add <modified context files>
   git commit -m "chore(context): post-block context review fixes"
@@ -398,28 +346,12 @@ Branch prefix `fix/` activates this pipeline automatically.
 
 ## Pipeline for Structural Requirements Changes
 
-Activate when stakeholders introduce changes to the functional scope that impact already-implemented blocks or the project structure. This pipeline **precedes** the standard development pipeline and is its prerequisite.
+Activate when stakeholders change functional scope impacting already-implemented blocks or the project structure. This pipeline **precedes** the standard development pipeline and is its prerequisite.
 
-**Phase R1 — Requirements update**
-- Compare the change with the relevant section of the current `docs/requirements.md`.
-- Propose updated text section by section.
-- *** STOP — wait for explicit approval of each section before writing anything. ***
-
-**Phase R2 — Impact analysis**
-- Identify all already-implemented blocks impacted by the change.
-- For each block: list affected files, logic to update, tests to revise.
-- Check `docs/refactoring-backlog.md`: can existing entries be deprecated, integrated, or updated in light of the change?
-- Expected output: impact matrix (block → file → change type) + refactoring-backlog delta.
-
-**Phase R3 — Intervention plan**
-- Update `docs/implementation-checklist.md` with the new plan.
-- Update `docs/refactoring-backlog.md` (deprecate obsolete entries, add emerging issues).
-- *** STOP — present the full plan and wait for explicit confirmation before touching any code file. ***
-
-**Phase R4 — Execution**
-- Read `docs/implementation-checklist.md` — the plan for each block is already defined and approved, ready to use.
-- Proceed block by block following the standard pipeline (Phases 0–8.5).
-- Update `MEMORY.md` (project root) Active plan section after each completed step.
+1. **Update requirements** (`docs/requirements.md`): compare the change with the current text; propose updated text section by section. *** STOP — wait for explicit approval of each section before writing anything. ***
+2. **Impact analysis**: identify all already-implemented blocks impacted. For each: list affected files, logic to update, tests to revise. Check `docs/refactoring-backlog.md` for entries to deprecate or update. Output: impact matrix (block → file → change type) + refactoring-backlog delta.
+3. **Intervention plan**: update `docs/implementation-checklist.md` + `docs/refactoring-backlog.md` (deprecate obsolete entries, add emerging issues). *** STOP — present the full plan and wait for explicit confirmation before touching any code file. ***
+4. **Execution**: proceed block by block following the standard pipeline (Phases 0–8.5). Update `MEMORY.md` (project root) Active plan section after each completed block.
 
 ---
 
@@ -437,12 +369,7 @@ Activate when stakeholders introduce changes to the functional scope that impact
 - **Worktree — sm-staging command**: always pass the branch name explicitly: `sm-staging worktree-block-name`. Never call `sm-staging` without arguments when in a worktree context.
 - **Worktree cleanup**: handled in Phase 8 step 8 — local `git worktree remove` + remote branch delete — always under explicit user confirmation (STOP gate).
 - **Dependency scan is mandatory**: whenever a block touches existing routes, components, or pages, always grep for all usages before producing the file list (Phase 1). Deliver a complete file list from the start.
-- **Hard gates**: "STOP" instructions are hard stops. Do not treat them as suggestions.
 - **PRD sync is a hard gate — no exceptions**: `docs/prd/prd.md` must be updated and the GDoc Changelog entry must be appended **before closing any block**, whether full pipeline or fast-lane. This step cannot be deferred, skipped due to time pressure, or merged with another block's update. A block is not complete until both `docs/prd/prd.md` and the GDoc reflect its functional changes (or it is explicitly confirmed that no PRD section was affected).
 - **Even if the plan is pre-written**: still execute phase by phase with the gates. A pre-written plan replaces only Phase 1, it does not compress subsequent phases.
-- **Do not re-read files already in context**: use the already-acquired line reference.
-- **Explore agent for broad searches**: if a search requires >3 independent Glob/Grep queries, use the Agent tool with `subagent_type: 'Explore'` and `model: 'haiku'` to protect the main context from verbosity and reduce cost.
-- **Concise output**: always report only the build/test summary line. Paste details only on error.
-- **Keep MEMORY.md compact**: project-root MEMORY.md and auto-memory MEMORY.md must both stay under ~150 active lines. Beyond that: extract topics into separate files and link.
 - **Migrations — staging only during development**: see `CLAUDE.md § Known Patterns → HARD RULES`. Apply immediately after writing to `gjwkvgfwkdwzqlvudgqr` only. Production migrations run once in Phase 8 step 7 pre-deploy. Using production project_id outside Phase 8 step 7 is a hard process error — stop and flag it.
 - **Mid-session context**: if context window reaches ~50% during a long Phase 2 implementation, run `/compact [keep: current implementation state and open TODOs]` before continuing. Do not wait for Phase 8.5. After compact completes, re-read `.claude/CLAUDE.local.md` to restore any active session overrides before resuming.

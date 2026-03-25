@@ -29,7 +29,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 
 | Role | Email | Password | Notes |
 |---|---|---|---|
-| collaboratore | collaboratore_test@test.com | Testbusters123 | collab_id 99f6c44c-... — smoke tests |
+| collaboratore | collaboratore_tb_test@test.com | Testbusters123 | staging smoke tests (TB community). Production: collaboratore_test@test.com |
 | responsabile_compensi | responsabile_compensi_test@test.com | Testbusters123 | smoke tests |
 | amministrazione | admin_test@test.com | Testbusters123 | smoke tests |
 

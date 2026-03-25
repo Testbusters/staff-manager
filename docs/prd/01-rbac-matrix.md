@@ -55,7 +55,7 @@
 | Create compensation (GSheet import) | ❌ | ❌ | ✅ | Admin-only |
 | Edit compensation fields | ❌ | ❌ | ✅* | Admin only, IN_ATTESA state only |
 | Approve compensation | ❌ | ❌ | ✅ | Final — no double-confirm. Massimale check runs |
-| Reject compensation | ❌ | ❌ | ✅ | rejection_note required |
+| Reject compensation | ❌ | ✅* | ✅ | rejection_note required. Resp: community members only |
 | Liquidate compensation | ❌ | ❌ | ✅ | Triggers receipt generation |
 | Reopen compensation (RIFIUTATO→IN_ATTESA) | ✅* | ❌ | ✅ | Collab: own only |
 | Bulk approve | ❌ | ❌ | ✅ | Coda lavoro — with massimale check |
@@ -169,7 +169,7 @@
 
 ---
 
-## 8. User Management (was §7)
+## 8. User Management
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -183,7 +183,7 @@
 
 ---
 
-## 8. Community Management
+## 9. Community Management
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -195,7 +195,7 @@
 
 ---
 
-## 9. Import
+## 10. Import
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -207,7 +207,7 @@
 
 ---
 
-## 10. Export
+## 11. Export
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -217,7 +217,7 @@
 
 ---
 
-## 11. Impostazioni
+## 12. Impostazioni
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -225,13 +225,13 @@
 | Manage email layout config | ❌ | ❌ | ✅ | Header/footer/colors |
 | Manage compensation competenze | ❌ | ❌ | ✅ | compensation_competenze table |
 | Manage contract templates | ❌ | ❌ | ✅ | PDF/DOCX templates |
-| Manage community settings | ❌ | ❌ | ✅ | can_publish_announcements toggle (legacy) |
+| Manage community settings | ❌ | ❌ | ✅ | Banner, LookupOptions (città/materie), notification_settings |
 | View monitoring (Monitoraggio tab) | ❌ | ❌ | ✅ | System status, logs, errors |
 | Configure notification settings | ❌ | ❌ | ✅ | notification_settings table (19 rows) |
 
 ---
 
-## 12. Notifications
+## 13. Notifications
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|

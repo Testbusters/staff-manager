@@ -774,3 +774,47 @@ Gap fixes (G1–G6 + anomaly A1) identified during compliance review of the Bloc
 - MOD: `app/(app)/corsi/assegnazione/page.tsx`
 - MOD: `components/corsi/AssegnazioneRespCittPage.tsx`
 - NEW: `__tests__/api/assegnazioni.test.ts`
+
+---
+
+## Block eventi-citta — City Events (Responsabile Cittadino)
+
+### Scope
+Activates the "Creazione Eventi" nav item for `responsabile_cittadino`. Resp.citt can create,
+edit, and delete events scoped to their city (`citta_responsabile`). City events appear in:
+- Collab dashboard "Prossimi eventi" box (alongside national events, filtered by `collab.citta`)
+- Collab `/eventi` feed (national + city events matching `collab.citta`)
+- Admin `/contenuti` tab eventi (all events, city events show a città badge)
+
+### Requirements confirmed
+- Extend `events` table: add `citta text NULL` column (national events = NULL)
+- **RLS (migration 059)**: resp.citt can INSERT events where `citta = citta_responsabile`; UPDATE/DELETE own city events only
+- **`/corsi/eventi-citta`**: resp.citt CRUD page — list own city events, create/edit via Dialog, delete with AlertDialog
+- **API `POST /api/events`**: add `responsabile_cittadino` to WRITE_ROLES; auto-set `citta = citta_responsabile` and `community_ids` from resp.citt's community
+- **API `PATCH/DELETE /api/events/[id]`**: add `responsabile_cittadino`; ownership check (can only modify events with `citta = citta_responsabile`)
+- **Dashboard collab**: "Prossimi eventi" includes city events where `event.citta = collab.citta`
+- **Feed `/eventi`**: shows national (`citta IS NULL`) + city events where `event.citta = collab.citta`
+- **Admin `/contenuti`**: all events shown; city events display a badge with city name
+- **Notifications**: creating a city event notifies active collabs in the same city via `getCollaboratoriForCity()` helper (in-app only)
+- **Nav**: remove `comingSoon: true` from resp.citt "Creazione eventi"; update `href: '/corsi/eventi-citta'`
+
+### Out of scope
+- Draft/status workflow for events (no stato field introduced)
+- Email notifications for city events (in-app only, matching national behavior)
+- Resp.citt cannot manage allegati or luma_embed_url (visible in feed but not editable by resp.citt)
+
+### Files
+- NEW: `supabase/migrations/059_events_citta.sql`
+- NEW: `app/(app)/corsi/eventi-citta/page.tsx`
+- NEW: `app/(app)/corsi/eventi-citta/loading.tsx`
+- NEW: `components/corsi/EventiCittaPage.tsx`
+- NEW: `__tests__/api/events.test.ts`
+- MOD: `lib/types.ts` — ContentEvent add `citta`
+- MOD: `lib/nav.ts` — remove comingSoon from resp.citt "Creazione eventi"
+- MOD: `lib/notification-helpers.ts` — add `getCollaboratoriForCity()`
+- MOD: `app/api/events/route.ts` — resp.citt support + city notification filter
+- MOD: `app/api/events/[id]/route.ts` — resp.citt ownership check
+- MOD: `app/(app)/page.tsx` — dashboard city events filter
+- MOD: `app/(app)/eventi/page.tsx` — feed city events filter
+- MOD: `app/(app)/eventi/[id]/page.tsx` — citta badge
+- MOD: `components/contenuti/EventList.tsx` — citta badge in admin list
