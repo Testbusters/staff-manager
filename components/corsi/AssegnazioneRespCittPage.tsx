@@ -193,7 +193,7 @@ export default function AssegnazioneRespCittPage({
   }
 
   return (
-    <div className="inline-flex flex-col gap-10">
+    <div className="inline-flex flex-col gap-14">
       {/* Section 1: Corsi disponibili (no city) */}
       <div>
         <h2 className="text-base font-semibold text-foreground mb-3">Corsi disponibili</h2>
