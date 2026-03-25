@@ -193,7 +193,7 @@ export default function AssegnazioneRespCittPage({
   }
 
   return (
-    <div className="inline-flex flex-col gap-14">
+    <div className="space-y-14">
       {/* Section 1: Corsi disponibili (no city) */}
       <div>
         <h2 className="text-base font-semibold text-foreground mb-3">Corsi disponibili</h2>
@@ -207,16 +207,16 @@ export default function AssegnazioneRespCittPage({
             description="Non ci sono corsi senza città al momento."
           />
         ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
-              <Table className="w-auto">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden">
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead className="text-xs">Codice</TableHead>
+                    <TableHead className="text-xs w-[145px]">Codice</TableHead>
                     <TableHead className="text-xs">Nome</TableHead>
-                    <TableHead className="text-xs">Modalità</TableHead>
-                    <TableHead className="text-xs">Stato</TableHead>
-                    <TableHead className="text-xs">Date</TableHead>
-                    <TableHead className="text-xs"></TableHead>
+                    <TableHead className="text-xs w-[90px]">Modalità</TableHead>
+                    <TableHead className="text-xs w-[120px]">Stato</TableHead>
+                    <TableHead className="text-xs w-[175px]">Date</TableHead>
+                    <TableHead className="text-xs w-[195px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -226,7 +226,7 @@ export default function AssegnazioneRespCittPage({
                     return (
                       <TableRow key={corso.id} className="hover:bg-muted/60">
                         <TableCell className="font-mono text-xs text-muted-foreground">{corso.codice_identificativo}</TableCell>
-                        <TableCell className="font-medium">{corso.nome}</TableCell>
+                        <TableCell className="font-medium truncate" title={corso.nome}>{corso.nome}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
                             {corso.modalita === 'online' ? 'Online' : 'In aula'}
