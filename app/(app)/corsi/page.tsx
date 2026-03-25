@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -76,14 +76,28 @@ export default async function CorsiPage({
 
     const communityId = collabComm.community_id;
 
-    const [{ data: community }, { data: corsiComunitaRaw }, { data: assegnazioniRaw }] = await Promise.all([
+    const [{ data: community }, { data: corsiComunitaRaw }, { data: assegnazioniRaw }, { data: allegatiRes }] = await Promise.all([
       svc.from('communities').select('name').eq('id', communityId).single(),
       svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine')
         .eq('community_id', communityId).order('data_inizio', { ascending: true }),
       collabRow?.id
         ? svc.from('assegnazioni').select('lezione_id, ruolo').eq('collaborator_id', collabRow.id)
         : Promise.resolve({ data: [] as { lezione_id: string; ruolo: string }[] }),
+      svc.from('resources')
+        .select('tag, file_url, titolo')
+        .overlaps('tag', ['allegato-docenza', 'allegato-cocoda'])
+        .not('file_url', 'is', null),
     ]);
+
+    const allegatiMap: Record<string, { titolo: string; file_url: string }> = {};
+    for (const r of allegatiRes ?? []) {
+      if (!r.file_url) continue;
+      for (const t of (r.tag ?? []) as string[]) {
+        if (t === 'allegato-docenza' || t === 'allegato-cocoda') {
+          allegatiMap[t] = { titolo: r.titolo, file_url: r.file_url };
+        }
+      }
+    }
 
     const corsiComunita = (corsiComunitaRaw ?? [])
       .map((c) => ({ ...c, stato: getCorsoStato(c.data_inizio, c.data_fine) as CorsoStato }))
@@ -109,11 +123,39 @@ export default async function CorsiPage({
 
     return (
       <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-foreground">Corsi</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {community?.name ?? 'La tua community'}
-          </p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Corsi</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {community?.name ?? 'La tua community'}
+            </p>
+          </div>
+          {(allegatiMap['allegato-docenza'] || allegatiMap['allegato-cocoda']) && (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {allegatiMap['allegato-docenza'] && (
+                <a
+                  href={allegatiMap['allegato-docenza'].file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs font-medium text-foreground transition-colors"
+                >
+                  <Paperclip className="h-3 w-3 shrink-0" />
+                  {allegatiMap['allegato-docenza'].titolo}
+                </a>
+              )}
+              {allegatiMap['allegato-cocoda'] && (
+                <a
+                  href={allegatiMap['allegato-cocoda'].file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted hover:bg-accent px-3 py-1.5 text-xs font-medium text-foreground transition-colors"
+                >
+                  <Paperclip className="h-3 w-3 shrink-0" />
+                  {allegatiMap['allegato-cocoda'].titolo}
+                </a>
+              )}
+            </div>
+          )}
         </div>
         <CorsiPageCollab
           communityName={community?.name ?? ''}
