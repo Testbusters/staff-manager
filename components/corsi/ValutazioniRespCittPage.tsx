@@ -83,7 +83,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
           </div>
 
           <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
-              <Table className="w-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
                     <TableHead className="text-xs">Collaboratore</TableHead>

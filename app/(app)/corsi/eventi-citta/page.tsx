@@ -1,6 +1,4 @@
 import { notFound, redirect } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import EventiCittaPage from '@/components/corsi/EventiCittaPage';
@@ -39,15 +37,7 @@ export default async function EventiCittaRoute() {
     : { data: [] };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <Link
-        href="/corsi/assegnazione"
-        className="inline-flex items-center gap-1.5 text-sm text-link hover:text-link/80"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Torna ai corsi
-      </Link>
-
+    <div className="p-6 space-y-6">
       <EventiCittaPage
         initialEvents={(events ?? []) as ContentEvent[]}
         citta={citta}

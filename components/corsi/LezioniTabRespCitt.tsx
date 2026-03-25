@@ -130,7 +130,7 @@ export default function LezioniTabRespCitt({
                 Nessuna candidatura.
               </div>
             ) : (
-              <Table className="w-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
                     <TableHead className="text-xs">Collaboratore</TableHead>
