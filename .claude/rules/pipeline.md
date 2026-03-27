@@ -213,16 +213,34 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - After green build + tests: **run `/commit`** (Conventional Commits skill) to stage and commit on the current `worktree-[block-name]` branch. The skill reads staged changes, determines type+scope, and executes the commit. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
 
 **Phase 3b — API integration tests** *(only if the block creates or modifies API routes)*
-- Write core tests in `__tests__/api/<route-name>.test.ts` with vitest:
-  - Happy path: expected status code + key fields in response body
-  - Auth: no token → 401
-  - Authz: unauthorized role → 403
-  - Validation: invalid payload or missing required field → 400
-  - Business rules: application constraint violation → correct error code
-  - DB state: after write, verify expected record with service role
+
+**Test classification — three distinct types (do not conflate):**
+- **Unit tests** (no I/O): schema validation, type checks, business logic functions. Place in `__tests__/api/`. Già eseguiti in Phase 3 — non ri-eseguire in isolation, aggiungili alla suite esistente.
+- **DB integration tests**: direct Supabase service role calls. Test RLS constraints, CRUD, DB state. No dev server needed.
+- **HTTP integration tests**: `fetch(APP_URL/api/...)`. Test proxy redirect behavior (401 on no-session). **Require a running dev server** — verify `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000` returns 200/302 before writing these; if server is not running, skip HTTP tests and cover auth via RLS instead.
+
+**File naming convention**: `__tests__/api/<resource>[-<sub-resource>].test.ts`. Examples: `candidature.test.ts`, `corsi-valutazioni.test.ts`, `compensations-import.test.ts`. Never use slashes or dynamic segment markers `[id]` in the filename.
+
+**Minimum cases per new API route (AAA structure — Arrange → Act → Assert in every test):**
+- Auth: no session → `fetch` with `redirect: 'manual'` → expect `[307, 401]`
+- Authz (wrong role): test via RLS (anon client or service role with mismatched ownership) → DB error not null. HTTP 403 is structurally impossible without a real JWT for the wrong role in Vitest — use RLS verification instead. Document this explicitly in the test comment.
+- Validation: invalid payload → 400 (if HTTP test feasible) or Zod schema rejection in unit test
+- Business rules: application constraint violation → DB error or correct status code
+- DB state: after write, verify expected record exists using service role client — not API response alone
+- Happy path: expected status code + key response fields
+
+**Test data rules:**
+- **Fixture IDs**: always use canonical test accounts from `memory/test_credentials.md` — never create new permanent staging users. Key IDs: `COLLAB_ID = 'f6d75100-...'`, `COLLAB_P4M_ID = '608ccbe6-...'`.
+- **Fixture prefix uniqueness**: each test file uses a unique `codice_identificativo` or name prefix (e.g. `TEST-<FEATURE>-001`) to avoid cross-file DB conflicts when Vitest runs files in parallel.
+- **Cleanup-first + idempotency**: `beforeAll` must (1) delete any pre-existing data matching the test prefix before inserting fresh fixtures, and (2) cascade-delete dependent records (FK order: children before parents). Pattern: lookup by unique identifier → delete children → delete parent. Run twice in a row: same result.
+- **afterAll**: delete all records inserted by this test file. Scope to the fixture prefix — never delete unrelated data.
+
+**Conditional skip pattern**: never use `console.log + return` to skip a live test — it produces a false positive green. Use `test.skipIf(!process.env.VAR)('description', ...)` so Vitest marks it as skipped, not passed.
+
+**Timeout**: add `{ timeout: 15000 }` to any `it()` that inserts or queries the staging DB. Default 5s is insufficient for multi-step fixture setup. Example: `it('inserts record', async () => { ... }, 15000)`.
+
 - Focus on core cases — do not exhaust every combination, cover critical paths.
-- **Test data teardown**: every test that writes to DB must clean up in `afterAll`/`afterEach` using the service role client. Use cleanup-first pattern in `beforeAll` (delete any pre-existing data before creating test fixtures — prevents orphaned records from interrupted runs).
-- Run `npx vitest run __tests__/api/` — all green.
+- Run `npx vitest run __tests__/api/<new-test-file>.test.ts` first (scope to the new file), then `npx vitest run` to confirm the full suite is green.
 - Output: summary line only. Do not proceed with open errors.
 
 **Phase 3c — HTTP integration tests (Bruno CLI)** *(only if the block modifies `proxy.ts`, auth flow, or introduces routes where cookie/header/redirect behavior is critical and cannot be covered by Vitest — rarely triggered in practice; most auth/redirect behavior is covered by Phase 3b vitest integration tests)*
