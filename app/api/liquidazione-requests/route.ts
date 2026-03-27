@@ -132,7 +132,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (insertError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Fire-and-forget: notify admins
   (async () => {
@@ -220,7 +220,7 @@ export async function GET() {
     .eq('stato', 'in_attesa')
     .order('created_at', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Two-step: add collab name
   const collabIds = [...new Set((requests ?? []).map((r) => r.collaborator_id))];

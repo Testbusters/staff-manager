@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ expenses: data ?? [] });
 }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   if (!col) return NextResponse.json({ error: 'Collaboratore non trovato' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Insert initial history entry
   await supabase.from('expense_history').insert({

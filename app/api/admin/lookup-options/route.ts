@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   if (community) query = query.eq('community', community);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ options: data ?? [] });
 }
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   const user = await getCallerRole(cookieStore);
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Opzione già esistente' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ option: data }, { status: 201 });

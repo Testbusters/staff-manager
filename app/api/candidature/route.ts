@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
     }
 
     return NextResponse.json({ candidatura: data }, { status: 201 });
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ candidatura: data }, { status: 201 });

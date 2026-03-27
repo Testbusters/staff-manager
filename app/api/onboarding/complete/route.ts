@@ -50,10 +50,10 @@ export async function POST(request: Request) {
 
   if (!profile) return NextResponse.json({ error: 'Profilo non trovato' }, { status: 404 });
   if (profile.onboarding_completed) {
-    return NextResponse.json({ error: 'Onboarding già completato' }, { status: 400 });
+    return NextResponse.json({ error: 'Onboarding già completato' }, { status: 409 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });

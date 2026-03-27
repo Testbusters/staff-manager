@@ -23,7 +23,7 @@ export async function GET() {
     .select('*')
     .order('start_datetime', { ascending: true, nullsFirst: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ events: data ?? [] });
 }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const {
     titolo, descrizione, start_datetime, end_datetime,
     location, luma_url, luma_embed_url, community_ids, tipo, file_url,
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Fire content notifications
   try {

@@ -25,7 +25,7 @@ export async function GET() {
     .select('communities(id, name)')
     .eq('collaborator_id', col.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   type CommunityRow = { id: string; name: string };
   const communities = (data ?? [])

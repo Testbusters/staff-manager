@@ -53,7 +53,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   ]);
 
   if (error || !corso) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (lezioniError) return NextResponse.json({ error: lezioniError.message }, { status: 500 });
+  if (lezioniError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({
     corso: { ...corso, stato: getCorsoStato(corso.data_inizio, corso.data_fine) },
@@ -77,7 +77,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const parsed = allowed.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
     const { data, error } = await svc.from('corsi').update(parsed.data).eq('id', id).select().single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
     return NextResponse.json({ corso: { ...data, stato: getCorsoStato(data.data_inizio, data.data_fine) } });
   }
 
@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
 
   const { data, error } = await svc.from('corsi').update(parsed.data).eq('id', id).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ corso: { ...data, stato: getCorsoStato(data.data_inizio, data.data_fine) } });
 }
@@ -103,7 +103,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   const { error } = await svc.from('corsi').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return new NextResponse(null, { status: 204 });
 }

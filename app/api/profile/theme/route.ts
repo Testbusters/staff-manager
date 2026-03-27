@@ -22,7 +22,7 @@ export async function PATCH(req: Request) {
     .update({ theme_preference: parsed.data.theme })
     .eq('user_id', user.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

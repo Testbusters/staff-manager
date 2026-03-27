@@ -32,7 +32,7 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Password troppo corta (minimo 8 caratteri)' }, { status: 400 });

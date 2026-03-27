@@ -59,7 +59,7 @@ export async function POST(
   }
 
   if (ticket.stato === 'CHIUSO') {
-    return NextResponse.json({ error: 'Il ticket è chiuso' }, { status: 400 });
+    return NextResponse.json({ error: 'Il ticket è chiuso' }, { status: 409 });
   }
 
   const formData = await request.formData();
@@ -107,7 +107,7 @@ export async function POST(
     .select()
     .single();
 
-  if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
+  if (msgErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Update denormalized last-message fields + updated_at on the ticket
   const authorProfile = await serviceClient

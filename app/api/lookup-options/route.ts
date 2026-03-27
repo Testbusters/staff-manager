@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     .eq('community', community)
     .order('sort_order');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ options: data ?? [] });
 }

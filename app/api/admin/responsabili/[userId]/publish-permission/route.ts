@@ -23,7 +23,7 @@ export async function PATCH(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (!ADMIN_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const body = await request.json() as { can_publish_announcements: boolean };
+  const body = await request.json().catch(() => null) as { can_publish_announcements: boolean };
   if (typeof body.can_publish_announcements !== 'boolean') {
     return NextResponse.json({ error: 'can_publish_announcements deve essere boolean' }, { status: 400 });
   }
@@ -49,6 +49,6 @@ export async function PATCH(
     .update({ can_publish_announcements: body.can_publish_announcements })
     .eq('user_id', userId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ updated: true });
 }

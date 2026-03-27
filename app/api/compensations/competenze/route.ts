@@ -13,7 +13,7 @@ export async function GET() {
     .eq('active', true)
     .order('sort_order');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ competenze: data ?? [] });
 }

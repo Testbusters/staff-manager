@@ -93,7 +93,7 @@ export async function DELETE(
     .delete()
     .eq('id', id);
 
-  if (deleteErr) return NextResponse.json({ error: deleteErr.message }, { status: 500 });
+  if (deleteErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ deleted: true });
 }
@@ -171,7 +171,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (updateErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Best-effort: delete old file from storage
   if (existingDoc.file_original_url) {

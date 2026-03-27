@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     .select('id, stato, collaborator_id, importo, categoria, data_spesa')
     .in('id', ids);
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (fetchError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const notPending = (expenses ?? []).filter((e) => e.stato !== 'IN_ATTESA');
   if (notPending.length > 0) {
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       .update({ stato: 'APPROVATO', approved_by: user.id, approved_at: now })
       .in('id', allowedIds);
 
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
     const historyRows = allowedIds.map((id) => ({
       reimbursement_id: id,

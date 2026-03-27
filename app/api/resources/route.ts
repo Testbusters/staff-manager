@@ -15,7 +15,7 @@ export async function GET() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ resources: data ?? [] });
 }
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const { titolo, descrizione, link, file_url, tag, community_ids, categoria } = body as {
     titolo: string;
     descrizione?: string;
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ resource: data }, { status: 201 });
 }

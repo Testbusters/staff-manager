@@ -58,7 +58,7 @@ export async function PATCH(
     }
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -81,7 +81,7 @@ export async function PATCH(
     .update({ username: parsed.data.username })
     .eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ ok: true, username: parsed.data.username });
 }

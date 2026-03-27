@@ -81,7 +81,7 @@ export async function PATCH(
       .select()
       .single();
 
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
     return NextResponse.json({ liquidazione_request: updated });
   }
 
@@ -113,7 +113,7 @@ export async function PATCH(
         .update({ stato: 'LIQUIDATO', liquidated_at: now, liquidated_by: user.id })
         .in('id', req.compensation_ids);
 
-      if (compUpdateError) return NextResponse.json({ error: compUpdateError.message }, { status: 500 });
+      if (compUpdateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
       svc.from('compensation_history').insert(historyRows).then(({ error }) => {
         if (error) console.error('compensation_history insert failed:', error.message);
@@ -136,7 +136,7 @@ export async function PATCH(
         .update({ stato: 'LIQUIDATO', liquidated_at: now, liquidated_by: user.id })
         .in('id', req.expense_ids);
 
-      if (expUpdateError) return NextResponse.json({ error: expUpdateError.message }, { status: 500 });
+      if (expUpdateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
       svc.from('expense_history').insert(expHistoryRows).then(({ error }) => {
         if (error) console.error('expense_history insert failed:', error.message);
@@ -150,7 +150,7 @@ export async function PATCH(
       .select()
       .single();
 
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
     // Fire-and-forget: notify collab
     (async () => {
@@ -192,7 +192,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Fire-and-forget: notify collab
   (async () => {

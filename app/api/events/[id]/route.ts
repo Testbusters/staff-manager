@@ -42,7 +42,7 @@ export async function PATCH(
     }
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const update: Record<string, unknown> = {};
   if (body.titolo !== undefined) update.titolo = body.titolo.trim();
   if (body.descrizione !== undefined) update.descrizione = body.descrizione?.trim() || null;
@@ -65,7 +65,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ event: data });
 }
@@ -94,7 +94,7 @@ export async function DELETE(
 
   const { error } = await serviceClient.from('events').delete().eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({}, { status: 204 });
 }

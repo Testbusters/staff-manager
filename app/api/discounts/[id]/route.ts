@@ -27,7 +27,7 @@ export async function PATCH(
   const auth = await authorizeAdmin(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const {
     titolo, descrizione, codice_sconto, link,
     valid_from, valid_to, community_ids, fornitore, logo_url, file_url, brand,
@@ -70,7 +70,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ discount: data });
 }
@@ -94,7 +94,7 @@ export async function DELETE(
     .delete()
     .eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({}, { status: 204 });
 }

@@ -70,7 +70,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
     }
 
     return NextResponse.json({ candidatura: data });
@@ -143,7 +143,7 @@ export async function PATCH(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   // E13: send assignment email when candidatura is accepted

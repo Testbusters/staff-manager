@@ -40,7 +40,7 @@ export async function POST() {
     .eq('stato', 'APPROVATO')
     .is('exported_at', null);
 
-  if (compErr) return NextResponse.json({ error: compErr.message }, { status: 500 });
+  if (compErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const { data: rawExps, error: expErr } = await svc
     .from('expense_reimbursements')
@@ -48,7 +48,7 @@ export async function POST() {
     .eq('stato', 'APPROVATO')
     .is('exported_at', null);
 
-  if (expErr) return NextResponse.json({ error: expErr.message }, { status: 500 });
+  if (expErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const comps = rawComps ?? [];
   const exps = rawExps ?? [];
@@ -70,7 +70,7 @@ export async function POST() {
     .select('id, email, nome, cognome, data_nascita, luogo_nascita, comune, indirizzo, codice_fiscale, iban, intestatario_pagamento')
     .in('id', allCollabIds);
 
-  if (collabErr) return NextResponse.json({ error: collabErr.message }, { status: 500 });
+  if (collabErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const collabMap = new Map(
     (collabRows ?? []).map((c) => [c.id, c]),

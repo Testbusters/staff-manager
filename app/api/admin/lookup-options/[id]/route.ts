@@ -34,7 +34,7 @@ export async function PATCH(
   const user = await getCallerUser(cookieStore);
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -56,7 +56,7 @@ export async function PATCH(
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Opzione già esistente' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ option: data });
@@ -77,7 +77,7 @@ export async function DELETE(
   );
 
   const { error } = await svc.from('lookup_options').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

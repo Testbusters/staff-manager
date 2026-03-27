@@ -37,7 +37,7 @@ export async function GET() {
     .select('id, tipo, file_name, uploaded_at')
     .order('tipo');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ templates: data ?? [] });
 }
 
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   const { error: upsertError } = await admin
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     );
 
   if (upsertError) {
-    return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

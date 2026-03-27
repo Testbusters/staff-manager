@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     .select('id, stato, collaborator_id, importo_lordo, data_competenza, nome_servizio_ruolo')
     .in('id', ids);
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (fetchError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const notPending = (comps ?? []).filter((c) => c.stato !== 'IN_ATTESA');
   if (notPending.length > 0) {
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       .update({ stato: 'APPROVATO', approved_by: user.id, approved_at: now })
       .in('id', allowedIds);
 
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
     const historyRows = allowedIds.map((id) => ({
       compensation_id: id,

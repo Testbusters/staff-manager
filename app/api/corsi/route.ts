@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   if (community_id) query = query.eq('community_id', community_id);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const corsi = (data ?? []).map((c: Record<string, unknown>) => ({
     ...c,
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json(
     { corso: { ...data, stato: getCorsoStato(data.data_inizio, data.data_fine) } },
     { status: 201 },

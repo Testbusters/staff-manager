@@ -40,7 +40,7 @@ export async function PATCH(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   const { data, error } = await svc.from('lezioni').update(parsed.data).eq('id', lid).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ lezione: data });
 }
 
@@ -58,7 +58,7 @@ export async function DELETE(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   const { error } = await svc.from('lezioni').delete().eq('id', lid);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return new NextResponse(null, { status: 204 });
 }

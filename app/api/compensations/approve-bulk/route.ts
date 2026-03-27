@@ -46,14 +46,14 @@ export async function POST(request: Request) {
     .select('id, community_id, stato')
     .in('id', ids);
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (fetchError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Verify all are IN_ATTESA
   const notPending = (comps ?? []).filter((c) => c.stato !== 'IN_ATTESA');
   if (notPending.length > 0) {
     return NextResponse.json(
       { error: 'Alcuni compensi selezionati non sono in stato IN_ATTESA.' },
-      { status: 400 },
+      { status: 409 },
     );
   }
 
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     .update({ stato: 'APPROVATO', approved_by: user.id, approved_at: now })
     .in('id', ids);
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const historyRows = ids.map((id) => ({
     compensation_id: id,

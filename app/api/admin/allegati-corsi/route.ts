@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   if (community_id) query = query.eq('community_id', community_id);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ allegati: data ?? [] });
 }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     .from('corsi-allegati')
     .upload(storagePath, buffer, { contentType: file.type, upsert: true });
 
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  if (uploadError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const { data: urlData } = svc.storage.from('corsi-allegati').getPublicUrl(storagePath);
 
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ allegato: data }, { status: 201 });
 }

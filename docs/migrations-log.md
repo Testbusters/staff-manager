@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 062 | `062_security_fixes.sql` | 2026-03-27 | SEC12: `ALTER FUNCTION SET search_path = public` on 6 SECURITY DEFINER functions (`get_my_role`, `is_active_user`, `get_my_member_status`, `can_manage_community`, `get_my_collaborator_id`, `set_updated_at`). SEC11: DROP+CREATE `assegnazioni_valutazione_update` WITH CHECK mirroring USING clause. SEC16: DROP+CREATE `app_errors_insert` WITH CHECK (user_id = auth.uid()). Supabase storage bucket `corsi-allegati` created (public) |
 | 061 | `061_liquidazione_requests.sql` | 2026-03-27 | CREATE TABLE `liquidazione_requests` (id, collaborator_id FK→collaborators, compensation_ids UUID[], expense_ids UUID[], importo_netto_totale, iban, ha_partita_iva, stato CHECK(in_attesa\|accettata\|annullata), note_admin, processed_at, processed_by); UNIQUE INDEX on (collaborator_id) WHERE stato='in_attesa'; RLS: 4 policies (collab read/insert/update-revoca, admin all) |
 | 060 | `060_resp_citt_gaps.sql` | 2026-03-24 | DROP+CREATE POLICY `candidature_review` (extends WITH CHECK to allow `in_attesa` for revoke); CREATE POLICY `assegnazioni_resp_citt_delete` (resp.citt DELETE cocoda assegnazioni for their city's lezioni) |
 | 059 | `059_events_citta.sql` | 2026-03-24 | ADD COLUMN `citta TEXT NULL` on `events`; CREATE POLICY `events_respcitt_insert` (resp.citt INSERT city events where citta = citta_responsabile); CREATE POLICY `events_respcitt_update`; CREATE POLICY `events_respcitt_delete` |

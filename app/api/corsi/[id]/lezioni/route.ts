@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     .order('data')
     .order('orario_inizio');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ lezioni: data ?? [] });
 }
 
@@ -62,6 +62,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ lezione: data }, { status: 201 });
 }

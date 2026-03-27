@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ documents: data ?? [] });
 }
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Notify collaboratore if DA_FIRMARE (in-app + optional email)
   if (stato_firma === 'DA_FIRMARE' && collab.user_id) {

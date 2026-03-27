@@ -31,7 +31,7 @@ export async function GET() {
     .order('exported_at', { ascending: false })
     .limit(50);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const runs: ExportRunWithUrl[] = await Promise.all(
     (runRows ?? []).map(async (run) => {

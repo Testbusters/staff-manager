@@ -23,7 +23,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
   const { error } = await svc.from('blacklist').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return new NextResponse(null, { status: 204 });
 }

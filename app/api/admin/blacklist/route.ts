@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     .select('id, collaborator_id, note, created_at')
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const collabIds = (data ?? []).map((r: { collaborator_id: string }) => r.collaborator_id);
   const { data: collabs } = collabIds.length
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Collaboratore già in blacklist' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ entry: data }, { status: 201 });

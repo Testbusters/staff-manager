@@ -47,7 +47,7 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -71,7 +71,7 @@ export async function PATCH(request: Request) {
       .from('collaborators')
       .update(update)
       .eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   if (emailChanged) {

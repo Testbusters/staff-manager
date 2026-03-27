@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${storagePath}`;
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     .eq('user_id', user.id);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ url: `${publicUrl}?t=${Date.now()}` });
