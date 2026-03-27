@@ -348,9 +348,15 @@ export default function LiquidazioneRequestBanner({
                   onCheckedChange={(v) => setHaPartitaIva(!!v)}
                   className="mt-0.5"
                 />
-                <span className="text-sm text-foreground leading-relaxed">
-                  Sono possessore di Partita IVA.
-                </span>
+                <div>
+                  <span className="text-sm text-foreground leading-relaxed">
+                    Sono possessore di Partita IVA.
+                  </span>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    Emetterò fattura a Testbusters e la invierò a{' '}
+                    <span className="font-mono">fatture@testbusters.it</span>
+                  </p>
+                </div>
               </label>
             </div>
           </div>
