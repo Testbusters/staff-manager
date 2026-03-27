@@ -305,27 +305,39 @@ Never check DB state without waiting for the API response. Tests that assert DB 
 - **Run 4b when**: the block creates or modifies at least one visible page or component. Skip only for blocks that are exclusively API routes, migrations, or lib utilities with zero UI surface.
 
 **Phase 5b — Test data setup** *(MANDATORY — must complete before Phase 5c)*
-- **Prerequisite — dev server**:
-  - **Worktree context**: start `npm run dev` automatically on the first available port. Port detection: check `lsof -ti:3000` — if non-empty, try 3001, 3002, … until a free port is found. Start in background: `PORT=NNNN npm run dev > /tmp/staff-dev.log 2>&1 &`. Wait ~15s, then verify: `curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN` must return 200 or 302. Declare the endpoint to the user before proceeding: **"Dev server started at `http://localhost:NNNN` — use this URL for smoke test steps."**
-  - **Main repo (non-worktree)**: default port is 3000. If not already running, instruct the user to start it (`npm run dev`) before inserting fixtures.
-- Determine the test user(s) from the role scope of the block:
-  - Collaboratore → `collaboratore_test@test.com`
-  - Responsabile compensi → `responsabile_compensi_test@test.com`
-  - Admin → `admin_test@test.com`
-  - Multi-role blocks: use all relevant accounts.
-- Identify the entities and states involved in the block (tables, state machines, relevant DB records).
-- Insert representative test records covering all relevant states via Node.js one-shot script (service role, cleanup-first pattern — delete existing UAT records before inserting fresh ones).
-- Goal: the smoke test account has realistic data for every UI state that must be visible in Phase 5c.
-- Leave test data in DB for the smoke test. Clean up after Phase 5c only if the records would break other tests.
+
+**Step 1 — Insert test data** *(independent of dev server — do this first)*
+
+Test credentials — always use canonical accounts from `memory/test_credentials.md`. Never create new permanent staging users:
+- Collaboratore TB → `collaboratore_tb_test@test.com` · Collaboratore P4M → `collaboratore_p4m_test@test.com`
+- Responsabile compensi → `responsabile_compensi_test@test.com` · Admin → `admin_test@test.com`
+- Multi-community blocks (content, notifications, banners): insert data for BOTH communities. IDs: TB = `6a5aeb11-d4bc-4575-84ad-9c343ea95bbf` · P4M = `20ef2aac-7447-4576-b815-91d44560f00e`
+
+**State coverage rule**: for every state machine state of the entities touched by the block (IN_ATTESA, APPROVATO_RESP, APPROVATO_ADMIN, PAGATO, RIFIUTATO, DA_FIRMARE, FIRMATO…), insert at least one record. The smoke test account must have data for every UI branch — not just the happy-path state.
+
+**UAT prefix rule**: every record inserted in Phase 5b must be identifiable. Add a marker in a suitable field: `note_interne: 'UAT-[block-name]'` on compensations, `codice_identificativo: 'UAT-[BLOCK]-001'` on corsi, etc. This makes manual cleanup safe — search by prefix, delete only matching records.
+
+**One-shot script rules** (security + correctness):
+- Write the script directly in the project root — never in `/tmp/` (Node ESM resolves `node_modules` from the script's directory; `/tmp/` has none).
+- Always load credentials via dotenv: `import { config } from 'dotenv'; config({ path: '.env.local' });`. Use `process.env.SUPABASE_SERVICE_ROLE_KEY` — **never hardcode the key in the script** (a hardcoded key commits production credentials to git).
+- Verify staging before any write: assert `process.env.NEXT_PUBLIC_SUPABASE_URL` contains `gjwkvgfwkdwzqlvudgqr`. If not, `throw new Error('Wrong project — aborting')`.
+- Cleanup-first: delete existing UAT records matching the prefix before inserting fresh ones. Cascade-delete in FK order (children before parents).
+- Execute: `node script.mjs`. Then: `rm script.mjs`. The script must not remain in the repo.
+
+**Step 2 — Start dev server** *(needed for Phase 5c and 5d Track A — do after data insertion)*
+- **Worktree context**: detect first available port starting from 3000: `lsof -ti:3000` non-empty → try 3001, 3002… Start in background: `PORT=NNNN npm run dev > /tmp/staff-dev.log 2>&1 &`. Then poll until ready (max 48s): `for i in $(seq 1 24); do curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN | grep -q "200\|302" && break; sleep 2; done`. If not ready after 48s: read `/tmp/staff-dev.log` to diagnose (port conflict, .env.local missing, TypeScript error). Declare endpoint: **"Dev server started at `http://localhost:NNNN` — use this URL for smoke test steps."**
+  - **Re-run after Phase 4**: `playwright.config.ts` uses `reuseExistingServer: false` on port 3001. If re-running Phase 4 after Phase 5b has already claimed port 3001, kill Phase 5b's server first: `kill $(lsof -ti:3001) 2>/dev/null || true`, then re-run Phase 4.
+- **Main repo (non-worktree)**: insert data first (server-independent). Then instruct the user to start the dev server (`npm run dev`) when ready for Phase 5c.
+
+**Cleanup lifecycle**: Phase 5b data is temporary. Clean up in the same session after Phase 5d completes (or after 5c if 5d is not applicable): delete all UAT-prefixed records inserted by this block. Exception: records needed for ongoing multi-session development may remain, but must carry the UAT prefix and be documented in the session file.
 
 **Phase 5c — Manual smoke test** *(before the formal checklist)*
 - **Run locally — feature branches never merge to staging before Phase 8**: smoke test always runs against `http://localhost:[PORT]` with `npm run dev` running.
   - **Worktree context**: use the port detected and declared in Phase 5b (server already running). Restate the endpoint at the top of this phase: **"Smoke test endpoint: `http://localhost:NNNN`"**.
   - **Main repo (non-worktree)**: default port 3000. If not running, instruct the user to start it first.
-- **Step 1 — smoke test on localhost**: open the declared endpoint and use the staging test accounts:
-  - Collaboratore → `collaboratore_test@test.com`
-  - Responsabile compensi → `responsabile_compensi_test@test.com`
-  - Admin → `admin_test@test.com`
+- **Step 1 — smoke test on localhost**: open the declared endpoint and use the staging test accounts (full list: `memory/test_credentials.md`):
+  - Collaboratore TB → `collaboratore_tb_test@test.com` · Collaboratore P4M → `collaboratore_p4m_test@test.com`
+  - Responsabile compensi → `responsabile_compensi_test@test.com` · Admin → `admin_test@test.com`
 - Run 3-5 quick steps in the browser to verify the main flow.
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
 - Output: "smoke test OK" or list the problem and fix it before proceeding.
@@ -353,7 +365,7 @@ Never check DB state without waiting for the API response. Tests that assert DB 
 - **Medium / Minor**: append to `docs/refactoring-backlog.md` immediately — assign the correct ID prefix (`PERF-`, `API-`, `DB-`, `DEV-`) and add to the priority index. Do not defer or accumulate silently.
 - Output per skill: one-paragraph summary only — do not paste full reports.
 
-**Server shutdown (worktree context only)**: after all Track A audits complete, stop the dev server started in Phase 5b: `kill $(lsof -ti:NNNN) 2>/dev/null || true` (replace NNNN with the port declared in Phase 5b). Track B audits may run after shutdown. **Main repo**: server was started by the user — do not stop it.
+**Server shutdown (worktree context only)**: after all Track A audits complete, stop the dev server started in Phase 5b: `kill $(lsof -ti:NNNN) 2>/dev/null; sleep 1; kill -9 $(lsof -ti:NNNN) 2>/dev/null || true` (replace NNNN with the port declared in Phase 5b — two-step kill handles Next.js child worker processes). Track B audits may run after shutdown. **Main repo**: server was started by the user — do not stop it. If Track A fails mid-way and the server remains live, run the shutdown command manually before continuing.
 
 **Phase 6 — Outcome checklist + confirmation**
 Present the checklist from `@docs/phase6-checklist-template.md` filled with actual results, then wait for explicit confirmation before proceeding to Phase 8.
