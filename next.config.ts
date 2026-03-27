@@ -42,7 +42,10 @@ const nextConfig: NextConfig = {
   // Keep pdfjs-dist, pdf-lib and lightningcss out of the Turbopack/webpack bundle so they
   // run in plain Node.js context. Without this, Turbopack rewrites module
   // paths into .next/dev/server/chunks/ and native binary resolution breaks.
-  serverExternalPackages: ["lightningcss", "pdfjs-dist", "pdf-lib"],
+  serverExternalPackages: ["lightningcss", "pdfjs-dist", "pdf-lib", "xlsx", "docxtemplater", "pizzip"],
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   typescript: {
     // Type checking runs locally via `npx tsc --noEmit` (pipeline Phase 3).
     // Skipped here to avoid OOM on Replit's build workers.
