@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 061 | `061_liquidazione_requests.sql` | 2026-03-27 | CREATE TABLE `liquidazione_requests` (id, collaborator_id FK→collaborators, compensation_ids UUID[], expense_ids UUID[], importo_netto_totale, iban, ha_partita_iva, stato CHECK(in_attesa\|accettata\|annullata), note_admin, processed_at, processed_by); UNIQUE INDEX on (collaborator_id) WHERE stato='in_attesa'; RLS: 4 policies (collab read/insert/update-revoca, admin all) |
 | 060 | `060_resp_citt_gaps.sql` | 2026-03-24 | DROP+CREATE POLICY `candidature_review` (extends WITH CHECK to allow `in_attesa` for revoke); CREATE POLICY `assegnazioni_resp_citt_delete` (resp.citt DELETE cocoda assegnazioni for their city's lezioni) |
 | 059 | `059_events_citta.sql` | 2026-03-24 | ADD COLUMN `citta TEXT NULL` on `events`; CREATE POLICY `events_respcitt_insert` (resp.citt INSERT city events where citta = citta_responsabile); CREATE POLICY `events_respcitt_update`; CREATE POLICY `events_respcitt_delete` |
 | 058 | `058_assegnazioni_cocoda_rls.sql` | 2026-03-24 | CREATE POLICY `assegnazioni_cocoda_insert` (responsabile_cittadino can INSERT cocoda assegnazioni for lezioni belonging to corsi assigned to their citta_responsabile) |

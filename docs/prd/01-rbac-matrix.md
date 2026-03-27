@@ -60,6 +60,11 @@
 | Reopen compensation (RIFIUTATO→IN_ATTESA) | ✅* | ❌ | ✅ | Collab: own only |
 | Bulk approve | ❌ | ❌ | ✅ | Coda lavoro — with massimale check |
 | Bulk liquidate | ❌ | ❌ | ✅ | Coda lavoro |
+| Delete compensation (IN_ATTESA) | ❌ | ✅* | ✅ | Resp: community members only |
+| Request liquidation | ✅* | ❌ | ❌ | Collab: own APPROVATO records, ≥€250 net, 1 active request at a time |
+| Revoke liquidation request | ✅* | ❌ | ❌ | Collab: own in_attesa only |
+| Accept liquidation request | ❌ | ❌ | ✅ | Admin: bulk-liquidates referenced records |
+| Reject liquidation request | ❌ | ❌ | ✅ | Admin: optional note, sets stato=annullata |
 
 **Contract**: `docs/contracts/compensation-fields.md`
 
