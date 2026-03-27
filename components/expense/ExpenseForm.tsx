@@ -69,7 +69,7 @@ export default function ExpenseForm() {
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { categoria: undefined, data_spesa: '', importo: '', descrizione: '' },
+    defaultValues: { categoria: '', data_spesa: '', importo: '', descrizione: '' },
   });
 
   const watchImporto = form.watch('importo');

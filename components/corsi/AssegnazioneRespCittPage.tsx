@@ -134,6 +134,8 @@ export default function AssegnazioneRespCittPage({
         const { candidatura } = await res.json();
         setCandidature((prev) => [...prev, candidatura]);
         toast.success('Candidatura città inviata');
+      } else {
+        toast.error('Errore durante l\'invio della candidatura.');
       }
     } finally {
       setLoading(null);
@@ -150,6 +152,8 @@ export default function AssegnazioneRespCittPage({
       });
       if (res.ok) {
         setCandidature((prev) => prev.filter((c) => c.id !== candidaturaId));
+      } else {
+        toast.error('Errore durante il ritiro della candidatura.');
       }
     } finally {
       setLoading(null);
@@ -162,6 +166,8 @@ export default function AssegnazioneRespCittPage({
       const res = await fetch(`/api/assegnazioni/${assegnazioneId}`, { method: 'DELETE' });
       if (res.ok) {
         setCocodaAssegnazioni((prev) => prev.filter((a) => a.id !== assegnazioneId));
+      } else {
+        toast.error('Errore durante la rimozione dell\'assegnazione.');
       }
     } finally {
       setLoading(null);
@@ -186,6 +192,8 @@ export default function AssegnazioneRespCittPage({
           delete next[lezioneId];
           return next;
         });
+      } else {
+        toast.error('Errore durante l\'assegnazione CoCoD\'à.');
       }
     } finally {
       setLoading(null);
