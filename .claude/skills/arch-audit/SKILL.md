@@ -47,6 +47,7 @@ Read these files in parallel while the Step 1 agent runs:
 - `.claude/rules/pipeline.md`
 - `.claude/rules/context-review.md`
 - `.claude/rules/claudemd-standards.md` ← normative baseline for P1–P5 compliance checks
+- `.claude/rules/pipeline-standards.md` ← normative baseline for Step 3e pipeline compliance checks
 - `.claude/settings.json`
 - `.claude/files-guide.md`
 - `.claude/cheatsheet.md`
@@ -318,6 +319,90 @@ Batch command: `grep -A1 "^name:" .claude/skills/*/SKILL.md | grep "model:"` —
 FAIL: any skill using `model: haiku` as top-level model (only Explore *subagents within* skills should use haiku, not the skill itself).
 WARN: any skill using `model: opus` **unless** it is one of the three visual/UX skills (`visual-audit`, `ux-audit`, `responsive-audit`) — these intentionally use Opus for screenshot-based visual reasoning. All other skills should use sonnet.
 
+## Step 3e — Pipeline.md compliance check
+
+Using `pipeline.md` (read in Step 2) and **`.claude/rules/pipeline-standards.md`** as the normative baseline, evaluate each pipeline phase and the Fast Lane against industry standards. Classify each finding as PASS or WARN (never auto-fix pipeline content — changes require user confirmation).
+
+**Standards file currency check (run first)**: compare the `Last verified` date in `.claude/rules/pipeline-standards.md` against today's date. If > 30 days old AND Step 1 fetched material changes → flag as RECOMMEND to update the standards file.
+
+**PE1 — Phase gates integrity (S1)**
+Check: does every Phase have a verifiable STOP gate before promotion to the next phase? Phases 1, 1.5, 1.6, 6, and Phase 8 worktree cleanup must have explicit `*** STOP` markers requiring an execution keyword.
+Run: `grep -c "\*\*\* STOP" .claude/rules/pipeline.md`
+Expected: ≥ 5. Also verify the Phase 8 worktree cleanup STOP is present (`grep -n "STOP.*before cleanup\|before cleanup.*STOP\|STOP.*Confermo eliminazione" .claude/rules/pipeline.md`).
+Pass: ≥5 stops, Phase 8 cleanup stop present.
+
+**PE2 — Testing pyramid compliance (S2)**
+Check: does pipeline.md define a phase ordering that enforces the pyramid (fast tests before slow)?
+Expected order: Phase 3 (vitest unit) → Phase 3b (API integration) → Phase 4 (Playwright e2e). Any inversion = WARN.
+Run: `grep -n "Phase 3\b\|Phase 3b\|Phase 4\b" .claude/rules/pipeline.md | head -10`
+
+**PE3 — Auth boundary coverage mandatory (S2)**
+Check: does Phase 3b explicitly require no-token → 401, unauthorized role → 403, valid role → 2xx for every new API route?
+Run: `grep -n "401\|403\|no.token\|unauthorized role" .claude/rules/pipeline.md`
+Expected: at least 3 matches in Phase 3b. Missing = WARN.
+
+**PE4 — TypeScript check before commit (S3)**
+Check: does pipeline.md require `npx tsc --noEmit` before committing?
+Run: `grep -n "tsc --noEmit" .claude/rules/pipeline.md`
+Expected: ≥1 match. Missing = WARN.
+
+**PE5 — Security checklist per API route (S3)**
+Check: does Phase 2 include the 5-point security checklist (auth check, Zod validation, no sensitive data, RLS not bypassed, RLS enabled on new tables)?
+Run: `grep -A8 "Security checklist" .claude/rules/pipeline.md | grep -c "Zod\|RLS\|auth\|sensitive"`
+Expected: ≥3 matches. Missing = WARN.
+
+**PE6 — Staging-before-production (S4)**
+Check: does pipeline.md prohibit direct production deploy without staging first?
+Run: `grep -n "staging.*production\|production.*staging\|staging before\|sm-deploy" .claude/rules/pipeline.md | head -5`
+Expected: ≥1 match enforcing the staging prerequisite. Missing = WARN.
+
+**PE7 — Migration isolation (S4)**
+Check: does pipeline.md explicitly state production migrations run ONLY in Phase 8 step 7, and that `execute_sql` during Phase 2 must target the staging project_id?
+Run: `grep -n "gjwkvgfwkdwzqlvudgqr\|Phase 8 step 7\|production.*migration\|migration.*production" .claude/rules/pipeline.md | head -5`
+Expected: ≥2 matches. Missing = WARN.
+
+**PE8 — Scope gate before implementation (S1, S5)**
+Check: does Phase 1 include both a Tier 1 / Tier 2 scope sweep AND an execution keyword gate before the dependency scan proceeds?
+Run: `grep -n "Tier 1\|Tier 2\|execution keyword" .claude/rules/pipeline.md | head -5`
+Expected: ≥2 matches in Phase 1. Missing = WARN.
+
+**PE9 — Minimal footprint / no unrequested features (S1, S3)**
+Check: does pipeline.md prohibit adding features beyond the approved plan scope?
+Run: `grep -n "unrequested\|scope creep\|approved plan\|outside.*plan" .claude/rules/pipeline.md | head -5`
+Expected: ≥1 match. Missing = WARN.
+
+**PE10 — Fast Lane escalation criteria (S6)**
+Check: does the Fast Lane define clear escalation conditions to the full pipeline?
+Run: `grep -A5 "Escalat" .claude/rules/pipeline.md | grep -c "file\|migration\|shared\|consumer"`
+Expected: ≥2 matches. Missing = WARN.
+
+**PE11 — Documentation requirements gate (S7)**
+Check: does Phase 8 require `docs/prd/prd.md` + GDoc update as a hard gate before block closure?
+Run: `grep -n "PRD.*hard gate\|PRD.*mandatory\|no exceptions.*PRD\|PRD.*no exception" .claude/rules/pipeline.md`
+Expected: ≥1 match. Missing = WARN.
+
+**PE12 — Commit discipline (S8)**
+Check: does pipeline.md specify the 3-commit block pattern (code → docs → context files)?
+Run: `grep -n "Commit 1\|Commit 2\|Commit 3\|three-commit\|3-commit" .claude/rules/pipeline.md | head -5`
+Expected: ≥2 matches. Missing = WARN.
+
+Output results in the Step 6 report under a new section:
+```
+### Pipeline compliance (PE1–PE12) — judgment-based, PASS/WARN only
+- PE1 Phase gates integrity: [PASS/WARN]
+- PE2 Testing pyramid order: [PASS/WARN]
+- PE3 Auth boundary coverage: [PASS/WARN]
+- PE4 TypeScript check gate: [PASS/WARN]
+- PE5 Security checklist: [PASS/WARN]
+- PE6 Staging before production: [PASS/WARN]
+- PE7 Migration isolation: [PASS/WARN]
+- PE8 Scope gate before impl: [PASS/WARN]
+- PE9 Minimal footprint: [PASS/WARN]
+- PE10 Fast Lane escalation: [PASS/WARN]
+- PE11 Documentation gate: [PASS/WARN]
+- PE12 Commit discipline: [PASS/WARN]
+```
+
 ## Step 4 — Apply AUTO-FIX changes
 
 For each AUTO-FIX from Step 3 and Step 3b: apply the change, note the file and line modified.
@@ -378,6 +463,20 @@ Output a structured report in this exact format:
 - T3 Phase 5d Playwright concurrency: [PASS/WARN]
 - T4 shadcn MCP referenced: [PASS/FAIL — CLAUDE.md / cheatsheet]
 - T5 Skill model fitness: [PASS/FAIL/WARN — list any mismatches]
+
+### Pipeline compliance (PE1–PE12) — judgment-based, PASS/WARN only
+- PE1 Phase gates integrity: [PASS/WARN]
+- PE2 Testing pyramid order: [PASS/WARN]
+- PE3 Auth boundary coverage: [PASS/WARN]
+- PE4 TypeScript check gate: [PASS/WARN]
+- PE5 Security checklist: [PASS/WARN]
+- PE6 Staging before production: [PASS/WARN]
+- PE7 Migration isolation: [PASS/WARN]
+- PE8 Scope gate before impl: [PASS/WARN]
+- PE9 Minimal footprint: [PASS/WARN]
+- PE10 Fast Lane escalation: [PASS/WARN]
+- PE11 Documentation gate: [PASS/WARN]
+- PE12 Commit discipline: [PASS/WARN]
 
 ### Next audit due: [DATE + 7 days]
 ```
