@@ -27,3 +27,18 @@ For components not yet in the map: query the **shadcn MCP** (`npx shadcn@latest 
 - Icon-only buttons: always add `aria-label="..."`.
 - Pagination `‹`/`›` buttons: always `aria-label="Pagina precedente"` / `aria-label="Pagina successiva"`.
 - Interactive `<div>` with onClick: convert to `<button>` or add `role="button" tabIndex={0} onKeyDown`.
+
+## shadcn Component Patterns
+- **Dialog**: `onOpenChange(false)` fires for both X and Esc — always reset form state there. Built-in X button at `absolute top-4 right-4` — add `pr-10` to custom headers to avoid overlap. `showCloseButton={false}` to suppress it.
+- **Tooltip**: `<TooltipProvider delayDuration={300}>` wraps `app/(app)/layout.tsx`. Radix portal means `overflow-hidden` on parent containers no longer clips the tooltip.
+- **Nav icons across Server/Client boundary**: `lib/nav.ts` uses `iconName: string` (plain, serializable). `Sidebar.tsx` resolves icons via `ICON_MAP`. Never put Lucide icon components in data structures passed from Server to Client Components.
+
+## Table Layout Rules (PERMANENT)
+- **Dedicated pages**: `<Table className="w-auto">` inside `<div className="w-fit ... overflow-hidden">`. Card snaps to table content — row hover does NOT bleed right. Never `w-full` on table or card wrapper. Dashboard widgets exempt.
+- **Multiple tables on same page**: all cards share the width of the widest table — add `min-w-[Xpx]` to narrower cards so columns align vertically. Confirmed 2026-03-25.
+- **Multi-group alignment**: separate `<Table>` elements cannot share column widths. Use a single `<Table>` with section header rows (`<TableRow><TableCell colSpan={N}>`) for aligned columns across groups. Example: `DocumentList.tsx` (CONTRATTO/CU/RICEVUTA sections).
+
+## Theme + Hydration
+- **next-themes**: `defaultTheme="dark"`, `enableSystem=false`. Theme stored in `user_profiles.theme_preference`, synced on mount. Login page always forces dark.
+- **`suppressHydrationWarning`**: required on `<html>`, `<body>`, and any element reading `resolvedTheme` before mount.
+- **Tiptap 3 SSR**: always add `immediatelyRender: false` to `useEditor()` — without it Next.js hydration throws even in `'use client'` components.
