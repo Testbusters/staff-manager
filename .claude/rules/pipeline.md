@@ -97,7 +97,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
 - *** STOP — wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before writing code. ***
 
-**Phase 1.6 — Visual & UX Design** *(MANDATORY for any block with UI/UX impact — cannot be skipped)*
+**Phase 1.6 — Visual & UX Design** *(run when triggered by the conditions below)*
 
 **Triggers — this phase is required when the block:**
 - Creates a new page route or full-page redesign
@@ -105,19 +105,21 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - Changes the information architecture of an existing page (sections, tabs, panels)
 - Adds a complex interactive pattern (multi-step flow, bulk actions, split views)
 
+> **Model — MANDATORY**: Phase 1.6 runs on **Opus 4.6** for maximum design quality. Before step 1: switch with `/model opus`. Switch back to Sonnet after the Phase 1.6 STOP gate is confirmed.
+
 **When triggered, always execute in this order:**
 
-1. **ASCII wireframe** — invoke the `frontend-design` skill with an explicit ASCII wireframe request. The wireframe must show:
+1. **ASCII wireframe** — call the **Skill tool** (`skill: "frontend-design"`) with an explicit wireframe prompt. **Do NOT generate the wireframe inline in text** — the Skill tool must be invoked. Prompt must request:
    - Full page layout with named regions
    - Column structure for tables/lists
    - Action placement and grouping
    - Empty states and loading states
    - Mobile breakpoint if relevant
 
-2. **Design context + HTML preview** *(optional)* — Two paths, in order of preference:
-   - **Path A — Figma MCP**: use `get_variable_defs` on the Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`) to pull real design tokens, then generate the component with `frontend-design`. This produces code aligned with the actual design system.
-   - **Path B — frontend-design standalone**: `frontend-design` skill → self-contained HTML (inline Tailwind CDN) → iterate in-session. Use when Figma context is not needed.
-   Either way: approved preview = visual contract for Phase 2; generated code is reference only.
+2. **HTML preview** — call the **Skill tool** (`skill: "frontend-design"`) a second time with a full component generation prompt. Two paths, in order of preference:
+   - **Path A — Figma MCP**: first fetch design tokens with `get_variable_defs` on the Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`), then include them in the Skill tool prompt. Produces code aligned to the real design system.
+   - **Path B — standalone**: Skill tool prompt → self-contained HTML with inline Tailwind CDN. Use when Figma context is not needed.
+   Approved output = visual contract for Phase 2; generated code is reference only, not committed.
 
 3. **UX rationale** — for each layout decision, state explicitly:
    - What mental model it maps to (inbox, pipeline, kanban, wizard…)
@@ -126,7 +128,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 
 4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
 
-5. **STOP — present wireframe (+ CodePen link or description if HTML preview was used) + UX rationale + component map. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. The approved wireframe/preview is the implementation contract — Phase 2 must match it.**
+5. **STOP — present wireframe + HTML preview + UX rationale + component map. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. Switch back to Sonnet (`/model sonnet`) only after the user confirms. The approved output is the implementation contract — Phase 2 must match it.**
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
 - Use `EnterPlanMode` to present the complete approved plan in structured, locked form. Call `ExitPlanMode` after confirmation.
@@ -166,7 +168,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - Run `npx vitest run __tests__/api/` — all green.
 - Output: summary line only. Do not proceed with open errors.
 
-**Phase 3c — HTTP integration tests (Bruno CLI)** *(only if the block modifies `proxy.ts`, auth flow, or introduces routes where cookie/header/redirect behavior is critical and cannot be covered by Vitest)*
+**Phase 3c — HTTP integration tests (Bruno CLI)** *(only if the block modifies `proxy.ts`, auth flow, or introduces routes where cookie/header/redirect behavior is critical and cannot be covered by Vitest — rarely triggered in practice; most auth/redirect behavior is covered by Phase 3b vitest integration tests)*
 - Write `.bru` request files in `api-tests/<block-name>/` (one file per endpoint or scenario).
 - Minimum cases to cover:
   - No token → 401 (or redirect to `/login`, depending on route type)
@@ -177,8 +179,27 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - `.bru` files are committed in `api-tests/`. Never commit Bruno environment files containing secrets (add to `.gitignore`).
 - Output: summary line only. If something fails: paste the failing request + response body, fix, re-run. Do not proceed with open failures.
 
-**Phase 4 + 4b — UAT / Playwright e2e + Visual baseline** ⏸ SUSPENDED via `.claude/CLAUDE.local.md`
-> Re-enable together after Fase 9: remove CLAUDE.local.md (explicit user confirmation). When re-enabling: use `data-*` attribute selectors (CLAUDE.md "shadcn e2e selectors"). Never `span.text-{color}` — Badge renders `<div>`, not `<span>`.
+**Phase 4 — UAT / Playwright e2e**
+- Write or update the spec file `e2e/[block-name].spec.ts`.
+- **Selector rules** (mandatory — see CLAUDE.md § "shadcn e2e selectors"):
+  - Status badges: `[data-stato="APPROVATO"]` (compensations/expenses) · `[data-ticket-stato="CHIUSO"]` (tickets)
+  - Dialog scope: `[data-slot="dialog-content"]`
+  - Never `span.text-{color}` — Badge renders `<div>`, not `<span>`
+- **Timing**: use `Promise.all([page.waitForResponse(...), action()])` before DB assertions — DB check must not run before API completes.
+- **Coverage per block** — minimum scenarios:
+  - Happy path: main user flow end-to-end for each affected role
+  - Auth boundary: unauthorized role → redirect or 403
+  - State transitions: if block touches a state machine, cover each transition
+  - Empty state: no records → correct empty state shown
+- **Test data**: use the fixtures inserted in Phase 5b (cleanup-first, service role). Do not re-insert in spec setup if Phase 5b already ran.
+- Run: `npx playwright test e2e/[block-name].spec.ts`
+- Output: summary line only (`N passed`). Fix all failures before Phase 4b. Do not proceed with open failures.
+
+**Phase 4b — Visual baseline**
+- After Phase 4 passes: capture/update baseline screenshots with `npx playwright test e2e/[block-name].spec.ts --update-snapshots`.
+- Snapshots committed in `e2e/snapshots/` as part of Commit 1 (code).
+- On subsequent runs without `--update-snapshots`: visual regression is detected automatically.
+- Skip 4b if the block has no UI changes (API-only or migration-only blocks).
 
 **Phase 5b — Test data setup** *(MANDATORY — must complete before Phase 5c)*
 - **Prerequisite — dev server**:
@@ -308,9 +329,9 @@ Use when: the change touches ≤3 files, introduces no migration, no new pattern
 Branch prefix `fix/` activates this pipeline automatically.
 
 **FL-0 — Branch check + session file**
-- **FIRST ACTION — session file**: check `.claude/session/` for existing `fix-*.md` files.
+- **Session file (optional for truly trivial fixes)**: check `.claude/session/` for existing `fix-*.md` files.
   - If one exists: read it — a previous fix session was interrupted. Resume from it. Do NOT create a new file.
-  - If none exists: create `.claude/session/fix-[description].md` with a one-line description of the fix and the current date. This file must exist before any code is written.
+  - If none exists: only create `fix-[description].md` if the fix is expected to span sessions (e.g. complex investigation, multi-step change). For a clear 1-file correction, skip — no file needed.
 - Confirm current branch starts with `fix/`. If not, stop and instruct user to run `sm-fix description`.
 - If on `main` or `staging`: stop — same rule as Phase 0 of the full pipeline.
 - **Escalation to full pipeline**: if the fix touches a shared type or utility with >5 import consumers, stop — notify the user and escalate to the full pipeline (worktree + Phase 1 scope gate). A fix with wide-impact shared changes is not a fast-lane operation.

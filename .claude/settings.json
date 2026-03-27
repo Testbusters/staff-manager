@@ -111,6 +111,39 @@
           }
         ]
       }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); WORKTREE=$(echo \"$INPUT\" | jq -r '.tool_input.path // empty' 2>/dev/null); if [ -n \"$WORKTREE\" ] && [ ! -f \"$WORKTREE/.env.local\" ]; then echo \"⚠️  WorktreeCreate: .env.local missing in $WORKTREE — run: cp ~/.envs/staff-manager.staging.env $WORKTREE/.env.local\"; fi",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); WORKTREE=$(echo \"$INPUT\" | jq -r '.tool_input.path // empty' 2>/dev/null); if [ -n \"$WORKTREE\" ] && [ -d \"$WORKTREE\" ]; then CHANGES=$(git -C \"$WORKTREE\" status --porcelain 2>/dev/null); if [ -n \"$CHANGES\" ]; then echo \"⚠️  WorktreeRemove: uncommitted changes detected in $WORKTREE — verify before removal.\"; fi; fi",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Task completed\" with title \"Staff Manager\"' 2>/dev/null || true",
+            "async": true
+          }
+        ]
+      }
     ]
   },
   "permissions": {
