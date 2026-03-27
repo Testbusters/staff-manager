@@ -515,3 +515,21 @@ export interface Assegnazione {
   valutazione: number | null;
   created_at: string;
 }
+
+// ── Liquidazione Request ─────────────────────────────────────
+export type LiquidazioneRequestStato = 'in_attesa' | 'accettata' | 'annullata';
+
+export interface LiquidazioneRequest {
+  id: string;
+  collaborator_id: string;
+  compensation_ids: string[];
+  expense_ids: string[];
+  importo_netto_totale: number;
+  iban: string;
+  ha_partita_iva: boolean;
+  stato: LiquidazioneRequestStato;
+  note_admin: string | null;
+  created_at: string;
+  processed_at: string | null;
+  processed_by: string | null;
+}

@@ -204,9 +204,9 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Responsive notes**: Filter bar (community + state selects) and table should stack on mobile. Action buttons per row should remain tappable.
 
 ### `/coda`
-- **Tabs / states**: 2 tabs — Compensi · Rimborsi. Stats strip at top shows aggregate counts. Each tab: sub-filters (community, state), date sort, bulk approve + bulk liquidate, footer totals. Bulk actions open a confirmation Dialog (with MassimaleCheckModal for over-massimale cases).
-- **Key interactions**: Admin — bulk approve all IN_ATTESA, bulk liquidate all APPROVATO, individual approve/reject/liquidate per row.
-- **Empty states**: Both tabs use EmptyState when queue is empty.
+- **Tabs / states**: 3 tabs — Compensi · Rimborsi · Liquidazioni. Stats strip at top shows aggregate counts. Compensi/Rimborsi tabs: sub-filters (community, state), date sort, bulk approve + bulk liquidate, footer totals. Bulk actions open a confirmation Dialog (with MassimaleCheckModal for over-massimale cases). Liquidazioni tab: CodaLiquidazioni table (collabName, importo netto, masked IBAN, P.IVA, record count, date) with Accetta (AlertDialog) / Rifiuta (Dialog + note) per row.
+- **Key interactions**: Admin — bulk approve all IN_ATTESA, bulk liquidate all APPROVATO, individual approve/reject/liquidate per row; accept/reject liquidazione requests per row.
+- **Empty states**: All tabs use EmptyState when queue is empty.
 - **Responsive notes**: Stats strip is multi-column — stack on mobile. Bulk action buttons and per-row actions must remain accessible. Footer totals row should not be hidden by overflow.
 
 ### `/collaboratori/[id]`

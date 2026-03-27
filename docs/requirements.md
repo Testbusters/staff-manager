@@ -818,3 +818,44 @@ edit, and delete events scoped to their city (`citta_responsabile`). City events
 - MOD: `app/(app)/eventi/page.tsx` — feed city events filter
 - MOD: `app/(app)/eventi/[id]/page.tsx` — citta badge
 - MOD: `components/contenuti/EventList.tsx` — citta badge in admin list
+
+---
+
+## Block liquidazione-request — Liquidation Request Flow
+
+### Scope
+Collaboratori can request liquidation of their APPROVATO compensations and expense reimbursements.
+Admin receives the request in /coda and can accept (bulk-liquidate exactly those records) or reject with optional note.
+
+### Requirements
+- **Threshold**: request only allowed when total net of selected records ≥ €250 (net already stored in `compensations.importo_netto` and `expense_reimbursements.importo`; ritenuta already applied at creation)
+- **Per-record selection**: checkbox table — collab selects which APPROVATO records to include. No partial-record splitting.
+- **IBAN**: shown read-only from `collaborators.iban` — collab cannot change it in this flow
+- **P.IVA**: optional checkbox ("Sono possessore di Partita IVA")
+- **Disclaimer**: "Ho controllato che i dati siano corretti" (required checkbox) + explanation of €250 minimum
+- **One active request per collab**: unique index on `(collaborator_id) WHERE stato = 'in_attesa'`
+- **Revoca**: collab can revoke their in_attesa request (sets stato = 'annullata')
+- **Admin accept**: bulk-liquidates exactly the compensation_ids + expense_ids in the request
+- **Admin reject**: sets stato = 'annullata' with optional note_admin
+- **Notifications**: E15 → admin on creation; E16 → collab on accept/reject (in-app + email)
+
+### Out of scope
+- Slack integration
+- Amount splitting (records are included in full or not at all)
+- Liquidation of records not individually selected
+
+### New table
+`liquidazione_requests` — migration 061
+
+### Files
+- NEW: `supabase/migrations/061_liquidazione_requests.sql`
+- MOD: `lib/types.ts` — add `LiquidazioneRequestStato`, `LiquidazioneRequest`, extend `NotificationEntityType`
+- MOD: `lib/email-templates.ts` — E15 + E16 templates
+- MOD: `lib/notification-utils.ts` — add `buildLiquidazioneRequestNotification`
+- NEW: `app/api/liquidazione-requests/route.ts` — POST (collab creates) + GET (admin lists)
+- NEW: `app/api/liquidazione-requests/[id]/route.ts` — PATCH (revoca / accetta / annulla)
+- NEW: `components/compensi/LiquidazioneRequestBanner.tsx` — banner + dialog (4 states)
+- MOD: `app/(app)/compensi/page.tsx` — fetch APPROVATO records + active request; render banner
+- NEW: `components/admin/CodaLiquidazioni.tsx` — admin table with Accetta/Rifiuta actions
+- MOD: `app/(app)/coda/page.tsx` — add Liquidazioni tab
+- NEW: `__tests__/api/liquidazione-requests.test.ts` — 11 tests

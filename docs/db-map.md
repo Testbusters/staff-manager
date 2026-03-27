@@ -89,6 +89,12 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | `blacklist` | Collaborators barred from teaching | `collaborator_id` (UNIQUE), `note`, `created_by` | UNIQUE on collaborator_id. Error 23505 on duplicate |
 | `allegati_globali` | Global attachment files per tipo × community | `tipo` (docenza/cocoda), `community_id`, `file_url`, `nome_file`, `updated_by` | UNIQUE `(tipo, community_id)`. Always use UPSERT. Stored in `corsi-allegati` bucket |
 
+### Liquidazione Requests
+
+| Table | Purpose | Key columns | Notes |
+|---|---|---|---|
+| `liquidazione_requests` | Collaborator liquidation requests | `collaborator_id`, `compensation_ids` (UUID[]), `expense_ids` (UUID[]), `importo_netto_totale`, `iban`, `ha_partita_iva`, `stato`, `note_admin`, `processed_at`, `processed_by` | `stato` CHECK: `in_attesa`, `accettata`, `annullata`. Partial UNIQUE INDEX on `(collaborator_id) WHERE stato='in_attesa'` — max 1 active per collaborator. RLS: collab read/insert/update-revoca, admin all |
+
 ### Operations & Monitoring
 
 | Table | Purpose | Key columns | Notes |
@@ -118,7 +124,8 @@ collaborators
   ├── collaborator_communities.collaborator_id (UNIQUE — 1:1)
   ├── compensations.collaborator_id
   ├── expense_reimbursements.collaborator_id
-  └── documents.collaborator_id
+  ├── documents.collaborator_id
+  └── liquidazione_requests.collaborator_id
 
 communities
   ├── collaborator_communities.community_id
@@ -268,10 +275,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-03-24.
+> Last refreshed: 2026-03-27.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -809,6 +817,23 @@ tickets
 | `ore` | numeric | YES | — | — |
 | `materia` | text | NO | — | — |
 | `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `liquidazione_requests`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `compensation_ids` | uuid[] | NO | `'{}'[]` | — |
+| `expense_ids` | uuid[] | NO | `'{}'[]` | — |
+| `importo_netto_totale` | numeric | NO | — | — |
+| `iban` | text | NO | — | — |
+| `ha_partita_iva` | boolean | NO | `false` | — |
+| `stato` | text | NO | — | — |
+| `note_admin` | text | YES | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+| `processed_at` | timestamp with time zone | YES | — | — |
+| `processed_by` | uuid | YES | — | → auth.users.id |
 
 ### `lookup_options`
 
