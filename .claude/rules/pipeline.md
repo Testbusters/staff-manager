@@ -91,12 +91,28 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - Expected output: feature summary, **complete** file list verified by dependency scan.
 - *** STOP — present requirements summary and file list. Any residual questions that emerged from the scan must be included here, not in a new `AskUserQuestion` call. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding. ***
 
-**Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or touching >5 files)*
-- Present a design outline: data flow, data structures involved, main trade-offs.
-- State any discarded alternatives and rationale.
-- For simple blocks (≤3 files **AND** no shared types/utilities modified **AND** no migration **AND** no new patterns): skip this phase, stating so explicitly.
+**Phase 1.5 — Design review** *(blocks introducing new patterns, DB schema changes, or architectural decisions)*
+
+**Triggers — this phase is required when the block:**
+- Introduces a new shared pattern, utility, or service (used by >1 consumer)
+- Applies a DB schema change (new table, column, FK, index, RLS policy)
+- Involves a cross-cutting refactor (shared type, state machine, auth flow)
+- Introduces a new external integration (new MCP, new API, new cron job)
+
+**Skip**: if the block touches ≤5 files AND none of the above triggers apply — skip, stating so explicitly. File count alone is not a trigger.
+
+**Execution** — delegate to the **`Plan` subagent** (`Agent tool`, `subagent_type: "Plan"`). Pass the confirmed scope from Phase 1 and the file list. The subagent returns a structured architectural plan; present it as the design contract for Phase 2.
+
+**Minimum output required** (the Plan subagent must cover all applicable sections):
+1. **Data model** — entities, key fields, relationships (table or ASCII diagram)
+2. **API contract sketch** — new/modified routes: verb, path, payload shape, response shape, auth requirement *(only if block creates/modifies API routes)*
+3. **Decision log** — at least 2 alternatives evaluated with rationale for the chosen approach. "No alternatives considered" is not acceptable.
+4. **Risk register** — what can fail in Phase 2 due to this architectural choice? Pre-mortem on the design itself, not the scope.
+
+The approved output is the **architectural contract** for Phase 2 — implementation must match it. Any deviation discovered in Phase 2 requires returning here.
+
 - **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
-- *** STOP — wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before writing code. ***
+- *** STOP — present Plan subagent output. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before writing code. ***
 
 **Phase 1.6 — Visual & UX Design** *(run when triggered by the conditions below)*
 
