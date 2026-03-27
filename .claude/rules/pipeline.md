@@ -153,7 +153,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - Run `npx vitest run`. All tests must pass.
 - Expected output: summary line only (e.g. `✓ 106/106`). Do NOT paste full output — reduces token consumption.
 - If something fails: paste only the error lines, fix, and re-run. Do not proceed with open errors.
-- After green build + tests: **make an intermediate commit** (`git add … && git commit`) on the current `feature/block-name` branch. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
+- After green build + tests: **make an intermediate commit** (`git add … && git commit`) on the current `worktree-[block-name]` branch. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
 
 **Phase 3b — API integration tests** *(only if the block creates or modifies API routes)*
 - Write core tests in `__tests__/api/<route-name>.test.ts` with vitest:
@@ -181,7 +181,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 
 **Phase 4 — UAT / Playwright e2e**
 - Write or update the spec file `e2e/[block-name].spec.ts`.
-- **Selector rules** (mandatory — see CLAUDE.md § "shadcn e2e selectors"):
+- **Selector rules** (mandatory — see `.claude/rules/playwright-patterns.md`):
   - Status badges: `[data-stato="APPROVATO"]` (compensations/expenses) · `[data-ticket-stato="CHIUSO"]` (tickets)
   - Dialog scope: `[data-slot="dialog-content"]`
   - Never `span.text-{color}` — Badge renders `<div>`, not `<span>`
@@ -355,6 +355,7 @@ Branch prefix `fix/` activates this pipeline automatically.
 
 **FL-4 — Cleanup**
 - Update `docs/implementation-checklist.md` only if the fix closes a tracked item.
+- **PRD update** (mandatory if observable behaviour changed): update `docs/prd/prd.md` and append GDoc Changelog entry (script in `@.claude/rules/gdoc-append.md`). If the fix is a pure internal change with zero functional effect, skip GDoc append but verify `docs/prd/prd.md` is current. Same rule as Phase 8 step 2f — no exceptions.
 - Update `CLAUDE.md` only if the fix reveals a non-obvious pattern worth documenting.
 - **Delete session file**: remove `.claude/session/fix-[description].md`.
   - Proceed only if `sm-deploy` completed without errors and the fix is confirmed in production.
