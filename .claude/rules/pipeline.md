@@ -170,16 +170,39 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 **Phase 2 — Implementation**
 - **First action — restore design contracts**: re-read the session file (`.claude/session/block-[name].md`) to restore the architectural contract (Phase 1.5) and design contract (Phase 1.6) into context. `/compact` clears the conversation context — the session file is the only source for approved design decisions. Skip if no Phase 1.5/1.6 contracts were saved.
 - **Second action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
-- Write the code. Follow the project's Coding Conventions.
-- **UI components** — follow `CLAUDE.md § "UI Design System — MANDATORY RULES"` and `CLAUDE.md § "Known Patterns"` before writing any UI code. Key: shadcn components only (no native HTML elements), semantic tokens only, `loading.tsx` for new routes, `aria-label` on icon-only buttons, `iconName: string` in nav data.
+
+- **Implementation sequence** (mandatory order — deviating causes TypeScript cascades and missing-schema errors):
+  1. Migration SQL → apply to staging immediately after writing
+  2. TypeScript types and interfaces (`lib/types.ts`, shared enums)
+  3. Shared utilities and helpers (`lib/`)
+  4. API routes (`app/api/`)
+  5. Server components and data-fetching functions
+  6. Client components and UI
+
+- **Plan deviation protocol**: if during implementation a discovery makes the approved plan wrong or incomplete (FK missing, field absent, business rule conflict), **STOP immediately** — do not adapt silently. State the divergence, propose the adjustment, wait for an execution keyword before continuing. Adapting the plan without user awareness is a process error.
+
+- **UI components** — if Phase 1.6 was executed, the design contract in the session file is the primary implementation reference. CLAUDE.md `§ "UI Design System — MANDATORY RULES"` is the fallback for patterns not covered by the contract. Key: shadcn components only (no native HTML elements), semantic tokens only, `loading.tsx` for new routes, `aria-label` on icon-only buttons, `iconName: string` in nav data.
+
+- **Per-component UI quality check** (inline, before moving to the next file): for every new UI component written, verify before proceeding: (1) only semantic tokens used — no hardcoded color values on structural elements; (2) `data-attribute` names match the selector strategy defined in the Phase 1.6 Design Quality Gate; (3) `aria-label` present on every icon-only button; (4) component renders correctly in both light and dark theme (semantic tokens are the guarantee).
+
 - Do not add unrequested features. No unrequested refactoring.
+
+- **`npx tsc --noEmit` at internal checkpoints**: for blocks touching >8 files, run after each logical group (after migrations+types, after API routes, after UI components). Fixes TypeScript errors close to where they are introduced — do not accumulate them for Phase 3.
+
 - **After every new migration** (`supabase/migrations/NNN_*.sql`): apply **immediately** to the **staging DB only** (`gjwkvgfwkdwzqlvudgqr`) — use `mcp__claude_ai_Supabase__execute_sql` with `project_id: "gjwkvgfwkdwzqlvudgqr"` (preferred, no shell interpolation issues) or Node.js `https.request` as fallback. Verify with a SELECT query + add a row to `docs/migrations-log.md`. **Never apply to production (`nyajqcjqmgxctlqighql`) during development** — production migrations run exclusively in Phase 8 step 7 pre-deploy (see below). **Do not wait for tests to discover missing migrations** — finding them in later phases is a process error.
 - **Destructive migrations** (`DROP COLUMN`, `DROP TABLE`, `ALTER TYPE … RENAME VALUE`, `TRUNCATE`): before applying, write the rollback SQL in a comment block at the top of the migration file (e.g. `-- ROLLBACK: ALTER TABLE t ADD COLUMN c ...`). This ensures recovery is possible without relying on memory.
 - **PostgREST join syntax** (`table!relation`, `!inner`): verify FK existence before using it. If FK absent → two-step query (separate fetches + in-memory merge). Verification query: `SELECT conname FROM pg_constraint WHERE conrelid='tablename'::regclass AND contype='f';`
 - **DROP CONSTRAINT before UPDATE** (migrations): if a column has a CHECK constraint and the UPDATE sets a value not allowed by the current constraint (e.g. renaming an enum value), the UPDATE fails. Pattern inside a single migration: (1) `ALTER TABLE t DROP CONSTRAINT c;` (2) `UPDATE t SET col = new_val WHERE ...;` (3) `ALTER TABLE t ADD CONSTRAINT c CHECK (...);` — all three statements in the same migration file so they run atomically.
-- **Security checklist** (before intermediate commit): for every new/modified API route verify: (1) auth check before any operation, (2) input validated (Zod), (3) no sensitive data exposed in response, (4) RLS not implicitly bypassed; for every new Supabase table: (5) `ALTER TABLE t ENABLE ROW LEVEL SECURITY` is present in the migration and at least one policy covers each relevant role.
+
+- **Pre-commit self-review** (before moving to Phase 3 — covers both security and API design):
+  - *Security*: (1) auth check before any operation; (2) input validated with Zod; (3) no sensitive data in response; (4) RLS not implicitly bypassed; (5) new tables: `ALTER TABLE t ENABLE ROW LEVEL SECURITY` present with at least one policy per relevant role.
+  - *API design*: (1) verb correct — GET never mutates, POST/PATCH/DELETE for writes; (2) response shape consistent — always `{ data }` or `{ error }`, never mixed; (3) status codes: 400 validation, 401 no-token, 403 wrong-role, 409 conflict, 422 business rule; (4) ZodError uses `.issues` not `.errors`; (5) `await params` on all dynamic route segments (Next.js 15+); (6) pagination present on routes returning unbounded lists.
+
 - Expected output: list of created/modified files with paths.
-- **After writing code, before Phase 3**: run `/simplify` (built-in skill) on the changed files. It reviews for reuse, quality, and efficiency and fixes issues in-place. Skippable for trivial 1-file changes.
+
+- **End-of-Phase 2 quality gate** (in this exact order, before Phase 3):
+  1. **`/simplify`** — run on all changed files. Skip only for pure text/label changes with no logic. Fixes reuse, duplication, efficiency in-place.
+  2. **`/skill-dev`** — full skill invocation on the block's changed files. Audits TypeScript safety, React antipatterns, coupling, dead code, `use client` sprawl. Critical findings: fix before Phase 3. Major/Medium: append to `docs/refactoring-backlog.md`. Skippable only for migration-only blocks with no TypeScript changes.
 
 **Phase 3 — Build + unit tests**
 - Run `npx tsc --noEmit` and `npm run build`. Must complete without errors.
