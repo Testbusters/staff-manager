@@ -46,6 +46,7 @@ Read these files in parallel while the Step 1 agent runs:
 - `CLAUDE.md`
 - `.claude/rules/pipeline.md`
 - `.claude/rules/context-review.md`
+- `.claude/rules/claudemd-standards.md` ← normative baseline for P1–P5 compliance checks
 - `.claude/settings.json`
 - `.claude/files-guide.md`
 - `.claude/cheatsheet.md`
@@ -125,9 +126,9 @@ Expected: at least one mention. Missing = FAIL.
 
 **C7 — Cross-file path references (dead pointers)**
 For each file path mentioned in CLAUDE.md and pipeline.md that is a docs/ or .claude/ path, verify the file exists.
-Check these paths: `docs/requirements.md`, `docs/implementation-checklist.md`, `docs/refactoring-backlog.md`, `docs/migrations-log.md`, `docs/entity-manifest.md`, `docs/prd/prd.md`, `docs/prd/01-rbac-matrix.md`, `docs/profile-editing-contract.md`, `docs/ui-components.md`, `docs/design-system.md`, `docs/sitemap.md`, `docs/dependency-map.md`, `docs/db-map.md`, `docs/patterns-reference.md`, `.claude/rules/pipeline.md`, `.claude/rules/context-review.md`, `.claude/agents/dependency-scanner.md`, `.claude/files-guide.md`, `.claude/cheatsheet.md`.
+Check these paths: `docs/requirements.md`, `docs/implementation-checklist.md`, `docs/refactoring-backlog.md`, `docs/migrations-log.md`, `docs/entity-manifest.md`, `docs/prd/prd.md`, `docs/prd/01-rbac-matrix.md`, `docs/profile-editing-contract.md`, `docs/ui-components.md`, `docs/design-system.md`, `docs/sitemap.md`, `docs/dependency-map.md`, `docs/db-map.md`, `.claude/rules/pipeline.md`, `.claude/rules/context-review.md`, `.claude/agents/dependency-scanner.md`, `.claude/files-guide.md`, `.claude/cheatsheet.md`.
 Also verify directories: `docs/contracts/` and `.claude/skills/`.
-Run: `ls docs/requirements.md docs/implementation-checklist.md docs/refactoring-backlog.md docs/migrations-log.md docs/entity-manifest.md docs/prd/prd.md docs/prd/01-rbac-matrix.md docs/profile-editing-contract.md docs/ui-components.md docs/design-system.md docs/sitemap.md docs/dependency-map.md docs/db-map.md docs/patterns-reference.md .claude/rules/pipeline.md .claude/rules/context-review.md .claude/agents/dependency-scanner.md .claude/files-guide.md .claude/cheatsheet.md 2>&1 && ls -d docs/contracts/ .claude/skills/ 2>&1`
+Run: `ls docs/requirements.md docs/implementation-checklist.md docs/refactoring-backlog.md docs/migrations-log.md docs/entity-manifest.md docs/prd/prd.md docs/prd/01-rbac-matrix.md docs/profile-editing-contract.md docs/ui-components.md docs/design-system.md docs/sitemap.md docs/dependency-map.md docs/db-map.md .claude/rules/pipeline.md .claude/rules/context-review.md .claude/agents/dependency-scanner.md .claude/files-guide.md .claude/cheatsheet.md 2>&1 && ls -d docs/contracts/ .claude/skills/ 2>&1`
 Expected: all paths resolve. Any "No such file or directory" = FAIL.
 
 **C8 — Interaction Protocol present in CLAUDE.md**
@@ -207,7 +208,9 @@ AUTO-FIX: for each failing skill, read the `mcp__*` tool names from its body and
 
 ## Step 3c — Anthropic Prompting Guide compliance
 
-Using the prompting guide content fetched in Step 1, evaluate `CLAUDE.md`, `pipeline.md`, and `context-review.md` against Anthropic's published best practices for system prompts and agent instructions. These checks are judgment-based — classify each as PASS or WARN (not hard FAIL), and always RECOMMEND, never auto-fix.
+Using the prompting guide content fetched in Step 1 **and the normative baseline in `.claude/rules/claudemd-standards.md`** (read in Step 2), evaluate `CLAUDE.md`, `pipeline.md`, and `context-review.md` against best practices. The standards file is the local stable reference — use it as the primary benchmark; live-fetched docs confirm it's still current. These checks are judgment-based — classify each as PASS or WARN (not hard FAIL), and always RECOMMEND, never auto-fix.
+
+**Standards file currency check (run first)**: compare the `Last verified` date in `.claude/rules/claudemd-standards.md` against today's date. If > 30 days old AND Step 1 fetched new material changes → flag as RECOMMEND to update the standards file. If ≤ 30 days → skip.
 
 **P1 — CLAUDE.md content type (Anthropic's inclusion test)**
 Anthropic's rule: CLAUDE.md should contain ONLY non-obvious information Claude cannot infer by reading the code. Apply Anthropic's own test to every section: *"Would removing this cause Claude to make mistakes?"*
