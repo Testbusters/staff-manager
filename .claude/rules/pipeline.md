@@ -42,6 +42,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
 - Read **only the relevant section** of `docs/requirements.md` for the current block — not the entire file.
 - Check `docs/refactoring-backlog.md`: if there are entries that intersect the current block, include them in the work plan or flag them explicitly.
 - **Consult `docs/entity-manifest.md`**: for any block touching a domain entity (profile, compensation, reimbursement, document, ticket, content), look up the entity and read its linked contract file in `docs/contracts/`. Every surface and entry point listed there is a mandatory candidate for the file list. This is a **functional** dependency check — distinct from and complementary to the code-level scan below. If the block introduces a brand-new entity (new DB table + CRUD surface), propose creating a new contract file in `docs/contracts/` and a new entry in `entity-manifest.md` before proceeding to Phase 1.5.
+- **Consult `docs/dependency-map.md`** (alongside entity-manifest.md, before Tier selection): look up the entity being modified to get an early read on surface count and consumer spread. A high surface count or shared utility with >10 consumers seen here upgrades the tier to Tier 2 even if the initial signal was Tier 1. If the entity is not listed, add it to the map before proceeding.
 - **Consult `docs/prd/01-rbac-matrix.md`**: for any block touching role permissions, RBAC rules, member_status restrictions, or adding a new role/entity. The matrix is the cross-cutting authority — entity contracts describe field-level detail, the RBAC matrix is the role-level overview.
 - Summarize the block's requirements concisely based on the doc reads above.
 - **Scope confirmation gate — always mandatory**: apply the **Interaction Protocol** (CLAUDE.md § Plan-then-Confirm) using the structured sweep below. First, select the tier based on block signals from the doc reads, declare it explicitly, and allow the user to override before proceeding.
@@ -49,6 +50,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
   **Tier selection (auto, after doc reads):**
   - **Tier 1 — Standard Sweep**: ≤5 files, single entity, no migration, no new pattern, no cross-role change.
   - **Tier 2 — EARS + Deep Sweep**: >5 files, OR new entity, OR migration, OR multi-role change, OR new integration, OR full redesign.
+  - **Tier upgrade after dep scan**: if the dep scan reveals a file count or consumer spread beyond Tier 1 thresholds (e.g. shared utility with >10 consumers), complete the Tier 2 sweep before the STOP gate — even if Tier 1 was selected initially.
 
   Work through every dimension of the selected tier. Note "clear" if no ambiguity; include open items in the `AskUserQuestion` call. The user — not Claude — declares when the scope is complete. Do NOT proceed to the dependency scan until an execution keyword is received.
 
