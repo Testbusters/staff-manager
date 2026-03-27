@@ -122,30 +122,44 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - Changes the information architecture of an existing page (sections, tabs, panels)
 - Adds a complex interactive pattern (multi-step flow, bulk actions, split views)
 
-> **Model — MANDATORY**: Phase 1.6 runs on **Opus 4.6** for maximum design quality. Before step 1: switch with `/model opus`. Switch back to Sonnet after the Phase 1.6 STOP gate is confirmed.
+**Skip**: block modifies only an internal section of an existing page without changing the main layout or navigation structure → skip Phase 1.6. Use Phase 1.5 if an architectural decision is involved.
+
+> **Model — MANDATORY**: Phase 1.6 runs on **Opus 4.6** for maximum design quality. Before step 0: switch with `/model opus`. Switch back to Sonnet after the Phase 1.6 STOP gate is confirmed.
 
 **When triggered, always execute in this order:**
+
+0. **Consistency check** — before producing any wireframe, read `docs/ui-components.md` and identify existing pages with similar patterns (lists, forms, detail panels, state machines). State which existing patterns will be reused and which will diverge, and why. No region in the wireframe should introduce a new pattern if an existing one fits.
 
 1. **ASCII wireframe** — call the **Skill tool** (`skill: "frontend-design"`) with an explicit wireframe prompt. **Do NOT generate the wireframe inline in text** — the Skill tool must be invoked. Prompt must request:
    - Full page layout with named regions
    - Column structure for tables/lists
    - Action placement and grouping
-   - Empty states and loading states
-   - Mobile breakpoint if relevant
+   - **All UI states**: loading, empty, error, partial (data partially loaded), 403/permission-denied
+   - **Mobile breakpoint (375px) — mandatory if block modifies collab or responsabile routes**; skip for admin-only routes
 
-2. **HTML preview** — call the **Skill tool** (`skill: "frontend-design"`) a second time with a full component generation prompt. Two paths, in order of preference:
-   - **Path A — Figma MCP**: first fetch design tokens with `get_variable_defs` on the Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`), then include them in the Skill tool prompt. Produces code aligned to the real design system.
-   - **Path B — standalone**: Skill tool prompt → self-contained HTML with inline Tailwind CDN. Use when Figma context is not needed.
+2. **HTML preview** — call the **Skill tool** (`skill: "frontend-design"`) a second time with a full component generation prompt. Two paths:
+   - **Path A — Figma MCP**: fetch design tokens with `get_variable_defs` on Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`), include in Skill tool prompt. Use when block introduces new UI components or token-sensitive layouts. **If `get_variable_defs` fails or Figma MCP is unavailable → fall back to Path B immediately, do not retry.**
+   - **Path B — standalone**: self-contained HTML with inline Tailwind CDN. Use when focus is structure/layout and tokens are already established in the codebase.
    Approved output = visual contract for Phase 2; generated code is reference only, not committed.
 
 3. **UX rationale** — for each layout decision, state explicitly:
    - What mental model it maps to (inbox, pipeline, kanban, wizard…)
-   - Why competing alternatives were discarded
-   - The single most important UX improvement over the current state
+   - Why **at least 2 competing alternatives** were discarded — "no alternatives considered" is not acceptable
+   - For **new pages**: primary design goal of the chosen mental model. For **redesigns**: single most important improvement over the current state.
 
 4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
 
-5. **STOP — present wireframe + HTML preview + UX rationale + component map. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. Switch back to Sonnet (`/model sonnet`) only after the user confirms. The approved output is the implementation contract — Phase 2 must match it.**
+5. **Design Quality Gate** — the design contract must explicitly address all of the following before the STOP. Any missing item = incomplete contract, do not proceed to STOP.
+   - **Accessibility plan**: heading hierarchy (h1→h2→h3), focus order in dialogs/sheets, aria-label strategy for icon-only buttons, semantic tokens only (no hardcoded color pairs)
+   - **Dark mode plan**: for every region, confirm which semantic token covers it in both themes. Flag any region where light/dark rendering differs structurally
+   - **Responsive plan**: if route is collab/responsabile — confirm 375px wireframe is in step 1. State which columns collapse, which actions move to overflow, which tables scroll
+   - **Selector strategy**: define `data-attribute` names for all stateful elements (badges, rows, dialogs) that Phase 4 Playwright e2e will need. These are part of the implementation contract
+   - **State coverage**: confirm loading, empty, error, partial, 403 states are all in step 1 wireframe. Missing state = incomplete wireframe
+   - **Pattern consistency**: confirm step 0 check was completed; no new pattern introduced without explicit justification
+
+6. **Persist design contract** — append the approved wireframe (ASCII) and UX rationale to the session file (`.claude/session/block-[name].md`) before proceeding. This ensures the design contract survives `/compact` and remains the Phase 2 reference.
+
+7. **STOP — present wireframe + HTML preview + UX rationale + component map + Design Quality Gate checklist. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. Switch back to Sonnet (`/model sonnet`) only after the user confirms. The approved output is the implementation contract — Phase 2 must match it.**
 
 **Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
 - Use `EnterPlanMode` to present the complete approved plan in structured, locked form. Call `ExitPlanMode` after confirmation.
