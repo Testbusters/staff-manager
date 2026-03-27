@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `057_corsi3_rls.sql` (2026-03-22).
+> Last synced: migration `063_db_audit_fixes.sql` (2026-03-27).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -202,8 +202,15 @@ tickets
 | `user_community_access` | `uca_user_id_community_id_key` | UNIQUE | composite |
 | `user_profiles` | `user_profiles_user_id_key` | UNIQUE | |
 | `contract_templates` | `contract_templates_tipo_key` | UNIQUE | |
+| `candidature` | `candidature_collaborator_id_idx` | btree | FK — added migration 063 |
+| `candidature` | `candidature_corso_id_idx` | btree | FK — added migration 063 |
+| `candidature` | `candidature_lezione_id_idx` | btree | FK — added migration 063 |
+| `candidature` | `candidature_city_user_id_idx` | btree | FK — added migration 063 |
+| `lezioni` | `lezioni_corso_id_idx` | btree | FK CASCADE target — added migration 063 |
+| `compensation_attachments` | `comp_attachments_compensation_id_idx` | btree | FK — added migration 063 |
+| `ticket_messages` | `ticket_messages_ticket_id_idx` | btree | FK — added migration 063 |
 
-**Missing indexes (potential gaps for skill-db to flag):**
+**Missing indexes (potential gaps — lower priority):**
 - `compensations.data_competenza` — used in date-range filters in export
 - `expense_reimbursements.data_spesa` — used in filters
 - `notifications.created_at` — used for ordering in bell + page
@@ -226,7 +233,7 @@ tickets
 | `ticket_messages` | read if ticket accessible, insert for all authenticated | |
 | `notifications` | own only (ALL) | Simple ownership |
 | `notification_settings` | all authenticated (SELECT), admin (UPDATE) | |
-| `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL) | Content tables — community filtering is in-memory in API, NOT in RLS |
+| `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL write) | Content tables — community filtering is in-memory in API, NOT in RLS. `events`: resp.citt can INSERT/UPDATE/DELETE city-scoped events |
 | `corsi` | all authenticated (SELECT), admin (ALL) | |
 | `lezioni` | all authenticated (SELECT), admin (ALL) | |
 | `assegnazioni` | all authenticated (SELECT), admin (ALL), resp.citt INSERT ruolo=cocoda for citta_responsabile corsi (migration 058), resp.citt UPDATE valutazione for citta_responsabile corsi | `assegnazioni_cocoda_insert`: lezione_id IN (lezioni of corsi where citta = citta_responsabile) |
@@ -240,11 +247,12 @@ tickets
 | `app_errors` | any authenticated (INSERT), admin (SELECT) | |
 | `compensation_history/expense_history` | any authenticated (INSERT — append-only), role-filtered SELECT | |
 
-**⚠️ RLS gaps to note:**
-- `communications`: `announcements_admin_write` grants ALL to `responsabile_compensi` too — check if intentional
+**⚠️ RLS gaps to note (open):**
 - `compensation_attachments`: `comp_attachments_own_insert` has no `WITH CHECK` clause — any authenticated user can insert
 - `expense_attachments`: `exp_attachments_own_insert` same — no WITH CHECK
-- `ticket_messages`: `ticket_messages_insert` has no WITH CHECK — any authenticated user can post to any ticket
+- *(ticket_messages_insert fixed in migration 062; communications write restricted to amministrazione in migration 063)*
+
+**RLS performance:** all policies use `(select auth.uid())` subquery form (per-statement evaluation) since migration 063.
 
 ---
 
@@ -295,7 +303,7 @@ tickets
 | `must_change_password` | boolean | NO | `false` | — |
 | `onboarding_completed` | boolean | NO | `false` | — |
 | `can_publish_announcements` | boolean | YES | `true` | — |
-| `theme_preference` | character varying | YES | `'dark'` | — |
+| `theme_preference` | text | YES | `'dark'` | — |
 | `skip_contract_on_onboarding` | boolean | NO | `false` | — |
 | `citta_responsabile` | text | YES | — | — |
 
