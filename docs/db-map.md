@@ -248,9 +248,9 @@ tickets
 | `compensation_history/expense_history` | any authenticated (INSERT — append-only), role-filtered SELECT | |
 
 **⚠️ RLS gaps to note (open):**
-- `compensation_attachments`: `comp_attachments_own_insert` has no `WITH CHECK` clause — any authenticated user can insert
-- `expense_attachments`: `exp_attachments_own_insert` same — no WITH CHECK
-- *(ticket_messages_insert fixed in migration 062; communications write restricted to amministrazione in migration 063)*
+- `compensation_attachments` and `expense_attachments`: `WITH CHECK` clauses added in migration 063 (verified 2026-03-27). No open RLS gaps on these tables.
+- *(ticket_messages_insert WITH CHECK added in migration 062; communications restricted to amministrazione in migration 063)*
+- **Remaining open gap (backlog DB4)**: all 90+ policies have `TO {public}` instead of `TO authenticated` — does not allow unauthenticated access (RLS is enforced) but adds overhead and widens surface.
 
 **RLS performance:** all policies use `(select auth.uid())` subquery form (per-statement evaluation) since migration 063.
 
