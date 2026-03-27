@@ -288,6 +288,7 @@ function AdminDocumentList({ collaborators }: { collaborators: CollaboratorOptio
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Nome, cognome, username o email…"
+                  aria-label="Cerca collaboratore"
                   className="pl-9"
                   autoFocus
                 />

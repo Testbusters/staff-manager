@@ -61,6 +61,7 @@ export default function TicketMessageForm({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Scrivi un messaggio…"
+          aria-label="Messaggio"
           rows={4}
           className="resize-none"
         />

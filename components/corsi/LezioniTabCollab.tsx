@@ -141,7 +141,6 @@ export default function LezioniTabCollab({
       )}
 
       <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
-        <div className="overflow-x-auto">
         <Table className="w-auto">
           <TableHeader>
             <TableRow>
@@ -231,7 +230,6 @@ export default function LezioniTabCollab({
             })}
           </TableBody>
         </Table>
-        </div>
       </div>
 
       <AlertDialog open={!!withdrawTarget} onOpenChange={(open) => { if (!open) setWithdrawTarget(null); }}>
