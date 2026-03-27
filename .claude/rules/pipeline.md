@@ -245,19 +245,56 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 
 
 **Phase 4 — UAT / Playwright e2e**
-- Write or update the spec file `e2e/[block-name].spec.ts`.
-- **Selector rules** (mandatory — see `.claude/rules/playwright-patterns.md`):
-  - Status badges: `[data-stato="APPROVATO"]` (compensations/expenses) · `[data-ticket-stato="CHIUSO"]` (tickets)
-  - Dialog scope: `[data-slot="dialog-content"]`
-  - Never `span.text-{color}` — Badge renders `<div>`, not `<span>`
-- **Timing**: use `Promise.all([page.waitForResponse(...), action()])` before DB assertions — DB check must not run before API completes.
-- **Coverage per block** — minimum scenarios:
-  - Happy path: main user flow end-to-end for each affected role
-  - Auth boundary: unauthorized role → redirect or 403
-  - State transitions: if block touches a state machine, cover each transition
-  - Empty state: no records → correct empty state shown
-- **If block modifies `proxy.ts`**: add Playwright scenarios for every redirect chain changed — `must_change_password=true → /change-password`, `onboarding_completed=false → /onboarding`, `is_active=false → /pending`, no session → `/login`. These are page-level redirects and cannot be tested via HTTP fetch (API routes bypass most proxy checks).
-- **Test data**: use the fixtures inserted in Phase 5b (cleanup-first, service role). Do not re-insert in spec setup if Phase 5b already ran.
+
+**Reference**: read `.claude/rules/playwright-patterns.md` before writing any spec — it contains timing, selector, serial context, and rich text patterns not repeated here.
+
+**Spec file**: `e2e/[block-name].spec.ts` — use the same block name as the worktree. Wrap all tests in `test.describe.serial('Block name UAT', () => { ... })` — serial mode guarantees scenario order and shared state within the describe block. `playwright.config.ts` already sets `workers: 1` (global serial), but `describe.serial` also enforces within-describe ordering explicitly.
+
+**Shared helpers — mandatory**: if `e2e/helpers.ts` does not exist, create it before writing the spec. It must export: `login(page, role)`, `db<T>(table, params)`, `dbFirst<T>(table, params)`, `dbPost<T>(table, body)`, `dbDelete(table, filter)`, `dbPatch(table, filter, body)`, `deleteAuthUser(userId)`. Never define these inline in a spec file — duplication across specs is a maintenance failure. See existing helpers pattern in git history (`cc207cc`).
+
+**Test credentials**: always use canonical accounts from `memory/test_credentials.md`. For staging Playwright tests: `collaboratore_tb_test@test.com` (TB), `collaboratore_p4m_test@test.com` (P4M). `collaboratore@test.com` is production-only — never use it in spec files.
+
+**Test data setup — Phase 4 is autonomous**:
+- Phase 4 inserts its own fixtures in `beforeAll` via service role (Supabase REST API with `SERVICE_KEY` — not the `@supabase/supabase-js` client, which has session/context issues in Playwright). Phase 5b is separate — it prepares data for the manual smoke test (5c), not for automated specs.
+- **Cleanup-first in `beforeAll`**: delete stale data matching the test prefix BEFORE inserting fresh fixtures. Cascade delete in FK order (children before parents).
+- **`afterAll`**: delete all records inserted by this spec. Never delete fixtures in `e2e/fixtures/` — only temp files created during the test run.
+- **`deleteAuthUser` FK rule**: before deleting an auth user, delete linked `documents` rows first (`documents.collaborator_id` FK constraint).
+
+**Login and user switch**:
+- Each test in a `describe.serial` block receives a FRESH browser context — call `login(page, role)` at the start of every `test()`, not once in `beforeAll`.
+- To switch roles within the same spec (shared page via `beforeAll + browser.newPage()`): `goto('/login')` → if not on `/login` (active session) → click "Esci" → `waitForURL('/login')` → then login with new credentials.
+
+**Timing — mandatory before every DB assertion**:
+```
+await Promise.all([
+  page.waitForResponse(r => r.url().includes('/api/...') && r.request().method() === 'POST', { timeout: 15_000 }),
+  page.click('button:has-text("Save")'),
+]);
+// DB assertion only after the above resolves
+```
+Never check DB state without waiting for the API response. Tests that assert DB state synchronously after a UI action will pass locally and fail non-deterministically in CI.
+
+**Selector rules** (mandatory — full patterns in `playwright-patterns.md`):
+- Status badges: `[data-stato="APPROVATO"]` (compensations/expenses) · `[data-ticket-stato="CHIUSO"]` (tickets)
+- Dialog scope: `[data-slot="dialog-content"]`
+- Never `span.text-{color}` — Badge renders `<div>`, not `<span>`
+- `waitForLoadState`: use `domcontentloaded` on all app pages — never `networkidle` on pages with NotificationBell (30s polling prevents settle)
+
+**Scenario naming**: use `S1 — description`, `S2 — description` convention. The Playwright report shows test names — generic names ("test 1", "submits form") make failure reports unreadable.
+
+**Coverage per block** — minimum scenarios:
+- Happy path: main user flow end-to-end for each affected role
+- Auth boundary: unauthorized role → redirect or 403
+- State transitions: if block touches a state machine, cover each transition
+- Empty state: no records → correct empty state shown
+- **If block modifies `proxy.ts`**: add redirect chain scenarios — `must_change_password=true → /change-password`, `onboarding_completed=false → /onboarding`, `is_active=false → /pending`, no session → `/login`. These are page-level redirects (API routes bypass proxy checks).
+
+**Multi-role coverage**: for blocks with >1 affected role, test each role's happy path within the same spec (user switch pattern above) — do not create separate spec files per role.
+
+**Timeouts**: default `playwright.config.ts` is `timeout: 30_000`. For complex flows (PDF generation, onboarding wizard, multi-step state machines), override with `test.setTimeout(60_000)` at the top of the specific `test()` block. Do not raise the global timeout.
+
+**`retries: 0` is intentional**: the config has no retries by design. A flaky test masks a real timing bug or selector issue. Never add `retries` to fix intermittent failures — diagnose and fix the root cause.
+
 - Run: `npx playwright test e2e/[block-name].spec.ts`
 - Output: summary line only (`N passed`). Fix all failures before Phase 4b. Do not proceed with open failures.
 
@@ -265,7 +302,7 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - After Phase 4 passes: capture/update baseline screenshots with `npx playwright test e2e/[block-name].spec.ts --update-snapshots`.
 - Snapshots committed in `e2e/snapshots/` as part of Commit 1 (code).
 - On subsequent runs without `--update-snapshots`: visual regression is detected automatically.
-- Skip 4b if the block has no UI changes (API-only or migration-only blocks).
+- **Run 4b when**: the block creates or modifies at least one visible page or component. Skip only for blocks that are exclusively API routes, migrations, or lib utilities with zero UI surface.
 
 **Phase 5b — Test data setup** *(MANDATORY — must complete before Phase 5c)*
 - **Prerequisite — dev server**:
