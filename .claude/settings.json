@@ -66,6 +66,11 @@
             "type": "command",
             "command": "BRANCH=$(git -C ~/Projects/staff-manager rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$BRANCH\" = 'main' ] || [ \"$BRANCH\" = 'staging' ]; then echo \"⚠️  Branch discipline: currently on '$BRANCH'. No direct commits to main/staging. Use a worktree (functional blocks) or fix/ branch (fixes).\"; fi",
             "async": true
+          },
+          {
+            "type": "prompt",
+            "prompt": "You are a critical review gate. Read the user message and evaluate ONLY this: does it contain a clear factual error or incorrect premise that would cause Claude to give a wrong answer if accepted uncritically? Examples of YES: assumes a file or function exists that likely does not, states a technical fact that is wrong, contradicts an explicit rule documented in CLAUDE.md (environment isolation, branch discipline, production DB rule), requests action based on a clear technical misunderstanding. Examples of NO: opinion questions, exploratory or research requests, ambiguous scope, preferences, any question that could reasonably be interpreted multiple ways. Be conservative — when in doubt, respond ok:true. If YES: respond {\"ok\": false, \"reason\": \"Premessa da verificare: [one sentence stating the specific factual issue and what the correct situation is]\"}. If NO: respond {\"ok\": true}.",
+            "model": "claude-haiku-4-5-20251001"
           }
         ]
       }
