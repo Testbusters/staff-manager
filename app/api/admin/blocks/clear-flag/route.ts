@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const { userId } = body as { userId: string };
   if (!userId) return NextResponse.json({ error: 'userId mancante' }, { status: 400 });
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     .update({ must_change_password: false })
     .eq('user_id', userId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

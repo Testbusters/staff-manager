@@ -39,7 +39,9 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!role || !ADMIN_ROLES.includes(role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const { name } = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: 'Payload non valido' }, { status: 400 });
+  const { name } = body;
   if (!name?.trim()) return NextResponse.json({ error: 'Il nome è obbligatorio' }, { status: 400 });
 
   const serviceClient = createServiceClient(
@@ -53,6 +55,6 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ community: data }, { status: 201 });
 }

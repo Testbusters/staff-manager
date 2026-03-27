@@ -74,15 +74,17 @@ export default async function EventiPage({
   if (!profile?.is_active) redirect('/pending');
   if (profile.member_status === 'uscente_senza_compenso') redirect('/documenti');
 
-  // Fetch user's community IDs for content filtering (collaboratori only)
+  // Fetch user's community IDs and citta for content filtering (collaboratori only)
   let userCommunityIds: string[] = [];
+  let collabCitta: string | null = null;
   if (profile.role === 'collaboratore') {
     const { data: collabRow } = await supabase
       .from('collaborators')
-      .select('id')
+      .select('id, citta')
       .eq('user_id', user.id)
       .maybeSingle();
     if (collabRow?.id) {
+      collabCitta = collabRow.citta ?? null;
       const { data: cc } = await supabase
         .from('collaborator_communities')
         .select('community_id')
@@ -93,7 +95,7 @@ export default async function EventiPage({
 
   const { data } = await supabase
     .from('events')
-    .select('id, titolo, tipo, start_datetime, end_datetime, location, descrizione, community_ids')
+    .select('id, titolo, tipo, start_datetime, end_datetime, location, descrizione, community_ids, citta')
     .order('start_datetime', { ascending: false, nullsFirst: false });
 
   const params = await searchParams;
@@ -102,8 +104,13 @@ export default async function EventiPage({
   const now = new Date();
   const allEvents: ContentEvent[] = (data ?? []) as ContentEvent[];
   const events = profile.role === 'collaboratore'
-    ? allEvents.filter((e) =>
-        e.community_ids.length === 0 || e.community_ids.some((id) => userCommunityIds.includes(id)))
+    ? allEvents.filter((e) => {
+        const communityMatch = e.community_ids.length === 0 || e.community_ids.some((id) => userCommunityIds.includes(id));
+        if (!communityMatch) return false;
+        // City events: only show if collab citta matches; national events (citta null) always shown
+        if (e.citta !== null && e.citta !== collabCitta) return false;
+        return true;
+      })
     : allEvents;
 
   const upcoming = events.filter((e) => !e.start_datetime || new Date(e.start_datetime) >= now);
@@ -143,6 +150,11 @@ export default async function EventiPage({
             {ev.tipo && (
               <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[ev.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
                 {TIPO_LABELS[ev.tipo as EventTipo] ?? ev.tipo}
+              </span>
+            )}
+            {ev.citta && (
+              <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                📍 {ev.citta}
               </span>
             )}
             <h3 className={`text-sm font-semibold ${isPast ? 'text-muted-foreground' : 'text-foreground'}`}>

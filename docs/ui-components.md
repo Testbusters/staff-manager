@@ -75,9 +75,9 @@ check whether a mapped component exists here.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 <Dialog open={open} onOpenChange={(v) => { if (!v) { setOpen(false); resetState(); } }}>
-  <DialogContent className="max-w-md bg-gray-900 border-gray-800">
+  <DialogContent className="max-w-md bg-card border-border">
     <DialogHeader>
-      <DialogTitle className="text-base font-semibold text-gray-100">Titolo</DialogTitle>
+      <DialogTitle className="text-base font-semibold text-foreground">Titolo</DialogTitle>
     </DialogHeader>
     {/* body */}
     <div className="flex gap-3 justify-end">
@@ -91,9 +91,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-  <SheetContent side="right" className="w-full max-w-lg bg-gray-900 border-l border-gray-800 p-0 flex flex-col sm:max-w-lg">
-    <SheetHeader className="px-6 py-5 border-b border-gray-800 flex-shrink-0 space-y-0">
-      <SheetTitle className="text-base font-semibold text-gray-100">Titolo</SheetTitle>
+  <SheetContent side="right" className="w-full max-w-lg bg-card border-l border-border p-0 flex flex-col sm:max-w-lg">
+    <SheetHeader className="px-6 py-5 border-b border-border flex-shrink-0 space-y-0">
+      <SheetTitle className="text-base font-semibold text-foreground">Titolo</SheetTitle>
     </SheetHeader>
     <div className="flex-1 overflow-y-auto px-6 py-4">{/* content */}</div>
   </SheetContent>
@@ -227,15 +227,15 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 ```tsx
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
-<div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+<div className="rounded-xl bg-card border border-border overflow-hidden">
   <Table>
     <TableHeader>
-      <TableRow className="border-gray-800">
-        <TableHead className="px-4 py-3 text-xs text-gray-500">Column</TableHead>
+      <TableRow className="border-border">
+        <TableHead className="px-4 py-3 text-xs text-muted-foreground">Column</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableRow className="cursor-pointer hover:bg-gray-800/50 border-gray-800">
+      <TableRow className="cursor-pointer hover:bg-muted/60 border-border">
         <TableCell className="px-4 py-3">value</TableCell>
       </TableRow>
     </TableBody>

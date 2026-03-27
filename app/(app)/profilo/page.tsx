@@ -36,6 +36,7 @@ export default async function ProfiloPage({
         comune, provincia_residenza, data_ingresso,
         telefono, indirizzo, civico_residenza, iban, intestatario_pagamento, tshirt_size,
         foto_profilo_url, sono_un_figlio_a_carico, importo_lordo_massimale,
+        citta, materie_insegnate,
         collaborator_communities ( communities ( id, name ) )
       `)
       .eq('user_id', user.id)
@@ -65,6 +66,9 @@ export default async function ProfiloPage({
   );
 
   const allCommunities = (allCommunitiesData ?? []) as { id: string; name: string }[];
+
+  // Derive community slug for lookup_options API
+  const communitySlug = communities[0]?.name?.toLowerCase().replace(/\s+/g, '') ?? 'testbusters';
 
   const role = profile?.role ?? '';
   if (role === 'responsabile_compensi') redirect('/');
@@ -98,6 +102,7 @@ export default async function ProfiloPage({
           collaborator={collaborator ?? null}
           role={role}
           email={user.email ?? ''}
+          community={communitySlug}
           communities={communities}
           allCommunities={allCommunities}
           guidaFigli={guidaFigliRow ?? null}
@@ -106,6 +111,12 @@ export default async function ProfiloPage({
     );
   }
 
+  const materie = (collaborator?.materie_insegnate as string[] | null) ?? [];
+  const initials = [collaborator?.nome, collaborator?.cognome]
+    .filter(Boolean)
+    .map((n) => n![0].toUpperCase())
+    .join('');
+
   return (
     <div className="p-6 max-w-3xl">
       <div className="mb-6">
@@ -113,6 +124,50 @@ export default async function ProfiloPage({
         <p className="text-sm text-muted-foreground mt-0.5">
           Gestisci i tuoi dati personali e consulta i tuoi documenti.
         </p>
+      </div>
+
+      {/* Hero card — avatar + nome + community + materie */}
+      <div className="rounded-2xl bg-card border border-border p-5 mb-6 flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          {collaborator?.foto_profilo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={collaborator.foto_profilo_url}
+              alt="avatar"
+              className="h-14 w-14 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-full bg-brand/20 flex items-center justify-center text-brand font-semibold text-xl shrink-0">
+              {initials || '?'}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="font-semibold text-foreground">
+              {collaborator?.nome} {collaborator?.cognome}
+            </p>
+            {communities[0] && (
+              <p className="text-sm text-muted-foreground">{communities[0].name}</p>
+            )}
+          </div>
+        </div>
+        {/* Materie chips row */}
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <span className="text-xs text-muted-foreground mr-1">Materie:</span>
+          {materie.length > 0 ? (
+            materie.map((m) => (
+              <span
+                key={m}
+                className="inline-flex items-center rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-foreground"
+              >
+                {m}
+              </span>
+            ))
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs text-muted-foreground italic">
+              Non configurato
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6">
@@ -126,6 +181,7 @@ export default async function ProfiloPage({
             collaborator={collaborator ?? null}
             role={role}
             email={user.email ?? ''}
+            community={communitySlug}
             communities={communities}
             allCommunities={allCommunities}
             guidaFigli={guidaFigliRow ?? null}

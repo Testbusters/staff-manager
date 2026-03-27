@@ -138,7 +138,7 @@ export default function CommunityManager({
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmToggle && doToggle(confirmToggle.id, confirmToggle.active)}
-              className={confirmToggle?.active ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+              variant={confirmToggle?.active ? 'destructive' : 'default'}
             >
               {confirmToggle?.active ? 'Disattiva' : 'Riattiva'}
             </AlertDialogAction>

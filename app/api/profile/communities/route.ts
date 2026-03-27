@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const { community_ids } = body as { community_ids: string[] };
 
   if (!Array.isArray(community_ids) || community_ids.length === 0) {
@@ -59,7 +59,7 @@ export async function PATCH(request: Request) {
     .eq('collaborator_id', collaboratorId);
 
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   // Insert new memberships
@@ -69,7 +69,7 @@ export async function PATCH(request: Request) {
     .insert(rows);
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

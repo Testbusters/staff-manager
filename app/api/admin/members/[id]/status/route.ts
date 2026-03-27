@@ -25,7 +25,9 @@ export async function PATCH(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (!ADMIN_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const { member_status } = await request.json() as { member_status: MemberStatus };
+  const rawBody = await request.json().catch(() => null);
+  if (!rawBody) return NextResponse.json({ error: 'Payload non valido' }, { status: 400 });
+  const { member_status } = rawBody as { member_status: MemberStatus };
   if (!VALID_STATUSES.includes(member_status)) {
     return NextResponse.json({ error: 'Valore member_status non valido' }, { status: 400 });
   }
@@ -49,6 +51,6 @@ export async function PATCH(
     .update({ member_status })
     .eq('user_id', collab.user_id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ updated: true });
 }

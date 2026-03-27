@@ -16,7 +16,9 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { password } = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: 'Payload non valido' }, { status: 400 });
+  const { password } = body;
   if (!password || password.length < 8) {
     return NextResponse.json({ error: 'Password troppo corta (minimo 8 caratteri)' }, { status: 400 });
   }

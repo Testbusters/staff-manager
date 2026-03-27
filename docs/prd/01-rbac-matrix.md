@@ -4,7 +4,7 @@
 > or adding a new entity surface, verify alignment against this matrix before declaring the file list.
 > Update this document in Phase 8 (step 2e) whenever a block changes role permissions.
 >
-> Roles not yet fully defined: `responsabile_cittadino`, `responsabile_servizi_individuali` — omitted until spec is confirmed.
+> `responsabile_cittadino` fully defined (corsi-1/2/3). `responsabile_servizi_individuali` — not yet in scope.
 
 ---
 
@@ -32,6 +32,9 @@
 | Edit data_ingresso | ❌ | ❌ | ✅ | Admin-only |
 | Edit tipo_contratto | ❌ | ❌ | ✅ | Admin-only |
 | Edit importo_lordo_massimale | ✅* | ✅* | ✅ | Collab/resp: own record only via profile API |
+| Edit citta | ✅ | ❌ | ✅ | Self-edit (/api/profile) and admin (/api/admin/collaboratori/[id]/profile). Resp: read-only |
+| Edit materie_insegnate | ✅ | ❌ | ✅ | Self-edit (/api/profile) and admin (/api/admin/collaboratori/[id]/profile). Resp: read-only. Min 1 required |
+| Manage lookup_options (città/materie lists) | ❌ | ❌ | ✅ | Admin-only via /api/admin/lookup-options. GET available to all authenticated |
 | Invite (create) new user | ❌ | ❌ | ✅ | Invite-only flow, email+password shown in UI |
 | Deactivate / change member_status | ❌ | ❌ | ✅ | Includes uscente_con_compenso / uscente_senza_compenso |
 | Reset password | ❌ | ❌ | ✅ | Via admin panel |
@@ -52,11 +55,16 @@
 | Create compensation (GSheet import) | ❌ | ❌ | ✅ | Admin-only |
 | Edit compensation fields | ❌ | ❌ | ✅* | Admin only, IN_ATTESA state only |
 | Approve compensation | ❌ | ❌ | ✅ | Final — no double-confirm. Massimale check runs |
-| Reject compensation | ❌ | ❌ | ✅ | rejection_note required |
+| Reject compensation | ❌ | ✅* | ✅ | rejection_note required. Resp: community members only |
 | Liquidate compensation | ❌ | ❌ | ✅ | Triggers receipt generation |
 | Reopen compensation (RIFIUTATO→IN_ATTESA) | ✅* | ❌ | ✅ | Collab: own only |
 | Bulk approve | ❌ | ❌ | ✅ | Coda lavoro — with massimale check |
 | Bulk liquidate | ❌ | ❌ | ✅ | Coda lavoro |
+| Delete compensation (IN_ATTESA) | ❌ | ✅* | ✅ | Resp: community members only |
+| Request liquidation | ✅* | ❌ | ❌ | Collab: own APPROVATO records, ≥€250 net, 1 active request at a time |
+| Revoke liquidation request | ✅* | ❌ | ❌ | Collab: own in_attesa only |
+| Accept liquidation request | ❌ | ❌ | ✅ | Admin: bulk-liquidates referenced records |
+| Reject liquidation request | ❌ | ❌ | ✅ | Admin: optional note, sets stato=annullata |
 
 **Contract**: `docs/contracts/compensation-fields.md`
 
@@ -135,7 +143,38 @@
 
 ---
 
-## 7. User Management
+## 7. Corsi
+
+> Fully defined across corsi-1 (foundation), corsi-2 (collab candidature), corsi-3 (resp.citt landing, review, valutazioni).
+
+| Action | `collaboratore` | `responsabile_cittadino` | `responsabile_compensi` | `amministrazione` | Notes |
+|---|---|---|---|---|---|
+| View corso list | ✅ | ✅ | ❌ | ✅ | Collab: own community (programmato/attivo). Resp.citt: /corsi/assegnazione |
+| View corso detail | ✅ | ✅ | ❌ | ✅ | Resp.citt: scoped to citta_responsabile |
+| Create corso | ❌ | ❌ | ❌ | ✅ | Admin-only |
+| Edit corso (all fields) | ❌ | ❌ | ❌ | ✅ | Admin-only |
+| Edit corso (city assignment) | ❌ | ❌ | ❌ | ✅ | Admin assigns città from candidature città tab |
+| Delete corso | ❌ | ❌ | ❌ | ✅ | Cascades to lezioni → assegnazioni/candidature |
+| Add / edit / delete lezione | ❌ | ❌ | ❌ | ✅ | Admin-only |
+| View lezioni | ✅ | ✅ | ❌ | ✅ | — |
+| Submit candidatura (lezione) | ✅ | ❌ | ❌ | ❌ | Collab: docente_lezione or qa_lezione; blacklist + duplicate check |
+| Withdraw candidatura (lezione) | ✅ | ❌ | ❌ | ❌ | Collab: own in_attesa only |
+| Submit candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: citta_corso type; per corso |
+| Withdraw candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: own in_attesa only |
+| Review candidatura (lezione) | ❌ | ✅ | ❌ | ✅ | Resp.citt: corsi where citta = citta_responsabile; stato → accettata or ritirata |
+| Assign CoCoD'à (assegnazione ruolo=cocoda) | ❌ | ✅ | ❌ | ✅ | Resp.citt: INSERT cocoda for lezioni of corsi in their citta (RLS policy assegnazioni_cocoda_insert). Admin: full CRUD. |
+| Manage assegnazioni (docente/qa/full) | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD |
+| Set valutazione | ❌ | ✅ | ❌ | ❌ | Resp.citt: assegnazioni for their city's corsi; score 1–10 |
+| View blacklist | ❌ | ✅ | ❌ | ✅ | Read-only for resp.citt |
+| Manage blacklist | ❌ | ❌ | ❌ | ✅ | Admin: add/remove |
+| View allegati globali | ✅ | ✅ | ✅ | ✅ | All authenticated |
+| Manage allegati globali | ❌ | ❌ | ❌ | ✅ | Admin: upload/replace |
+
+**Contract**: `docs/contracts/corsi-fields.md`
+
+---
+
+## 8. User Management
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -149,7 +188,7 @@
 
 ---
 
-## 8. Community Management
+## 9. Community Management
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -161,7 +200,7 @@
 
 ---
 
-## 9. Import
+## 10. Import
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -173,7 +212,7 @@
 
 ---
 
-## 10. Export
+## 11. Export
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -183,7 +222,7 @@
 
 ---
 
-## 11. Impostazioni
+## 12. Impostazioni
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|
@@ -191,13 +230,13 @@
 | Manage email layout config | ❌ | ❌ | ✅ | Header/footer/colors |
 | Manage compensation competenze | ❌ | ❌ | ✅ | compensation_competenze table |
 | Manage contract templates | ❌ | ❌ | ✅ | PDF/DOCX templates |
-| Manage community settings | ❌ | ❌ | ✅ | can_publish_announcements toggle (legacy) |
+| Manage community settings | ❌ | ❌ | ✅ | Banner, LookupOptions (città/materie), notification_settings |
 | View monitoring (Monitoraggio tab) | ❌ | ❌ | ✅ | System status, logs, errors |
 | Configure notification settings | ❌ | ❌ | ✅ | notification_settings table (19 rows) |
 
 ---
 
-## 12. Notifications
+## 13. Notifications
 
 | Action | `collaboratore` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|

@@ -10,6 +10,7 @@ const SELF_EDIT_FIELDS = [
   'nome', 'cognome', 'codice_fiscale', 'data_nascita', 'luogo_nascita', 'provincia_nascita',
   'comune', 'provincia_residenza', 'telefono', 'indirizzo', 'civico_residenza',
   'iban', 'intestatario_pagamento', 'tshirt_size', 'sono_un_figlio_a_carico', 'importo_lordo_massimale',
+  'citta', 'materie_insegnate',
 ] as const;
 
 const patchSchema = z.object({
@@ -31,6 +32,8 @@ const patchSchema = z.object({
   // sono_un_figlio_a_carico: il collaboratore dichiara se È fiscalmente a carico di un familiare
   sono_un_figlio_a_carico:   z.boolean().optional(),
   importo_lordo_massimale:   z.number().min(1).max(5000).nullable().optional(),
+  citta:                     z.string().min(1).optional(),
+  materie_insegnate:         z.array(z.string().min(1)).min(1).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -44,7 +47,7 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -68,7 +71,7 @@ export async function PATCH(request: Request) {
       .from('collaborators')
       .update(update)
       .eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   if (emailChanged) {

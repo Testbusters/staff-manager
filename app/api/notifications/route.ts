@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   }
 
   const { data, error, count } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Always return the real total unread count (regardless of current filter)
   const { count: unreadCount } = await supabase
@@ -66,7 +66,7 @@ export async function PATCH() {
     .eq('user_id', user.id)
     .eq('read', false);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

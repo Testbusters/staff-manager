@@ -23,7 +23,9 @@ export async function PUT(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (!ADMIN_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const { community_ids } = await request.json() as { community_ids: string[] };
+  const rawBody = await request.json().catch(() => null);
+  if (!rawBody) return NextResponse.json({ error: 'Payload non valido' }, { status: 400 });
+  const { community_ids } = rawBody as { community_ids: string[] };
   if (!Array.isArray(community_ids)) {
     return NextResponse.json({ error: 'community_ids deve essere un array' }, { status: 400 });
   }
@@ -43,7 +45,7 @@ export async function PUT(
   if (community_ids.length > 0) {
     const rows = community_ids.map((community_id) => ({ user_id: userId, community_id }));
     const { error } = await serviceClient.from('user_community_access').insert(rows);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ updated: community_ids.length });

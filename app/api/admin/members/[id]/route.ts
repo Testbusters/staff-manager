@@ -64,10 +64,10 @@ export async function PATCH(
   ]);
 
   if (profileUpdate.error) {
-    return NextResponse.json({ error: profileUpdate.error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
   if (collabUpdate.error) {
-    return NextResponse.json({ error: collabUpdate.error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   return NextResponse.json({ updated: true });

@@ -43,7 +43,7 @@ export async function GET(
     .eq('ticket_id', id)
     .order('created_at', { ascending: true });
 
-  if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
+  if (msgErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const messages = rawMessages ?? [];
 

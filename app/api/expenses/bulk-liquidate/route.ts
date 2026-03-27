@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     .select('id, stato')
     .in('id', ids);
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (fetchError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const notApproved = (expenses ?? []).filter((e) => e.stato !== 'APPROVATO');
   if (notApproved.length > 0) {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     .update({ stato: 'LIQUIDATO', liquidated_at: now, liquidated_by: user.id })
     .in('id', ids);
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const historyRows = ids.map((id) => ({
     reimbursement_id: id,

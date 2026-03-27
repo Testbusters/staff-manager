@@ -272,7 +272,7 @@
 | Theme sync (DB → provider) | `components/ThemeSync.tsx` |
 | Sidebar toggle | `components/Sidebar.tsx` |
 | Theme API | `app/api/profile/theme/route.ts` |
-| Login page (forces light) | `app/login/page.tsx` |
+| Login page (forces dark) | `app/login/page.tsx` |
 
 **DB**: `user_profiles.theme_preference` (migration 035).
 **Rule**: `suppressHydrationWarning` on `<html>`, `<body>`, and any element reading `resolvedTheme` before mount.
@@ -302,7 +302,7 @@
 | Notification helpers | `lib/notification-helpers.ts` (`getAllActiveCollaboratori`, `getCollaboratoriForCommunities`) |
 | Email templates | `lib/email-templates.ts` (E10, E11, E12) |
 
-**DB**: `communications`, `content_events`, `opportunities`, `discounts`, `resources`. All use `community_ids UUID[] DEFAULT '{}'`.
+**DB**: `communications`, `events`, `opportunities`, `discounts`, `resources`. All use `community_ids UUID[] DEFAULT '{}'`.
 **Filtering**: in-memory (not PostgREST array operators) — safer, avoids syntax issues.
 
 ---

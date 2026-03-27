@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Accesso non autorizzato' }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     .eq('stato', 'IN_ATTESA');
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   if (!toApprove || toApprove.length === 0) {
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     .in('id', ids);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   const historyRows = ids.map((id: string) => ({

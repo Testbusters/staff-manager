@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json() as { skipContract?: boolean };
+  const body = await request.json().catch(() => null) as { skipContract?: boolean };
   const skipContract = body.skipContract ?? true;
 
   const svc = createClient(

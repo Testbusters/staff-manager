@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     .select('user_id, member_status, is_active')
     .eq('role', 'collaboratore');
 
-  if (profilesError) return NextResponse.json({ error: profilesError.message }, { status: 500 });
+  if (profilesError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const collabUserIds = (collabProfiles ?? []).map((p) => p.user_id);
   if (collabUserIds.length === 0) {
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
   const { data: collabs, count, error } = await query;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   if (!collabs || collabs.length === 0) {
     return NextResponse.json({ members: [], total: count ?? 0, page, limit });
   }

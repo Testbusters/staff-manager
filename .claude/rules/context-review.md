@@ -122,10 +122,34 @@ For each path found, verify it exists: `ls [path]`.
 
 ---
 
+## C12 — Canonical docs currency (sitemap.md + db-map.md)
+
+**What**: verify that `docs/sitemap.md` and `docs/db-map.md` are up to date with the current codebase state.
+
+**Run on sitemap.md**:
+```
+ls app/\(app\)/*/page.tsx app/\(app\)/*/*/page.tsx 2>/dev/null | sed 's|app/(app)||; s|/page.tsx||'
+```
+Compare the resulting route list against routes listed in `docs/sitemap.md`. Flag any route present in the filesystem but absent from the sitemap.
+**Pass**: every `app/(app)/*/page.tsx` path has a corresponding entry in sitemap.md.
+**Fail**: add the missing route to sitemap.md (route, roles, layout, Componenti chiave, loading.tsx status).
+
+**Run on db-map.md**:
+```
+ls supabase/migrations/ | tail -1
+```
+Compare the filename with the "Last synced: migration `NNN_*.sql`" line at the top of `docs/db-map.md`.
+**Pass**: the Last synced migration matches the highest-numbered file in `supabase/migrations/`.
+**Fail**: `docs/db-map.md` is behind — update the Tables section, FK Graph, Indexes, and RLS Summary for any migration applied since the last sync, then run `node scripts/refresh-db-map.mjs` to regenerate Column specs.
+
+**Note**: this check is a backstop — steps 2c and 2d in Phase 8 are the primary enforcement point. C12 catches drift that slipped through.
+
+---
+
 ## Execution order and completion condition
 
-Run C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 → C10 → C11 in sequence.
+Run C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 → C10 → C11 → C12 in sequence.
 Apply any fixes found before moving to the next check.
-**The phase is complete when C1–C11 have all passed.** Then run `/compact`.
+**The phase is complete when C1–C12 have all passed.** Then run `/compact`.
 
 > If a check reveals a pattern worth adding to CLAUDE.md or auto-memory, add it before C6 (duplication check) so the dedup pass catches any overlap.

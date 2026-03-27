@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   if (statoFilter) query = query.eq('stato', statoFilter);
 
   const { data: tickets, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // For admin/responsabile, enrich with creator name from collaborators
   const isManager = ['amministrazione', 'responsabile_compensi'].includes(profile.role);
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const { categoria, oggetto, messaggio, priority } = body as {
     categoria: string;
     oggetto: string;
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Optionally create first message
   if (messaggio?.trim()) {

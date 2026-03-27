@@ -1,7 +1,7 @@
 // Pure utility functions for building notification payloads.
 // Used by API route handlers to insert into the `notifications` table.
 
-export type NotificationEntityType = 'compensation' | 'reimbursement' | 'document' | 'ticket' | 'communication' | 'event' | 'opportunity' | 'discount';
+export type NotificationEntityType = 'compensation' | 'reimbursement' | 'document' | 'ticket' | 'communication' | 'event' | 'opportunity' | 'discount' | 'liquidazione_request';
 
 export interface NotificationPayload {
   user_id: string;
@@ -239,4 +239,40 @@ export function buildTicketStatusNotification(
     entity_type: 'ticket',
     entity_id: ticketId,
   };
+}
+
+export function buildLiquidazioneRequestNotification(
+  action: 'created' | 'accettata' | 'annullata',
+  userId: string,
+  requestId: string,
+  importo?: number,
+  nota?: string | null,
+): NotificationPayload {
+  const base = { user_id: userId, entity_type: 'liquidazione_request' as const, entity_id: requestId };
+  const importoStr = importo != null ? ` (€${importo.toFixed(2)})` : '';
+  switch (action) {
+    case 'created':
+      return {
+        ...base,
+        tipo: 'liquidazione_richiesta',
+        titolo: 'Nuova richiesta di liquidazione',
+        messaggio: `Un collaboratore ha inviato una richiesta di liquidazione${importoStr}.`,
+      };
+    case 'accettata':
+      return {
+        ...base,
+        tipo: 'liquidazione_accettata',
+        titolo: 'Richiesta di liquidazione accettata',
+        messaggio: `La tua richiesta di liquidazione${importoStr} è stata accettata.`,
+      };
+    case 'annullata':
+      return {
+        ...base,
+        tipo: 'liquidazione_annullata',
+        titolo: 'Richiesta di liquidazione annullata',
+        messaggio: nota
+          ? `La tua richiesta di liquidazione è stata annullata. Nota: ${nota}`
+          : `La tua richiesta di liquidazione${importoStr} è stata annullata.`,
+      };
+  }
 }

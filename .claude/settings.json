@@ -5,6 +5,7 @@
     "pr": ""
   },
   "includeGitInstructions": false,
+  "showClearContextOnPlanAccept": true,
   "claudeMdExcludes": [
     "/Users/MarcoG/Projects/staff-manager-requirements-check/**"
   ],
@@ -40,6 +41,108 @@
           {
             "type": "command",
             "command": "[ -f .claude/CLAUDE.local.md ] && echo '⚠️  Active CLAUDE.local.md overrides in effect — re-read to restore session context.' || true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SESSION=$(ls .claude/session/block-*.md 2>/dev/null | head -1); [ -n \"$SESSION\" ] && echo \"⚠️  Pre-compact: session file $SESSION exists — verify it reflects current block state before context resets.\" || true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BRANCH=$(git -C ~/Projects/staff-manager rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$BRANCH\" = 'main' ] || [ \"$BRANCH\" = 'staging' ]; then echo \"⚠️  Branch discipline: currently on '$BRANCH'. No direct commits to main/staging. Use a worktree (functional blocks) or fix/ branch (fixes).\"; fi",
+            "async": true
+          },
+          {
+            "type": "prompt",
+            "prompt": "You are a critical review gate. Read the user message and evaluate ONLY this: does it contain a clear factual error or incorrect premise that would cause Claude to give a wrong answer if accepted uncritically? Examples of YES: assumes a file or function exists that likely does not, states a technical fact that is wrong, contradicts an explicit rule documented in CLAUDE.md (environment isolation, branch discipline, production DB rule), requests action based on a clear technical misunderstanding. Examples of NO: opinion questions, exploratory or research requests, ambiguous scope, preferences, any question that could reasonably be interpreted multiple ways. Be conservative — when in doubt, respond ok:true. If YES: respond {\"ok\": false, \"reason\": \"Premessa da verificare: [one sentence stating the specific factual issue and what the correct situation is]\"}. If NO: respond {\"ok\": true}.",
+            "model": "claude-haiku-4-5-20251001"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__claude_ai_Supabase__execute_sql",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); PROJECT=$(echo \"$INPUT\" | jq -r '.tool_input.params.project_id // .tool_input.project_id // empty' 2>/dev/null); if [ \"$PROJECT\" = 'nyajqcjqmgxctlqighql' ]; then echo 'BLOCKED: production project_id detected outside Phase 8. Use staging project gjwkvgfwkdwzqlvudgqr during development.' >&2; exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git push.*(origin main|origin staging)'; then echo 'BLOCKED: direct push to main/staging. Use sm-staging or sm-deploy workflow (Phase 8 step 7).' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Review the conversation. Were all tasks from the user's last request completed? If yes, respond {\"ok\": true}. If no, respond {\"ok\": false, \"reason\": \"what remains\"}.",
+            "model": "claude-haiku-4-5-20251001"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs your input\" with title \"Staff Manager\" sound name \"Submarine\"'",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); WORKTREE=$(echo \"$INPUT\" | jq -r '.tool_input.path // empty' 2>/dev/null); if [ -n \"$WORKTREE\" ] && [ ! -f \"$WORKTREE/.env.local\" ]; then echo \"⚠️  WorktreeCreate: .env.local missing in $WORKTREE — run: cp ~/.envs/staff-manager.staging.env $WORKTREE/.env.local\"; fi",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); WORKTREE=$(echo \"$INPUT\" | jq -r '.tool_input.path // empty' 2>/dev/null); if [ -n \"$WORKTREE\" ] && [ -d \"$WORKTREE\" ]; then CHANGES=$(git -C \"$WORKTREE\" status --porcelain 2>/dev/null); if [ -n \"$CHANGES\" ]; then echo \"⚠️  WorktreeRemove: uncommitted changes detected in $WORKTREE — verify before removal.\"; fi; fi",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Task completed\" with title \"Staff Manager\"' 2>/dev/null || true",
             "async": true
           }
         ]

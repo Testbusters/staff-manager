@@ -38,7 +38,7 @@ export async function POST(
 
   if (fetchError || !doc) return NextResponse.json({ error: 'Documento non trovato' }, { status: 404 });
   if (doc.stato_firma !== 'DA_FIRMARE') {
-    return NextResponse.json({ error: 'Il documento non è in stato DA_FIRMARE' }, { status: 400 });
+    return NextResponse.json({ error: 'Il documento non è in stato DA_FIRMARE' }, { status: 409 });
   }
 
   const svc = createServiceClient(

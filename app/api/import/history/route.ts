@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   if (tipo) query = query.eq('tipo', tipo);
 
   const { data: rows, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   const runs: ImportRunWithUrl[] = await Promise.all(
     (rows ?? []).map(async (row) => {

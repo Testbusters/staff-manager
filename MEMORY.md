@@ -5,24 +5,16 @@
 
 ---
 
-## Active plan — Structural requirements revision
+## Active plan
 
 ### Context
-Stakeholders clarified and re-engineered some core project components. A structural requirements
-revision is in progress: `docs/requirements.md` is being updated section by section, followed by
-implementation of each approved block. Working on `main`.
-
-### Steps — progress
+All defined blocks complete. No active in-progress work.
 
 | Step | Description | Status |
 |------|-------------|--------|
-| C | Guided review of `docs/requirements.md`: section-by-section comparison, user approval per change | 🔄 in progress — Blocks 1–14 + community targeting + feedback management + revisione Compensi e Rimborsi + revisione sezione Rimborsi + dashboard responsabile_compensi + fix responsabile nav/form + admin dashboard redesign + Import CU + Import email flow + Monitoraggio tab ✅, next blocks to define |
-| D | Rebuild `docs/implementation-checklist.md` based on updated `requirements.md` | 🔄 in progress — same as C |
-| E | shadcn/ui migration — Fasi 1–9 ✅ COMPLETE | ✅ — Fase 9 (Cleanup) complete 2026-03-05. Migration fully done. |
-| F | UI Kit adoption — Phase A + Wave 1 + Wave 2 | ✅ — Phase A (themes.css, next-themes, toggle, DB persistence) + Wave 1 (9 zero-dep components + 5 alignments) + Wave 2 (DataTable + Form, @tanstack/react-table + react-hook-form + @hookform/resolvers) complete 2026-03-05. Phase C on demand for Calendar/Chart. |
-
-> **Rule**: do not advance to the next step without explicit confirmation. C and D depend on
-> order — the checklist cannot be rebuilt before `requirements.md` is updated.
+| eventi-citta | City events for resp.citt + collab feed city filter (migration 059) | ✅ complete 2026-03-24 |
+| corsi-4 | Q&A ore KPI — DashboardCorsiKpi addition | ✅ complete 2026-03-24 |
+| resp-citt-gaps | Resp.citt gap fixes: revoke, CoCoD'à rimuovi, blacklist, Q&A metadata, export CSV, E13/E14, cron (migration 060) | ✅ complete 2026-03-24 |
 
 ---
 

@@ -27,7 +27,7 @@ export async function PATCH(
   const auth = await authorizeAdmin();
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const update: Record<string, unknown> = {};
   if (body.name !== undefined) update.name = body.name.trim();
   if (body.is_active !== undefined) update.is_active = body.is_active;
@@ -48,6 +48,6 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ community: data });
 }

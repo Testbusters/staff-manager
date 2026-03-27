@@ -204,6 +204,28 @@ export async function getCollaboratoriForCommunities(
   }));
 }
 
+// Returns active collaboratori in the given communities whose citta matches the given city.
+// Used for city-scoped event notifications.
+export async function getCollaboratoriForCity(
+  citta: string,
+  communityIds: string[],
+  svc: Svc,
+): Promise<PersonInfo[]> {
+  const communityCollabs = await getCollaboratoriForCommunities(communityIds, svc);
+  if (communityCollabs.length === 0) return [];
+
+  const userIds = communityCollabs.map((c) => c.user_id);
+
+  const { data: cityCollabs } = await svc
+    .from('collaborators')
+    .select('user_id')
+    .eq('citta', citta)
+    .in('user_id', userIds);
+
+  const cityUserIds = new Set((cityCollabs ?? []).map((c: { user_id: string }) => c.user_id));
+  return communityCollabs.filter((c) => cityUserIds.has(c.user_id));
+}
+
 // Returns all active collaboratori with their email (for broadcast content notifications).
 export async function getAllActiveCollaboratori(svc: Svc): Promise<PersonInfo[]> {
   const { data: profiles } = await svc

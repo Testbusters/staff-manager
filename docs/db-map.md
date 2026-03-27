@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `051_p4m_templates.sql` (2026-03-18).
+> Last synced: migration `063_db_audit_fixes.sql` (2026-03-27).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -14,7 +14,7 @@
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione` |
-| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento` | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year |
+| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific |
 | `communities` | Community entities | `id`, `name` (UNIQUE), `is_active`, `banner_content`, `banner_active`, `banner_link_url`, `banner_link_label`, `banner_link_new_tab`, `banner_updated_at` | Banner fields added in migrations 052+053. `banner_updated_at` used as dismiss-key version for localStorage. |
 | `collaborator_communities` | Collaborator → Community membership (1:1 per migration 044) | `collaborator_id` (UNIQUE), `community_id` | UNIQUE on `collaborator_id` — each collaborator belongs to exactly 1 community |
 | `user_community_access` | Responsabile → Community access | `user_id`, `community_id` | UNIQUE `(user_id, community_id)`. Used for RBAC joins in RLS policies |
@@ -23,7 +23,7 @@
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `compensations` | Compensation records | `collaborator_id`, `community_id` (nullable — always null for new), `stato`, `nome_servizio_ruolo`, `importo_lordo`, `ritenuta_acconto`, `importo_netto`, `competenza` (FK→comp_competenze.key), `receipt_document_id`, `approved_lordo_ytd` | State machine: `IN_ATTESA → INVIATO → APPROVATO → LIQUIDATO` or `→ RIFIUTATO` or `→ INTEGRAZIONI_RICHIESTE`. Ownership via `collaborator_id` (NOT `user_id`) |
+| `compensations` | Compensation records | `collaborator_id`, `community_id` (nullable — always null for new), `stato`, `nome_servizio_ruolo`, `importo_lordo`, `ritenuta_acconto`, `importo_netto`, `competenza` (FK→comp_competenze.key), `receipt_document_id`, `approved_lordo_ytd` | State machine: `IN_ATTESA → APPROVATO → LIQUIDATO` or `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`. Ownership via `collaborator_id` (NOT `user_id`) |
 | `compensation_history` | Audit log of state changes | `compensation_id`, `stato_precedente`, `stato_nuovo`, `changed_by`, `role_label` | Append-only |
 | `compensation_attachments` | Files attached to compensations | `compensation_id`, `file_url`, `file_name` | |
 | `compensation_competenze` | Lookup table for competenza types | `key` (UNIQUE), `label`, `active`, `sort_order` | `compensations.competenza` FK→ this table's `key` |
@@ -32,7 +32,7 @@
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `expense_reimbursements` | Reimbursement requests | `collaborator_id`, `community_id` (NOT NULL), `categoria`, `importo`, `stato`, `receipt_document_id` | State machine: `INVIATO → APPROVATO → LIQUIDATO` or `→ RIFIUTATO` or `→ INTEGRAZIONI_RICHIESTE`. Ownership via `collaborator_id` |
+| `expense_reimbursements` | Reimbursement requests | `collaborator_id`, `community_id` (NOT NULL), `categoria`, `importo`, `stato`, `receipt_document_id` | State machine: `IN_ATTESA → APPROVATO → LIQUIDATO` or `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`. Ownership via `collaborator_id` |
 | `expense_history` | Audit log of state changes | `reimbursement_id`, `stato_precedente`, `stato_nuovo`, `changed_by`, `role_label` | Append-only |
 | `expense_attachments` | Files attached to reimbursements | `reimbursement_id`, `file_url`, `file_name` | At least 1 required by business rule |
 
@@ -57,7 +57,7 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `communications` | News/announcements | `titolo`, `contenuto`, `pinned`, `published_at`, `expires_at`, `file_urls[]`, `community_ids[]` | |
-| `events` | Events | `titolo`, `tipo`, `start_datetime`, `end_datetime`, `luma_url`, `community_ids[]` | |
+| `events` | Events | `titolo`, `tipo`, `start_datetime`, `end_datetime`, `luma_url`, `community_ids[]`, `citta` | `citta NULL` = national; non-null = city-scoped (resp.citt can write own city only) |
 | `opportunities` | Job/project opportunities | `titolo`, `tipo`, `descrizione`, `requisiti`, `scadenza_candidatura`, `community_ids[]` | |
 | `resources` | Resources/guides | `titolo`, `categoria`, `tag[]`, `link`, `file_url`, `community_ids[]` | `tag` used for fiscal guides: `procedura-piva`, `detrazioni-figli` |
 | `discounts` | Discounts/benefits | `titolo`, `fornitore`, `brand`, `codice_sconto`, `valid_from`, `valid_to`, `community_ids[]` | `brand` values: `testbusters`, `peer4med` |
@@ -71,6 +71,29 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | `email_templates` | Editable email templates | `key` (UNIQUE), `event_group`, `subject`, `body_before`, `highlight_rows` (jsonb), `body_after`, `available_markers[]` | 12 rows. `getRenderedEmail()` in `lib/email-template-service.ts` |
 | `email_layout_config` | Singleton layout config | `brand_color`, `logo_url`, `header_title`, `footer_address` | Single row, cached 5min |
 | `email_events` | Resend delivery log (webhook) | `resend_email_id`, `recipient`, `subject`, `event_type` | Written by `/api/webhooks/resend` (HMAC-SHA256) |
+
+### Lookup Tables
+
+| Table | Purpose | Key columns | Notes |
+|---|---|---|---|
+| `lookup_options` | Admin-managed lookup values for collaborator profile fields | `type` (`citta`\|`materia`), `community` (`testbusters`\|`peer4med`), `nome`, `sort_order` | UNIQUE `(type, community, nome)`. SELECT: all authenticated. ALL: `amministrazione` only. Used for città + materie_insegnate dropdowns — community-specific lists |
+
+### Corsi
+
+| Table | Purpose | Key columns | Notes |
+|---|---|---|---|
+| `corsi` | Master course record | `nome`, `codice_identificativo`, `community_id`, `modalita`, `citta` (nullable), `data_inizio`, `data_fine`, `max_docenti_per_lezione`, `max_qa_per_lezione`, `created_by` | `stato` (programmato/attivo/concluso) is COMPUTED — not a column. 12 link/metadata fields. |
+| `lezioni` | Individual lessons per corso | `corso_id`, `data`, `orario_inizio`, `orario_fine`, `ore` (GENERATED STORED), `materia` | `ore = ROUND(EXTRACT(EPOCH FROM orario_fine - orario_inizio) / 3600, 2)`. ON DELETE CASCADE from corsi |
+| `assegnazioni` | Collaborator × lezione × ruolo | `lezione_id`, `collaborator_id`, `ruolo` (docente/cocoda/qa), `valutazione` (nullable, 1.0–10.0), `created_by` | UNIQUE `(lezione_id, collaborator_id, ruolo)`. ON DELETE CASCADE from lezioni |
+| `candidature` | Applications (collab per-lezione or resp.cittadino per-corso) | `tipo` (docente_lezione/qa_lezione/citta_corso), `lezione_id` (nullable), `corso_id` (nullable), `collaborator_id` (nullable), `city_user_id` (nullable), `stato` | CHECK: exactly one of lezione_id or corso_id non-null. ON DELETE CASCADE from lezioni+corsi |
+| `blacklist` | Collaborators barred from teaching | `collaborator_id` (UNIQUE), `note`, `created_by` | UNIQUE on collaborator_id. Error 23505 on duplicate |
+| `allegati_globali` | Global attachment files per tipo × community | `tipo` (docenza/cocoda), `community_id`, `file_url`, `nome_file`, `updated_by` | UNIQUE `(tipo, community_id)`. Always use UPSERT. Stored in `corsi-allegati` bucket |
+
+### Liquidazione Requests
+
+| Table | Purpose | Key columns | Notes |
+|---|---|---|---|
+| `liquidazione_requests` | Collaborator liquidation requests | `collaborator_id`, `compensation_ids` (UUID[]), `expense_ids` (UUID[]), `importo_netto_totale`, `iban`, `ha_partita_iva`, `stato`, `note_admin`, `processed_at`, `processed_by` | `stato` CHECK: `in_attesa`, `accettata`, `annullata`. Partial UNIQUE INDEX on `(collaborator_id) WHERE stato='in_attesa'` — max 1 active per collaborator. RLS: collab read/insert/update-revoca, admin all |
 
 ### Operations & Monitoring
 
@@ -101,7 +124,8 @@ collaborators
   ├── collaborator_communities.collaborator_id (UNIQUE — 1:1)
   ├── compensations.collaborator_id
   ├── expense_reimbursements.collaborator_id
-  └── documents.collaborator_id
+  ├── documents.collaborator_id
+  └── liquidazione_requests.collaborator_id
 
 communities
   ├── collaborator_communities.community_id
@@ -120,6 +144,23 @@ expense_reimbursements
   ├── expense_history.reimbursement_id
   ├── expense_attachments.reimbursement_id
   └── documents.id ← expense_reimbursements.receipt_document_id
+
+corsi
+  ├── lezioni.corso_id (CASCADE)
+  └── candidature.corso_id (CASCADE, nullable)
+
+lezioni
+  ├── assegnazioni.lezione_id (CASCADE)
+  └── candidature.lezione_id (CASCADE, nullable)
+
+collaborators
+  ├── assegnazioni.collaborator_id (CASCADE)
+  ├── candidature.collaborator_id (CASCADE, nullable)
+  └── blacklist.collaborator_id (CASCADE, UNIQUE)
+
+communities
+  ├── corsi.community_id
+  └── allegati_globali.community_id
 
 compensation_competenze.key ← compensations.competenza
 
@@ -161,8 +202,15 @@ tickets
 | `user_community_access` | `uca_user_id_community_id_key` | UNIQUE | composite |
 | `user_profiles` | `user_profiles_user_id_key` | UNIQUE | |
 | `contract_templates` | `contract_templates_tipo_key` | UNIQUE | |
+| `candidature` | `candidature_collaborator_id_idx` | btree | FK — added migration 063 |
+| `candidature` | `candidature_corso_id_idx` | btree | FK — added migration 063 |
+| `candidature` | `candidature_lezione_id_idx` | btree | FK — added migration 063 |
+| `candidature` | `candidature_city_user_id_idx` | btree | FK — added migration 063 |
+| `lezioni` | `lezioni_corso_id_idx` | btree | FK CASCADE target — added migration 063 |
+| `compensation_attachments` | `comp_attachments_compensation_id_idx` | btree | FK — added migration 063 |
+| `ticket_messages` | `ticket_messages_ticket_id_idx` | btree | FK — added migration 063 |
 
-**Missing indexes (potential gaps for skill-db to flag):**
+**Missing indexes (potential gaps — lower priority):**
 - `compensations.data_competenza` — used in date-range filters in export
 - `expense_reimbursements.data_spesa` — used in filters
 - `notifications.created_at` — used for ordering in bell + page
@@ -185,18 +233,26 @@ tickets
 | `ticket_messages` | read if ticket accessible, insert for all authenticated | |
 | `notifications` | own only (ALL) | Simple ownership |
 | `notification_settings` | all authenticated (SELECT), admin (UPDATE) | |
-| `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL) | Content tables — community filtering is in-memory in API, NOT in RLS |
+| `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL write) | Content tables — community filtering is in-memory in API, NOT in RLS. `events`: resp.citt can INSERT/UPDATE/DELETE city-scoped events |
+| `corsi` | all authenticated (SELECT), admin (ALL) | |
+| `lezioni` | all authenticated (SELECT), admin (ALL) | |
+| `assegnazioni` | all authenticated (SELECT), admin (ALL), resp.citt INSERT ruolo=cocoda for citta_responsabile corsi (migration 058), resp.citt UPDATE valutazione for citta_responsabile corsi | `assegnazioni_cocoda_insert`: lezione_id IN (lezioni of corsi where citta = citta_responsabile) |
+| `candidature` | collab (INSERT docente/qa, UPDATE own → ritirata), resp.citt (INSERT citta_corso, UPDATE own → ritirata, UPDATE docente/qa stato for citta corsi), admin (ALL) | Migrations 056 + 057 |
+| `blacklist` | admin (ALL), resp.citt (SELECT) | |
+| `allegati_globali` | all authenticated (SELECT), admin (ALL) | |
+| `lookup_options` | all authenticated (SELECT), admin (ALL) | |
 | `email_templates/email_layout_config` | admin only | Configuration tables |
 | `export_runs/import_runs` | admin only | |
 | `feedback` | any authenticated (INSERT), admin (SELECT/UPDATE/DELETE) | |
 | `app_errors` | any authenticated (INSERT), admin (SELECT) | |
 | `compensation_history/expense_history` | any authenticated (INSERT — append-only), role-filtered SELECT | |
 
-**⚠️ RLS gaps to note:**
-- `communications`: `announcements_admin_write` grants ALL to `responsabile_compensi` too — check if intentional
-- `compensation_attachments`: `comp_attachments_own_insert` has no `WITH CHECK` clause — any authenticated user can insert
-- `expense_attachments`: `exp_attachments_own_insert` same — no WITH CHECK
-- `ticket_messages`: `ticket_messages_insert` has no WITH CHECK — any authenticated user can post to any ticket
+**⚠️ RLS gaps to note (open):**
+- `compensation_attachments` and `expense_attachments`: `WITH CHECK` clauses added in migration 063 (verified 2026-03-27). No open RLS gaps on these tables.
+- *(ticket_messages_insert WITH CHECK added in migration 062; communications restricted to amministrazione in migration 063)*
+- **Remaining open gap (backlog DB4)**: all 90+ policies have `TO {public}` instead of `TO authenticated` — does not allow unauthenticated access (RLS is enforced) but adds overhead and widens surface.
+
+**RLS performance:** all policies use `(select auth.uid())` subquery form (per-statement evaluation) since migration 063.
 
 ---
 
@@ -224,10 +280,14 @@ tickets
 ---
 
 
+
+
+
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-03-20.
+> Last refreshed: 2026-03-27.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -243,8 +303,9 @@ tickets
 | `must_change_password` | boolean | NO | `false` | — |
 | `onboarding_completed` | boolean | NO | `false` | — |
 | `can_publish_announcements` | boolean | YES | `true` | — |
-| `theme_preference` | character varying | YES | `'dark'` | — |
+| `theme_preference` | text | YES | `'dark'` | — |
 | `skip_contract_on_onboarding` | boolean | NO | `false` | — |
+| `citta_responsabile` | text | YES | — | — |
 
 ### `collaborators`
 
@@ -280,6 +341,8 @@ tickets
 | `data_fine_contratto` | date | YES | — | — |
 | `approved_lordo_ytd` | numeric | NO | `0` | — |
 | `approved_year` | integer | NO | `EXTRACT(year FROM CURRENT_DATE)` | — |
+| `citta` | text | NO | — | — |
+| `materie_insegnate` | text[] | NO | `'{}'[]` | — |
 
 ### `communities`
 
@@ -289,6 +352,12 @@ tickets
 | `name` | text | NO | — | — |
 | `created_at` | timestamp with time zone | YES | `now()` | — |
 | `is_active` | boolean | NO | `true` | — |
+| `banner_content` | text | YES | — | — |
+| `banner_active` | boolean | NO | `false` | — |
+| `banner_link_url` | text | YES | — | — |
+| `banner_link_label` | text | YES | — | — |
+| `banner_updated_at` | timestamp with time zone | NO | `now()` | — |
+| `banner_link_new_tab` | boolean | NO | `false` | — |
 
 ### `collaborator_communities`
 
@@ -503,6 +572,7 @@ tickets
 | `tipo` | text | YES | — | — |
 | `file_url` | text | YES | — | — |
 | `community_ids` | uuid[] | NO | `'{}'[]` | — |
+| `citta` | text | YES | — | — |
 
 ### `opportunities`
 
@@ -669,3 +739,116 @@ tickets
 | `url` | text | YES | — | — |
 | `user_id` | uuid | YES | — | → auth.users.id |
 | `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `allegati_globali`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `tipo` | text | NO | — | — |
+| `community_id` | uuid | NO | — | → communities.id |
+| `file_url` | text | NO | — | — |
+| `nome_file` | text | NO | — | — |
+| `updated_by` | uuid | NO | — | → auth.users.id |
+| `updated_at` | timestamp with time zone | NO | `now()` | — |
+
+### `assegnazioni`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `lezione_id` | uuid | NO | — | → lezioni.id |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `ruolo` | text | NO | — | — |
+| `valutazione` | numeric | YES | — | — |
+| `created_by` | uuid | NO | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `blacklist`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `note` | text | YES | — | — |
+| `created_by` | uuid | NO | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `candidature`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `tipo` | text | NO | — | — |
+| `lezione_id` | uuid | YES | — | → lezioni.id |
+| `corso_id` | uuid | YES | — | → corsi.id |
+| `collaborator_id` | uuid | YES | — | → collaborators.id |
+| `city_user_id` | uuid | YES | — | → auth.users.id |
+| `stato` | text | NO | `'in_attesa'` | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `corsi`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `nome` | text | NO | — | — |
+| `codice_identificativo` | text | NO | — | — |
+| `community_id` | uuid | NO | — | → communities.id |
+| `modalita` | text | NO | — | — |
+| `citta` | text | YES | — | — |
+| `linea` | text | YES | — | — |
+| `responsabile_doc` | text | YES | — | — |
+| `licenza_zoom` | text | YES | — | — |
+| `data_inizio` | date | NO | — | — |
+| `data_fine` | date | NO | — | — |
+| `max_docenti_per_lezione` | integer | NO | `8` | — |
+| `max_qa_per_lezione` | integer | NO | `6` | — |
+| `link_lw` | text | YES | — | — |
+| `link_zoom` | text | YES | — | — |
+| `link_telegram_corsisti` | text | YES | — | — |
+| `link_qa_assignments` | text | YES | — | — |
+| `link_questionari` | text | YES | — | — |
+| `link_emergenza` | text | YES | — | — |
+| `created_by` | uuid | NO | — | → auth.users.id |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `lezioni`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `corso_id` | uuid | NO | — | → corsi.id |
+| `data` | date | NO | — | — |
+| `orario_inizio` | time without time zone | NO | — | — |
+| `orario_fine` | time without time zone | NO | — | — |
+| `ore` | numeric | YES | — | — |
+| `materia` | text | NO | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+
+### `liquidazione_requests`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `compensation_ids` | uuid[] | NO | `'{}'[]` | — |
+| `expense_ids` | uuid[] | NO | `'{}'[]` | — |
+| `importo_netto_totale` | numeric | NO | — | — |
+| `iban` | text | NO | — | — |
+| `ha_partita_iva` | boolean | NO | `false` | — |
+| `stato` | text | NO | — | — |
+| `note_admin` | text | YES | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |
+| `processed_at` | timestamp with time zone | YES | — | — |
+| `processed_by` | uuid | YES | — | → auth.users.id |
+
+### `lookup_options`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `type` | text | NO | — | — |
+| `community` | text | NO | — | — |
+| `nome` | text | NO | — | — |
+| `sort_order` | integer | NO | `0` | — |

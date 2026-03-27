@@ -661,3 +661,201 @@ A community-specific informational banner rendered at the top of the app layout,
 
 ### Layout
 `app/(app)/layout.tsx`: when `role === 'collaboratore'`, fetch community banner via service client (2-step: collaborator_communities → communities). Render `<CommunityBanner>` if `banner_active && banner_content`.
+
+---
+
+## Block corsi-2 — Collaboratore View + Candidature
+
+### Scope
+Activates the collaboratore-facing `/corsi` route (previously redirecting to `/`). Collaboratori can browse their community's active/upcoming corsi and submit/withdraw candidature for individual lezioni.
+
+### Requirements confirmed
+- `/corsi` lists corsi for the collaboratore's own community only (via `collaborator_communities`)
+- Only `programmato` and `attivo` corsi shown (concluso filtered out, stato computed)
+- `/corsi/[id]` shows corso info header (links, modalita, citta) + lezioni table
+- Each lezione row has Docente and Q&A candidatura buttons
+- No slot limits — any collab can apply
+- Withdrawal allowed only while `stato = in_attesa`
+- Blacklisted collabs see the page but all candidatura buttons are disabled (yellow alert shown)
+- Assegnazioni shown as "Assegnato · Ruolo" badge in the lezioni row (no separate section)
+- No filter by materie
+
+### Out of scope (deferred to corsi-3)
+- Responsabile_cittadino view
+- Admin acceptance/rejection of candidature
+- Assegnazione management
+
+### Migration 056
+Two RLS policies on `candidature`:
+- `candidature_collab_insert`: collaboratore INSERT own candidature (tipo docente/qa only)
+- `candidature_collab_update_own`: collaboratore UPDATE own → `stato = 'ritirata'` only
+
+### API Routes
+- `POST /api/candidature`: blacklist check → duplicate check (same lezione+tipo, not ritirata) → insert
+- `PATCH /api/candidature/[id]`: ownership check → stato=in_attesa guard → set ritirata
+
+### Pages modified
+- `app/(app)/corsi/page.tsx`: removed collab redirect; added collab SSR branch (community fetch via `collaborator_communities`, corso list filtered to programmato/attivo)
+- `app/(app)/corsi/[id]/page.tsx`: added collab SSR branch (7 fetches: collab, community, blacklist, corso, lezioni, own candidature, own+all assegnazioni)
+
+### New components
+- `CorsiListCollab.tsx`: card grid with stato badge, modalita/citta badges, date range
+- `LezioniTabCollab.tsx`: table with DropdownMenu candidatura, AlertDialog withdraw confirm, optimistic state, blacklist alert
+
+---
+
+## Block corsi-dashboard — Dashboard + Profile Corsi Gaps
+
+### Scope
+Closes G1–G7 identified in post-release compliance review of corsi-1/2/3.
+
+### Requirements confirmed
+- **G1** — Dashboard collab hero: read-only chips `materie_insegnate`. Gray "Non configurato" chip if array empty. No click action.
+- **G2** — Dashboard collab: new "Corsi" section below the 4 existing KPI cards. 6 boxes:
+  - Corsi assegnati docente: assegnazioni tipo=docente, lezione.data >= today, corso.stato IN (programmato, attivo)
+  - Corsi svolti docente: assegnazioni tipo=docente, lezione.data < today, valutazione IS NOT NULL
+  - Valutazione media docente: AVG(assegnazioni.valutazione) WHERE tipo=docente AND valutazione IS NOT NULL
+  - Valutazione media CoCoDà: AVG(assegnazioni.valutazione) WHERE tipo=cocoda AND valutazione IS NOT NULL
+  - Q&A assegnati: count assegnazioni tipo=qa, lezione.data >= today, corso programmato/attivo; ore = "--" (deferred to corsi-4)
+  - Q&A svolti: count assegnazioni tipo=qa, lezione.data < today, valutazione IS NOT NULL; ore = "--"
+  - All boxes → /corsi on click (no filter)
+- **G3** — Dashboard collab: "Prossimi eventi" box showing national future events (city events deferred to eventi-citta block)
+- **G4** — Profilo page collab: hero card at top with avatar, nome/cognome, community, materie chips row (last row in hero)
+- **G5/G7** — Dashboard resp.citt: add "Ultimi aggiornamenti" section (same DashboardUpdates component used in collab dashboard: Events / Comunicazioni e risorse / Opportunità e sconti tabs)
+- **G6** — LezioniTabCollab: show "X/Y" posti count per lezione row (X = assegnazioni of that tipo, Y = max)
+
+### Out of scope
+- City events in dashboard — deferred to eventi-citta block
+- Q&A ore — deferred to corsi-4 block
+- Nav changes — already correct from corsi-3
+
+### Files modified
+- `app/(app)/page.tsx`: collab branch (materie chips G1, KPI corsi G2, prossimi eventi G3), resp.citt branch (DashboardUpdates G5/G7)
+- `components/corsi/LezioniTabCollab.tsx`: posti count per row (G6)
+- `app/(app)/profilo/page.tsx`: hero card with materie chips (G4)
+
+### New components
+- `components/corsi/DashboardCorsiKpi.tsx`: 6 KPI cards client component
+
+
+---
+
+## Block corsi-blocco4 — Blocco 4 Corsi Gap Fixes
+
+### Scope
+Gap fixes (G1–G6 + anomaly A1) identified during compliance review of the Blocco 4 Corsi raw requirements against corsi-1/2/3/corsi-dashboard.
+
+### Implemented
+
+- **G1** — Dashboard collab: Add `assegnatiCocoda` + `svoltiCocoda` KPI boxes (DashboardCorsiKpi: 6→8 boxes)
+- **A1+G2** — `/corsi` collab: 3 scrollable sections:
+  - Corsi assegnati (own assegnazioni, any stato)
+  - Corsi programmati — Docenza (community corsi, not concluso; in_aula filtered by `collaborators.citta = corsi.citta`; online = all)
+  - Q&A programmati (community corsi, not concluso, no city filter)
+- **G3** — `/corsi` collab: monthly calendar above sections, colored cells by ruolo (brand=docente, amber=cocoda, green=qa), prev/next navigation
+- **G4** — `/corsi/[id]` collab: display community name, `linea`, allegati docenza/CoCoD'à
+- **G5** — ✅ Already done in corsi-1 (`linea` field in CorsoForm at line 197)
+- **G6** — Resp.citt CoCoD'à direct assignment: migration 058 (RLS INSERT), POST /api/assegnazioni, CoCoD'à panel in `/corsi/assegnazione` per lezione with collab dropdown
+
+### Out of scope
+- CoCoD'à removal (not in requirements)
+- City filter for Q&A section (by spec Q&A has no city filter)
+- Allegati management (admin-only, already in admin panel)
+
+### Files
+- NEW: `supabase/migrations/058_assegnazioni_cocoda_rls.sql`
+- NEW: `app/api/assegnazioni/route.ts`
+- NEW: `components/corsi/CorsiCalendario.tsx`
+- NEW: `components/corsi/CorsiPageCollab.tsx`
+- MOD: `components/corsi/DashboardCorsiKpi.tsx`
+- MOD: `app/(app)/page.tsx`
+- MOD: `app/(app)/corsi/page.tsx`
+- MOD: `app/(app)/corsi/[id]/page.tsx`
+- MOD: `app/(app)/corsi/assegnazione/page.tsx`
+- MOD: `components/corsi/AssegnazioneRespCittPage.tsx`
+- NEW: `__tests__/api/assegnazioni.test.ts`
+
+---
+
+## Block eventi-citta — City Events (Responsabile Cittadino)
+
+### Scope
+Activates the "Creazione Eventi" nav item for `responsabile_cittadino`. Resp.citt can create,
+edit, and delete events scoped to their city (`citta_responsabile`). City events appear in:
+- Collab dashboard "Prossimi eventi" box (alongside national events, filtered by `collab.citta`)
+- Collab `/eventi` feed (national + city events matching `collab.citta`)
+- Admin `/contenuti` tab eventi (all events, city events show a città badge)
+
+### Requirements confirmed
+- Extend `events` table: add `citta text NULL` column (national events = NULL)
+- **RLS (migration 059)**: resp.citt can INSERT events where `citta = citta_responsabile`; UPDATE/DELETE own city events only
+- **`/corsi/eventi-citta`**: resp.citt CRUD page — list own city events, create/edit via Dialog, delete with AlertDialog
+- **API `POST /api/events`**: add `responsabile_cittadino` to WRITE_ROLES; auto-set `citta = citta_responsabile` and `community_ids` from resp.citt's community
+- **API `PATCH/DELETE /api/events/[id]`**: add `responsabile_cittadino`; ownership check (can only modify events with `citta = citta_responsabile`)
+- **Dashboard collab**: "Prossimi eventi" includes city events where `event.citta = collab.citta`
+- **Feed `/eventi`**: shows national (`citta IS NULL`) + city events where `event.citta = collab.citta`
+- **Admin `/contenuti`**: all events shown; city events display a badge with city name
+- **Notifications**: creating a city event notifies active collabs in the same city via `getCollaboratoriForCity()` helper (in-app only)
+- **Nav**: remove `comingSoon: true` from resp.citt "Creazione eventi"; update `href: '/corsi/eventi-citta'`
+
+### Out of scope
+- Draft/status workflow for events (no stato field introduced)
+- Email notifications for city events (in-app only, matching national behavior)
+- Resp.citt cannot manage allegati or luma_embed_url (visible in feed but not editable by resp.citt)
+
+### Files
+- NEW: `supabase/migrations/059_events_citta.sql`
+- NEW: `app/(app)/corsi/eventi-citta/page.tsx`
+- NEW: `app/(app)/corsi/eventi-citta/loading.tsx`
+- NEW: `components/corsi/EventiCittaPage.tsx`
+- NEW: `__tests__/api/events.test.ts`
+- MOD: `lib/types.ts` — ContentEvent add `citta`
+- MOD: `lib/nav.ts` — remove comingSoon from resp.citt "Creazione eventi"
+- MOD: `lib/notification-helpers.ts` — add `getCollaboratoriForCity()`
+- MOD: `app/api/events/route.ts` — resp.citt support + city notification filter
+- MOD: `app/api/events/[id]/route.ts` — resp.citt ownership check
+- MOD: `app/(app)/page.tsx` — dashboard city events filter
+- MOD: `app/(app)/eventi/page.tsx` — feed city events filter
+- MOD: `app/(app)/eventi/[id]/page.tsx` — citta badge
+- MOD: `components/contenuti/EventList.tsx` — citta badge in admin list
+
+---
+
+## Block liquidazione-request — Liquidation Request Flow
+
+### Scope
+Collaboratori can request liquidation of their APPROVATO compensations and expense reimbursements.
+Admin receives the request in /coda and can accept (bulk-liquidate exactly those records) or reject with optional note.
+
+### Requirements
+- **Threshold**: request only allowed when total net of selected records ≥ €250 (net already stored in `compensations.importo_netto` and `expense_reimbursements.importo`; ritenuta already applied at creation)
+- **Per-record selection**: checkbox table — collab selects which APPROVATO records to include. No partial-record splitting.
+- **IBAN**: shown read-only from `collaborators.iban` — collab cannot change it in this flow
+- **P.IVA**: optional checkbox ("Sono possessore di Partita IVA")
+- **Disclaimer**: "Ho controllato che i dati siano corretti" (required checkbox) + explanation of €250 minimum
+- **One active request per collab**: unique index on `(collaborator_id) WHERE stato = 'in_attesa'`
+- **Revoca**: collab can revoke their in_attesa request (sets stato = 'annullata')
+- **Admin accept**: bulk-liquidates exactly the compensation_ids + expense_ids in the request
+- **Admin reject**: sets stato = 'annullata' with optional note_admin
+- **Notifications**: E15 → admin on creation; E16 → collab on accept/reject (in-app + email)
+
+### Out of scope
+- Slack integration
+- Amount splitting (records are included in full or not at all)
+- Liquidation of records not individually selected
+
+### New table
+`liquidazione_requests` — migration 061
+
+### Files
+- NEW: `supabase/migrations/061_liquidazione_requests.sql`
+- MOD: `lib/types.ts` — add `LiquidazioneRequestStato`, `LiquidazioneRequest`, extend `NotificationEntityType`
+- MOD: `lib/email-templates.ts` — E15 + E16 templates
+- MOD: `lib/notification-utils.ts` — add `buildLiquidazioneRequestNotification`
+- NEW: `app/api/liquidazione-requests/route.ts` — POST (collab creates) + GET (admin lists)
+- NEW: `app/api/liquidazione-requests/[id]/route.ts` — PATCH (revoca / accetta / annulla)
+- NEW: `components/compensi/LiquidazioneRequestBanner.tsx` — banner + dialog (4 states)
+- MOD: `app/(app)/compensi/page.tsx` — fetch APPROVATO records + active request; render banner
+- NEW: `components/admin/CodaLiquidazioni.tsx` — admin table with Accetta/Rifiuta actions
+- MOD: `app/(app)/coda/page.tsx` — add Liquidazioni tab
+- NEW: `__tests__/api/liquidazione-requests.test.ts` — 11 tests

@@ -30,7 +30,7 @@ export async function GET() {
     .select('*')
     .order('event_key');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ settings: data ?? [] });
 }
 
@@ -50,7 +50,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
   }
 
-  const body = await request.json() as {
+  const body = await request.json().catch(() => null) as {
     event_key: string;
     recipient_role: string;
     field: 'inapp_enabled' | 'email_enabled';
@@ -75,6 +75,6 @@ export async function PATCH(request: Request) {
     .eq('event_key', body.event_key)
     .eq('recipient_role', body.recipient_role);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

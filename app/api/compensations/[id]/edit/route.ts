@@ -88,7 +88,7 @@ export async function PATCH(
     }
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = editSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -141,7 +141,7 @@ export async function PATCH(
     .eq('id', id);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   const { error: historyError } = await svc

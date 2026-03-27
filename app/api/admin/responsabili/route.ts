@@ -32,7 +32,7 @@ export async function GET() {
     .eq('is_active', true)
     .order('created_at', { ascending: true });
 
-  if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
+  if (pErr) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   if (!profiles || profiles.length === 0) return NextResponse.json({ responsabili: [] });
 
   const userIds = profiles.map((p) => p.user_id);

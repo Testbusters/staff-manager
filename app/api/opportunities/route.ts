@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const {
     titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Fire content notifications
   try {

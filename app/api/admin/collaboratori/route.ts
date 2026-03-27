@@ -130,5 +130,9 @@ export async function GET(request: Request) {
     })
     .sort((a, b) => `${a.cognome} ${a.nome}`.localeCompare(`${b.cognome} ${b.nome}`, 'it'));
 
-  return NextResponse.json({ collaborators: result });
+  // SEC9: strip codice_fiscale from response for non-admin callers (PII — admin-only field)
+  const responseList = profile.role === 'amministrazione'
+    ? result
+    : result.map(({ codice_fiscale: _cf, ...rest }) => rest);
+  return NextResponse.json({ collaborators: responseList });
 }

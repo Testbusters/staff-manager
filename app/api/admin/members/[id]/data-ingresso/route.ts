@@ -23,7 +23,7 @@ export async function PATCH(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
   if (!ADMIN_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
-  const body = await request.json() as { data_ingresso: string | null };
+  const body = await request.json().catch(() => null) as { data_ingresso: string | null };
   const { data_ingresso } = body;
 
   // Validate date format if provided
@@ -43,6 +43,6 @@ export async function PATCH(
     .update({ data_ingresso: data_ingresso ?? null })
     .eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   return NextResponse.json({ updated: true });
 }

@@ -91,7 +91,7 @@ path-specific rules (e.g. a rule that applies only to `e2e/*.spec.ts` files).
 
 **This project uses it for**:
 - `pipeline.md` — the mandatory development pipeline (Phases 0–8.5, R1–R4, cross-cutting rules). Separated from CLAUDE.md because it is long and specialised.
-- `context-review.md` — the Phase 8.5 compliance checklist (C1–C11). Contains specific, verifiable checks executed at the end of every block. Separated from pipeline.md to keep the checklist independently updatable.
+- `context-review.md` — the Phase 8.5 compliance checklist (C1–C12). Contains specific, verifiable checks executed at the end of every block. Separated from pipeline.md to keep the checklist independently updatable.
 
 **When to update**: only when the workflow itself changes — a phase is added, a rule is refined,
 or a process error reveals a gap. Not routine.
@@ -108,8 +108,9 @@ project root; this project uses `.claude/CLAUDE.local.md` (both paths are suppor
 Useful for: temporary suspensions (e.g. "skip Phase 4 and 5 during requirements revision"),
 personal preferences, machine-specific instructions.
 
-**Current content in this project**: Phase 4 (UAT) and Phase 5 (Playwright e2e) are suspended
-during the requirements revision cycle. Remove this file when the revision is complete.
+**Current content in this project**: temporary instructions active for the current work phase
+(e.g. phase suspensions, personal preferences). Read `.claude/CLAUDE.local.md` to see
+what is currently active. Remove or update when the temporary phase ends.
 
 **What belongs here**:
 - Temporary instructions active only during a specific phase of work
@@ -186,7 +187,7 @@ Key settings configured:
 |---|---|
 | Tech stack, RBAC, state machines, known patterns | `CLAUDE.md` |
 | Development pipeline, phase gates, cross-cutting rules | `.claude/rules/pipeline.md` |
-| Phase 8.5 compliance checklist (C1–C11) | `.claude/rules/context-review.md` |
+| Phase 8.5 compliance checklist (C1–C12) | `.claude/rules/context-review.md` |
 | Temporary suspension or personal override | `CLAUDE.local.md` |
 | Tool permission settings | `.claude/settings.local.json` (personal, gitignored) |
 | Current work in progress, session state | `MEMORY.md` → Active plan |

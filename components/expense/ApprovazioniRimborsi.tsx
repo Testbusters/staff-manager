@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Receipt } from 'lucide-react';
+import { Receipt, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,6 +14,16 @@ import StatusBadge from '@/components/compensation/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, type ColumnDef } from '@/components/ui/data-table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type ExpenseRow = Expense & {
   collaborators?: { nome: string; cognome: string } | null;
@@ -65,6 +76,8 @@ export default function ApprovazioniRimborsi({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
+  const [toDelete, setToDelete] = useState<ExpenseRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = expenses
     .filter((e) => filterStato === 'ALL' || e.stato === filterStato)
@@ -97,6 +110,27 @@ export default function ApprovazioniRimborsi({
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id); else next.add(id);
     setSelectedIds(next);
+  }
+
+  async function handleDelete() {
+    if (!toDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/expenses/${toDelete.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? "Errore durante l'eliminazione");
+      } else {
+        toast.success('Rimborso eliminato');
+        setSelectedIds((prev) => { const next = new Set(prev); next.delete(toDelete.id); return next; });
+        router.refresh();
+      }
+    } catch {
+      toast.error('Errore di rete');
+    } finally {
+      setIsDeleting(false);
+      setToDelete(null);
+    }
   }
 
   const columns: ColumnDef<ExpenseRow>[] = [
@@ -151,6 +185,22 @@ export default function ApprovazioniRimborsi({
       header: 'Stato',
       cell: ({ row }) => <StatusBadge stato={row.original.stato} />,
     },
+    {
+      id: 'azioni',
+      header: '',
+      cell: ({ row }) =>
+        row.original.stato === 'IN_ATTESA' ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Elimina rimborso"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={(e) => { e.preventDefault(); setToDelete(row.original); }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : null,
+    },
   ];
 
   async function handleBulkApprove() {
@@ -174,7 +224,34 @@ export default function ApprovazioniRimborsi({
     }
   }
 
+  const deleteCollabName = toDelete?.collaborators
+    ? `${toDelete.collaborators.nome} ${toDelete.collaborators.cognome}`
+    : 'questo collaboratore';
+
   return (
+    <>
+    <AlertDialog open={!!toDelete} onOpenChange={(open) => { if (!open) setToDelete(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Elimina rimborso</AlertDialogTitle>
+          <AlertDialogDescription>
+            Stai per eliminare il rimborso di <strong>{deleteCollabName}</strong>
+            {toDelete?.descrizione ? ` — ${toDelete.descrizione}` : ''}.
+            Questa operazione è irreversibile.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Annulla</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            variant="destructive"
+          >
+            {isDeleting ? 'Eliminazione...' : 'Elimina'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <div className="space-y-6">
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -284,5 +361,6 @@ export default function ApprovazioniRimborsi({
         </Card>
       )}
     </div>
+    </>
   );
 }

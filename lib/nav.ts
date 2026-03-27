@@ -13,7 +13,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Profilo e Documenti',     href: '/profilo',       iconName: 'User' },
     { label: 'Compensi e Rimborsi',     href: '/compensi',      iconName: 'Wallet' },
     { label: 'Ticket',                  href: '/ticket',        iconName: 'LifeBuoy' },
-    { label: 'Corsi',                   href: '#',              iconName: 'GraduationCap', comingSoon: true },
+    { label: 'Corsi',                   href: '/corsi',         iconName: 'GraduationCap' },
     { label: 'Schoolbusters',           href: '#',              iconName: 'School', comingSoon: true },
     { label: 'Eventi',                  href: '/eventi',        iconName: 'CalendarDays' },
     { label: 'Comunicazioni e Risorse', href: '/comunicazioni', iconName: 'Megaphone' },
@@ -26,7 +26,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Ticket',              href: '/ticket',       iconName: 'Ticket' },
   ],
 
-  responsabile_cittadino: [],
+  responsabile_cittadino: [
+    { label: 'Home',                       href: '/',                   iconName: 'Home' },
+    { label: 'Candidatura e Assegnazione', href: '/corsi/assegnazione', iconName: 'GraduationCap' },
+    { label: 'Valutazione Corsi',          href: '/corsi/valutazioni',  iconName: 'Star' },
+    { label: 'Creazione Eventi',           href: '/corsi/eventi-citta', iconName: 'CalendarDays' },
+  ],
 
   responsabile_servizi_individuali: [],
 
@@ -39,6 +44,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Documenti',     href: '/documenti',     iconName: 'Files' },
     { label: 'Ticket',        href: '/ticket',        iconName: 'LifeBuoy' },
     { label: 'Contenuti',     href: '/contenuti',     iconName: 'LayoutGrid' },
+    { label: 'Corsi',         href: '/corsi',         iconName: 'GraduationCap' },
     { label: 'Impostazioni',  href: '/impostazioni',  iconName: 'SlidersHorizontal' },
     { label: 'Feedback',      href: '/feedback',      iconName: 'MessageSquarePlus' },
   ],

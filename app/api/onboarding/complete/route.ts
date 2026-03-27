@@ -26,6 +26,8 @@ const schema = z.object({
   tshirt_size:         z.string().min(1),
   sono_un_figlio_a_carico:   z.boolean(),
   importo_lordo_massimale:   z.number().min(0).max(5000).nullable().optional(),
+  citta:                     z.string().min(1),
+  materie_insegnate:         z.array(z.string().min(1)).min(1),
 });
 
 
@@ -48,10 +50,10 @@ export async function POST(request: Request) {
 
   if (!profile) return NextResponse.json({ error: 'Profilo non trovato' }, { status: 404 });
   if (profile.onboarding_completed) {
-    return NextResponse.json({ error: 'Onboarding già completato' }, { status: 400 });
+    return NextResponse.json({ error: 'Onboarding già completato' }, { status: 409 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -92,6 +94,8 @@ export async function POST(request: Request) {
     tshirt_size:               d.tshirt_size,
     sono_un_figlio_a_carico:   d.sono_un_figlio_a_carico,
     importo_lordo_massimale:   d.importo_lordo_massimale ?? null,
+    citta:                     d.citta,
+    materie_insegnate:         d.materie_insegnate,
   };
 
   if (existingCollab) {

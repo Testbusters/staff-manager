@@ -216,6 +216,7 @@ export interface ContentEvent {
   tipo: EventTipo | null;
   file_url: string | null;
   created_at: string;
+  citta: string | null;
 }
 
 export interface Opportunity {
@@ -298,6 +299,8 @@ export interface Collaborator {
   data_fine_contratto: string | null;
   sono_un_figlio_a_carico: boolean;
   importo_lordo_massimale: number | null;
+  citta: string | null;
+  materie_insegnate: string[] | null;
   figli_dettaglio: Record<string, unknown> | null;
   created_at: string;
 }
@@ -420,4 +423,113 @@ export interface ExpenseHistory {
   role_label: string;
   note: string | null;
   created_at: string;
+}
+
+// ── Corsi ──────────────────────────────────────────────────
+export type CorsoStato = 'programmato' | 'attivo' | 'concluso';
+export type AssegnazioneRuolo = 'docente' | 'cocoda' | 'qa';
+export type CandidaturaTipo = 'docente_lezione' | 'qa_lezione' | 'citta_corso';
+export type CandidaturaStato = 'in_attesa' | 'accettata' | 'ritirata';
+
+export const CORSO_STATO_LABELS: Record<CorsoStato, string> = {
+  programmato: 'Programmato',
+  attivo: 'Attivo',
+  concluso: 'Concluso',
+};
+
+export const ASSEGNAZIONE_RUOLO_LABELS: Record<AssegnazioneRuolo, string> = {
+  docente: 'Docente',
+  cocoda: 'CoCoDà',
+  qa: 'Q&A',
+};
+
+export interface Corso {
+  id: string;
+  nome: string;
+  codice_identificativo: string;
+  community_id: string;
+  modalita: 'online' | 'in_aula';
+  citta: string | null;
+  linea: string | null;
+  responsabile_doc: string | null;
+  licenza_zoom: string | null;
+  data_inizio: string;
+  data_fine: string;
+  max_docenti_per_lezione: number;
+  max_qa_per_lezione: number;
+  link_lw: string | null;
+  link_zoom: string | null;
+  link_telegram_corsisti: string | null;
+  link_qa_assignments: string | null;
+  link_questionari: string | null;
+  link_emergenza: string | null;
+  created_by: string;
+  created_at: string;
+  stato?: CorsoStato;
+}
+
+export interface Lezione {
+  id: string;
+  corso_id: string;
+  data: string;
+  orario_inizio: string;
+  orario_fine: string;
+  ore: number;
+  materia: string;
+  created_at: string;
+}
+
+export interface AllegatoGlobale {
+  id: string;
+  tipo: 'docenza' | 'cocoda';
+  community_id: string;
+  file_url: string;
+  nome_file: string;
+  updated_at: string;
+}
+
+export interface BlacklistEntry {
+  id: string;
+  collaborator_id: string;
+  note: string | null;
+  created_at: string;
+  collaborator?: { username: string | null; nome: string | null; cognome: string | null };
+}
+
+export interface Candidatura {
+  id: string;
+  tipo: CandidaturaTipo;
+  lezione_id: string | null;
+  corso_id: string | null;
+  collaborator_id: string | null;
+  city_user_id: string | null;
+  stato: CandidaturaStato;
+  created_at: string;
+}
+
+export interface Assegnazione {
+  id: string;
+  lezione_id: string;
+  collaborator_id: string;
+  ruolo: AssegnazioneRuolo;
+  valutazione: number | null;
+  created_at: string;
+}
+
+// ── Liquidazione Request ─────────────────────────────────────
+export type LiquidazioneRequestStato = 'in_attesa' | 'accettata' | 'annullata';
+
+export interface LiquidazioneRequest {
+  id: string;
+  collaborator_id: string;
+  compensation_ids: string[];
+  expense_ids: string[];
+  importo_netto_totale: number;
+  iban: string;
+  ha_partita_iva: boolean;
+  stato: LiquidazioneRequestStato;
+  note_admin: string | null;
+  created_at: string;
+  processed_at: string | null;
+  processed_by: string | null;
 }

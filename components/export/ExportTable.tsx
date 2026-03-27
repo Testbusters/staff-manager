@@ -32,7 +32,7 @@ export default function ExportPreviewTable({ rows }: Props) {
   return (
     <Card>
       <CardContent className="overflow-hidden p-0">
-        <Table className="text-sm">
+        <Table className="text-sm w-auto">
           <TableHeader>
             <TableRow className="border-border">
               <TableHead className="px-4 py-3 text-xs text-muted-foreground font-medium">Email</TableHead>

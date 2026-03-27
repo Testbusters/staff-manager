@@ -21,6 +21,7 @@
 | [Document](#document) | `documents`, `contract_templates` | `docs/contracts/document-fields.md` | DA_FIRMARE → FIRMATO \| NON_RICHIESTO |
 | [Ticket](#ticket) | `tickets` | `docs/contracts/ticket-fields.md` | APERTO → IN_LAVORAZIONE → CHIUSO |
 | [Content (5 types)](#content) | `communications`, `events`, `resources`, `opportunities`, `discounts` | `docs/contracts/content-fields.md` | publish / expiry only |
+| [Corsi](#corsi) | `corsi`, `lezioni`, `assegnazioni`, `candidature`, `blacklist`, `allegati_globali` | `docs/contracts/corsi-fields.md` | stato: programmato/attivo/concluso (computed) |
 
 ---
 
@@ -45,15 +46,15 @@
 **Tables**: `compensations`, `compensation_competenze`
 **Contract**: `docs/contracts/compensation-fields.md`
 
-| Role | Create | Read | Edit | Approve | Liquidate |
-|---|---|---|---|---|---|
-| `collaboratore` | ❌ | Own only | ❌ | ❌ | ❌ |
-| `responsabile_compensi` | ✅ | Community members | ❌ (post-create) | ❌ | ❌ |
-| `amministrazione` | ✅ | All | ✅ | ✅ | ✅ |
+| Role | Create | Read | Edit | Approve | Reject | Liquidate |
+|---|---|---|---|---|---|---|
+| `collaboratore` | ❌ | Own only | ❌ | ❌ | ❌ | ❌ |
+| `responsabile_compensi` | ✅ | Community members | ❌ (post-create) | ❌ | ✅* (rejection_note required) | ❌ |
+| `amministrazione` | ✅ | All | ✅ | ✅ | ✅ | ✅ |
 
 **State machine**: `IN_ATTESA → APPROVATO → LIQUIDATO`, `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`
 **Notification triggers**: creation (E3), approval (E4), rejection (E5), liquidation (E6)
-**Key surfaces**: `/coda-lavoro` (admin), `/compensi` (collab), `/compensi-rimborsi` (resp), `/import` (GSheet)
+**Key surfaces**: `/coda` (admin), `/compensi` (collab), `/approvazioni` (resp), `/import` (GSheet)
 **Notes**: `community_id` always null (since migration 030). `competenza` FK → `compensation_competenze.key`. Massimale check on approve.
 
 ---
@@ -71,7 +72,7 @@
 
 **State machine**: identical to Compensation
 **Notification triggers**: creation (E3b), approval (E4b), rejection (E5b), liquidation (E6b)
-**Key surfaces**: `/coda-lavoro` (admin), `/rimborsi` (collab), `/compensi-rimborsi` (resp)
+**Key surfaces**: `/coda` (admin), `/rimborsi` (collab), `/approvazioni` (resp)
 **Notes**: file attachments stored in `file_urls[]`. Rejection requires `rejection_note`.
 
 ---
@@ -127,3 +128,22 @@
 **Notification triggers**: E10 (comunicazione), E11 (evento), E12 (contenuto by gender)
 **Key surfaces**: `/contenuti` (all roles, filtered by type tab)
 **Notes**: Tiptap 3 editor (always `immediatelyRender: false`). Expiry logic on events/discounts/opportunities.
+
+---
+
+## Corsi
+
+**Tables**: `corsi`, `lezioni`, `assegnazioni`, `candidature`, `blacklist`, `allegati_globali`
+**Contract**: `docs/contracts/corsi-fields.md`
+
+| Role | Corsi (read) | Corsi (create/edit/delete) | Lezioni (write) | Blacklist | Allegati globali |
+|---|---|---|---|---|---|
+| `collaboratore` | ✅ (own assignments — corsi-2) | ❌ | ❌ | ❌ | ❌ |
+| `responsabile_cittadino` | ✅ (own community — corsi-3) | ❌ | ❌ | ✅ (view) | ✅ (view) |
+| `responsabile_compensi` | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `amministrazione` | ✅ (all) | ✅ | ✅ | ✅ (full) | ✅ (full) |
+
+**Stato**: computed from `data_inizio`/`data_fine` via `getCorsoStato()` — no physical column.
+**Notification triggers**: none in corsi-1 (corsi-4)
+**Key surfaces**: `/corsi` (admin list), `/corsi/nuovo` (create), `/corsi/[id]` (detail tabs), `/impostazioni?tab=blacklist`, `/impostazioni?tab=allegati_corsi`
+**Notes**: `lezioni.ore` is a GENERATED ALWAYS AS column (computed from orario_inizio/orario_fine). `candidature` requires exactly one of `lezione_id` or `corso_id`. `blacklist` enforces UNIQUE on `collaborator_id`. `allegati_globali` enforces UNIQUE on `(tipo, community_id)` — use UPSERT for updates.

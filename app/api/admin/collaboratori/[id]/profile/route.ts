@@ -26,6 +26,9 @@ const patchSchema = z.object({
   importo_lordo_massimale: z.number().min(1).max(5000).nullable().optional(),
   // Admin-only payment field — stripped for responsabile_compensi below
   intestatario_pagamento: z.string().max(100).nullable().optional(),
+  // Admin-only profile enrichment fields
+  citta:             z.string().min(1).optional(),
+  materie_insegnate: z.array(z.string().min(1)).min(1).optional(),
 });
 
 export async function PATCH(
@@ -78,17 +81,19 @@ export async function PATCH(
     }
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const { username, intestatario_pagamento, ...profileFields } = parsed.data;
-  // intestatario_pagamento is admin-only — same restriction as IBAN
+  const { username, intestatario_pagamento, citta, materie_insegnate, ...profileFields } = parsed.data;
+  // Admin-only fields — stripped for responsabile_compensi
   const adminOnly: Record<string, unknown> = {};
-  if (caller.role === 'amministrazione' && intestatario_pagamento !== undefined) {
-    adminOnly.intestatario_pagamento = intestatario_pagamento;
+  if (caller.role === 'amministrazione') {
+    if (intestatario_pagamento !== undefined) adminOnly.intestatario_pagamento = intestatario_pagamento;
+    if (citta !== undefined) adminOnly.citta = citta;
+    if (materie_insegnate !== undefined) adminOnly.materie_insegnate = materie_insegnate;
   }
 
   // Username uniqueness check (if provided)
@@ -117,7 +122,7 @@ export async function PATCH(
     .update(update)
     .eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

@@ -179,7 +179,7 @@ export async function POST() {
     .select('id');
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   // Insert history entries

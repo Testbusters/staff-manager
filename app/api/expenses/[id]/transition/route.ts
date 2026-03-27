@@ -60,7 +60,7 @@ export async function POST(
     return NextResponse.json({ error: 'Rimborso non trovato' }, { status: 404 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = transitionSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
@@ -138,7 +138,7 @@ export async function POST(
     .eq('id', id);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
   }
 
   // Update approved_lordo_ytd counter on approve

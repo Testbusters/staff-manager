@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: Request) {
   let body: { message?: string; stack?: string; url?: string };
   try {
-    body = await request.json();
+    body = await request.json().catch(() => null);
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }

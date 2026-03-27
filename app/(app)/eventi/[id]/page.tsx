@@ -95,16 +95,23 @@ export default async function EventDetailPage({
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <Link href="/eventi" className="text-sm text-muted-foreground hover:text-foreground transition block mb-2">
+      <Link href="/eventi" className="text-sm text-link hover:text-link/80 transition block mb-2">
         ← Torna agli eventi
       </Link>
 
       <div className="space-y-3">
-        {event.tipo && (
-          <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[event.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
-            {TIPO_LABELS[event.tipo as EventTipo] ?? event.tipo}
-          </span>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {event.tipo && (
+            <span className={`inline-block rounded-full border px-3 py-0.5 text-xs font-medium ${TIPO_COLORS[event.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
+              {TIPO_LABELS[event.tipo as EventTipo] ?? event.tipo}
+            </span>
+          )}
+          {event.citta && (
+            <span className="inline-block rounded-full border border-border bg-muted px-3 py-0.5 text-xs font-medium text-muted-foreground">
+              📍 {event.citta}
+            </span>
+          )}
+        </div>
         <h1 className="text-2xl font-semibold text-foreground">{event.titolo}</h1>
       </div>
 
@@ -164,7 +171,7 @@ export default async function EventDetailPage({
             href={gcalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-2 text-sm text-foreground transition"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted hover:bg-accent px-4 py-3 text-sm text-foreground transition"
           >
             <CalendarDays className="h-3.5 w-3.5 shrink-0" />Aggiungi a Google Calendar
           </a>

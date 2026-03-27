@@ -428,3 +428,119 @@ export function emailNuovoTicket(p: {
     html: layout(body),
   };
 }
+
+// ── E13 — Assegnazione corso (docente / Q&A / CoCoD'à) ────────
+export function emailAssegnazioneCorsi(p: {
+  nome: string;
+  corso: string;
+  ruolo: string;
+  link?: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`Sei stato assegnato come <strong>${p.ruolo}</strong> per il seguente corso.`)}
+    ${highlight([
+      { label: 'Corso', value: p.corso },
+      { label: 'Ruolo', value: p.ruolo },
+    ])}
+    ${bodyText('Accedi all\'app per consultare i dettagli del corso e le lezioni in programma.')}
+    ${ctaButton('Vai ai corsi', p.link ?? `${APP_URL}/corsi`)}
+  `;
+  return {
+    subject: `Sei stato assegnato come ${p.ruolo} — ${p.corso}`,
+    html: layout(body),
+  };
+}
+
+// ── E14 — Reminder lezione (24h prima) ────────────────────────
+export function emailReminderLezione(p: {
+  nome: string;
+  corso: string;
+  lezione_data: string;
+  orario: string;
+  materia: string;
+  ruolo: string;
+  link?: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`Ricordati che domani hai una lezione programmata come <strong>${p.ruolo}</strong>.`)}
+    ${highlight([
+      { label: 'Corso', value: p.corso },
+      { label: 'Materia', value: p.materia },
+      { label: 'Data', value: p.lezione_data },
+      { label: 'Orario', value: p.orario },
+      { label: 'Ruolo', value: p.ruolo },
+    ])}
+    ${bodyText('Accedi all\'app per consultare i materiali e i dettagli della lezione.')}
+    ${ctaButton('Vai ai corsi', p.link ?? `${APP_URL}/corsi`)}
+  `;
+  return {
+    subject: `Reminder: lezione domani — ${p.corso} (${p.materia})`,
+    html: layout(body),
+  };
+}
+
+// ── E15 — Richiesta liquidazione (→ admin) ────────────────────
+export function emailRichiestaLiquidazione(p: {
+  nomeAdmin: string;
+  nomeCollab: string;
+  importoNetto: number;
+  iban: string;
+  haPartitaIva: boolean;
+  nRecord: number;
+}): { subject: string; html: string } {
+  const maskedIban = p.iban.length > 8
+    ? p.iban.slice(0, 4) + '****' + p.iban.slice(-4)
+    : p.iban;
+  const body = `
+    ${greeting(p.nomeAdmin)}
+    ${bodyText(`Il collaboratore <strong>${p.nomeCollab}</strong> ha inviato una richiesta di liquidazione.`)}
+    ${highlight([
+      { label: 'Collaboratore', value: p.nomeCollab },
+      { label: 'Importo netto', value: `€${p.importoNetto.toFixed(2)}` },
+      { label: 'Record selezionati', value: String(p.nRecord) },
+      { label: 'IBAN', value: maskedIban },
+      { label: 'Partita IVA', value: p.haPartitaIva ? 'Sì' : 'No' },
+    ])}
+    ${bodyText('Accedi alla coda lavoro per accettare o rifiutare la richiesta.')}
+    ${ctaButton('Vai alla coda lavoro', `${APP_URL}/coda?tab=liquidazioni`)}
+  `;
+  return {
+    subject: `Richiesta di liquidazione — ${p.nomeCollab}`,
+    html: layout(body),
+  };
+}
+
+// ── E16 — Esito richiesta liquidazione (→ collab) ─────────────
+export function emailEsitoLiquidazione(p: {
+  nomeCollab: string;
+  esito: 'accettata' | 'annullata';
+  importoNetto: number;
+  nota?: string | null;
+}): { subject: string; html: string } {
+  const esitoLabel = p.esito === 'accettata' ? 'accettata' : 'annullata';
+  const message = p.esito === 'accettata'
+    ? `La tua richiesta di liquidazione di <strong>€${p.importoNetto.toFixed(2)}</strong> è stata <strong>accettata</strong>. I compensi e i rimborsi selezionati sono stati contrassegnati come liquidati.`
+    : `La tua richiesta di liquidazione di <strong>€${p.importoNetto.toFixed(2)}</strong> è stata <strong>annullata</strong>.`;
+
+  const highlightRows: { label: string; value: string }[] = [
+    { label: 'Importo netto', value: `€${p.importoNetto.toFixed(2)}` },
+    { label: 'Esito', value: p.esito === 'accettata' ? 'Accettata' : 'Annullata' },
+  ];
+  if (p.nota) highlightRows.push({ label: 'Nota', value: p.nota });
+
+  const body = `
+    ${greeting(p.nomeCollab)}
+    ${bodyText(message)}
+    ${highlight(highlightRows)}
+    ${bodyText('Accedi all\'app per consultare lo stato dei tuoi compensi e rimborsi.')}
+    ${ctaButton('Vai ai compensi', `${APP_URL}/compensi`)}
+  `;
+  return {
+    subject: p.esito === 'accettata'
+      ? 'La tua richiesta di liquidazione è stata accettata'
+      : 'La tua richiesta di liquidazione è stata annullata',
+    html: layout(body),
+  };
+}

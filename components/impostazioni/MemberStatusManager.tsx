@@ -237,7 +237,7 @@ export default function MemberStatusManager() {
           </div>
         ) : (
           <div className="overflow-hidden">
-            <table className="w-auto text-sm">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="px-5 py-2.5 text-left font-medium w-[180px]">Nome</th>
@@ -431,7 +431,7 @@ export default function MemberStatusManager() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPendingStatus(null)}>Annulla</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 text-white"
+              variant="destructive"
               onClick={confirmDowngrade}
             >
               Conferma

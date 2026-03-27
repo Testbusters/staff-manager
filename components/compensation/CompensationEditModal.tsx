@@ -37,7 +37,8 @@ export default function CompensationEditModal({
   const [info_specifiche, setInfoSpecifiche] = useState('');
 
   // Withholding rate derived from original compensation (immutable during edit)
-  const [rateDecimal, setRateDecimal] = useState(0.20);
+  // Do NOT default to 0.20 — that's TB-specific. Start at 0 until derived from stored data.
+  const [rateDecimal, setRateDecimal] = useState(0);
 
   const [competenze, setCompetenze] = useState<Competenza[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,7 +54,7 @@ export default function CompensationEditModal({
       // Derive rate from original values
       const lordo = compensation.importo_lordo ?? 0;
       const ritenuta = compensation.ritenuta_acconto ?? 0;
-      setRateDecimal(lordo > 0 ? ritenuta / lordo : 0.20);
+      setRateDecimal(lordo > 0 ? ritenuta / lordo : 0);
     }
   }, [open, compensation]);
 
@@ -75,7 +76,7 @@ export default function CompensationEditModal({
     setNomeServizioRuolo('');
     setCompetenza('');
     setInfoSpecifiche('');
-    setRateDecimal(0.20);
+    setRateDecimal(0);
     onClose();
   }
 

@@ -28,7 +28,7 @@ export async function GET() {
     .order('event_group')
     .order('key');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ templates: data });
 }

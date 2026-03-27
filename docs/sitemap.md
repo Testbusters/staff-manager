@@ -1,6 +1,6 @@
 # Sitemap — Staff Manager
 
-Last updated: 2026-03-13
+Last updated: 2026-03-22
 
 Columns: **Route** | **Page file** | **Roles** | **Layout** | **Componenti chiave** | **loading.tsx** | **Access notes** | **Audit**
 
@@ -29,7 +29,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 
 | Role | Email | Password | Notes |
 |---|---|---|---|
-| collaboratore | collaboratore_test@test.com | Testbusters123 | collab_id 99f6c44c-... — smoke tests |
+| collaboratore | collaboratore_tb_test@test.com | Testbusters123 | staging smoke tests (TB community). Production: collaboratore_test@test.com |
 | responsabile_compensi | responsabile_compensi_test@test.com | Testbusters123 | smoke tests |
 | amministrazione | admin_test@test.com | Testbusters123 | smoke tests |
 
@@ -118,7 +118,13 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/collaboratori/[id]` | `app/(app)/collaboratori/[id]/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, Avatar | ✅ | Profile detail + edit + document history | `UI` `UX` |
 | `/export` | `app/(app)/export/page.tsx` | admin | `tabs` | Tabs, Form, Table (preview + history) | ✅ | CSV/XLSX export of compensations and reimbursements | `UI` `UX` |
 | `/import` | `app/(app)/import/page.tsx` | admin | `import-panel` | Tabs, Table (preview), Dialog, EmptyState | ✅ | Bulk import UI for collaboratori, contratti, CU | `UI` `UX` |
-| `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch | ✅ | Community config, notification settings, contract templates, email template management, community banners | `UI` `UX` |
+| `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch, BlacklistManager, AllegatiCorsiManager | ✅ | Community config, notification settings, contract templates, email template management, community banners, blacklist management, allegati corsi | `UI` `UX` |
+| `/corsi` | `app/(app)/corsi/page.tsx` | admin + resp.cittadino + collab | `full-list` | Table, Badge, EmptyState, CorsiFilterBar, CorsiPageCollab, CorsiCalendario | ✅ | Admin: full list with filters. Resp.cittadino: redirect → /corsi/assegnazione. Collab: 3-section view (I miei corsi / Docenza / Q&A) + monthly calendar; city filter for in_aula docenza. | `UI` `R` `UX` |
+| `/corsi/assegnazione` | `app/(app)/corsi/assegnazione/page.tsx` | resp.cittadino | `full-list` | AssegnazioneRespCittPage, Select, Badge, Button, AlertDialog | ✅ | Two sections: corsi senza città (candidatura citta_corso) + I miei corsi (accordion with CoCoD'à panel per corso; Select collab + Assegna; Rimuovi on existing; Export CSV button per corso; ⚠ blacklist in dropdown). | `UI` `R` `UX` |
+| `/corsi/valutazioni` | `app/(app)/corsi/valutazioni/page.tsx` | resp.cittadino | `full-list` | ValutazioniRespCittPage, Input, Button, Badge | ✅ | Per-corso, per-collaboratore×corso valutazione (1–10) input. Bulk update via PATCH /api/corsi/[id]/valutazioni. | `UI` `R` `UX` |
+| `/corsi/eventi-citta` | `app/(app)/corsi/eventi-citta/page.tsx` | resp.cittadino | `full-list` | EventiCittaPage, Table, Dialog, AlertDialog, RichTextEditor | ✅ | Create/edit/delete city-scoped events. citta auto-set from resp.citt profile. Ownership enforced on PATCH/DELETE. | `UI` `R` `UX` |
+| `/corsi/nuovo` | `app/(app)/corsi/nuovo/page.tsx` | admin | `form` | CorsoForm, Select, Input, Button | ✅ | Create new corso. Admin-only. | `UI` `UX` |
+| `/corsi/[id]` | `app/(app)/corsi/[id]/page.tsx` | admin + resp.cittadino + collab | `tabs` | Tabs, CorsoForm, LezioniTab, CandidatureCittaTab, LezioniTabCollab, LezioniTabRespCitt | ✅ | Admin: 3 tabs (Dettaglio/Lezioni/Candidature città). Resp.citt: lezioni + candidature with Accetta/Rifiuta/Revoca; capacity badges; blacklist badge + Q&A metadata (materie/città/qaSvolti). Collab: lezioni list + candidatura actions + allegati. | `UI` `R` `UX` |
 | `/monitoraggio` | `app/(app)/monitoraggio/page.tsx` | admin | `tabs` | Tabs, Badge, Table, auto-refresh | ✅ | System monitoring: access logs, emails, DB performance, app errors | `UI` `UX` |
 | `/feedback` | `app/(app)/feedback/page.tsx` | admin | `full-list` | Table, EmptyState | ✅ | User feedback/suggestions | `UI` `UX` |
 
@@ -142,11 +148,15 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | Documenti | — | ✅ (read) | ✅ |
 | Export | — | — | ✅ |
 | Contenuti | — | ✅ (read) | ✅ |
+| Corsi | ✅ (corsi-2) | — | ✅ |
+| Candidatura e Assegnazione | — | ✅ (resp.citt) | — |
+| Valutazione Corsi | — | ✅ (resp.citt) | — |
 | Impostazioni | — | — | ✅ |
 | Monitoraggio | — | — | ✅ |
 | Feedback | — | — | ✅ |
 
-> `responsabile_cittadino` and `responsabile_servizi_individuali` have no nav items defined yet.
+> `responsabile_cittadino` nav defined in corsi-1 (4 items: Home, Candidatura e Assegnazione, Valutazione Corsi, Creazione Eventi). Corsi pages implemented in corsi-3. Creazione eventi page implemented in eventi-citta block.
+> `responsabile_servizi_individuali` has no nav items defined yet.
 
 ---
 
@@ -194,9 +204,9 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Responsive notes**: Filter bar (community + state selects) and table should stack on mobile. Action buttons per row should remain tappable.
 
 ### `/coda`
-- **Tabs / states**: 2 tabs — Compensi · Rimborsi. Stats strip at top shows aggregate counts. Each tab: sub-filters (community, state), date sort, bulk approve + bulk liquidate, footer totals. Bulk actions open a confirmation Dialog (with MassimaleCheckModal for over-massimale cases).
-- **Key interactions**: Admin — bulk approve all IN_ATTESA, bulk liquidate all APPROVATO, individual approve/reject/liquidate per row.
-- **Empty states**: Both tabs use EmptyState when queue is empty.
+- **Tabs / states**: 3 tabs — Compensi · Rimborsi · Liquidazioni. Stats strip at top shows aggregate counts. Compensi/Rimborsi tabs: sub-filters (community, state), date sort, bulk approve + bulk liquidate, footer totals. Bulk actions open a confirmation Dialog (with MassimaleCheckModal for over-massimale cases). Liquidazioni tab: CodaLiquidazioni table (collabName, importo netto, masked IBAN, P.IVA, record count, date) with Accetta (AlertDialog) / Rifiuta (Dialog + note) per row.
+- **Key interactions**: Admin — bulk approve all IN_ATTESA, bulk liquidate all APPROVATO, individual approve/reject/liquidate per row; accept/reject liquidazione requests per row.
+- **Empty states**: All tabs use EmptyState when queue is empty.
 - **Responsive notes**: Stats strip is multi-column — stack on mobile. Bulk action buttons and per-row actions must remain accessible. Footer totals row should not be hidden by overflow.
 
 ### `/collaboratori/[id]`
@@ -234,6 +244,12 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Key interactions**: Collab — view status, reopen if RIFIUTATO. Admin — approve/reject/liquidate with optional rejection note Dialog.
 - **Empty states**: Timeline section uses EmptyState when no history entries exist yet.
 - **Responsive notes**: Detail card fields and timeline should stack cleanly in a single column on mobile.
+
+### `/corsi/[id]`
+- **Tabs / states**: 3 URL-driven tabs (`?tab=dettaglio|lezioni|candidature`). Dettaglio: CorsoForm in edit mode. Lezioni: table + Sheet (add/edit) + AlertDialog (delete). Candidature città: only shown when `corso.citta = null`; manual city assignment via Select.
+- **Key interactions**: Admin — edit corso metadata, add/edit/delete lezioni, assign città from candidature. Resp.cittadino — read-only in corsi-1 (full access in corsi-3).
+- **Empty states**: Lezioni tab uses EmptyState when no lezioni exist yet. Candidature città shows empty state when no candidature submitted yet.
+- **Responsive notes**: Admin-only route — desktop usage only.
 
 ### `/opportunita`
 - **Tabs / states**: 2 tabs — Opportunità · Sconti (two content types rendered in one page for collab). Each tab: card feed with EmptyState.

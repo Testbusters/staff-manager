@@ -47,7 +47,7 @@ export async function proxy(request: NextRequest) {
     : request.nextUrl.origin;
 
   const isHealthCheck = path === '/api/health';
-  const isPublicApiRoute = path.startsWith('/api/webhooks/');
+  const isPublicApiRoute = path.startsWith('/api/webhooks/') || path.startsWith('/api/jobs/');
 
   if (!user) {
     if (!isLoginPage && !isAuthRoute && !isHealthCheck && !isPublicApiRoute) {

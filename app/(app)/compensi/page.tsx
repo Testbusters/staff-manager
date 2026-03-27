@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import PaymentOverview from '@/components/compensation/PaymentOverview';
 import CompenseTabs from '@/components/compensation/CompenseTabs';
 import TicketQuickModal from '@/components/ticket/TicketQuickModal';
+import LiquidazioneRequestBanner from '@/components/compensi/LiquidazioneRequestBanner';
 import { Button } from '@/components/ui/button';
-import type { Role } from '@/lib/types';
+import type { Role, LiquidazioneRequest } from '@/lib/types';
 
 type CompYearBreakdown = { year: number; netto: number; lordo: number };
 type ExpYearBreakdown  = { year: number; total: number };
@@ -90,6 +91,9 @@ export default async function CompensiPage() {
     { data: allExpenses },
     { data: expenses },
     { data: collabRecord },
+    { data: approvedComps },
+    { data: approvedExps },
+    { data: activeRequest },
   ] = await Promise.all([
     supabase
       .from('compensations')
@@ -107,9 +111,24 @@ export default async function CompensiPage() {
       .order('created_at', { ascending: false }),
     supabase
       .from('collaborators')
-      .select('importo_lordo_massimale')
+      .select('id, iban, importo_lordo_massimale')
       .eq('user_id', user.id)
       .single(),
+    supabase
+      .from('compensations')
+      .select('id, nome_servizio_ruolo, importo_netto')
+      .eq('stato', 'APPROVATO')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('expense_reimbursements')
+      .select('id, categoria, importo')
+      .eq('stato', 'APPROVATO')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('liquidazione_requests')
+      .select('*')
+      .eq('stato', 'in_attesa')
+      .maybeSingle(),
   ]);
 
   const {
@@ -126,6 +145,7 @@ export default async function CompensiPage() {
   } = groupExpByYear(allExpenses ?? []);
 
   const massimale = collabRecord?.importo_lordo_massimale ?? null;
+  const iban = collabRecord?.iban ?? null;
 
   // Lordo liquidato nell'anno corrente — usato per la barra massimale
   const paidCurrentYear = compensPaidByYear.find((y) => y.year === currentYear)?.lordo ?? 0;
@@ -146,6 +166,13 @@ export default async function CompensiPage() {
           <TicketQuickModal />
         </div>
       </div>
+
+      <LiquidazioneRequestBanner
+        approvedCompensations={(approvedComps ?? []) as { id: string; nome_servizio_ruolo: string; importo_netto: number }[]}
+        approvedExpenses={(approvedExps ?? []) as { id: string; categoria: string; importo: number }[]}
+        activeRequest={(activeRequest as LiquidazioneRequest | null) ?? null}
+        iban={iban}
+      />
 
       <PaymentOverview
         compensPaidByYear={compensPaidByYear}

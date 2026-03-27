@@ -28,7 +28,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Accesso non autorizzato' }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const { stato } = body as { stato: TicketStatus };
 
   if (!stato || !VALID_STATI.includes(stato)) {
@@ -47,7 +47,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Notify ticket creator (collaboratore) of stato change
   if (ticket?.creator_user_id) {

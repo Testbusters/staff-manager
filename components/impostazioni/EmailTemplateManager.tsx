@@ -5,8 +5,8 @@ import { toast } from 'sonner';
 import { Settings, Plus, Trash2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/ui/empty-state';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 import EmailLayoutEditor from './EmailLayoutEditor';
 import type { EmailTemplateRow, EmailLayoutConfig } from '@/lib/email-template-service';
 import { buildPreviewHtml } from '@/lib/email-template-service';
@@ -272,10 +272,9 @@ export default function EmailTemplateManager({ initialTemplates, initialLayout }
             {/* Body before */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Testo prima del riquadro</label>
-              <Textarea
+              <RichTextEditor
                 value={editingTemplate.body_before}
-                onChange={(e) => setField('body_before', e.target.value)}
-                rows={3}
+                onChange={(html) => setField('body_before', html)}
                 placeholder="Testo introduttivo..."
               />
             </div>
@@ -326,10 +325,9 @@ export default function EmailTemplateManager({ initialTemplates, initialLayout }
             {/* Body after */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Testo dopo il riquadro</label>
-              <Textarea
+              <RichTextEditor
                 value={editingTemplate.body_after}
-                onChange={(e) => setField('body_after', e.target.value)}
-                rows={3}
+                onChange={(html) => setField('body_after', html)}
                 placeholder="Testo conclusivo..."
               />
             </div>

@@ -29,7 +29,7 @@ export async function PATCH(
   const auth = await authorizeAdmin(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const {
     titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
@@ -69,7 +69,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({ opportunity: data });
 }
@@ -93,7 +93,7 @@ export async function DELETE(
     .delete()
     .eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   return NextResponse.json({}, { status: 204 });
 }

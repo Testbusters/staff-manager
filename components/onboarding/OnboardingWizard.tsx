@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
@@ -32,10 +32,13 @@ type PrefillData = {
   sono_un_figlio_a_carico: boolean;
 } | null;
 
+type LookupOption = { id: string; nome: string };
+
 interface Props {
   prefill: PrefillData;
   tipoContratto: ContractTemplateType | null;
   tipoLabel: string | null;
+  community: string;
 }
 
 const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -45,7 +48,7 @@ const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 
 const sectionTitle = 'text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 mt-1';
 
-export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: Props) {
+export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, community }: Props) {
   const router = useRouter();
 
   // Step 1 — dati anagrafici
@@ -65,6 +68,20 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
   const [tshirt, setTshirt]                   = useState(prefill?.tshirt_size ?? '');
   const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
 
+  // Activity — città + materie
+  const [citta, setCitta]                   = useState('');
+  const [materieInsegnate, setMaterieInsegnate] = useState<string[]>([]);
+  const [cittaOptions, setCittaOptions]     = useState<LookupOption[]>([]);
+  const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
+
+  useEffect(() => {
+    const comm = community || 'testbusters';
+    fetch(`/api/lookup-options?type=citta&community=${comm}`)
+      .then((r) => r.json()).then((d) => setCittaOptions(d.options ?? [])).catch(() => {});
+    fetch(`/api/lookup-options?type=materia&community=${comm}`)
+      .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
+  }, [community]);
+
   // Username preview (readonly — shows pre-set or computed from nome+cognome)
   const previewUsername = prefill?.username ?? generateUsername(nome, cognome);
 
@@ -80,7 +97,8 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
     nome.trim() && cognome.trim() && codiceFiscale.trim() &&
     dataNascita && luogoNascita.trim() && provinciaNascita.trim() &&
     comune.trim() && provinciaRes.trim() && indirizzo.trim() && civico.trim() &&
-    telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt;
+    telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt &&
+    citta && materieInsegnate.length > 0;
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
@@ -102,8 +120,10 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
         telefono:            telefono.trim(),
         iban:                iban.trim().toUpperCase().replace(/\s/g, ''),
         intestatario_pagamento: intestatarioPagamento.trim(),
-        tshirt_size:         tshirt,
+        tshirt_size:             tshirt,
         sono_un_figlio_a_carico: sonoFiglio,
+        citta,
+        materie_insegnate:       materieInsegnate,
       }),
     });
 
@@ -421,6 +441,54 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel }: 
                   <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
                 </label>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Attività */}
+        <div>
+          <p className={sectionTitle}>Attività</p>
+          <div className="space-y-3">
+            <div>
+              <label className={labelCls}>Città <span className="text-destructive">*</span></label>
+              <Select value={citta || undefined} onValueChange={setCitta}>
+                <SelectTrigger><SelectValue placeholder="— Seleziona città —" /></SelectTrigger>
+                <SelectContent>
+                  {cittaOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className={labelCls}>Materie insegnate <span className="text-destructive">*</span></label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {materiaOptions.map((opt) => {
+                  const active = materieInsegnate.includes(opt.nome);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() =>
+                        setMaterieInsegnate((prev) =>
+                          active ? prev.filter((m) => m !== opt.nome) : [...prev, opt.nome],
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                        active
+                          ? 'bg-brand text-white border-brand'
+                          : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                      }`}
+                    >
+                      {opt.nome}
+                    </button>
+                  );
+                })}
+              </div>
+              {materieInsegnate.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">Seleziona almeno una materia.</p>
+              )}
             </div>
           </div>
         </div>

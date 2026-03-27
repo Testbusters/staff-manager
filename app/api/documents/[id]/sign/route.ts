@@ -34,7 +34,7 @@ export async function POST(
 
   if (fetchError || !doc) return NextResponse.json({ error: 'Documento non trovato' }, { status: 404 });
   if (doc.stato_firma !== 'DA_FIRMARE') {
-    return NextResponse.json({ error: 'Il documento non è in stato DA_FIRMARE' }, { status: 400 });
+    return NextResponse.json({ error: 'Il documento non è in stato DA_FIRMARE' }, { status: 409 });
   }
 
   const formData = await request.formData();
@@ -76,7 +76,7 @@ export async function POST(
     })
     .eq('id', id);
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
   // Notify admins (settings-driven)
   const settings = await getNotificationSettings(serviceClient);
