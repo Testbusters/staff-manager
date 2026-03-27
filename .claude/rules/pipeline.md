@@ -161,13 +161,15 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 
 7. **STOP — present wireframe + HTML preview + UX rationale + component map + Design Quality Gate checklist. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. Switch back to Sonnet (`/model sonnet`) only after the user confirms. The approved output is the implementation contract — Phase 2 must match it.**
 
-**Plan lock + context reset** *(after Phase 1 or 1.5 STOP gate is confirmed — mandatory before every Phase 2)*
-- Use `EnterPlanMode` to present the complete approved plan in structured, locked form. Call `ExitPlanMode` after confirmation.
+**Plan lock + context reset** *(after Phase 1, 1.5, or 1.6 STOP gate is confirmed — mandatory before every Phase 2)*
+- **Pre-compact check**: verify the session file (`.claude/session/block-[name].md`) is up to date with all decisions made — scope from Phase 1, architectural contract from Phase 1.5 (if run), design contract from Phase 1.6 (if run). Update it now if any decision is missing. This file is the only persistent state that survives `/compact`.
+- Use `EnterPlanMode` to present the complete approved plan in structured, locked form. The plan must reference: file list (Phase 1), architectural decisions (Phase 1.5 if run — see session file), design contract (Phase 1.6 if run — see session file). Call `ExitPlanMode` after confirmation.
 - Run `/compact` immediately to reset context and preserve enough window for the full Phase 2 implementation.
 - Phase 2 begins only after `/compact` completes.
 
 **Phase 2 — Implementation**
-- **First action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
+- **First action — restore design contracts**: re-read the session file (`.claude/session/block-[name].md`) to restore the architectural contract (Phase 1.5) and design contract (Phase 1.6) into context. `/compact` clears the conversation context — the session file is the only source for approved design decisions. Skip if no Phase 1.5/1.6 contracts were saved.
+- **Second action**: update `docs/requirements.md` with the approved plan for the current block (add or update the relevant section with the feature summary and scope as confirmed in Phase 1/1.5). This persists the approved spec before any code is written.
 - Write the code. Follow the project's Coding Conventions.
 - **UI components** — follow `CLAUDE.md § "UI Design System — MANDATORY RULES"` and `CLAUDE.md § "Known Patterns"` before writing any UI code. Key: shadcn components only (no native HTML elements), semantic tokens only, `loading.tsx` for new routes, `aria-label` on icon-only buttons, `iconName: string` in nav data.
 - Do not add unrequested features. No unrequested refactoring.
