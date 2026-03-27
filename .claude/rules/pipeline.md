@@ -243,16 +243,6 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - Run `npx vitest run __tests__/api/<new-test-file>.test.ts` first (scope to the new file), then `npx vitest run` to confirm the full suite is green.
 - Output: summary line only. Do not proceed with open errors.
 
-**Phase 3c — HTTP integration tests (Bruno CLI)** *(only if the block modifies `proxy.ts`, auth flow, or introduces routes where cookie/header/redirect behavior is critical and cannot be covered by Vitest — rarely triggered in practice; most auth/redirect behavior is covered by Phase 3b vitest integration tests)*
-- Write `.bru` request files in `api-tests/<block-name>/` (one file per endpoint or scenario).
-- Minimum cases to cover:
-  - No token → 401 (or redirect to `/login`, depending on route type)
-  - Valid session → expected status code + response shape
-  - `must_change_password=true` → redirect to `/change-password` (proxy-level check)
-  - Role boundary: unauthorized role → 403
-- Run against the running dev server (`npm run dev`): `npx @usebruno/cli run api-tests/<block-name>/`
-- `.bru` files are committed in `api-tests/`. Never commit Bruno environment files containing secrets (add to `.gitignore`).
-- Output: summary line only. If something fails: paste the failing request + response body, fix, re-run. Do not proceed with open failures.
 
 **Phase 4 — UAT / Playwright e2e**
 - Write or update the spec file `e2e/[block-name].spec.ts`.
@@ -266,6 +256,7 @@ The approved output is the **architectural contract** for Phase 2 — implementa
   - Auth boundary: unauthorized role → redirect or 403
   - State transitions: if block touches a state machine, cover each transition
   - Empty state: no records → correct empty state shown
+- **If block modifies `proxy.ts`**: add Playwright scenarios for every redirect chain changed — `must_change_password=true → /change-password`, `onboarding_completed=false → /onboarding`, `is_active=false → /pending`, no session → `/login`. These are page-level redirects and cannot be tested via HTTP fetch (API routes bypass most proxy checks).
 - **Test data**: use the fixtures inserted in Phase 5b (cleanup-first, service role). Do not re-insert in spec setup if Phase 5b already ran.
 - Run: `npx playwright test e2e/[block-name].spec.ts`
 - Output: summary line only (`N passed`). Fix all failures before Phase 4b. Do not proceed with open failures.
