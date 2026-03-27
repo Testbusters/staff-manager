@@ -5,6 +5,8 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CodaCompensazioni from '@/components/admin/CodaCompensazioni';
 import CodaRimborsi from '@/components/admin/CodaRimborsi';
 import CodaReceiptButton from '@/components/admin/CodaReceiptButton';
+import CodaLiquidazioni from '@/components/admin/CodaLiquidazioni';
+import type { LiquidazioneRequest } from '@/lib/types';
 
 export default async function CodaPage({
   searchParams,
@@ -26,14 +28,14 @@ export default async function CodaPage({
   if (profile.role !== 'amministrazione') redirect('/');
 
   const { tab } = await searchParams;
-  const activeTab = tab === 'rimborsi' ? 'rimborsi' : 'compensi';
+  const activeTab = tab === 'rimborsi' ? 'rimborsi' : tab === 'liquidazioni' ? 'liquidazioni' : 'compensi';
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const [compsRes, expsRes, receiptTemplateRes] = await Promise.all([
+  const [compsRes, expsRes, receiptTemplateRes, liqRes] = await Promise.all([
     svc
       .from('compensations')
       .select('id, collaborator_id, importo_lordo, importo_netto, data_competenza, nome_servizio_ruolo, stato, rejection_note, created_at')
@@ -49,6 +51,11 @@ export default async function CodaPage({
       .select('tipo')
       .eq('tipo', 'RICEVUTA_PAGAMENTO')
       .maybeSingle(),
+    svc
+      .from('liquidazione_requests')
+      .select('*')
+      .eq('stato', 'in_attesa')
+      .order('created_at', { ascending: true }),
   ]);
 
   const hasReceiptTemplate = !!receiptTemplateRes.data;
@@ -58,6 +65,7 @@ export default async function CodaPage({
     ...new Set([
       ...(compsRes.data ?? []).map((r) => r.collaborator_id),
       ...(expsRes.data ?? []).map((r) => r.collaborator_id),
+      ...(liqRes.data ?? []).map((r) => r.collaborator_id),
     ]),
   ].filter(Boolean);
 
@@ -84,6 +92,13 @@ export default async function CodaPage({
       ? `${collabMap.get(r.collaborator_id)!.nome} ${collabMap.get(r.collaborator_id)!.cognome}`
       : r.collaborator_id,
     massimale: collabMap.get(r.collaborator_id)?.importo_lordo_massimale ?? null,
+  }));
+
+  const liquidazioni = (liqRes.data ?? []).map((r) => ({
+    ...r,
+    collabName: collabMap.has(r.collaborator_id)
+      ? `${collabMap.get(r.collaborator_id)!.nome} ${collabMap.get(r.collaborator_id)!.cognome}`
+      : r.collaborator_id,
   }));
 
   const tabCls = (t: string) =>
@@ -119,6 +134,12 @@ export default async function CodaPage({
             <span className="ml-1.5 opacity-70">({expenses.length})</span>
           )}
         </Link>
+        <Link href="?tab=liquidazioni" className={tabCls('liquidazioni')}>
+          Liquidazioni
+          {liquidazioni.length > 0 && (
+            <span className="ml-1.5 opacity-70">({liquidazioni.length})</span>
+          )}
+        </Link>
       </div>
 
       {activeTab === 'compensi' && (
@@ -126,6 +147,9 @@ export default async function CodaPage({
       )}
       {activeTab === 'rimborsi' && (
         <CodaRimborsi expenses={expenses} hasReceiptTemplate={hasReceiptTemplate} />
+      )}
+      {activeTab === 'liquidazioni' && (
+        <CodaLiquidazioni requests={liquidazioni as (LiquidazioneRequest & { collabName: string })[]} />
       )}
     </div>
   );
