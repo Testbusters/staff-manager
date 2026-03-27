@@ -109,6 +109,7 @@
 | `/api-design` | API consistency: HTTP verb correctness, URL structure, response shape, error codes, pagination patterns, validation placement. Outputs to `docs/refactoring-backlog.md` | After adding 3+ new routes; quarterly |
 | `/perf-audit` | Performance: server/client boundaries, unnecessary `use client`, heavy lib bundling, useEffect data fetching, image optimization, unbounded queries, serial awaits. Internal app — CWV/SEO out of scope. Outputs to `docs/refactoring-backlog.md` | Before production releases; after major UI additions |
 | `/resend-verify [template:E<N>] [action:<desc>] [broadcast]` | Email delivery verification via Resend MCP: domain health (SPF/DKIM), delivery status, from address, CTA link domain, personalization token rendering. Template-specific checks for E1–E14. | After any action that triggers a transactional email (Phase 5c) |
+| `/commit` | Conventional Commits 1.0.0 compliant commit: reads staged diff, determines type+scope, writes imperative description ≤72 chars, executes. Handles BREAKING CHANGE footer. Model: Haiku. | Phase 3 intermediate commit · Phase 8 docs commit · Phase 8 context commit |
 
 > **Rule**: every new custom skill must be added to this table immediately after creation.
 > **Prerequisites for screenshot-based skills**: `npm run dev` must be running on `localhost:3001` (worktree) or `localhost:3000` (main).

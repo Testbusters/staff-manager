@@ -209,7 +209,8 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - Run `npx vitest run`. All tests must pass.
 - Expected output: summary line only (e.g. `✓ 106/106`). Do NOT paste full output — reduces token consumption.
 - If something fails: paste only the error lines, fix, and re-run. Do not proceed with open errors.
-- After green build + tests: **make an intermediate commit** (`git add … && git commit`) on the current `worktree-[block-name]` branch. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
+- **Debug code check** (before committing): run `grep -rn "console\.log\|debugger\|TODO\|FIXME\|@ts-ignore\|eslint-disable" <changed-files>`. Remove or justify every match before proceeding. A debug `console.log` committed to staging is a process error.
+- After green build + tests: **run `/commit`** (Conventional Commits skill) to stage and commit on the current `worktree-[block-name]` branch. The skill reads staged changes, determines type+scope, and executes the commit. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
 
 **Phase 3b — API integration tests** *(only if the block creates or modifies API routes)*
 - Write core tests in `__tests__/api/<route-name>.test.ts` with vitest:
