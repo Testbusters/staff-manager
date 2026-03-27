@@ -4,6 +4,7 @@
     "pr": ""
   },
   "includeGitInstructions": false,
+  "showClearContextOnPlanAccept": true,
   "claudeMdExcludes": [
     "/Users/MarcoG/Projects/staff-manager-requirements-check/**"
   ],
@@ -42,6 +43,70 @@
           {
             "type": "command",
             "command": "[ -f .claude/CLAUDE.local.md ] && echo '⚠️  Active CLAUDE.local.md overrides in effect — re-read to restore session context.' || true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SESSION=$(ls .claude/session/block-*.md 2>/dev/null | head -1); [ -n \"$SESSION\" ] && echo \"⚠️  Pre-compact: session file $SESSION exists — verify it reflects current block state before context resets.\" || true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BRANCH=$(git -C ~/Projects/staff-manager rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$BRANCH\" = 'main' ] || [ \"$BRANCH\" = 'staging' ]; then echo \"⚠️  Branch discipline: currently on '$BRANCH'. No direct commits to main/staging. Use a worktree (functional blocks) or fix/ branch (fixes).\"; fi",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__claude_ai_Supabase__execute_sql",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); PROJECT=$(echo \"$INPUT\" | jq -r '.tool_input.params.project_id // .tool_input.project_id // empty' 2>/dev/null); if [ \"$PROJECT\" = 'nyajqcjqmgxctlqighql' ]; then echo 'BLOCKED: production project_id detected outside Phase 8. Use staging project gjwkvgfwkdwzqlvudgqr during development.' >&2; exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git push.*(origin main|origin staging)'; then echo 'BLOCKED: direct push to main/staging. Use sm-staging or sm-deploy workflow (Phase 8 step 7).' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Review the conversation. Were all tasks from the user's last request completed? If yes, respond {\"ok\": true}. If no, respond {\"ok\": false, \"reason\": \"what remains\"}.",
+            "model": "claude-haiku-4-5-20251001"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs your input\" with title \"Staff Manager\" sound name \"Submarine\"'",
             "async": true
           }
         ]
