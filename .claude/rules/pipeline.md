@@ -338,19 +338,25 @@ Test credentials — always use canonical accounts from `memory/test_credentials
 - **Step 1 — smoke test on localhost**: open the declared endpoint and use the staging test accounts (full list: `memory/test_credentials.md`):
   - Collaboratore TB → `collaboratore_tb_test@test.com` · Collaboratore P4M → `collaboratore_p4m_test@test.com`
   - Responsabile compensi → `responsabile_compensi_test@test.com` · Admin → `admin_test@test.com`
-- Run 3-5 quick steps in the browser to verify the main flow.
+  - Responsabile cittadino: use the account from `memory/test_credentials.md` if available. Required for any block touching corsi/assegnazioni/valutazioni.
+- **Multi-role coverage rule**: test every role that the block explicitly targets. For a single-role block, test only that role. For a multi-role block (e.g. collab + responsabile + admin), verify the primary CTA and nav for each role — use the account switch pattern (log out → log in as next role).
+- **Minimum verification steps** (not optional): for each role tested: (1) page loads without JS errors in the browser console; (2) UAT records inserted in Phase 5b are visible in the list (not empty state); (3) primary CTA for the block's feature is present and clickable; (4) no 500 errors in the browser network tab. Confirm all four before marking smoke test OK.
+- **Sidebar navigation check**: if the block adds a new nav item, confirm it appears in the sidebar for the correct roles and is absent for roles that should not see it.
+- **For API-only blocks** (no UI surface — pure API routes, migrations, lib utilities): skip the browser steps. Instead run a targeted test: `curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN/api/<new-route>` → confirm 401 (no token, as expected). This verifies the route is reachable without a full UI walkthrough.
 - Goal: catch obvious issues (blocked UI, wrong redirect, data not saved) before presenting Phase 6.
-- Output: "smoke test OK" or list the problem and fix it before proceeding.
+- Output: "smoke test OK" or list the problem and fix it. **Fix loop**: after any fix, run `npx tsc --noEmit`; if the fix touched an API route also run `npx vitest run __tests__/api/<affected-file>.test.ts`; then re-run the smoke test steps. Do not proceed to 5d until the smoke test passes cleanly.
 - **For blocks with UI changes**: run the smoke test once in light mode and once in dark mode (sidebar theme toggle). Confirm both themes render correctly.
 - **For blocks that trigger transactional emails** (invite, state transitions, ticket reply, content publish): run `/resend-verify` after the triggering action. The skill handles the full verification sequence (list → confirm delivery → CTA link check). Do NOT send emails to real user addresses — use `@test.com` or `@test.local` addresses only.
 
 **Phase 5d — Block-scoped quality audit** *(two tracks — apply whichever match the block type; both may apply)*
 
 **Track A — UI audit** *(if block adds/modifies UI routes or components — runs on localhost)*
-- Run `/ui-audit target:page:<route>` scoped to the block's new/modified routes only (token compliance, shadcn usage, empty states, loading.tsx).
-- Run `/visual-audit target:page:<route>` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
-- Run `/ux-audit target:page:<route>` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
-- Run `/responsive-audit target:page:<route>` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
+- **Dev server health check first**: verify the server is still up before any Track A audit: `curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN | grep -q "200\|302" || echo "SERVER DOWN"`. If down: restart using the Phase 5b Step 2 procedure before proceeding.
+- **Multi-route syntax**: for blocks with multiple new/modified routes, pass them as a space-separated list: `target:page:/route1 target:page:/route2`. All matching skills accept this form. Scope to only the routes changed in this block — do not audit the entire app.
+- Run `/ui-audit target:page:<route(s)>` scoped to the block's new/modified routes only (token compliance, shadcn usage, empty states, loading.tsx). For new UI components: also verify against `docs/ui-components.md` — confirm no duplicate component was created and, if the component is genuinely new, it is documented there.
+- Run `/visual-audit target:page:<route(s)>` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
+- Run `/ux-audit target:page:<route(s)>` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
+- Run `/responsive-audit target:page:<route(s)>` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
 - **Execution order**: `/ui-audit` is static — launch it concurrently with the first Playwright-based skill. `/visual-audit` → `/ux-audit` → `/responsive-audit` (if applicable) must run **sequentially** — they share the MCP Playwright session and cannot run in parallel without conflicts.
 
 **Track B — API/DB audit** *(if block creates/modifies API routes or applies migrations — static analysis, no dev server needed)*
@@ -362,7 +368,7 @@ Test credentials — always use canonical accounts from `memory/test_credentials
 **Severity handling — both tracks**:
 - **Critical**: fix before Phase 6. Do not proceed with open Critical issues.
 - **Major**: flag in Phase 6 checklist with planned resolution sprint.
-- **Medium / Minor**: append to `docs/refactoring-backlog.md` immediately — assign the correct ID prefix (`PERF-`, `API-`, `DB-`, `DEV-`) and add to the priority index. Do not defer or accumulate silently.
+- **Medium / Minor**: append to `docs/refactoring-backlog.md` immediately — assign the correct ID prefix matching the backlog's existing scheme (`PERF-` performance, `DEV-` code quality, `SEC-`/`SEC` security, `DB-`/`B-` schema, `A-` architecture, `S-` structure, `T-` TypeScript, `N-` naming) and add to the priority index. Do not defer or accumulate silently.
 - Output per skill: one-paragraph summary only — do not paste full reports.
 
 **Server shutdown (worktree context only)**: after all Track A audits complete, stop the dev server started in Phase 5b: `kill $(lsof -ti:NNNN) 2>/dev/null; sleep 1; kill -9 $(lsof -ti:NNNN) 2>/dev/null || true` (replace NNNN with the port declared in Phase 5b — two-step kill handles Next.js child worker processes). Track B audits may run after shutdown. **Main repo**: server was started by the user — do not stop it. If Track A fails mid-way and the server remains live, run the shutdown command manually before continuing.
@@ -395,7 +401,7 @@ Only after explicit confirmation:
 5. If structural or design issues emerged: open `docs/refactoring-backlog.md`, check for duplicates, add new entries ordered by topic.
 6. **Commit sequence** — each block produces up to 3 commits, all on the `worktree-[block-name]` branch:
    - **Commit 1 — code** (already done in Phase 3): source files only.
-   - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b + `docs/sitemap.md` if modified in 2c + `docs/db-map.md` if modified in 2d.
+   - **Commit 2 — docs**: `docs/implementation-checklist.md` + `README.md` + `docs/prd/prd.md` (mandatory per 2f) + `docs/refactoring-backlog.md` if modified + `docs/migrations-log.md` if modified + `docs/profile-editing-contract.md` if modified in 2b + `docs/contracts/<entity>.md` if modified in 2b2 + `docs/entity-manifest.md` if modified in 2b2 + `docs/prd/01-rbac-matrix.md` if modified in 2e + `docs/sitemap.md` if modified in 2c + `docs/db-map.md` if modified in 2d.
    - **Commit 3 — context files** (only if updated): `CLAUDE.md` and/or project-root `MEMORY.md` in a separate commit — never mixed with code or docs.
 7. **Branch promotion sequence** (after all commits are on the worktree branch):
    - **staging (requires explicit user approval)**: present the branch name and commit count, then ask: "Confermo il merge di `[branch]` su staging e il deploy su Vercel preview?" Wait for explicit yes before proceeding. Then run: `git -C ~/Projects/staff-manager checkout staging && git pull origin staging && git merge [branch] --no-ff && git push origin staging`. Wait ~1–2 min for Vercel preview deploy; verify at `https://staff-staging.peerpetual.it`.
@@ -449,13 +455,13 @@ Branch prefix `fix/` activates this pipeline automatically.
   - If none exists: only create `fix-[description].md` if the fix is expected to span sessions (e.g. complex investigation, multi-step change). For a clear 1-file correction, skip — no file needed.
 - Confirm current branch starts with `fix/`. If not, stop and instruct user to run `sm-fix description`.
 - If on `main` or `staging`: stop — same rule as Phase 0 of the full pipeline.
-- **Escalation to full pipeline**: if the fix touches a shared type or utility with >5 import consumers, stop — notify the user and escalate to the full pipeline (worktree + Phase 1 scope gate). A fix with wide-impact shared changes is not a fast-lane operation.
+- **Escalation to full pipeline**: if ANY of these conditions hold, stop and escalate to the full pipeline (worktree + Phase 1 scope gate): (a) fix touches a shared type or utility with >5 import consumers; (b) fix requires a DB migration; (c) fix introduces a new shared pattern. A fast-lane fix is always migration-free and pattern-free — discovering otherwise mid-FL-1 is a hard escalation.
 
 **FL-1 — Implement**
 - **Scope confirmation (compact)**: before writing any code, apply the Interaction Protocol (CLAUDE.md § Plan-then-Confirm) in compact form — state the exact files to modify, the specific change in each, and flag any irreversible operation. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding.
 - No dependency scan (unless a shared utility is touched — then do a quick grep).
 - Write the fix. Run `npx tsc --noEmit`. Run `npx vitest run`. Must be green.
-- Commit: `git add … && git commit -m "fix(scope): description"`.
+- Run `/commit` (Conventional Commits skill) to stage and commit with correct type+scope. Do NOT use manual `git commit -m "..."` — the skill ensures Conventional Commits 1.0.0 compliance.
 - No intermediate docs update unless `CLAUDE.md` genuinely needs a pattern correction.
 
 **FL-2 — Deploy to staging + smoke**

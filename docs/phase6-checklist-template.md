@@ -5,7 +5,6 @@
 - [ ] npm run build: success
 - [ ] Vitest unit: N/N passed
 - [ ] Vitest API: N/N passed *(if Phase 3b executed)*
-- [ ] HTTP integration (Bruno CLI): N/N passed *(if Phase 3c executed)*
 - [ ] Playwright e2e: N/N passed *(⏸ suspended if CLAUDE.local.md active)*
 - [ ] Visual baseline + axe-core: passed *(if Phase 4b executed)*
 - [ ] ui-audit: no Critical issues *(if Track A)*
