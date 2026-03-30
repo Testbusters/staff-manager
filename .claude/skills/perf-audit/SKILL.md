@@ -1,43 +1,52 @@
 ---
 name: perf-audit
-description: Performance audit for the staff-manager web app. Checks bundle size (Turbopack + webpack analyzers, optimizePackageImports), server/client component boundaries, data fetching patterns (sequential await waterfall, missing use cache/React.cache, parallel Promise.all), unnecessary re-renders, image optimization, Core Web Vitals impact (LCP/CLS/INP), and N+1 query patterns in API routes. Internal app — SEO meta tags, sitemap.xml, OpenGraph, and Lighthouse public-facing metrics are out of scope. Core Web Vitals are included as ranking factors for any future public-facing surface.
+description: Performance audit for the staff-manager web app. Checks server/client boundaries (unnecessary use client, broad providers/layouts, lazy loading gaps), bundle health (serverExternalPackages, optimizePackageImports, bundle analyzer), data fetching (sequential await waterfall, useEffect fetching, uncached server queries), dynamic rendering triggers (accidental force-dynamic, cookies/headers in layouts), image optimization (CLS risk), and N+1/unbounded query patterns. Internal app — CWV scoring, SEO, and Lighthouse site auditing are out of scope. CWV thresholds are included as informational reference only.
 user-invocable: true
 model: sonnet
 context: fork
-argument-hint: [target:section:<section>|target:page:<route>]
+argument-hint: [target:section:<section>|target:page:<route>|mode:audit|mode:apply]
 ---
 
-You are performing a performance audit of the staff-manager Next.js application.
+You are performing a performance audit of the staff-manager Next.js 16 application (App Router, TypeScript, Supabase, Tailwind v4, shadcn/ui).
 
 ## Context and scope
 
-**In scope**: bundle composition, server/client component boundaries, data fetching efficiency (caching, parallelism, N+1), re-render patterns, image optimization, Core Web Vitals impact.
-**Out of scope**: SEO, public indexing, `robots.txt`, `sitemap.xml`, OG tags, Lighthouse "accessibility" and "best practices" categories (covered by `/ui-audit`), database schema (covered by `/skill-db`).
+**In scope**: bundle composition, server/client component boundaries, dynamic rendering triggers, lazy loading, data fetching efficiency (caching, parallelism, N+1), re-render patterns, image optimization.
+**Out of scope**: SEO, CWV as ranking signals, `robots.txt`, `sitemap.xml`, OG tags, Lighthouse site audit, accessibility (→ `/ui-audit`), DB schema (→ `/skill-db`).
+**Default mode**: audit (report only, no code changes). `mode:apply` makes focused non-breaking fixes.
 
-**Core Web Vitals note**: This is an internal app, so Google ranking is not directly relevant today. However, these metrics are included because (a) they measure real perceived performance for internal users, (b) CWV are Google search ranking signals — relevant if any page ever becomes public, and (c) the thresholds are useful quantitative anchors for triage.
+**CWV reference (informational only — not primary deliverable for this internal app):**
 
-| Metric | Measures | Good | Needs work | Poor |
+| Metric | Good | Needs work | Poor | Primary cause |
 |---|---|---|---|---|
-| LCP | Loading — largest content element visible | ≤ 2.5s | 2.5–4s | > 4s |
-| CLS | Visual stability — layout shift score | ≤ 0.1 | 0.1–0.25 | > 0.25 |
-| INP | Interactivity — response to input | ≤ 200ms | 200–500ms | > 500ms |
+| LCP | ≤ 2.5s | 2.5–4s | > 4s | Slow server response, render-blocking resources |
+| CLS | ≤ 0.1 | 0.1–0.25 | > 0.25 | Unsized images, dynamic content above fold |
+| INP | ≤ 200ms | 200–500ms | > 500ms | Blocking JS on event handlers |
 
-Source: web.dev/articles/vitals. Measured at 75th percentile of page loads across mobile/desktop.
+Source: web.dev/articles/vitals. Use these thresholds only as triage anchors — not as primary deliverables.
 
 ---
 
 ## Step 0 — Target resolution
 
-Parse `$ARGUMENTS` for a `target:` token.
+Parse `$ARGUMENTS` for `target:` and `mode:` tokens.
 
+**Operating modes:**
+| Mode | Behavior |
+|---|---|
+| `mode:audit` (default) | Report only — no code changes |
+| `mode:apply` | Apply focused, non-breaking fixes (lazy loading wrappers, `Promise.all` parallelization). Describe each change before applying. |
+
+**Target resolution:**
 | Pattern | Meaning |
 |---|---|
 | `target:section:corsi` | Focus on corsi/lezioni/candidature/assegnazioni components and routes |
 | `target:section:compensi` | Focus on compensation and expense components |
 | `target:page:/dashboard` | Focus on the dashboard and its component tree |
+| `target:section:<other>` | Read `docs/sitemap.md` — find rows matching the section keyword, resolve to page files and their "Componenti chiave" column |
 | No argument | Full audit — all files from sitemap |
 
-Announce: `Running perf-audit — scope: [FULL | target: <resolved>]`
+Announce: `Running perf-audit — scope: [FULL | target: <resolved>] — mode: [audit | apply]`
 Apply the target filter to the file list in Step 1.
 
 ---
@@ -47,8 +56,11 @@ Apply the target filter to the file list in Step 1.
 Read `docs/sitemap.md`. From the "Componenti chiave" column, build a list of:
 - All page files in scope
 - All heavy components (those with chart, calendar, data table, Tiptap editor — high rendering cost)
-- All lib files used in API routes
+- All `app/**/layout.tsx` files (always include regardless of target — critical for B1 Flag B and B8)
+- All lib service files directly called from page/component files (`lib/svc.ts`, `lib/queries.ts`, etc.) — exclude pure utility files with no DB calls
 - `next.config.ts` (or `next.config.js`)
+
+Note: API route files (`app/api/**/*.ts`) are scoped separately in Step 4 — do not include them in the Step 2 subagent file list.
 
 Read `docs/refactoring-backlog.md` — note existing `PERF-` entries to avoid duplicates.
 
@@ -58,12 +70,14 @@ Read `docs/refactoring-backlog.md` — note existing `PERF-` entries to avoid du
 
 Launch a **single Explore subagent** (model: haiku) with all page, component, and lib files from Step 1:
 
-"Run all 7 checks below. For each: state total match count, list every match as `file:line — excerpt`, and state PASS or FAIL.
+"Run all 9 checks below. For each: state total match count, list every match as `file:line — excerpt`, and state PASS or FAIL.
 
-**CHECK B1 — Unnecessary 'use client' directives**
+**CHECK B1 — Unnecessary or over-broad 'use client' directives**
 Grep: `'use client'` across all `app/**/*.tsx` files.
 For each match: check if the file uses ANY of: `useState`, `useEffect`, `useRef`, `useCallback`, `useMemo`, `onClick`, `onChange`, `useRouter`, `usePathname`, `useSearchParams`.
-Flag: any `'use client'` file that uses NONE of these patterns. It may be a Server Component that was incorrectly marked as client.
+Flag A: any `'use client'` file that uses NONE of these patterns. It may be a Server Component incorrectly marked as client.
+Flag B: any `'use client'` in a `layout.tsx` or `*Provider*.tsx` file that also imports 5 or more child components (count `import` statements targeting `./` or `../` paths). These files wrap large subtrees — if only a small interactive portion (theme toggle, session sync) requires browser APIs, extracting it into an island would allow the layout to become a Server Component.
+Exclude `app/(app)/layout.tsx` from Flag B — it intentionally uses `'use client'` for session and theme synchronization (known pattern).
 
 **CHECK B2 — Heavy libraries in client bundle**
 Grep: `import.*from` in `'use client'` files. Flag any imports of these known-heavy libraries that do NOT need browser APIs and should be moved to Server Components:
@@ -74,7 +88,10 @@ Grep: `import.*from` in `'use client'` files. Flag any imports of these known-he
 Flag: each import with the library name and whether a server-side equivalent pattern exists.
 
 **CHECK B3 — useEffect for data fetching in client components**
-Grep: `useEffect.*fetch\(|useEffect.*supabase\.|useEffect.*svc\.` in `'use client'` files.
+Two-pass approach:
+Pass 1 — grep `useEffect` in all `'use client'` files to find files with useEffect usage.
+Pass 2 — for each file found, read up to 10 lines after each `useEffect(` call. Flag any useEffect whose callback body contains `fetch(`, `.from(`, `svc.`, or `supabase.` within those 10 lines.
+The single-line regex `useEffect.*fetch\(` misses multi-line patterns where the fetch call is on the line after the opening brace.
 Flag: `useEffect` calls that fetch data — these defeat server rendering. Consider Server Components with `Suspense`, or SWR/React Query for client-side caching with proper revalidation.
 
 **CHECK B4 — Memo/callback missing on stable callbacks passed to child components**
@@ -96,10 +113,38 @@ Flag: server-side Supabase queries that are not cached and are called in layout-
 Note: `fetch` calls have automatic deduplication within a request, but Supabase client calls do NOT — they always hit the DB.
 
 **CHECK B7 — Images without explicit dimensions (CLS risk)**
-Grep: `<Image` without both `width` and `height` props (or without `fill` + parent position:relative).
-Pattern: `<Image[^>]+(?<!width=)[^>]+/>` — flag any Next.js Image without sizing props.
+Two-pass approach:
+Pass 1 — grep `<Image` across all `.tsx` files to collect all Next.js Image usages.
+Pass 2 — for each match, read up to 5 lines after the opening `<Image` tag. Flag if NEITHER of these conditions is met: (a) `width=` appears within those 5 lines, OR (b) `fill` prop appears within those 5 lines.
+Do NOT use a single-line regex with negative lookbehind — it fails when props are on separate lines.
 Also grep: `<img` (raw img tags — covered by /ui-audit but also a CLS risk here).
-Flag: each unsized image. Without dimensions, the browser cannot reserve layout space → content below the image shifts when it loads = CLS violation."
+Flag: each unsized image. Without dimensions, the browser cannot reserve layout space → content below the image shifts when it loads = CLS violation.
+
+**CHECK B8 — Dynamic rendering triggers (accidental force-dynamic)**
+Pattern A: `cookies()` or `headers()` called inside `app/**/layout.tsx` — opts the ENTIRE route subtree into dynamic rendering.
+Grep (two separate greps to avoid shell OR issues): `cookies()` in `app/**/layout.tsx`, then `headers()` in `app/**/layout.tsx`.
+Exclude `app/(app)/layout.tsx` — it intentionally calls `cookies()` for session and theme synchronization.
+For any other layout match: check whether the call could move to a child Server Component or Server Action.
+Pattern B: `export const dynamic = 'force-dynamic'` in page or layout files.
+Grep: `force-dynamic` across `app/**/*.tsx` and `app/**/*.ts`.
+Flag: each occurrence. Verify from context whether intentional (auth-dependent, real-time data) or avoidable with proper `React.cache` or component restructuring.
+Pattern C: `no-store` cache directive in fetch calls inside layout files — opts the route subtree out of static generation.
+Grep: `'no-store'` or `"no-store"` in `app/**/layout.tsx` files (use exact string match — avoid broad `cache.*no-store` which matches comments and variable names).
+Flag: each match with impact explanation.
+
+**CHECK B9 — Missing lazy loading for heavy client components**
+Heavy components known to this project: `CorsiCalendario`, Tiptap editor (`@tiptap/*`), chart components, large modal/sheet forms.
+Two-pass approach (run each grep separately — do not combine with `|`):
+Pass 1 — run four separate greps in `app/**/*.tsx`:
+  - `import CorsiCalendario`
+  - `from '@tiptap`
+  - `import.*recharts`
+  - `import.*chart\.js`
+Collect all matching files.
+Pass 2 — for each file from Pass 1: check if `next/dynamic` is also imported in the same file (grep `from 'next/dynamic'`).
+Flag: any file where a heavy component is statically imported AND `next/dynamic` is NOT present — the component loads eagerly in the initial bundle.
+If both a static import and `next/dynamic` are present in the same file, read the file to confirm the heavy component itself is the one wrapped in `dynamic()` (not a different component).
+Note: `ssr: false` is acceptable for browser-only components (calendar, charts). `ssr: true` (default) is preferable when the component can pre-render."
 
 ---
 
@@ -154,8 +199,17 @@ Flag: each match. N+1 on a list endpoint means N DB queries for an N-item list �
 ### Output format
 
 ```
-## Perf Audit — [DATE] — [SCOPE]
+## Perf Audit — [DATE] — [SCOPE] — mode: [audit | apply]
 ### Sources: Next.js bundle docs (v16), web.dev/vitals, React docs
+
+### Executive summary
+- [2-8 bullets: one per Critical/High finding or notable PASS. Lead with the most impactful issue.]
+
+### Scope reviewed
+- Routes/components scanned: [N files]
+- Config files: next.config.ts [present/absent]
+- Bundle evidence: bundle analyzer [configured / not configured]
+- Assumptions: [any scope limitations, e.g. "layout files excluded from B8 — none found"]
 
 ### Core Web Vitals thresholds (reference)
 | Metric | Good | Needs work | Poor | Primary cause |
@@ -167,13 +221,15 @@ Flag: each match. N+1 on a list endpoint means N DB queries for an N-item list �
 ### Server/Client Boundary
 | # | Check | Matches | Severity | Verdict |
 |---|---|---|---|---|
-| B1 | Unnecessary 'use client' | N | Medium | ✅/⚠️ |
+| B1 | Unnecessary / over-broad 'use client' | N | Medium | ✅/⚠️ |
 | B2 | Heavy libraries in client bundle | N | High | ✅/⚠️ |
 | B3 | useEffect data fetching | N | High | ✅/⚠️ |
 | B4 | Unstable callbacks on memo'd children | N | Low | ✅/⚠️ |
 | B5 | Sequential await waterfall | N | High | ✅/⚠️ |
 | B6 | Uncached server queries | N | Medium | ✅/⚠️ |
 | B7 | Images without dimensions (CLS) | N | Medium | ✅/⚠️ |
+| B8 | Dynamic rendering triggers | N | High | ✅/⚠️ |
+| B9 | Missing lazy loading for heavy components | N | Medium | ✅/⚠️ |
 
 ### Bundle Composition
 | # | Check | Verdict | Notes |
@@ -189,30 +245,73 @@ Flag: each match. N+1 on a list endpoint means N DB queries for an N-item list �
 | Q2 | Select * | N | ✅/⚠️ |
 | Q3 | N+1 patterns | N | ✅/⚠️ |
 
+### Performance maturity assessment
+| Dimension | Score | Notes |
+|---|---|---|
+| Boundary discipline (B1, B2, B9) | 🟢/🟡/🔴 | [summary] |
+| Client bundle health (P1, P2, P3) | 🟢/🟡/🔴 | [summary] |
+| Data-fetching quality (B3, B5, B6) | 🟢/🟡/🔴 | [summary] |
+| Async/query efficiency (Q1, Q2, Q3) | 🟢/🟡/🔴 | [summary] |
+| Rendering efficiency (B4, B8) | 🟢/🟡/🔴 | [summary] |
+| Image / layout stability (B7) | 🟢/🟡/🔴 | [summary] |
+Scoring: 🟢 = 0 High/Critical findings · 🟡 = 1-2 Medium findings · 🔴 = any High or Critical finding
+
 ### Findings requiring action ([N] total)
-[file:line — check# — issue — impact — suggested fix for each]
+[Sorted Critical → High → Medium → Low]
+Format: `[SEVERITY] file:line — check# — issue — impact — suggested fix`
+Example: `[HIGH] app/(app)/corsi/page.tsx:14 — B5 — sequential await for corsi + assegnazioni — adds ~200ms latency on every page load — replace with Promise.all([getCorsi(), getAssegnazioni()])`
+
+### Quick wins (implement in < 1 hour each)
+[findings that are isolated, low-risk, and self-contained — e.g. add Promise.all, add next/dynamic wrapper]
+
+### Strategic refactors (require planning)
+[findings that affect multiple files or need architectural decisions — e.g. move data fetch to Server Component, extract client island from layout]
+
+### Validation checklist
+After applying fixes, verify:
+- [ ] `npm run build` passes without new warnings
+- [ ] `npx tsc --noEmit` clean
+- [ ] Pages that had B8 dynamic triggers: confirm static generation is restored (check `.next/server/app/` for `.html` files)
+- [ ] Pages that had B5 waterfall: add timing log to confirm parallel fetch time ≤ slowest single fetch
+- [ ] B9 fixes: confirm heavy component chunk appears in `.next/static/chunks/` as a separate file
 ```
 
-### Write to backlog
+### Backlog decision gate
 
-For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
+Present all findings with severity Medium or above as a numbered decision list, sorted Critical → High → Medium:
+
+```
+Trovati N finding Medium o superiori. Quali aggiungere al backlog?
+
+[1] [CRITICAL] PERF-? — file:line — one-line description
+[2] [HIGH]     PERF-? — file:line — one-line description
+[3] [MEDIUM]   PERF-? — file:line — one-line description
+...
+
+Rispondi con i numeri da includere (es. "1 2 4"), "tutti", o "nessuno".
+```
+
+**Wait for explicit user response before writing anything.**
+
+Then write ONLY the approved entries to `docs/refactoring-backlog.md`:
 - Assign ID: `PERF-[n]` (increment from last PERF entry)
-- Add row to priority index table
-- Add full detail section
+- Add row to the priority index table with columns: `| PERF-N | check# | file:line | Severity | Description |`
+- Add full detail section: `### PERF-N — [check label]` with sub-sections: **File**, **Issue**, **Impact**, **Suggested fix**
 
 ### Severity guide
 
 - **Critical**: N+1 in dashboard/list endpoints under heavy load (Q3); heavy server-only library (pdfjs, xlsx) discovered in client bundle (B2)
-- **High**: Sequential await waterfall with >500ms combined latency risk (B5); useEffect data fetching on a primary route (B3); unbounded query on large-growth table (Q1)
-- **Medium**: Uncached layout-level server queries called on every page load (B6); `select *` on tables with blob/large-text columns (Q2); unsized images (B7 — CLS risk); `optimizePackageImports` missing for lucide-react (P3); unnecessary `'use client'` on a heavy page (B1)
+- **High**: Sequential await waterfall with >500ms combined latency risk (B5); useEffect data fetching on a primary route (B3); unbounded query on large-growth table (Q1); `cookies()`/`headers()` in a layout causing route tree force-dynamic (B8)
+- **Medium**: Uncached layout-level server queries called on every page load (B6); `select *` on tables with blob/large-text columns (Q2); unsized images (B7 — CLS risk); `optimizePackageImports` missing for lucide-react (P3); unnecessary or over-broad `'use client'` on a heavy page or layout (B1); missing `next/dynamic` on Tiptap/calendar/chart components (B9)
 - **Low**: Unstable callbacks on memoized children (B4); minor code-splitting opportunities; bundle analyzer not configured (P1)
 
 ---
 
 ## Execution notes
 
-- Do NOT make any code changes.
+- In `mode:audit` (default): do NOT make any code changes — report only. After producing the report, ask: "Vuoi che implementi le ottimizzazioni di priorità High/Critical?"
+- In `mode:apply`: apply only the fixes listed in Quick wins (isolated, non-breaking). Describe each change before writing it. Do not apply Strategic refactors without explicit user confirmation. Do NOT ask the closing question — the user already expressed intent via `mode:apply`.
 - Do NOT flag `SupabaseClient<any, any, any>` type workaround in notification helpers — intentional pattern per CLAUDE.md.
 - `pdfjs-dist` and `pdf-lib` in `serverExternalPackages` are intentional and documented — note as correctly configured.
 - Tiptap in `'use client'` files is acceptable — it requires browser APIs. Only flag if used in a read-only display context.
-- After producing the report, ask: "Vuoi che implementi le ottimizzazioni di priorità High/Critical?"
+- `app/(app)/layout.tsx` with `'use client'` and `cookies()` is intentional — session and theme synchronization. Do NOT flag under B1 Flag B or B8 Pattern A.

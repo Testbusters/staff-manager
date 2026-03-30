@@ -508,9 +508,24 @@ Format: "DB-[n]: [one-line description] — [migration or code change]"
 If no quick wins: state explicitly.
 ```
 
-### Write to backlog
+### Backlog decision gate
 
-For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
+Present all findings with severity Medium or above as a numbered decision list, sorted Critical → High → Medium:
+
+```
+Trovati N finding Medium o superiori. Quali aggiungere al backlog?
+
+[1] [CRITICAL] DB-? — table/check — one-line description
+[2] [HIGH]     DB-? — table/check — one-line description
+[3] [MEDIUM]   DB-? — table/check — one-line description
+...
+
+Rispondi con i numeri da includere (es. "1 2 4"), "tutti", o "nessuno".
+```
+
+**Wait for explicit user response before writing anything.**
+
+Then write ONLY the approved entries to `docs/refactoring-backlog.md`:
 - Assign ID: `DB-[n]` (next available after existing DB entries)
 - Add row to priority index
 - Add full detail section with: issue, evidence, impacted tables/files, fix, effort, migration risk
