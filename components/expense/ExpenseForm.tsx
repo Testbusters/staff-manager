@@ -151,6 +151,7 @@ export default function ExpenseForm() {
         }
       }
 
+      toast.success('Rimborso inviato con successo.');
       router.push('/compensi?tab=rimborsi');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Errore imprevisto', { duration: 5000 });
@@ -179,7 +180,7 @@ export default function ExpenseForm() {
                   <FormLabel>Categoria <span className="text-destructive">*</span></FormLabel>
                   <Select value={field.value || undefined} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+                      <SelectTrigger aria-label="Categoria"><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {EXPENSE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}

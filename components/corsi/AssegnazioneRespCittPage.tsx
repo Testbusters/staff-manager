@@ -33,9 +33,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getCorsoStato } from '@/lib/corsi-utils';
+import { getCorsoStato, CORSO_STATO_BADGE } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
-import type { CorsoStato } from '@/lib/types';
+import type { CorsoStato, Lezione } from '@/lib/types';
 
 interface Corso {
   id: string;
@@ -53,14 +53,7 @@ interface OwnCandidatura {
   stato: string;
 }
 
-interface Lezione {
-  id: string;
-  corso_id: string;
-  data: string;
-  orario_inizio: string;
-  orario_fine: string;
-  materia: string;
-}
+type CorsoLezione = Pick<Lezione, 'id' | 'corso_id' | 'data' | 'orario_inizio' | 'orario_fine' | 'materia'>;
 
 interface CollabOption {
   id: string;
@@ -79,17 +72,142 @@ interface Props {
   mieiCorsi: Corso[];
   ownCandidature: OwnCandidatura[];
   cittaResp: string | null;
-  mieiCorsiLezioni: Lezione[];
+  mieiCorsiLezioni: CorsoLezione[];
   collabsPerCocoda: CollabOption[];
   cocodaAssegnazioni: CocodaAssegnazione[];
   blacklistedIds: Set<string>;
 }
 
-const STATO_BADGE: Record<CorsoStato, string> = {
-  programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  attivo: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  concluso: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-};
+interface CocodaPanelProps {
+  lezioni: CorsoLezione[];
+  collabsPerCocoda: CollabOption[];
+  collabMap: Map<string, CollabOption>;
+  cocodaAssegnazioni: CocodaAssegnazione[];
+  loading: string | null;
+  blacklistedIds: Set<string>;
+  selectedCollabMap: Record<string, string>;
+  onAssign: (lezioneId: string) => void;
+  onRemove: (assegnazioneId: string) => void;
+  onSelectCollab: (lezioneId: string, collabId: string) => void;
+}
+
+function CocodaPanel({
+  lezioni,
+  collabsPerCocoda,
+  collabMap,
+  cocodaAssegnazioni,
+  loading,
+  blacklistedIds,
+  selectedCollabMap,
+  onAssign,
+  onRemove,
+  onSelectCollab,
+}: CocodaPanelProps) {
+  function getCocodaAssegnazione(lezioneId: string) {
+    return cocodaAssegnazioni.find((a) => a.lezione_id === lezioneId);
+  }
+
+  return (
+    <div className="border-t border-border bg-muted/20 px-4 py-3">
+      <p className="text-xs font-medium text-muted-foreground mb-3">
+        Assegnazione CoCoD&apos;à per lezione
+      </p>
+      <div className="space-y-2">
+        {lezioni.map((lezione) => {
+          const existing = getCocodaAssegnazione(lezione.id);
+          const existingCollab = existing ? collabMap.get(existing.collaborator_id) : null;
+          const isAssigning = loading === `assign-${lezione.id}`;
+
+          return (
+            <div key={lezione.id} className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs text-muted-foreground whitespace-nowrap w-24 shrink-0">
+                {lezione.data}
+              </span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                {lezione.orario_inizio}–{lezione.orario_fine}
+              </span>
+              <Badge variant="outline" className="text-xs shrink-0">{lezione.materia}</Badge>
+              {existing ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    Assegnato:{' '}
+                    <strong>
+                      {existingCollab
+                        ? `${existingCollab.nome} ${existingCollab.cognome}`
+                        : existing.collaborator_id}
+                    </strong>
+                  </span>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-6"
+                        disabled={loading === `remove-${existing.id}`}
+                      >
+                        Rimuovi
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Rimuovi CoCoD&apos;à?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Rimuovere l&apos;assegnazione di{' '}
+                          <strong>
+                            {existingCollab
+                              ? `${existingCollab.nome} ${existingCollab.cognome}`
+                              : 'questo collaboratore'}
+                          </strong>{' '}
+                          come CoCoD&apos;à?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annulla</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => onRemove(existing.id)}
+                          disabled={loading === `remove-${existing.id}`}
+                        >
+                          Rimuovi
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={selectedCollabMap[lezione.id] ?? ''}
+                    onValueChange={(val) => onSelectCollab(lezione.id, val)}
+                  >
+                    <SelectTrigger className="h-7 text-xs w-48">
+                      <SelectValue placeholder="Seleziona collaboratore" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {collabsPerCocoda.map((c) => (
+                        <SelectItem key={c.id} value={c.id} className="text-xs">
+                          {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠ Blacklist' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7"
+                    disabled={!selectedCollabMap[lezione.id] || isAssigning}
+                    onClick={() => onAssign(lezione.id)}
+                  >
+                    Assegna
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function AssegnazioneRespCittPage({
   corsiDisponibili,
@@ -111,16 +229,13 @@ export default function AssegnazioneRespCittPage({
     candidature.find((c) => c.corso_id === corsoId);
 
   // Group lezioni by corso
-  const lezioniByCorso = mieiCorsiLezioni.reduce<Record<string, Lezione[]>>((acc, l) => {
+  const lezioniByCorso = mieiCorsiLezioni.reduce<Record<string, CorsoLezione[]>>((acc, l) => {
     if (!acc[l.corso_id]) acc[l.corso_id] = [];
     acc[l.corso_id].push(l);
     return acc;
   }, {});
 
   const collabMap = new Map(collabsPerCocoda.map((c) => [c.id, c]));
-
-  const getCocodaAssegnazione = (lezioneId: string) =>
-    cocodaAssegnazioni.find((a) => a.lezione_id === lezioneId);
 
   async function submitCandidatura(corsoId: string) {
     setLoading(corsoId);
@@ -215,6 +330,7 @@ export default function AssegnazioneRespCittPage({
             description="Non ci sono corsi senza città al momento."
           />
         ) : (
+          <div className="overflow-x-auto">
           <div className="rounded-2xl bg-card border border-border overflow-hidden">
               <Table className="table-fixed">
                 <TableHeader>
@@ -241,7 +357,7 @@ export default function AssegnazioneRespCittPage({
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CORSO_STATO_BADGE[stato]}`}>
                             {CORSO_STATO_LABELS[stato]}
                           </span>
                         </TableCell>
@@ -251,7 +367,7 @@ export default function AssegnazioneRespCittPage({
                         <TableCell>
                           {candidatura ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground italic">Candidatura inviata</span>
+                              <Badge variant="outline" className="text-xs">Candidatura inviata</Badge>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="outline" size="sm" className="text-xs h-7">
@@ -278,15 +394,32 @@ export default function AssegnazioneRespCittPage({
                               </AlertDialog>
                             </div>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs h-7"
-                              onClick={() => submitCandidatura(corso.id)}
-                              disabled={loading === corso.id || !cittaResp}
-                            >
-                              Candida città
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-7"
+                                  disabled={loading === corso.id || !cittaResp}
+                                >
+                                  Candida città
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Candidatura città</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Vuoi inviare la candidatura di <strong>{cittaResp}</strong> per il corso <strong>{corso.nome}</strong>?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => submitCandidatura(corso.id)}>
+                                    Candida
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           )}
                         </TableCell>
                       </TableRow>
@@ -294,6 +427,7 @@ export default function AssegnazioneRespCittPage({
                   })}
                 </TableBody>
               </Table>
+          </div>
           </div>
         )}
       </div>
@@ -333,7 +467,7 @@ export default function AssegnazioneRespCittPage({
                       <Badge variant="outline" className="text-xs shrink-0">
                         {corso.modalita === 'online' ? 'Online' : 'In aula'}
                       </Badge>
-                      <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+                      <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${CORSO_STATO_BADGE[stato]}`}>
                         {CORSO_STATO_LABELS[stato]}
                       </span>
                       <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
@@ -370,106 +504,20 @@ export default function AssegnazioneRespCittPage({
 
                   {/* CoCoD'à panel */}
                   {isExpanded && (
-                    <div className="border-t border-border bg-muted/20 px-4 py-3">
-                      <p className="text-xs font-medium text-muted-foreground mb-3">
-                        Assegnazione CoCoD&apos;à per lezione
-                      </p>
-                      <div className="space-y-2">
-                        {lezioni.map((lezione) => {
-                          const existing = getCocodaAssegnazione(lezione.id);
-                          const existingCollab = existing ? collabMap.get(existing.collaborator_id) : null;
-                          const isAssigning = loading === `assign-${lezione.id}`;
-
-                          return (
-                            <div key={lezione.id} className="flex items-center gap-3 flex-wrap">
-                              <span className="text-xs text-muted-foreground whitespace-nowrap w-24 shrink-0">
-                                {lezione.data}
-                              </span>
-                              <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                                {lezione.orario_inizio}–{lezione.orario_fine}
-                              </span>
-                              <Badge variant="outline" className="text-xs shrink-0">{lezione.materia}</Badge>
-                              {existing ? (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">
-                                    Assegnato:{' '}
-                                    <strong>
-                                      {existingCollab
-                                        ? `${existingCollab.nome} ${existingCollab.cognome}`
-                                        : existing.collaborator_id}
-                                    </strong>
-                                  </span>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs h-6"
-                                        disabled={loading === `remove-${existing.id}`}
-                                      >
-                                        Rimuovi
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Rimuovi CoCoD&apos;à?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Rimuovere l&apos;assegnazione di{' '}
-                                          <strong>
-                                            {existingCollab
-                                              ? `${existingCollab.nome} ${existingCollab.cognome}`
-                                              : 'questo collaboratore'}
-                                          </strong>{' '}
-                                          come CoCoD&apos;à?
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => removeAssegnazione(existing.id)}
-                                          disabled={loading === `remove-${existing.id}`}
-                                        >
-                                          Rimuovi
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <Select
-                                    value={selectedCollabMap[lezione.id] ?? ''}
-                                    onValueChange={(val) =>
-                                      setSelectedCollabMap((prev) => ({ ...prev, [lezione.id]: val }))
-                                    }
-                                  >
-                                    <SelectTrigger className="h-7 text-xs w-48">
-                                      <SelectValue placeholder="Seleziona collaboratore" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {collabsPerCocoda.map((c) => (
-                                        <SelectItem key={c.id} value={c.id} className="text-xs">
-                                          {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠ Blacklist' : ''}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-xs h-7"
-                                    disabled={!selectedCollabMap[lezione.id] || isAssigning}
-                                    onClick={() => assignCocoda(lezione.id)}
-                                  >
-                                    Assegna
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <CocodaPanel
+                      lezioni={lezioni}
+                      collabsPerCocoda={collabsPerCocoda}
+                      collabMap={collabMap}
+                      cocodaAssegnazioni={cocodaAssegnazioni}
+                      loading={loading}
+                      blacklistedIds={blacklistedIds}
+                      selectedCollabMap={selectedCollabMap}
+                      onAssign={assignCocoda}
+                      onRemove={removeAssegnazione}
+                      onSelectCollab={(lezioneId, val) =>
+                        setSelectedCollabMap((prev) => ({ ...prev, [lezioneId]: val }))
+                      }
+                    />
                   )}
                 </div>
               );

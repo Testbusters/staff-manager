@@ -429,8 +429,8 @@ export default async function DashboardPage() {
     const noCollabs      = allCollabIds.length === 0;
 
     // Round 3 — compensations, expenses, collab names, ticket collab names (all in parallel)
-    type RComp    = { id: string; collaborator_id: string; importo_lordo: number | null; stato: string; competenza: string | null; created_at: string };
-    type RExp     = { id: string; collaborator_id: string; importo: number | null; categoria: string; stato: string; created_at: string };
+    type RComp    = { id: string; collaborator_id: string; importo_lordo: number | null; importo_netto: number | null; nome_servizio_ruolo: string | null; competenza: string | null; data_competenza: string | null; info_specifiche: string | null; stato: string; created_at: string };
+    type RExp     = { id: string; collaborator_id: string; importo: number | null; categoria: string; descrizione: string | null; data_spesa: string; stato: string; created_at: string };
     type RCollab3 = { id: string; nome: string | null; cognome: string | null };
     type RTCollab = { user_id: string; nome: string | null; cognome: string | null };
 
@@ -444,14 +444,14 @@ export default async function DashboardPage() {
       noCollabs
         ? resolveEmpty<RComp>([])
         : svc.from('compensations')
-            .select('id, collaborator_id, importo_lordo, stato, competenza, created_at')
+            .select('id, collaborator_id, importo_lordo, importo_netto, nome_servizio_ruolo, competenza, data_competenza, info_specifiche, stato, created_at')
             .in('collaborator_id', allCollabIds)
             .in('stato', ['IN_ATTESA', 'APPROVATO'])
             .order('created_at', { ascending: true }),
       noCollabs
         ? resolveEmpty<RExp>([])
         : svc.from('expense_reimbursements')
-            .select('id, collaborator_id, importo, categoria, stato, created_at')
+            .select('id, collaborator_id, importo, categoria, descrizione, data_spesa, stato, created_at')
             .in('collaborator_id', allCollabIds)
             .in('stato', ['IN_ATTESA', 'APPROVATO'])
             .order('created_at', { ascending: true }),

@@ -7,17 +7,11 @@ import LezioniTab from '@/components/corsi/LezioniTab';
 import CandidatureCittaTab from '@/components/corsi/CandidatureCittaTab';
 import LezioniTabCollab from '@/components/corsi/LezioniTabCollab';
 import LezioniTabRespCitt from '@/components/corsi/LezioniTabRespCitt';
-import { getCorsoStato } from '@/lib/corsi-utils';
+import { getCorsoStato, CORSO_STATO_BADGE } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
 
 type Tab = 'dettaglio' | 'lezioni' | 'candidature_citta';
-
-const STATO_BADGE: Record<CorsoStato, string> = {
-  programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  attivo: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  concluso: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-};
 
 export default async function CorsoDetailPage({
   params,
@@ -116,7 +110,7 @@ export default async function CorsoDetailPage({
             <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-sm text-muted-foreground font-mono">{corso.codice_identificativo}</span>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CORSO_STATO_BADGE[stato]}`}>
                 {CORSO_STATO_LABELS[stato]}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -237,7 +231,7 @@ export default async function CorsoDetailPage({
             <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-sm text-muted-foreground font-mono">{corso.codice_identificativo}</span>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CORSO_STATO_BADGE[stato]}`}>
                 {CORSO_STATO_LABELS[stato]}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -287,7 +281,7 @@ export default async function CorsoDetailPage({
     `px-4 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap ${
       activeTab === t
         ? 'bg-brand text-white'
-        : 'bg-muted text-muted-foreground hover:bg-accent'
+        : 'text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer'
     }`;
 
   return (
@@ -300,7 +294,7 @@ export default async function CorsoDetailPage({
           <h1 className="text-xl font-semibold text-foreground">{corso.nome}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-sm text-muted-foreground font-mono">{corso.codice_identificativo}</span>
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[stato]}`}>
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CORSO_STATO_BADGE[stato]}`}>
               {CORSO_STATO_LABELS[stato]}
             </span>
           </div>

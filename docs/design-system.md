@@ -43,7 +43,7 @@ Defined in `app/globals.css` via `@theme inline`. These are the Tailwind class n
 | Token | Light | Dark |
 |---|---|---|
 | `sidebar` | `--base-100` | `--base-900` |
-| `sidebar-foreground` | `--base-500` | `--base-400` |
+| `sidebar-foreground` | `--base-600` | `--base-400` |
 | `sidebar-primary` | `--base-950` | `--base-50` |
 | `sidebar-accent` | `--base-200` | `--base-800` |
 | `sidebar-border` | `--base-200` | `--base-800` |

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/email';
 import { emailReminderLezione } from '@/lib/email-templates';
-import { getCollaboratorInfo } from '@/lib/notification-helpers';
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -39,6 +38,26 @@ export async function GET(req: NextRequest) {
   const lezioneMap = new Map(lezioni.map((l) => [l.id, l]));
   const corsoMap = new Map((corsi ?? []).map((c) => [c.id, c]));
 
+  // Batch: fetch all collaborators in one query
+  const uniqueCollabIds = [...new Set((assegnazioni ?? []).map((a) => a.collaborator_id))];
+  const { data: collabs } = await svc
+    .from('collaborators')
+    .select('id, user_id, nome, cognome')
+    .in('id', uniqueCollabIds);
+
+  const collabInfoMap = new Map((collabs ?? []).map((c) => [c.id, c]));
+
+  // Batch: fetch all auth users in parallel
+  const uniqueUserIds = [...new Set((collabs ?? []).map((c) => c.user_id).filter(Boolean))];
+  const authResults = await Promise.all(
+    uniqueUserIds.map((uid) => svc.auth.admin.getUserById(uid)),
+  );
+  const emailMap = new Map(
+    authResults
+      .filter((r) => !r.error && r.data.user)
+      .map((r) => [r.data.user!.id, r.data.user!.email ?? '']),
+  );
+
   const RUOLO_LABEL: Record<string, string> = {
     docente: 'Docente',
     qa: "Q&A",
@@ -53,14 +72,17 @@ export async function GET(req: NextRequest) {
     const corso = corsoMap.get(lez.corso_id);
     if (!corso) continue;
 
-    const info = await getCollaboratorInfo(a.collaborator_id, svc);
-    if (!info?.email) continue;
+    const collab = collabInfoMap.get(a.collaborator_id);
+    if (!collab) continue;
+
+    const email = emailMap.get(collab.user_id);
+    if (!email) continue;
 
     const orario = `${lez.orario_inizio} – ${lez.orario_fine}`;
     const ruoloLabel = RUOLO_LABEL[a.ruolo] ?? a.ruolo;
 
     const { subject, html } = emailReminderLezione({
-      nome: info.nome,
+      nome: collab.nome,
       corso: corso.nome,
       lezione_data: lez.data,
       orario,
@@ -68,7 +90,7 @@ export async function GET(req: NextRequest) {
       ruolo: ruoloLabel,
     });
 
-    sendEmail(info.email, subject, html).catch(() => {});
+    sendEmail(email, subject, html).catch(() => {});
     sent++;
   }
 

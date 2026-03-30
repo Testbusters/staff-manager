@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { MATERIA_COLORS } from '@/lib/corsi-utils';
 import { ASSEGNAZIONE_RUOLO_LABELS } from '@/lib/types';
-import type { Lezione, Candidatura, Assegnazione, AssegnazioneRuolo, CandidaturaTipo } from '@/lib/types';
+import type { Lezione, Candidatura, Assegnazione, AssegnazioneRuolo, CandidaturaTipo, CandidaturaStato } from '@/lib/types';
 import { GraduationCap, ChevronDown } from 'lucide-react';
 
 interface Props {

@@ -132,7 +132,7 @@ export default function LoginPage() {
       {/* Test credentials — local dev + staging only, hidden on production */}
       {process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 space-y-2">
         <p className="text-center text-xs text-muted-foreground">Utenze di test</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {TEST_USERS.map((u) => (
             <button
               key={u.email}

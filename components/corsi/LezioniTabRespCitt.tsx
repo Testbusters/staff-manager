@@ -25,16 +25,7 @@ import {
 } from '@/components/ui/table';
 import { GraduationCap } from 'lucide-react';
 import { MATERIA_COLORS } from '@/lib/corsi-utils';
-import type { Candidatura } from '@/lib/types';
-
-interface Lezione {
-  id: string;
-  data: string;
-  orario_inizio: string;
-  orario_fine: string;
-  materia: string;
-  ore: number;
-}
+import type { Candidatura, CandidaturaStato, Lezione } from '@/lib/types';
 
 interface Props {
   lezioni: Lezione[];
@@ -71,7 +62,7 @@ export default function LezioniTabRespCitt({
   const getCandidatureForLezione = (lezioneId: string) =>
     candidature.filter((c) => c.lezione_id === lezioneId);
 
-  async function reviewCandidatura(candidaturaId: string, stato: 'accettata' | 'ritirata' | 'in_attesa') {
+  async function reviewCandidatura(candidaturaId: string, stato: CandidaturaStato) {
     setLoading(candidaturaId);
     try {
       const res = await fetch(`/api/candidature/${candidaturaId}`, {

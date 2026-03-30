@@ -314,7 +314,7 @@ function AdminDocumentList({ collaborators }: { collaborators: CollaboratorOptio
             )}
 
             {searchQuery.trim() && filtered.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-2">Nessun collaboratore trovato.</p>
+              <EmptyState icon={Search} title="Nessun collaboratore trovato" description="Nessun collaboratore corrisponde alla ricerca." />
             )}
 
             {!searchQuery.trim() && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -57,6 +57,11 @@ interface CollabData {
   materie_insegnate: string[] | null;
 }
 
+interface LookupOption {
+  id: string;
+  nome: string;
+}
+
 interface CollaboratoreDetailProps {
   collab: CollabData;
   userId: string | null;
@@ -67,6 +72,8 @@ interface CollaboratoreDetailProps {
   documents: DocumentRow[];
   role: Role;
   collabRole?: Role | null;
+  cittaOptions?: LookupOption[];
+  materiaOptions?: LookupOption[];
 }
 
 const MEMBER_STATUS_LABELS: Record<string, string> = {
@@ -93,6 +100,8 @@ export default function CollaboratoreDetail({
   documents,
   role,
   collabRole,
+  cittaOptions: cittaOptionsProp = [],
+  materiaOptions: materiaOptionsProp = [],
 }: CollaboratoreDetailProps) {
   const router = useRouter();
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -122,18 +131,9 @@ export default function CollaboratoreDetail({
   const [fCitta, setFCitta]                       = useState(collab.citta ?? '');
   const [fMaterieInsegnate, setFMaterieInsegnate] = useState<string[]>(collab.materie_insegnate ?? []);
 
-  // Lookup options (fetched lazily when edit modal opens)
-  const [cittaOptions, setCittaOptions]     = useState<{ id: string; nome: string }[]>([]);
-  const [materiaOptions, setMateriaOptions] = useState<{ id: string; nome: string }[]>([]);
-
-  useEffect(() => {
-    if (!editModalOpen || role !== 'amministrazione') return;
-    const comm = communityNames[0]?.toLowerCase().replace(/\s+/g, '') || 'testbusters';
-    fetch(`/api/lookup-options?type=citta&community=${comm}`)
-      .then((r) => r.json()).then((d) => setCittaOptions(d.options ?? [])).catch(() => {});
-    fetch(`/api/lookup-options?type=materia&community=${comm}`)
-      .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
-  }, [editModalOpen, role, communityNames]);
+  // Lookup options provided by the parent page (server-fetched)
+  const cittaOptions   = cittaOptionsProp;
+  const materiaOptions = materiaOptionsProp;
 
   const openEditModal = () => {
     setFNome(collab.nome ?? '');

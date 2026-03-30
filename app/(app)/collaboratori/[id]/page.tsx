@@ -62,6 +62,15 @@ export default async function CollaboratoreDetailPage({
   const memberStatus = upData?.member_status ?? null;
   const collabRole = (upData?.role ?? null) as Role | null;
 
+  // ── Fetch lookup options (for admin edit modal) ─────────────────────────
+  const community = communityNames[0]?.toLowerCase().replace(/\s+/g, '') || 'testbusters';
+  const [{ data: rawCitta }, { data: rawMaterie }] = await Promise.all([
+    svc.from('lookup_options').select('id, nome').eq('type', 'citta').eq('community', community).order('nome'),
+    svc.from('lookup_options').select('id, nome').eq('type', 'materia').eq('community', community).order('nome'),
+  ]);
+  const cittaOptions   = (rawCitta ?? []) as { id: string; nome: string }[];
+  const materiaOptions = (rawMaterie ?? []) as { id: string; nome: string }[];
+
   // ── Fetch documents ──────────────────────────────────────────────────────
   const { data: rawDocs } = await svc
     .from('documents')
@@ -112,6 +121,8 @@ export default async function CollaboratoreDetailPage({
       documents={documents}
       role={role}
       collabRole={collabRole}
+      cittaOptions={cittaOptions}
+      materiaOptions={materiaOptions}
     />
   );
 }

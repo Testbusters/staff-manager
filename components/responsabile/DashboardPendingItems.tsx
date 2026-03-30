@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
 import type { ExpenseCategory } from '@/lib/types';
@@ -8,7 +8,6 @@ import { Receipt, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -17,8 +16,12 @@ export type PendingComp = {
   id: string;
   collaborator_id: string;
   importo_lordo: number | null;
-  stato: string;
+  importo_netto: number | null;
+  nome_servizio_ruolo: string | null;
   competenza: string | null;
+  data_competenza: string | null;
+  info_specifiche: string | null;
+  stato: string;
   created_at: string;
 };
 
@@ -27,6 +30,8 @@ export type PendingExp = {
   collaborator_id: string;
   importo: number | null;
   categoria: string;
+  descrizione: string | null;
+  data_spesa: string;
   stato: string;
   created_at: string;
 };
@@ -53,95 +58,60 @@ function formatCurrency(n: number | null) {
 
 // ── Comp detail modal ─────────────────────────────────────────────────────────
 
-type CompDetail = {
-  id: string;
-  stato: string;
-  importo_lordo: number | null;
-  importo_netto: number | null;
-  nome_servizio_ruolo: string | null;
-  competenza: string | null;
-  data_competenza: string | null;
-  info_specifiche: string | null;
-};
-
-function CompModal({ compId, onClose }: { compId: string; onClose: () => void }) {
-  const [data, setData] = useState<CompDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/compensations/${compId}`)
-      .then((r) => r.json())
-      .then((d) => { setData(d.compensation); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [compId]);
-
+function CompModal({ comp, onClose }: { comp: PendingComp; onClose: () => void }) {
   return (
     <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className="max-w-sm bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold text-foreground">Dettaglio compenso</DialogTitle>
         </DialogHeader>
-
-        {loading ? (
-          <div className="space-y-3 py-1">
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-5 w-1/2" />
-          </div>
-        ) : !data ? (
-          <p className="text-sm text-red-600 dark:text-red-400 text-center py-4">Errore caricamento.</p>
-        ) : (
-          <div className="space-y-3 text-sm">
-            {data.nome_servizio_ruolo && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Servizio / Ruolo</p>
-                <p className="text-foreground">{data.nome_servizio_ruolo}</p>
-              </div>
-            )}
-            {data.competenza && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Competenza</p>
-                <Badge variant="outline" className={COMP_COMPETENZA_BADGE[data.competenza] ?? 'border-border text-muted-foreground'}>
-                  {data.competenza}
-                </Badge>
-              </div>
-            )}
-            {data.data_competenza && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Data competenza</p>
-                <p className="text-foreground">{new Date(data.data_competenza).toLocaleDateString('it-IT')}</p>
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Lordo</p>
-                <p className="text-foreground tabular-nums font-medium">{formatCurrency(data.importo_lordo)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Netto</p>
-                <p className="text-amber-600 dark:text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo_netto)}</p>
-              </div>
+        <div className="space-y-3 text-sm">
+          {comp.nome_servizio_ruolo && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Servizio / Ruolo</p>
+              <p className="text-foreground">{comp.nome_servizio_ruolo}</p>
             </div>
-            {data.info_specifiche && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Note</p>
-                <p className="text-muted-foreground text-xs">{data.info_specifiche}</p>
-              </div>
-            )}
-            <div className="pt-2">
-              <Link
-                href={`/compensi/${compId}`}
-                onClick={onClose}
-                className="text-xs text-link hover:text-link/80 transition"
-              >
-                Apri pagina completa →
-              </Link>
+          )}
+          {comp.competenza && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Competenza</p>
+              <Badge variant="outline" className={COMP_COMPETENZA_BADGE[comp.competenza] ?? 'border-border text-muted-foreground'}>
+                {comp.competenza}
+              </Badge>
+            </div>
+          )}
+          {comp.data_competenza && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Data competenza</p>
+              <p className="text-foreground">{new Date(comp.data_competenza).toLocaleDateString('it-IT')}</p>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Lordo</p>
+              <p className="text-foreground tabular-nums font-medium">{formatCurrency(comp.importo_lordo)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Netto</p>
+              <p className="text-amber-600 dark:text-amber-300 tabular-nums font-medium">{formatCurrency(comp.importo_netto)}</p>
             </div>
           </div>
-        )}
+          {comp.info_specifiche && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Note</p>
+              <p className="text-muted-foreground text-xs">{comp.info_specifiche}</p>
+            </div>
+          )}
+          <div className="pt-2">
+            <Link
+              href={`/compensi/${comp.id}`}
+              onClick={onClose}
+              className="text-xs text-link hover:text-link/80 transition"
+            >
+              Apri pagina completa →
+            </Link>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -149,77 +119,44 @@ function CompModal({ compId, onClose }: { compId: string; onClose: () => void })
 
 // ── Expense detail modal ──────────────────────────────────────────────────────
 
-type ExpDetail = {
-  id: string;
-  stato: string;
-  importo: number | null;
-  categoria: string;
-  descrizione: string | null;
-  data_spesa: string;
-};
-
-function ExpModal({ expId, onClose }: { expId: string; onClose: () => void }) {
-  const [data, setData] = useState<ExpDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/expenses/${expId}`)
-      .then((r) => r.json())
-      .then((d) => { setData(d.reimbursement); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [expId]);
-
+function ExpModal({ exp, onClose }: { exp: PendingExp; onClose: () => void }) {
   return (
     <Dialog open={true} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className="max-w-sm bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold text-foreground">Dettaglio rimborso</DialogTitle>
         </DialogHeader>
-
-        {loading ? (
-          <div className="space-y-3 py-1">
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-5 w-1/2" />
+        <div className="space-y-3 text-sm">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Categoria</p>
+            <Badge variant="outline" className={EXPENSE_CATEGORIA_BADGE[exp.categoria as ExpenseCategory] ?? 'border-border text-muted-foreground'}>
+              {exp.categoria}
+            </Badge>
           </div>
-        ) : !data ? (
-          <p className="text-sm text-red-600 dark:text-red-400 text-center py-4">Errore caricamento.</p>
-        ) : (
-          <div className="space-y-3 text-sm">
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Categoria</p>
-              <Badge variant="outline" className={EXPENSE_CATEGORIA_BADGE[data.categoria as ExpenseCategory] ?? 'border-border text-muted-foreground'}>
-                {data.categoria}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Data spesa</p>
-              <p className="text-foreground">{new Date(data.data_spesa).toLocaleDateString('it-IT')}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Importo</p>
-              <p className="text-amber-600 dark:text-amber-300 tabular-nums font-medium">{formatCurrency(data.importo)}</p>
-            </div>
-            {data.descrizione && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Descrizione</p>
-                <p className="text-muted-foreground text-xs">{data.descrizione}</p>
-              </div>
-            )}
-            <div className="pt-2">
-              <Link
-                href={`/rimborsi/${expId}`}
-                onClick={onClose}
-                className="text-xs text-link hover:text-link/80 transition"
-              >
-                Apri pagina completa →
-              </Link>
-            </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Data spesa</p>
+            <p className="text-foreground">{new Date(exp.data_spesa).toLocaleDateString('it-IT')}</p>
           </div>
-        )}
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Importo</p>
+            <p className="text-amber-600 dark:text-amber-300 tabular-nums font-medium">{formatCurrency(exp.importo)}</p>
+          </div>
+          {exp.descrizione && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Descrizione</p>
+              <p className="text-muted-foreground text-xs">{exp.descrizione}</p>
+            </div>
+          )}
+          <div className="pt-2">
+            <Link
+              href={`/rimborsi/${exp.id}`}
+              onClick={onClose}
+              className="text-xs text-link hover:text-link/80 transition"
+            >
+              Apri pagina completa →
+            </Link>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -236,8 +173,8 @@ export default function DashboardPendingItems({
   exps: PendingExp[];
   collabNameMap: Record<string, string>;
 }) {
-  const [selectedComp, setSelectedComp] = useState<string | null>(null);
-  const [selectedExp, setSelectedExp] = useState<string | null>(null);
+  const [selectedComp, setSelectedComp] = useState<PendingComp | null>(null);
+  const [selectedExp, setSelectedExp] = useState<PendingExp | null>(null);
 
   const pendingComps = comps.filter((c) => c.stato === 'IN_ATTESA');
   const pendingExps  = exps.filter((e) => e.stato === 'IN_ATTESA');
@@ -262,7 +199,7 @@ export default function DashboardPendingItems({
                 <Button
                   key={c.id}
                   variant="ghost"
-                  onClick={() => setSelectedComp(c.id)}
+                  onClick={() => setSelectedComp(c)}
                   className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted text-left cursor-pointer h-auto rounded-none justify-start"
                 >
                   {c.competenza && (
@@ -298,7 +235,7 @@ export default function DashboardPendingItems({
                 <Button
                   key={e.id}
                   variant="ghost"
-                  onClick={() => setSelectedExp(e.id)}
+                  onClick={() => setSelectedExp(e)}
                   className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted text-left cursor-pointer h-auto rounded-none justify-start"
                 >
                   <Badge variant="outline" className={`shrink-0 ${EXPENSE_CATEGORIA_BADGE[e.categoria as ExpenseCategory] ?? 'border-border text-muted-foreground'}`}>
@@ -319,10 +256,10 @@ export default function DashboardPendingItems({
       </div>
 
       {selectedComp && (
-        <CompModal compId={selectedComp} onClose={() => setSelectedComp(null)} />
+        <CompModal comp={selectedComp} onClose={() => setSelectedComp(null)} />
       )}
       {selectedExp && (
-        <ExpModal expId={selectedExp} onClose={() => setSelectedExp(null)} />
+        <ExpModal exp={selectedExp} onClose={() => setSelectedExp(null)} />
       )}
     </>
   );

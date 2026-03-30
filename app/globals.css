@@ -91,7 +91,7 @@
   --chart-5: oklch(0.769 0.188 70.08);
   /* Sidebar tokens */
   --sidebar: var(--base-100);
-  --sidebar-foreground: var(--base-500);
+  --sidebar-foreground: var(--base-600);
   --sidebar-primary: var(--base-950);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: var(--base-200);

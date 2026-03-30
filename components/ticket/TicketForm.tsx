@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { TICKET_CATEGORIES, TICKET_PRIORITY_LABELS } from '@/lib/types';
 import type { TicketPriority } from '@/lib/types';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
+type FieldErrors = { categoria?: string; oggetto?: string };
+
 export default function TicketForm() {
   const router = useRouter();
   const [categoria, setCategoria] = useState('');
@@ -18,13 +19,18 @@ export default function TicketForm() {
   const [priority, setPriority] = useState<TicketPriority>('NORMALE');
   const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!categoria || !oggetto.trim()) {
-      toast.error('Riferimento e oggetto sono obbligatori.', { duration: 5000 });
+    const newErrors: FieldErrors = {};
+    if (!categoria) newErrors.categoria = 'Seleziona un riferimento.';
+    if (!oggetto.trim()) newErrors.oggetto = 'L\'oggetto è obbligatorio.';
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     setLoading(true);
 
     const res = await fetch('/api/tickets', {
@@ -57,12 +63,13 @@ export default function TicketForm() {
           <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
             Riferimento <span className="text-destructive">*</span>
           </label>
-          <Select value={categoria || undefined} onValueChange={setCategoria}>
-            <SelectTrigger id="categoria"><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
+          <Select value={categoria || undefined} onValueChange={(v) => { setCategoria(v); setErrors((e) => ({ ...e, categoria: undefined })); }}>
+            <SelectTrigger id="categoria" className={errors.categoria ? 'border-destructive' : ''}><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
             <SelectContent>
               {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
+          {errors.categoria && <p className="text-xs text-destructive">{errors.categoria}</p>}
         </div>
 
         <div className="space-y-1.5">
@@ -89,11 +96,12 @@ export default function TicketForm() {
           id="oggetto"
           type="text"
           value={oggetto}
-          onChange={(e) => setOggetto(e.target.value)}
+          onChange={(e) => { setOggetto(e.target.value); setErrors((err) => ({ ...err, oggetto: undefined })); }}
           placeholder="Descrivi brevemente il problema o la richiesta"
           maxLength={200}
-          required
+          className={errors.oggetto ? 'border-destructive' : ''}
         />
+        {errors.oggetto && <p className="text-xs text-destructive">{errors.oggetto}</p>}
       </div>
 
       {/* Messaggio iniziale */}
@@ -115,9 +123,9 @@ export default function TicketForm() {
         <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
           {loading ? 'Apertura…' : 'Apri ticket'}
         </Button>
-        <Link href="/ticket" className="text-sm text-muted-foreground hover:text-foreground transition">
-          ← Annulla
-        </Link>
+        <Button type="button" variant="outline" onClick={() => router.push('/ticket')}>
+          Annulla
+        </Button>
       </div>
     </form>
   );

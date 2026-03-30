@@ -205,5 +205,5 @@ export async function POST(
     }
   }
 
-  return NextResponse.json({ message: msg }, { status: 201 });
+  return NextResponse.json({ data: msg }, { status: 201 });
 }

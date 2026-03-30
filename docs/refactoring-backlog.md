@@ -23,7 +23,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | DEV-10 | `pdf-utils.ts` uses `as any` twice (`pdfjsLib` import and `sigImage`) — missing typed wrappers for pdfjs-dist and pdf-lib types | LOW |
 | DB9 | `GET /api/compensations` and `GET /api/expenses` fully unbounded — no pagination | HIGH |
 | DB10 | `GET /api/tickets` fully unbounded — no pagination | HIGH |
-| SEC7 | `corsi-allegati` bucket missing from DB — allegati-corsi feature is broken + security gap | HIGH |
+| SEC7 | ~~`corsi-allegati` bucket missing from DB~~ — **RESOLVED** migration 062 (verified security-audit 2026-03-30, public bucket confirmed) | ~~HIGH~~ |
 | SEC8 | `expenses` bucket missing from DB — expense attachment uploads silently fail | HIGH |
 | SEC9 | `codice_fiscale` exposed in `GET /api/admin/collaboratori` to `responsabile_compensi` role | HIGH |
 | DB3 | 39 RLS policies use bare `auth.uid()` — per-row function evaluation | MEDIUM |
@@ -37,11 +37,14 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | DB12 | N+1 notification inserts in `liquidazione-requests` route | MEDIUM |
 | SEC10 | DB error messages forwarded verbatim to client in 20+ routes | MEDIUM |
 | SEC11 | `assegnazioni_valutazione_update` RLS policy has `WITH CHECK (true)` — unrestricted write scope | HIGH |
-| SEC12 | 6 RLS helper functions (`get_my_role`, `is_active_user`, etc.) have mutable `search_path` | HIGH |
+| SEC12 | ~~6 RLS helper functions (`get_my_role`, `is_active_user`, etc.) have mutable `search_path`~~ — **RESOLVED** migration 063 (verified skill-db 2026-03-30) | ~~HIGH~~ |
 | SEC13 | `xlsx` dependency has 2 unpatched high CVEs (Prototype Pollution + ReDoS) — no fix available | HIGH |
 | SEC14 | Leaked password protection disabled in Supabase Auth | MEDIUM |
 | SEC15 | Missing Zod on 6+ write routes (tickets POST, ticket status, ticket messages, sign, notifications, members status) | MEDIUM |
 | SEC16 | `app_errors` table has `WITH CHECK (true)` for INSERT — any authenticated user can insert arbitrary rows | MEDIUM |
+| SEC-NEW-2 | 15+ import/export routes forward `err.message` from Google Sheets/file-parse errors to client — reveals internal service config | MEDIUM |
+| SEC-NEW-3 | 20+ dynamic route handlers lack UUID validation on path params — DB error instead of clean 400 | MEDIUM |
+| SEC-NEW-4 | 7 admin RLS `FOR ALL` policies (corsi/lezioni/assegnazioni/candidature/blacklist/allegati_globali/liq_requests) lack explicit `WITH CHECK` — functionally correct but non-standard | LOW |
 | TC5 | No RLS test for compensation_history leakage | HIGH |
 | B4 | Typo `data_compenso` vs `data_competenza` in transition route | HIGH |
 | SEC1 | Temporary password returned in plain text by the API | HIGH |
@@ -72,6 +75,14 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | T4 | State machine action is not a discriminated union | LOW |
 | T5 | `tipo` column in documents is `text + CHECK` instead of a PostgreSQL ENUM | LOW |
 | DB8 | Missing filter indexes on `compensations.data_competenza`, `tickets.last_message_at`, `expense_reimbursements.data_spesa` | LOW |
+| DB-NEW-1 | `compensations.importo_lordo` nullable — NaN propagation in financial calculations | MEDIUM |
+| DB-NEW-2 | `compensations.importo_netto` nullable — NaN propagation in financial calculations | MEDIUM |
+| DB-NEW-3 | `compensations.ritenuta_acconto` nullable — incorrect net calculation | MEDIUM |
+| DB-NEW-4 | `compensations.data_competenza` nullable — date-range filters silently exclude rows | MEDIUM |
+| DB-NEW-5 | No `CHECK (importo_lordo > 0)` on compensations — service-role insert bypasses Zod | MEDIUM |
+| DB-NEW-6 | No `CHECK (importo > 0)` on expense_reimbursements — service-role insert bypasses Zod | MEDIUM |
+| DB-NEW-7 | No `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations — invalid rate accepted at DB level | MEDIUM |
+| DB-NEW-8 | `expense_attachments.reimbursement_id` FK unindexed — sequential scan on every expense detail join | MEDIUM |
 | P2 | Index on `collaborators.user_id` not documented | LOW |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW |
 | N2 | `contenuti/page.tsx` accessible to collaboratori but not in nav — consider redirect to /comunicazioni | LOW |
@@ -87,16 +98,12 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | UX-2 | Form validation pattern inconsistency: `ExpenseForm` uses react-hook-form+Zod (inline field errors); all other forms (30+) use manual `useState`+`toast.error` (generic toast). Unify to react-hook-form+Zod for new forms; ensure toast-only forms highlight specific failed fields | MEDIUM |
 | UX-3 | HTML `required` on Input in `TicketForm`, `CorsoForm`, `CreateUserForm`, `ProfileForm` triggers English browser validation tooltip — add `noValidate` to `<form>` elements to prevent browser-native validation | LOW |
 | UX-4 | CoCoD'à button on `/corsi/assegnazione` is completely hidden when no collaborators exist in responsabile's city (no `canExpand`) — show disabled state with tooltip "Nessun collaboratore disponibile nella tua città" | LOW |
-| RESP-1 | `/approvazioni` (resp) — table overflows 235px at 375px viewport. Fix: add `hidden sm:table-cell` on Data and Stato columns (or all non-essential columns). Cannot use `overflow-x-auto` (permanent rule). | MEDIUM |
-| RESP-2 | `/corsi/assegnazione` (resp_citt) — "Corsi disponibili" table overflows 350px + "I miei corsi" buttons overlap text at 375px. Fix: convert to card layout at mobile breakpoint. | MEDIUM |
 | RESP-3 | `/corsi/eventi-citta` (resp_citt) — events table overflows 507px, Luogo/Tipo/action buttons invisible at 375px. Fix: card layout at mobile or responsive column hiding. | MEDIUM |
-| RESP-4 | `/ticket` (collab) — table overflows 98px at 375px. Fix: `hidden sm:table-cell` on Categoria column, `line-clamp-1 min-w-0` on Oggetto cell. | LOW |
-| RESP-5 | `/compensi` (collab) — "Da ricevere" summary table overflows 35px at 375px. Fix: reduce cell padding or hide least-essential column at mobile. | LOW |
 | RESP-6 | `/corsi/valutazioni` (resp_citt) — table overflows 6px, "Salva" button slightly clipped. Fix: minor padding reduction or `min-w-0` on button column. | LOW |
 | RESP-7 | Systemic: hamburger (28px), notification bell (32px), tab buttons (28px), filter pills (28-36px) all below 44px WCAG tap target minimum. Fix: `min-h-[44px]` on header nav and tab bar elements. | LOW |
+| RESP-8 | `/notifiche` (collab) — "Segna tutte come lette" button text clipped at 375px. Fix: shorter label at mobile or allow wrapping. | LOW |
+| RESP-9 | `/corsi` (collab) — global attachment link "Allegato CoCoD'à" clipped at 375px. Fix: `truncate` class or allow wrapping on link container. | LOW |
 | N4 | Italian DB column names — rename to English | LOW |
-| PERF-1 | `next.config.ts`: `xlsx`, `docxtemplater`, `pizzip` missing from `serverExternalPackages` — latent client-bundle risk if any import path changes. Add alongside `pdfjs-dist`/`pdf-lib`. | MEDIUM |
-| PERF-2 | `next.config.ts`: `lucide-react` missing from `optimizePackageImports` — 69+ component files import from it; no barrel import optimization. Add to `optimizePackageImports` array. | MEDIUM |
 | PERF-3 | `app/(app)/page.tsx:576` (admin dashboard): sequential `await adminCollab` before 25-query `Promise.all` — independent call adds ~50-100ms TTFB. Move into the `Promise.all`. | MEDIUM |
 | PERF-4 | `app/(app)/page.tsx:1023–1031` (collab dashboard): 2 sequential awaits before 10-query `Promise.all` — can be parallelized into the existing `Promise.all`. | MEDIUM |
 | PERF-5 | `app/api/export/history` and `app/api/import/history`: N+1 `createSignedUrl` calls (one per row, up to 50). Fix: use `Promise.all()` to parallelize URL generation. | MEDIUM |
@@ -116,23 +123,26 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | C10 | `/corsi/nuovo` — "Annulla" button border invisible in light mode (outline variant stroke not rendering); investigate `border` token contrast in light theme | LOW |
 | C11 | `/corsi` collab list — "Corsi programmati — Docenza" and "Q&A programmati" sections show duplicates for collabs already assigned; add disambiguating subtitle or split into Assegnati/Disponibili tabs | LOW |
 | C12 | `/corsi/assegnazione` — "Azioni" column header absent in "Corsi disponibili" table; "I miei corsi" section has no column headers at all — apply consistent "Azioni" header pattern across both sections | LOW |
-| API1 | 42 routes call `request.json()` without `.catch()` or wrapping `try/catch` — malformed JSON body → unhandled 500 text response | MEDIUM |
+| API1 | ~~42 routes call `request.json()` without `.catch()`~~ — **RESOLVED** api-design audit 2026-03-30: all 53 routes with `request.json()` use `.catch(() => null)` pattern; original count was wrong | ~~MEDIUM~~ |
 | API2 | `canTransition` failure returns 403 for both "wrong role" and "wrong state" — state conflicts should return 409 | MEDIUM |
 | API3 | `documents/[id]/sign` state check (DA_FIRMARE), `tickets/[id]/messages` closed-ticket check, `approve-bulk` IN_ATTESA check, `onboarding/complete` already-completed check all return 400 for state conflicts — should be 409 | MEDIUM |
 | API4 | `GET /api/expenses` collection uses key `expenses`, but POST returns `{ reimbursement }` — entity key inconsistent within same route | LOW |
 | API5 | Duplicate bulk-action routes with inverted naming: `compensations/approve-bulk` and `compensations/bulk-approve` (similarly for expenses) both exist with different caller/purpose; naming convention is inconsistent | LOW |
 | API6 | 8 content/ticket write routes lack Zod validation — `tickets` (POST), `tickets/[id]/status` (PATCH), `tickets/[id]/messages` (POST), `opportunities` (POST), `communications` (POST), `resources` (POST/PUT), `events` (POST/PATCH), `discounts` (POST/PATCH) — supersedes S4/SEC15 detail | MEDIUM |
 | API7 | `admin/members` pagination uses `limit` param name; email-delivery uses `page` + hardcoded `PAGE_SIZE` — no unified pagination contract across paginated endpoints | LOW |
+| API8 | `POST /api/admin/create-user` returns default 200 — should be 201 (creates auth user + profile + collaborator records) | LOW |
+| API9 | 8 routes wrap Zod issues in the `error` key (`{ error: [ZodIssue] }`) instead of the project standard `{ error: 'msg', issues: [...] }` — inconsistent error shape for validation failures | MEDIUM |
+| API10 | ~~`POST /api/tickets/[id]/messages` returns `{ message: msg }`~~ — **RESOLVED** fixed 2026-03-30: `{ data: msg }` | ~~LOW~~ |
+| API11 | ~~5 content routes return `NextResponse.json({}, { status: 204 })`~~ — **RESOLVED** fixed 2026-03-30: `new NextResponse(null, { status: 204 })` on all 5 | ~~LOW~~ |
 | UX1 | Ticket form validation: global toast only, no inline `<FormMessage>` per field | LOW |
 | UX2 | Tab switching pattern inconsistency: `/comunicazioni` + `/approvazioni` use `<Link href="?tab=">` (URL-based, history entries), while `/compensi` uses Radix `<Tabs>` (state-based) — normalise to one pattern | LOW |
-| PERF-1 | `xlsx` and `docxtemplater` missing from `serverExternalPackages` in `next.config.ts` — risk of client-bundle inclusion if accidentally imported from a `'use client'` path | MEDIUM |
-| PERF-2 | `optimizePackageImports` not set for `lucide-react` (69+ icon imports across components) — icon tree-shaking relies on bundler heuristics rather than explicit declaration | MEDIUM |
 | PERF-3 | Admin dashboard: `adminCollab` fetched sequentially before the 25-query `Promise.all` block in `app/(app)/page.tsx:576` — ~50–100ms extra latency on every admin page load | MEDIUM |
 | PERF-4 | Collab dashboard: `collaborator` (line 1023) then `collaborator_communities` (line 1031) fetched sequentially before the 10-query `Promise.all` block — two extra round trips serialised unnecessarily | MEDIUM |
 | PERF-5 | `GET /api/export/history` and `GET /api/import/history`: N+1 signed URL generation — one `createSignedUrl` call per run record inside `Promise.all` (up to 50 calls) — consider batch-signed-URL API or a single pre-signed path on upload | MEDIUM |
 | PERF-6 | 5 raw `<img>` tags without `width`/`height` attributes — CLS risk on avatar images in dashboard hero, `/sconti/[id]` logo, and `SignaturePad` preview | MEDIUM |
 | PERF-7 | `select('*')` on 20+ API routes — over-fetches all columns including large `body`/`content` text fields on `tickets`, `expense_reimbursements`, `compensations` list endpoints | MEDIUM |
 | PERF-8 | Bundle analyzer not configured — neither `@next/bundle-analyzer` nor `next experimental-analyze` documented in `package.json` scripts; developers cannot inspect bundle composition without manual setup | LOW |
+| PERF-11 | `components/corsi/CorsiPageCollab.tsx:9` — `CorsiCalendario` statically imported, no `next/dynamic` wrapper — loads eagerly in initial bundle for all collaboratore users on `/corsi` | MEDIUM |
 | UI1 | G4: 6 bare `<p>` empty states in import sections and constrained UI contexts (NotificationBell, TicketDetailModal) — replace with `<EmptyState>` | LOW |
 | UI2 | S2: 7 native `<button>` elements — filter chips in CompensationList/ExpenseList/ApprovazioniRimborsi/ApprovazioniCompensazioni + MonitoraggioSection (×2) + SignaturePad (×2) | LOW |
 | UI3 | S4: Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files — consolidate | LOW |
@@ -314,11 +324,9 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Impact**: LOW
 - **Fix**: Document in README: "Rotate RESEND_API_KEY every 90 days" + add note in `.env.local.example`.
 
-### SEC7 — `corsi-allegati` bucket missing from DB — feature broken and security gap
-- **Problem**: `app/api/admin/allegati-corsi/route.ts` uploads to and calls `getPublicUrl` on a bucket named `corsi-allegati`, but this bucket does not exist in the Supabase project (confirmed via `SELECT id, name, public FROM storage.buckets`). Every upload silently fails. Additionally, `getPublicUrl` was intended for a public bucket but there is no corresponding bucket definition with access policies. The feature is effectively non-functional in production.
-- **Files**: `app/api/admin/allegati-corsi/route.ts:65-71`, missing migration for bucket creation.
-- **Impact**: HIGH
-- **Fix**: Add a migration creating the `corsi-allegati` bucket. Determine whether it should be public (download links without auth) or private (signed URLs with TTL). If private: replace `getPublicUrl` with `createSignedUrl`. The bucket definition must include allowed MIME types and a `file_size_limit`.
+### SEC7 — ~~`corsi-allegati` bucket missing from DB~~ — RESOLVED
+- **Resolution**: Bucket `corsi-allegati` exists in staging (`public: true`, `file_size_limit: 50MB`). Created in migration 062. `getPublicUrl` in `route.ts:71` is correct for a public bucket. Decision (2026-03-30): intentionally public — these are generic training contract templates with no PII, shared with all community collaboratori.
+- **Closed**: 2026-03-30
 
 ### SEC8 — `expenses` bucket missing from DB — expense attachment uploads silently fail
 - **Problem**: `components/expense/ExpenseForm.tsx` (a client component) uploads expense attachments to `storage.from('expenses')` and calls `getPublicUrl` on the result. The `expenses` bucket does not exist in Supabase (confirmed via live DB query). Every attachment upload silently fails. Furthermore, using `getPublicUrl` from a client component violates the project rule that storage operations must go through API routes with service role (CLAUDE.md Known Patterns — "Storage upload").
@@ -344,11 +352,10 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Impact**: HIGH
 - **Fix**: Add a meaningful `WITH CHECK` clause that mirrors the `USING` clause (or restricts to only the `valutazione` column). Example: `WITH CHECK ((public.get_my_role() = 'responsabile_cittadino') AND (lezione_id IN (SELECT l.id FROM lezioni l JOIN corsi c ON c.id = l.corso_id JOIN user_profiles up ON up.user_id = auth.uid() WHERE c.citta IS NOT NULL AND c.citta = up.citta_responsabile)))`.
 
-### SEC12 — 6 RLS helper functions have mutable `search_path`
-- **Problem**: Supabase Security Advisor flags 6 `SECURITY DEFINER` functions — `set_updated_at`, `get_my_role`, `is_active_user`, `get_my_member_status`, `can_manage_community`, `get_my_collaborator_id` — as lacking a fixed `search_path`. A mutable search path in a `SECURITY DEFINER` function creates a potential privilege escalation vector: an attacker who can create objects in a schema earlier in the search path could shadow the functions or tables these helpers depend on.
-- **Files**: Respective `CREATE FUNCTION` statements in migration files.
-- **Impact**: HIGH (Supabase advisory WARN level; elevated to HIGH due to SECURITY DEFINER context)
-- **Fix**: Add `SET search_path = public` (or `SET search_path = public, pg_temp`) to each function definition. Example: `CREATE OR REPLACE FUNCTION public.get_my_role() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ SELECT role FROM user_profiles WHERE user_id = auth.uid() $$;`. Reference: https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
+### SEC12 — ~~6 RLS helper functions have mutable `search_path`~~ — RESOLVED
+- **Resolution**: All 4 active SECURITY DEFINER helpers (`get_my_role`, `is_active_user`, `can_manage_community`, `get_my_collaborator_id`) verified with `SET search_path = public` in the live staging DB. Confirmed by skill-db audit 2026-03-30.
+- **Originally**: Supabase Security Advisor flagged mutable `search_path` as a potential privilege escalation vector in SECURITY DEFINER functions.
+- **Closed**: 2026-03-30
 
 ### SEC13 — `xlsx` (SheetJS) dependency has 2 unpatched high CVEs
 - **Problem**: `npm audit` reports the `xlsx` package (SheetJS) has two high-severity CVEs with no fix available: (1) **GHSA-4r6h-8v6p-xvw6** — Prototype Pollution (CVSS 7.8, CWE-1321); (2) **GHSA-5pgg-2g8v-p4x9** — ReDoS (CVSS 7.5, CWE-1333). Both affect all versions (`range: *`). The package is used in `app/api/export/gsheet/route.ts` and `app/api/export/history/route.ts` (server-side XLSX generation). The prototype pollution vector is local (AV:L) so risk is mitigated by server-side only usage. The ReDoS (AV:N) is more directly relevant to any route parsing uploaded XLSX input.
@@ -372,6 +379,27 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Files**: Migration where `app_errors_insert` policy was created.
 - **Impact**: MEDIUM
 - **Fix**: Restrict the INSERT policy to only the fields the application writes (e.g. add a CHECK on `user_id = auth.uid()` and/or restrict `error_type` to a known enum). Alternatively, use service role only for inserts and remove the RLS INSERT policy entirely.
+
+### SEC-NEW-2 — Import/export routes forward `err.message` from external services to client
+- **Problem**: 15+ import/export routes (Google Sheets import, history export, XLSX generation) catch errors and return `err.message` directly in the JSON response. These messages can reveal internal service configuration details (GSheet IDs, OAuth scopes, file paths) to authenticated users.
+- **Files**: `app/api/export/`, `app/api/admin/import/`, related import routes
+- **Impact**: MEDIUM
+- **Fix**: Replace `err.message` in catch blocks for external service calls with a generic `'Errore servizio esterno'` string. Log the real error server-side: `console.error('[import]', err.message)`.
+- **Discovered**: security-audit 2026-03-30
+
+### SEC-NEW-3 — Dynamic route handlers lack UUID path-param validation
+- **Problem**: All 20+ dynamic API routes (e.g. `/api/compensations/[id]`, `/api/tickets/[id]`) use `params.id` directly in Supabase queries without validating UUID format. An invalid UUID (e.g. `../admin`, `' OR 1=1`) causes a Supabase DB error (not a clean 400), leaking internal error shape to the caller.
+- **Files**: All `app/api/**/*[id]*/route.ts` files (20+ handlers)
+- **Impact**: MEDIUM
+- **Fix**: Add `z.string().uuid().parse(id)` at the top of each dynamic handler, wrapped in try/catch returning `{ error: 'ID non valido' }` with status 400.
+- **Discovered**: security-audit 2026-03-30
+
+### SEC-NEW-4 — Admin RLS `FOR ALL` policies lack explicit `WITH CHECK`
+- **Problem**: 7 admin-only `FOR ALL` RLS policies on `corsi`, `lezioni`, `assegnazioni`, `candidature`, `blacklist`, `allegati_globali`, `liquidazione_requests` omit `WITH CHECK`. In Postgres, `FOR ALL` without `WITH CHECK` inherits `USING` for write checks — functionally equivalent, but the pattern is non-standard and harder to audit. Future policy changes risk missing the write-check implication.
+- **Files**: `supabase/migrations/` — relevant policy definitions
+- **Impact**: LOW
+- **Fix**: Add explicit `WITH CHECK (get_my_role() = 'amministrazione')` to each of the 7 policies.
+- **Discovered**: security-audit 2026-03-30
 
 ---
 
@@ -479,7 +507,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 
 ## API — API Design
 
-### API1 — `request.json()` called without `.catch()` or `try/catch` in 42 routes
+### API1 — ~~`request.json()` called without `.catch()` or `try/catch` in 42 routes~~ — RESOLVED
 - **Problem**: 42 API route handlers call `await request.json()` (or `await req.json()`) without wrapping in a `try/catch` or chaining `.catch()`. If the client sends a malformed JSON body (e.g. truncated payload, wrong `Content-Type`), the `JSON.parse` inside `request.json()` throws a `SyntaxError`. In Next.js App Router, an unhandled throw returns a raw 500 text response instead of a clean `{ error }` JSON. Client code that always expects JSON will silently fail. Known-safe routes use `.catch(() => null)` inline (e.g. `bulk-approve`, `assegnazioni/route.ts`).
 - **Sample affected files (42 total)**:
   - `app/api/tickets/route.ts` (POST handler, line 82)
@@ -494,7 +522,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
   - `app/api/compensations/[id]/transition/route.ts` (line 67)
   - `app/api/expenses/route.ts` (line 72)
   - `app/api/expenses/[id]/transition/route.ts` (line 63)
-  - `app/api/corsi/route.ts` (line 84) and 4 other corsi routes
+  - `app/api/corsi/route.ts` (line 84), `corsi/[id]/route.ts`, `corsi/[id]/lezioni/route.ts`, `corsi/[id]/lezioni/[lid]/route.ts`, `corsi/[id]/valutazioni/route.ts` (5 corsi routes — bare, no try/catch wrapper)
   - `app/api/events/route.ts`, `events/[id]/route.ts`, `communications/route.ts`, `communications/[id]/route.ts`, `discounts/route.ts`, `discounts/[id]/route.ts`, `resources/route.ts`, `resources/[id]/route.ts`
   - and 20+ more admin/profile routes
 - **Impact**: MEDIUM — malformed JSON from a browser/test client returns a non-JSON 500, breaking client error handling
@@ -558,6 +586,18 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
   - All other collection endpoints (`compensations`, `expenses`, `tickets`, `corsi`, etc.) return full unbounded result sets with no pagination
 - **Impact**: LOW — currently no client-side cross-endpoint pagination consumer; risk grows as lists scale
 - **Fix**: Define a project-wide pagination standard: params `page` + `pageSize`, response `{ items: T[], total: number, page: number, pageSize: number }`. Apply to `admin/members` first (already closest), then `email-delivery`, then evaluate unbounded endpoints for risk.
+
+### API8 — `POST /api/admin/create-user` returns 200 instead of 201
+- **Problem**: `POST /api/admin/create-user` (line 183) returns `NextResponse.json({ email, password })` with no explicit status, defaulting to 200. This route creates an auth user, a `user_profiles` row, and a `collaborators` row — it is a resource-creation endpoint and should return 201 per RFC 9110. Every other resource-creating POST in the project returns 201.
+- **Files**: `app/api/admin/create-user/route.ts:183`
+- **Impact**: LOW — no current client checks the status code; affects future client consistency
+- **Fix**: Change final return to `NextResponse.json({ email, password }, { status: 201 })`.
+
+### API9 — Inconsistent Zod validation error shape in 8 routes
+- **Problem**: The project standard for Zod validation failures is `{ error: 'Dati non validi', issues: result.error.issues }` (used in 20+ routes: `expenses`, `liquidazione-requests`, `compensations`, etc.). Eight routes wrap the issues array directly in the `error` key: `{ error: parsed.error.issues }` — an array where a string is expected. Client code that reads `data.error` as a string to display will receive `[object Object]` or `[...]`. The affected routes are all in the corsi domain plus `admin/blacklist`.
+- **Files**: `app/api/corsi/route.ts:86`, `app/api/corsi/[id]/route.ts:78,87`, `app/api/corsi/[id]/lezioni/route.ts:53`, `app/api/corsi/[id]/lezioni/[lid]/route.ts:36`, `app/api/admin/blacklist/route.ts:62`
+- **Impact**: MEDIUM — client error display shows `[object Object]` for validation failures in corsi/blacklist routes
+- **Fix**: Replace `{ error: parsed.error.issues }` with `{ error: 'Dati non validi', issues: parsed.error.issues }` in all 6 files listed above.
 
 ---
 
@@ -659,6 +699,62 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Fix**: Change to `ON DELETE SET NULL` and make `creator_user_id` nullable, or add `ON DELETE RESTRICT` to prevent user deletion while tickets exist.
 - **Discovered**: skill-db audit 2026-03-27
 
+### DB-NEW-1 — `compensations.importo_lordo` nullable — NaN propagation risk
+- **Problem**: `importo_lordo` has no NOT NULL constraint. A NULL value silently propagates as NaN through `importo_netto` and `ritenuta_acconto` calculations, producing corrupt financial records without a DB-level error.
+- **Files**: `supabase/migrations/` — ALTER COLUMN
+- **Impact**: MEDIUM
+- **Fix**: Verify no NULL rows exist (`SELECT COUNT(*) FROM compensations WHERE importo_lordo IS NULL`), then `ALTER TABLE compensations ALTER COLUMN importo_lordo SET NOT NULL`.
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-2 — `compensations.importo_netto` nullable — NaN propagation risk
+- **Problem**: Same as DB-NEW-1. `importo_netto` is nullable — should always be derived from `importo_lordo` and `ritenuta_acconto`, so NULL is semantically invalid.
+- **Files**: `supabase/migrations/` — ALTER COLUMN
+- **Impact**: MEDIUM
+- **Fix**: `ALTER TABLE compensations ALTER COLUMN importo_netto SET NOT NULL` (after backfill check).
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-3 — `compensations.ritenuta_acconto` nullable — incorrect net calculation
+- **Problem**: `ritenuta_acconto` is nullable. A NULL withholding rate causes `importo_netto` to be calculated incorrectly (treated as 0%) — the collaborator appears to receive gross pay.
+- **Files**: `supabase/migrations/` — ALTER COLUMN
+- **Impact**: MEDIUM
+- **Fix**: `ALTER TABLE compensations ALTER COLUMN ritenuta_acconto SET NOT NULL` (after backfill check).
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-4 — `compensations.data_competenza` nullable — date-range filters silently exclude rows
+- **Problem**: `data_competenza` is nullable. Date-range export filters (e.g. `gte`/`lte`) silently exclude NULL rows, causing compensations without a competency date to disappear from exports without any error.
+- **Files**: `supabase/migrations/` — ALTER COLUMN
+- **Impact**: MEDIUM
+- **Fix**: `ALTER TABLE compensations ALTER COLUMN data_competenza SET NOT NULL` (after backfill check).
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-5 — No `CHECK (importo_lordo > 0)` on compensations
+- **Problem**: No constraint prevents a service-role insert (bypassing Zod) from writing a zero or negative gross amount. This creates financially invalid records.
+- **Files**: `supabase/migrations/` — ADD CONSTRAINT
+- **Impact**: MEDIUM
+- **Fix**: `ALTER TABLE compensations ADD CONSTRAINT chk_comp_lordo_positive CHECK (importo_lordo > 0)` (verify no zero/negative rows first).
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-6 — No `CHECK (importo > 0)` on expense_reimbursements
+- **Problem**: Same pattern as DB-NEW-5 on the `expense_reimbursements` table. No positive-amount constraint at DB level.
+- **Files**: `supabase/migrations/` — ADD CONSTRAINT
+- **Impact**: MEDIUM
+- **Fix**: `ALTER TABLE expense_reimbursements ADD CONSTRAINT chk_exp_importo_positive CHECK (importo > 0)`.
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-7 — No `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations
+- **Problem**: The withholding rate is stored as a percentage (e.g. 20 = 20%). No DB constraint prevents inserting a value outside 0–100, which would produce mathematically invalid `importo_netto` calculations.
+- **Files**: `supabase/migrations/` — ADD CONSTRAINT
+- **Impact**: MEDIUM
+- **Fix**: `ALTER TABLE compensations ADD CONSTRAINT chk_ritenuta_range CHECK (ritenuta_acconto BETWEEN 0 AND 100)`.
+- **Discovered**: skill-db audit 2026-03-30
+
+### DB-NEW-8 — `expense_attachments.reimbursement_id` FK unindexed
+- **Problem**: The FK `expense_attachments.reimbursement_id → expense_reimbursements.id` has no index. Every expense detail page join and cascade delete operation requires a full sequential scan of `expense_attachments`.
+- **Files**: `supabase/migrations/` — CREATE INDEX CONCURRENTLY
+- **Impact**: MEDIUM
+- **Fix**: `CREATE INDEX CONCURRENTLY idx_exp_att_reimbursement_id ON expense_attachments(reimbursement_id)`.
+- **Discovered**: skill-db audit 2026-03-30
+
 ---
 
 ## DEV — Code Quality / Coupling / Type Safety
@@ -740,20 +836,6 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 
 ## PERF — Performance / Bundle
 
-### PERF-1 — `xlsx` and `docxtemplater` missing from `serverExternalPackages`
-- **Problem**: `next.config.ts` lists `serverExternalPackages: ["lightningcss", "pdfjs-dist", "pdf-lib"]` but omits `xlsx` and `docxtemplater`. Both libraries are large (xlsx ≈ 1.2MB, docxtemplater + pizzip ≈ 400KB) and server-only. If a developer accidentally imports `lib/export-utils.ts` or `lib/import-history-utils.ts` (which import `xlsx`) from a `'use client'` component, the full library will be bundled into the client JS.
-- **Files**: `next.config.ts:45`, `lib/export-utils.ts:1`, `lib/import-history-utils.ts:1`
-- **Impact**: MEDIUM (latent — not currently client-bundled; no `'use client'` component imports xlsx directly; but no build-time guard)
-- **Fix**: Add `'xlsx'`, `'docxtemplater'`, and `'pizzip'` to `serverExternalPackages` array in `next.config.ts`.
-- **Discovered**: perf-audit 2026-03-27
-
-### PERF-2 — `optimizePackageImports` missing for `lucide-react`
-- **Problem**: `next.config.ts` does not declare `optimizePackageImports` for `lucide-react`. The library has 1,000+ named exports. While Next.js may apply automatic tree-shaking, explicit declaration in `optimizePackageImports` guarantees dead-code elimination and speeds up hot-module replacement during development. 69+ icon imports are spread across components.
-- **Files**: `next.config.ts`, `components/**/*.tsx` (69 files with `from 'lucide-react'`)
-- **Impact**: MEDIUM (bundle size + dev server HMR speed)
-- **Fix**: Add `optimizePackageImports: ['lucide-react']` to the `nextConfig` object in `next.config.ts`.
-- **Discovered**: perf-audit 2026-03-27
-
 ### PERF-3 — Admin dashboard: sequential `adminCollab` fetch before parallel block
 - **Problem**: In the admin dashboard branch of `app/(app)/page.tsx` (line 576), `adminCollab` is fetched with a standalone `await svc.from('collaborators')...` before the 25-query `Promise.all` at line 589. These queries are fully independent — `adminCollab` is not used as an input to any query in the parallel block. This serialises ~50–100ms of DB latency on every admin page load.
 - **Files**: `app/(app)/page.tsx:576–580`, `app/(app)/page.tsx:589–711`
@@ -805,3 +887,10 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Impact**: LOW (operational tooling gap — no runtime effect)
 - **Fix**: Add `"analyze": "npx next experimental-analyze"` as a script in `package.json` (no extra package needed for Next.js 16 native analyzer).
 - **Discovered**: perf-audit 2026-03-27
+
+### PERF-11 — `CorsiCalendario` statically imported — no `next/dynamic`
+- **Problem**: `components/corsi/CorsiPageCollab.tsx:9` statically imports `CorsiCalendario`, a client-side calendar component with full day-grid rendering logic. It loads eagerly in the initial JS bundle for every collaboratore visiting `/corsi`, even those with no calendar entries or who never view the calendar tab.
+- **Files**: `components/corsi/CorsiPageCollab.tsx:9`
+- **Impact**: MEDIUM (initial JS bundle size + parse time for all collaboratori on `/corsi`)
+- **Fix**: Replace static import with `const CorsiCalendario = dynamic(() => import('./CorsiCalendario'), { ssr: false })` — the calendar doesn't need SSR.
+- **Discovered**: perf-audit 2026-03-30

@@ -40,6 +40,12 @@ CLAUDE.local.md
 playwright-report/
 test-results/
 
+# audit skill screenshot artifacts (fallback — primary path is /tmp/sm-audit/)
+visual-*
+ux-audit-*.png
+responsive/
+tmp/
+
 # supabase CLI temp files
 supabase/.temp/
 
