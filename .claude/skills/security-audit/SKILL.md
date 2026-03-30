@@ -320,9 +320,24 @@ Read `proxy.ts`. Verify:
 [route/file — check# — note]
 ```
 
-### Write to backlog
+### Backlog decision gate
 
-For each Critical or High finding, append to `docs/refactoring-backlog.md`:
+Present all findings with severity Medium or above as a numbered decision list, sorted Critical → High → Medium:
+
+```
+Trovati N finding Medium o superiori. Quali aggiungere al backlog?
+
+[1] [CRITICAL] SEC-? — route/file — one-line description
+[2] [HIGH]     SEC-? — route/file — one-line description
+[3] [MEDIUM]   SEC-? — route/file — one-line description
+...
+
+Rispondi con i numeri da includere (es. "1 2 4"), "tutti", o "nessuno".
+```
+
+**Wait for explicit user response before writing anything.**
+
+Then write ONLY the approved entries to `docs/refactoring-backlog.md`:
 - Assign ID: `SEC-[n]`
 - Add to priority index
 - Add full detail section with exploit scenario and recommended fix
