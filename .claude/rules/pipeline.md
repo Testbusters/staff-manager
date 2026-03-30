@@ -21,7 +21,7 @@ All functional blocks use a dedicated worktree (`.claude/worktrees/block-name`, 
   - If none exists: create `.claude/session/block-new-session.md` with the current date and a placeholder skeleton. This file will be renamed to the real block name in Phase 1 once the block name is known.
   - This is non-negotiable: the session file must exist before any other Phase 0 action runs.
 - Read `.claude/CLAUDE.local.md` to confirm active overrides for this session (it is auto-loaded, but an explicit read ensures its content is fully in context). If the file does not exist, continue.
-- Check `MEMORY.md` (project root): read the **Active plan** section (if present) to re-align on in-progress sessions, then **Lessons/Patterns** for patterns relevant to the current block. The auto-memory is injected automatically — no explicit read needed.
+- The auto-memory MEMORY.md is injected automatically at session start — no explicit read needed. It contains the Active plan and all key patterns for this project.
 - If context was compressed (summary): read `docs/implementation-checklist.md` to re-align on current state.
 - Do not re-read files already in the current context — use the already-acquired line reference.
 - **Worktree setup** *(functional blocks — skip for Fast Lane `fix/` branches)*:
