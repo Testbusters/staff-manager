@@ -161,11 +161,11 @@ Evaluate each candidate after the ritenuta scale is confirmed in Step 4 (run S4 
 For each: "if a row were inserted directly via service role with an invalid value, would the DB catch it?" If no, and the value drives financial calculations or state machine logic, flag as Medium.
 
 *Part B — Composite UNIQUE constraints*
-Cross-reference `docs/contracts/` business rules against the schema:
-- `candidature (lezione_id, collaborator_id)`: can a collaborator submit two candidature for the same lezione? If the contracts say no, flag missing UNIQUE.
-- `assegnazioni (lezione_id, collaborator_id)`: same logic — can a collaborator be assigned twice to the same lezione?
-- `blacklist (lezione_id, collaborator_id)`: should a blacklist entry for the same pair be unique?
-- `notification_settings (event_key, recipient_role)`: should this pair be unique?
+Cross-reference `docs/entity-manifest.md` + the contract files in `docs/contracts/` against the schema. For each entity, identify business rules of the form "only one record per X+Y combination" — these are composite UNIQUE candidates. Then verify the constraint exists in `db-map.md`.
+
+Patterns to look for in contracts:
+- Junction tables (entity + collaborator, key + role) are almost always composite UNIQUE — verify each one.
+- Any contract rule saying "a collaborator can only have one active X per Y" requires a DB-level UNIQUE (optionally partial, scoped to active states).
 
 For each: anchor to the business rule from the contract, not to implementation preference. Flag as Medium if the absence would allow duplicate records currently prevented only by application code.
 

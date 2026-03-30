@@ -137,7 +137,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 ### Priority 1 flows (always run in standard mode)
 
 #### F1 — Collaboratore: apertura rimborso
-**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
+**Role**: collab · **Credential**: read collaboratore (TB) test credentials from docs/sitemap.md "Test accounts"
 **Read before simulating**: `app/(app)/rimborsi/nuova/page.tsx` + rimborso form component
 **Steps**:
 1. Login → `/`
@@ -152,7 +152,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 **Evaluate**: D1 (can user find the CTA?), D3 (success toast + BF1 message quality), D5 (field count vs BF6), D6 (validation messages specific per BF1?), D7 (cancel path present? Reassurance copy?)
 
 #### F2 — Collaboratore: consultazione comunicazioni
-**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
+**Role**: collab · **Credential**: read collaboratore (TB) test credentials from docs/sitemap.md "Test accounts"
 **Read before simulating**: `app/(app)/comunicazioni/page.tsx` + detail page
 **Steps**:
 1. Navigate to `/comunicazioni`
@@ -163,7 +163,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 **Evaluate**: D4 (is there a back affordance? — H6 recognition), D2 (does detail page match eventi/[id] and opportunita/[id] patterns?)
 
 #### F3 — Collaboratore: apertura ticket
-**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
+**Role**: collab · **Credential**: read collaboratore (TB) test credentials from docs/sitemap.md "Test accounts"
 **Read before simulating**: `app/(app)/ticket/nuova/page.tsx`
 **Steps**:
 1. Navigate to `/ticket`
@@ -176,7 +176,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 **Evaluate**: D1, D3 (BF1 message quality), D5 (form length ≤6 per BF6?), D2 (consistent with rimborso form pattern?), D7 (cancel path, no accidental submission)
 
 #### F4 — Responsabile: consultazione compensi e rimborsi
-**Role**: resp · **Credential**: responsabile_compensi_test@test.com / Testbusters123
+**Role**: resp · **Credential**: read responsabile_compensi test credentials from docs/sitemap.md "Test accounts"
 **Read before simulating**: `app/(app)/approvazioni/page.tsx`
 **Steps**:
 1. Login → `/`
@@ -190,18 +190,18 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 **Evaluate**: D2 (read-only constraint clearly communicated?), D4 (active tab visually clear? — H6 recognition), D5 (info density per row appropriate?), D7 (user feels informed, not confused by missing actions)
 
 #### F5 — Collaboratore: dashboard orientation
-**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
-**Read before simulating**: `app/(app)/page.tsx` + DashboardUpdates component
+**Role**: collab · **Credential**: read collaboratore (TB) test credentials from docs/sitemap.md "Test accounts"
+**Read before simulating**: `app/(app)/page.tsx` + the dashboard components listed in the 'Componenti chiave' column of docs/sitemap.md for the `/` route
 **Steps**:
 1. Login → `/`
 2. Observe dashboard: what is shown first? What draws the eye?
-3. Interact with DashboardUpdates tabs (Documenti / Eventi / Comunicazioni / Opportunità)
+3. Interact with the dashboard updates/tabs section (read component structure from the page file loaded above)
 4. Check if any CTA on dashboard leads to the correct section
 
 **Evaluate**: D1 (can user understand what to do from the dashboard?), D4 (current section clear from sidebar?), D5 (info density — too much / too little?), D7 (does the dashboard inspire confidence or overwhelm?)
 
 #### F6 — Collaboratore: corsi list + candidatura
-**Role**: collab · **Credential**: collaboratore_tb_test@test.com / Testbusters123
+**Role**: collab · **Credential**: read collaboratore (TB) test credentials from docs/sitemap.md "Test accounts"
 **Read before simulating**: look up `/corsi` in `docs/sitemap.md` 'Componenti chiave' column → read the listed files
 **Steps**:
 1. Navigate to `/corsi`
@@ -215,7 +215,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 **Evaluate**: D1 (candidatura CTA discoverable?), D2 (detail page follows same tab pattern?), D3 (state change feedback + BF1 quality), D5 (lezioni data density), D4 (back navigation), D7 (confirmation for irreversible action?)
 
 #### F7 — Responsabile cittadino: assegnazione CoCoD'à
-**Role**: resp_citt · **Credential**: responsabile_cittadino_test@test.com / Testbusters123
+**Role**: resp_citt · **Credential**: read responsabile_cittadino test credentials from docs/sitemap.md "Test accounts"
 **Prerequisite**: if this account doesn't exist, skip this flow and log: "F7 SKIPPED — no resp_citt test account. Create one before running this flow."
 **Read before simulating**: look up `/corsi/assegnazione` in `docs/sitemap.md` 'Componenti chiave' column → read the listed files
 **Steps**:
@@ -231,7 +231,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 
 #### F-onboarding — Collaboratore: wizard di onboarding
 **Role**: collab · **Priority**: 1
-**Credential**: collaboratore_tb_test@test.com / Testbusters123 (requires `onboarding_completed=false`)
+**Credential**: read collaboratore (TB) test credentials from docs/sitemap.md "Test accounts" (requires `onboarding_completed=false`)
 **Prerequisite**: account must have `onboarding_completed=false` + `must_change_password=false`. If not: use staging DB to reset `onboarding_completed=false` for the test account before running.
 **Read before simulating**: `app/(app)/onboarding/` — all steps
 **Steps**:
@@ -453,7 +453,7 @@ Order by severity, then by impact (flows affected):
 After the report:
 
 > "Vuoi approfondire qualche finding specifico? Posso:
-> - **Design via Figma MCP**: leggere le Foundation TB (`get_variable_defs` su file `p9kUAQ2qNVg4PojTBEkSmC`) e proporre un redesign del flusso critico fedele al design system reale
+> - **Design via Figma MCP**: leggere le Foundation TB (`get_variable_defs` sul file ID dal "Design system" entry in MEMORY.md) e proporre un redesign del flusso critico fedele al design system reale
 > - **Wireframe ASCII**: proporre il design dettagliato per un fix via `/frontend-design`
 > - **Heuristic deep-dive**: analizzare in dettaglio un'euristica specifica su tutte le pagine (es. H5 su tutti i flussi con azioni distruttive)
 > - Eseguire un flow aggiuntivo (elenca il flow con i passi)

@@ -4,16 +4,22 @@
 > find the entity being modified below and add ALL listed surfaces to the file list.
 > If the entity is not listed: add it here before proceeding.
 >
-> **Companion document**: `docs/entity-manifest.md` — for functional surfaces (role permissions,
-> entry points, field-level access). Read the relevant contract in `docs/contracts/` alongside this map.
+> **Scope of this file**: lib files, TypeScript types, components, tests, and implementation notes.
+> Page files (`app/(app)/...page.tsx`) and API route files (`app/api/...route.ts`) are indexed in
+> `docs/sitemap.md` — use the sitemap's route table and API Routes section to find those surfaces.
+>
+> **Companion documents**:
+> - `docs/sitemap.md` — UI routes, API routes, roles, and cross-cutting topology
+> - `docs/entity-manifest.md` — functional surfaces per entity (role permissions, field-level access)
+> Read the relevant contract in `docs/contracts/` alongside this map.
 
 ---
 
 ## How to use
 
 1. Identify the entity being changed (profile field, state machine, role, etc.)
-2. Look it up in the table below
-3. Every row in that entity's surface list is a candidate for the file list
+2. Look it up in the table below — every row is a non-obvious candidate for the file list
+3. For page and API route files: cross-reference `docs/sitemap.md` → filter by section or route
 4. For field-level permission and entry point details: read `docs/entity-manifest.md` → linked contract
 5. Cross-check with the dependency scan (grep/glob) — this map is the starting point, not a substitute
 
@@ -48,14 +54,6 @@
 
 | Surface | Path |
 |---|---|
-| Self-edit page | `app/(app)/profilo/page.tsx` |
-| Admin detail view | `app/(app)/collaboratori/[id]/page.tsx` |
-| Onboarding wizard | `app/onboarding/page.tsx` |
-| Self-edit API | `app/api/profile/route.ts` |
-| Admin edit API | `app/api/admin/collaboratori/[id]/profile/route.ts` |
-| Username-only API | `app/api/admin/collaboratori/[id]/route.ts` |
-| Onboarding complete API | `app/api/onboarding/complete/route.ts` |
-| Create-user API | `app/api/admin/create-user/route.ts` |
 | Types | `lib/types.ts` (`Collaborator` interface) |
 | Profile editing contract | `docs/profile-editing-contract.md` |
 | Sitemap (if field changes access) | `docs/sitemap.md` |
@@ -72,16 +70,6 @@
 |---|---|
 | Transition logic (pure) | `lib/compensation-transitions.ts` |
 | Transition unit tests | `lib/compensation-transitions.test.ts` |
-| Collaboratore list | `app/(app)/compensi/page.tsx` |
-| Collaboratore detail | `app/(app)/compensi/[id]/page.tsx` |
-| Responsabile approval view | `app/(app)/approvazioni/page.tsx` |
-| Admin work queue | `app/(app)/coda/page.tsx` |
-| Admin export | `app/(app)/export/page.tsx` |
-| Transition API | `app/api/compensations/[id]/transition/route.ts` |
-| Compensation API (list/create) | `app/api/compensations/route.ts` |
-| Approve-all API | `app/api/compensations/approve-all/route.ts` |
-| Approve-bulk API | `app/api/compensations/approve-bulk/route.ts` |
-| Mark-paid API | `app/api/export/mark-paid/route.ts` |
 | Types + labels | `lib/types.ts` (`CompensationStatus`, `COMPENSATION_STATUS_LABELS`) |
 | Notification builder | `lib/notification-utils.ts` |
 | Email templates | `lib/email-templates.ts` (E1, E2, E3) |
@@ -99,16 +87,6 @@
 |---|---|
 | Transition logic (pure) | `lib/expense-transitions.ts` |
 | Transition unit tests | `lib/expense-transitions.test.ts` |
-| Collaboratore list | `app/(app)/rimborsi/page.tsx` |
-| Collaboratore create | `app/(app)/rimborsi/nuova/page.tsx` |
-| Collaboratore detail | `app/(app)/rimborsi/[id]/page.tsx` |
-| Responsabile approval view | `app/(app)/approvazioni/page.tsx` |
-| Admin work queue | `app/(app)/coda/page.tsx` |
-| Admin export | `app/(app)/export/page.tsx` |
-| Transition API | `app/api/expenses/[id]/transition/route.ts` |
-| Expense API (list/create) | `app/api/expenses/route.ts` |
-| Approve-all API | `app/api/expenses/approve-all/route.ts` |
-| Approve-bulk API | `app/api/expenses/approve-bulk/route.ts` |
 | Types + labels | `lib/types.ts` (`ExpenseStatus`, `EXPENSE_STATUS_LABELS`, `ExpenseCategory`) |
 | Notification builder | `lib/notification-utils.ts` |
 | Email templates | `lib/email-templates.ts` (E1, E2, E3 reused) |
@@ -124,13 +102,9 @@
 
 | Surface | Path |
 |---|---|
-| Collaboratore profile docs tab | `app/(app)/profilo/page.tsx` |
-| Admin document manager | `app/(app)/documenti/page.tsx` |
-| Document detail / sign flow | `app/(app)/documenti/[id]/page.tsx` |
-| Upload API | `app/api/documents/route.ts` |
-| Sign API | `app/api/documents/[id]/sign/route.ts` |
-| CU batch upload API | `app/api/documents/cu-batch/route.ts` |
 | Types + labels | `lib/types.ts` (`DocumentSignStatus`, `DocumentType`, `DocumentMacroType`) |
+| PDF generation | `lib/pdf-utils.ts`, `lib/document-generation.ts` |
+| DOCX generation | `lib/docx-generation.ts` |
 | Email templates | `lib/email-templates.ts` (E4, E5) |
 
 **DB**: `documents` table. `macro_type` is a generated column — verify before adding indexes.
@@ -144,12 +118,6 @@
 
 | Surface | Path |
 |---|---|
-| Ticket list (all roles) | `app/(app)/ticket/page.tsx` |
-| Ticket create | `app/(app)/ticket/nuova/page.tsx` |
-| Ticket detail + thread | `app/(app)/ticket/[id]/page.tsx` |
-| Status transition API | `app/api/tickets/[id]/status/route.ts` |
-| Ticket API (list/create) | `app/api/tickets/route.ts` |
-| Messages API | `app/api/tickets/[id]/messages/route.ts` |
 | Types + labels | `lib/types.ts` (`TicketStatus`, `TicketPriority`, `TICKET_STATUS_LABELS`) |
 | Notification builder | `lib/notification-utils.ts` |
 | Email templates | `lib/email-templates.ts` (E6, E9) |
@@ -168,15 +136,12 @@
 | Auth proxy (role attach + redirect) | `proxy.ts` |
 | Navigation config | `lib/nav.ts` (`NAV_BY_ROLE`) |
 | Sidebar (icon resolution) | `components/Sidebar.tsx` |
-| App layout | `app/(app)/layout.tsx` |
 | Types | `lib/types.ts` (`Role`, `ROLE_LABELS`) |
-| Every page with role guard | `app/(app)/**/page.tsx` (grep `x-user-role`) |
-| Every API route with role check | `app/api/**/*.ts` (grep `get_my_role\|x-user-role`) |
-| DB helper functions | migrations: `get_my_role()`, `can_manage_community()`, `is_active_user()` |
-| All RLS policies | (check all migrations if role enum changes) |
 | Sitemap | `docs/sitemap.md` |
 | CLAUDE.md RBAC table | `CLAUDE.md` |
 
+**Note**: grep `x-user-role` across `app/(app)/**/page.tsx` to find all role-guarded pages.
+**Note**: grep `get_my_role\|x-user-role` across `app/api/**/*.ts` to find all API role checks.
 **Critical**: renaming a role requires updating the Postgres `role` enum AND all CHECK constraints AND all RLS `get_my_role()` comparisons across migrations.
 
 ---
@@ -189,7 +154,6 @@
 |---|---|
 | Navigation config | `lib/nav.ts` |
 | Sidebar component | `components/Sidebar.tsx` (ICON_MAP) |
-| App layout | `app/(app)/layout.tsx` |
 | Sitemap doc | `docs/sitemap.md` |
 
 **Rule**: always use `iconName: string` in `lib/nav.ts` — never a Lucide `icon: LucideIcon` component (Server→Client boundary).
@@ -205,13 +169,12 @@
 | Notification builders | `lib/notification-utils.ts` |
 | Recipient helpers | `lib/notification-helpers.ts` |
 | Bell component | `components/NotificationBell.tsx` |
-| Notification page | `app/(app)/notifiche/page.tsx` (client) |
+| Notification page (client) | `app/(app)/notifiche/page.tsx` |
 | Settings manager (admin) | `components/NotificationSettingsManager.tsx` |
-| Settings API | `app/api/admin/notification-settings/route.ts` |
-| Every API route that triggers a notification | (grep `buildXNotification\|sendEmail`) |
 | Types | `lib/types.ts` (`NotificationEntityType`) |
 | Email templates | `lib/email-templates.ts` (all templates) |
 
+**Note**: grep `buildXNotification\|sendEmail` across `app/api/**/*.ts` for all triggering routes.
 **DB**: `notifications`, `notification_settings` (19 rows: event_key × recipient_role).
 **Pattern**: fire-and-forget `sendEmail(...).catch(() => {})` — failures must NOT block API responses.
 
@@ -223,17 +186,8 @@
 
 | Surface | Path |
 |---|---|
-| Responsabile approval view | `app/(app)/approvazioni/page.tsx` |
-| Admin collaboratori list | `app/(app)/collaboratori/page.tsx` |
-| Admin document manager | `app/(app)/documenti/page.tsx` |
-| Content management | `app/(app)/contenuti/page.tsx` |
-| Communities API | `app/api/compensations/communities/route.ts` |
-| Approve-all APIs | `app/api/compensations/approve-all/route.ts`, `app/api/expenses/approve-all/route.ts` |
-| Admin collaboratore profile edit | `app/api/admin/collaboratori/[id]/profile/route.ts` |
-| Create-user API | `app/api/admin/create-user/route.ts` |
-| All content creation APIs | `app/api/communications/route.ts`, `events`, `opportunities`, `discounts`, `resources` |
 | Notification helpers | `lib/notification-helpers.ts` |
-| RLS DB helper | `can_manage_community()` (security definer fn) |
+| RLS DB helper | `can_manage_community()` (security definer fn in migrations) |
 
 **DB**: `collaborator_communities`, `user_community_access`, `communities`.
 **Security**: any route allowing responsabile to modify a collaborator MUST verify community membership first.
@@ -248,13 +202,8 @@
 |---|---|
 | All templates | `lib/email-templates.ts` |
 | Email sender util | `lib/email.ts` |
-| Compensation transition API | `app/api/compensations/[id]/transition/route.ts` |
-| Expense transition API | `app/api/expenses/[id]/transition/route.ts` |
-| Document upload API | `app/api/documents/route.ts` |
-| Document sign API | `app/api/documents/[id]/sign/route.ts` |
-| Ticket messages API | `app/api/tickets/[id]/messages/route.ts` |
-| Content creation APIs | `app/api/communications`, `events`, `opportunities`, `discounts` |
 
+**Note**: grep `sendEmail` across `app/api/**/*.ts` to find all routes that trigger emails.
 **Env**: `APP_URL` controls all CTA links. `RESEND_API_KEY` for delivery.
 **Branding color**: `#E8320A` (Testbusters red) — used in template layout wrapper.
 
@@ -271,8 +220,6 @@
 | Theme provider | `components/ThemeProvider.tsx` |
 | Theme sync (DB → provider) | `components/ThemeSync.tsx` |
 | Sidebar toggle | `components/Sidebar.tsx` |
-| Theme API | `app/api/profile/theme/route.ts` |
-| Login page (forces dark) | `app/login/page.tsx` |
 
 **DB**: `user_profiles.theme_preference` (migration 035).
 **Rule**: `suppressHydrationWarning` on `<html>`, `<body>`, and any element reading `resolvedTheme` before mount.
@@ -285,18 +232,6 @@
 
 | Surface | Path |
 |---|---|
-| Content management (admin+resp) | `app/(app)/contenuti/page.tsx` |
-| Comunicazioni list (collab) | `app/(app)/comunicazioni/page.tsx` |
-| Events list (collab) | `app/(app)/eventi/page.tsx` |
-| Opportunità list (collab) | `app/(app)/opportunita/page.tsx` |
-| Sconti list (collab) | `app/(app)/sconti/page.tsx` |
-| Risorse list (collab) | `app/(app)/risorse/page.tsx` |
-| Content detail pages (collab) | `app/(app)/[type]/[id]/page.tsx` |
-| Communications API | `app/api/communications/route.ts`, `[id]/route.ts` |
-| Events API | `app/api/events/route.ts`, `[id]/route.ts` |
-| Opportunities API | `app/api/opportunities/route.ts`, `[id]/route.ts` |
-| Discounts API | `app/api/discounts/route.ts`, `[id]/route.ts` |
-| Resources API | `app/api/resources/route.ts`, `[id]/route.ts` |
 | Types | `lib/types.ts` (`Communication`, `ContentEvent`, `Opportunity`, `Discount`, `Resource`) |
 | Notification utils | `lib/notification-utils.ts` (`buildContentNotification`) |
 | Notification helpers | `lib/notification-helpers.ts` (`getAllActiveCollaboratori`, `getCollaboratoriForCommunities`) |
@@ -315,11 +250,10 @@
 |---|---|
 | Auth proxy (header attach) | `proxy.ts` |
 | Member status manager (admin UI) | `components/MemberStatusManager.tsx` |
-| Admin collaboratori detail | `app/(app)/collaboratori/[id]/page.tsx` |
-| Every page checking member_status | `app/(app)/compensi`, `rimborsi`, `ticket`, `documenti` (grep `x-member-status`) |
 | Types | `lib/types.ts` (`MemberStatus`) |
 | Sitemap | `docs/sitemap.md` |
 
+**Note**: grep `x-member-status` across `app/(app)/**` to find all gated pages.
 **DB**: `user_profiles.member_status`.
 **Values**: `attivo` | `uscente_con_compenso` | `uscente_senza_compenso`.
 
@@ -332,15 +266,6 @@
 | Surface | Path |
 |---|---|
 | Auth proxy (all redirect logic) | `proxy.ts` |
-| Login page | `app/login/page.tsx` |
-| Change password page | `app/change-password/page.tsx` |
-| Onboarding wizard | `app/onboarding/page.tsx` |
-| Pending page (inactive users) | `app/pending/page.tsx` |
-| Auth callback | `app/auth/callback/route.ts` |
-| Change password API | `app/api/auth/change-password/route.ts` |
-| Clear force-change API | `app/api/auth/clear-force-change/route.ts` |
-| Onboarding complete API | `app/api/onboarding/complete/route.ts` |
-| Create-user API (invite flow) | `app/api/admin/create-user/route.ts` |
 
 **Pattern**: `createRedirect(url, supabaseResponse)` — copies Supabase cookies on redirect to avoid session loss.
 **Proxy chain**: `must_change_password` → `/change-password` → `onboarding_completed=false` → `/onboarding` → app.
@@ -353,12 +278,9 @@
 
 | Surface | Path |
 |---|---|
-| Template manager (admin) | `app/(app)/impostazioni/page.tsx` |
-| Document upload form | `app/(app)/documenti/page.tsx` |
-| Contract templates API | `app/api/admin/contract-templates/route.ts` |
-| Documents upload API | `app/api/documents/route.ts` |
-| CU batch upload API | `app/api/documents/cu-batch/route.ts` |
 | Types | `lib/types.ts` (`DocumentType`, `DocumentMacroType`, `ContractTemplateType`) |
+| PDF generation | `lib/pdf-utils.ts`, `lib/document-generation.ts` |
+| DOCX generation | `lib/docx-generation.ts` |
 
 **DB**: `contract_templates` table. `documents.macro_type` is a generated column.
 **Partial unique index**: `WHERE macro_type = 'CONTRATTO'` — one contract per collaborator. Drop index before UPDATE, re-add after.
@@ -371,11 +293,8 @@
 
 | Surface | Path |
 |---|---|
-| Export page (admin) | `app/(app)/export/page.tsx` |
 | Export utilities | `lib/export-utils.ts` |
 | Export unit tests | `__tests__/export-utils.test.ts` |
-| Mark-paid API | `app/api/export/mark-paid/route.ts` |
-| Compensations list API (with export params) | `app/api/compensations/route.ts` |
 
 ---
 
@@ -385,13 +304,12 @@
 
 | Surface | Path |
 |---|---|
-| Dashboard page (all roles) | `app/(app)/page.tsx` |
 | Admin dashboard | `components/AdminDashboard.tsx` |
 | Responsabile dashboard | `components/DashboardPendingItems.tsx` |
 | Collaboratore dashboard | `components/CollabOpenTicketsSection.tsx` |
 | KPI chart | `components/DashboardBarChart.tsx` |
 | Updates feed | `components/DashboardUpdates.tsx` |
-| Types used | compensations, expenses, tickets, documents stati from `lib/types.ts` |
+| Types used | `lib/types.ts` (compensations, expenses, tickets, documents stati) |
 
 ---
 
