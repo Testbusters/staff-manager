@@ -1001,12 +1001,26 @@ export default async function DashboardPage() {
       });
     }
 
+    // ── Corsi KPI (admin global view) ────────────────────────
+    const [corsiAllRes, candidatureInAttesaRes] = await Promise.all([
+      svc.from('corsi').select('id, data_inizio, data_fine'),
+      svc.from('candidature').select('id').eq('stato', 'in_attesa'),
+    ]);
+    const todayAdmin = new Date().toISOString().slice(0, 10);
+    const allCorsi = (corsiAllRes.data ?? []) as { id: string; data_inizio: string; data_fine: string }[];
+    const corsiKpi = {
+      corsiTotali: allCorsi.length,
+      corsiAttivi: allCorsi.filter((c) => c.data_inizio <= todayAdmin && c.data_fine >= todayAdmin).length,
+      candidatureInAttesa: (candidatureInAttesaRes.data ?? []).length,
+    };
+
     const dashData: AdminDashboardData = {
       kpis,
       communityCards,
       periodMetrics,
       feedItems,
       blockItems,
+      corsiKpi,
       hero: {
         nome:            adminCollab?.nome ?? null,
         cognome:         adminCollab?.cognome ?? null,

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { ShieldCheck, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Inbox, ChevronLeft, ChevronRight, GraduationCap } from 'lucide-react';
 import type { AdminDashboardData, AdminCommunityCard, AdminCommunityCompRecord, AdminCommunityExpRecord, AdminCommunityDocRecord } from './types';
 import type { AdminHero } from './types';
 import BlocksDrawer from './BlocksDrawer';
@@ -263,7 +263,7 @@ function AdminHeroSection({ hero }: { hero: AdminHero }) {
 export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
   const {
     kpis, communityCards, periodMetrics,
-    blockItems, hero,
+    blockItems, hero, corsiKpi,
   } = data;
 
   const [showBlocks, setShowBlocks] = useState(false);
@@ -328,6 +328,19 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
           <KpiCard label="Rimborsi da liquidare" value={kpis.expsApprovatoCount} sub={eur(kpis.expsApprovatoAmount)} highlight={kpis.expsApprovatoCount > 0} />
           <KpiCard label="Compensi liquidati" value={kpis.compsLiquidatoCount} sub={eur(kpis.compsLiquidatoAmount)} />
           <KpiCard label="Rimborsi liquidati" value={kpis.expsLiquidatoCount} sub={eur(kpis.expsLiquidatoAmount)} />
+        </div>
+      </section>
+
+      {/* ── Corsi KPI ── */}
+      <section>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+          <GraduationCap className="h-4 w-4" />
+          Corsi
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KpiCard label="Corsi totali" value={corsiKpi.corsiTotali} sub="nel sistema" />
+          <KpiCard label="Corsi attivi" value={corsiKpi.corsiAttivi} sub="in corso oggi" highlight={corsiKpi.corsiAttivi > 0} />
+          <KpiCard label="Candidature in attesa" value={corsiKpi.candidatureInAttesa} sub="da approvare" highlight={corsiKpi.candidatureInAttesa > 0} />
         </div>
       </section>
 

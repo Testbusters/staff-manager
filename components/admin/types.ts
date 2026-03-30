@@ -91,6 +91,12 @@ export type AdminHero = {
   roleLabel: string;
 };
 
+export type AdminCorsiKpi = {
+  corsiTotali: number;
+  corsiAttivi: number;
+  candidatureInAttesa: number;
+};
+
 export type AdminDashboardData = {
   kpis: AdminKPIs;
   communityCards: AdminCommunityCard[];
@@ -98,4 +104,5 @@ export type AdminDashboardData = {
   feedItems: AdminFeedItem[];
   blockItems: AdminBlockItem[];
   hero: AdminHero;
+  corsiKpi: AdminCorsiKpi;
 };
