@@ -114,6 +114,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | C1 | `STATO_BADGE` corso stato color map duplicated in 5 corsi files — extract to `lib/corsi-utils.ts` as `CORSO_STATO_COLORS` | LOW |
 | C2 | Corsi page date display: cards use raw ISO format (`2025-01-01`), table rows use `DD/MM/YYYY` — apply consistent `formatDate()` in `CorsiPageCollab` | LOW |
 | C3 | `AssegnazioneRespCittPage` section 1 uses native `<table>` instead of shadcn `<Table>` — migrate for component consistency | LOW |
+| VI-8 | `/rimborsi/[id]` IN_ATTESA state feels sparse (V5) — add timeline section even when empty with a single "Richiesta creata" event to fill vertical space and give context | MEDIUM |
+| VI-9 | `/rimborsi/[id]` rejection note (V9) — same visual weight as attachments card despite higher semantic importance; increase left border thickness or text size to signal hierarchy | LOW |
 | C4 | CoCoD'à toggle button in `AssegnazioneRespCittPage` should show disabled state with Tooltip when `!hasLezioni` or `!hasCollabs` — explain why the feature is unavailable | LOW |
 | C5 | `/corsi` admin list — "Date" column truncated at right edge of viewport on standard 1280px screens; combine data_inizio/data_fine into a single column or reduce total column count | LOW |
 | C6 | `/corsi` admin list — "Apri" link text is barely distinguishable from foreground text in dark mode; verify it uses `text-link` token | LOW |
