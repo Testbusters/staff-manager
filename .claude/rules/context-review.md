@@ -146,10 +146,35 @@ Compare the filename with the "Last synced: migration `NNN_*.sql`" line at the t
 
 ---
 
+---
+
+## C13 — CLAUDE.md Known Patterns hygiene
+
+**Trigger**: run when CLAUDE.md exceeds 100 lines, OR every 4 completed blocks — whichever comes first. Skip if neither condition is met.
+
+**What**: audit every entry under `## Known Patterns` in `CLAUDE.md` against the decision filter:
+> "Would Claude make this mistake on a new block, without prior warning, even after reading the relevant code and schema?"
+
+**Run**: `wc -l CLAUDE.md` to check line count first. If < 100 lines AND fewer than 4 blocks since last C13 ran → skip and mark ✅.
+
+**For each entry that fails the filter** (it's a schema fact, historical note, or something Claude would recover from reading the code):
+- Move the full content to an appropriate memory topic file in `~/.claude/projects/.../memory/`
+- Remove the entry from CLAUDE.md Known Patterns
+- Add or update a pointer in MEMORY.md if the topic file is new
+
+**For each entry that is obsolete** (table renamed, pattern removed, workaround superseded):
+- Delete from CLAUDE.md
+- If a memory topic file exists for it, delete or archive that too
+
+**Pass**: all remaining Known Patterns entries pass the decision filter; CLAUDE.md ≤ 100 lines (or justified exceptions documented).
+**Fail**: demote or delete failing entries, then re-run `wc -l CLAUDE.md` to confirm.
+
+---
+
 ## Execution order and completion condition
 
-Run C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 → C10 → C11 → C12 in sequence.
+Run C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 → C10 → C11 → C12 in sequence. Run C13 only when its trigger condition is met.
 Apply any fixes found before moving to the next check.
-**The phase is complete when C1–C12 have all passed.** Then run `/compact`.
+**The phase is complete when C1–C12 have all passed (and C13 if triggered).** Then run `/compact`.
 
 > If a check reveals a pattern worth adding to CLAUDE.md or auto-memory, add it before C6 (duplication check) so the dedup pass catches any overlap.

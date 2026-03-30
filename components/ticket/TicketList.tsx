@@ -103,9 +103,10 @@ export default function TicketList({
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="overflow-hidden p-0">
-          <Table>
+        <div className="overflow-x-auto">
+        <Card className="w-fit overflow-hidden">
+          <CardContent className="p-0">
+          <Table className="w-auto">
             <TableHeader>
               <TableRow>
                 <TableHead>Stato</TableHead>
@@ -152,6 +153,7 @@ export default function TicketList({
           </Table>
           </CardContent>
         </Card>
+        </div>
       )}
     </div>
   );

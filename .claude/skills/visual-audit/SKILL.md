@@ -1,11 +1,11 @@
 ---
 name: visual-audit
-description: Evaluate the aesthetic quality and visual polish of staff-manager pages. Takes live screenshots via Playwright, analyses each on 8 visual dimensions (typography, spacing, hierarchy, colour, density, dark-mode, micro-polish, contrast/legibility), runs computed browser checks (font scale, 8px grid, transition timing, contrast), and produces a scored report with concrete improvement suggestions. Use /ui-audit for token/component compliance, /ux-audit for UX flows, /responsive-audit for breakpoints.
+description: Evaluate the aesthetic quality and visual polish of staff-manager pages. Takes live screenshots via Playwright, analyses each on 11 visual dimensions (typography, spacing, hierarchy, colour, density, dark-mode, micro-polish, contrast/legibility, Gestalt, typographic quality, interaction states), runs computed browser checks (font scale, 8px grid, transition timing, contrast), and produces a scored report with concrete improvement suggestions. Use /ui-audit for token/component compliance, /ux-audit for UX flows, /responsive-audit for breakpoints.
 user-invocable: true
 model: opus
 context: fork
 argument-hint: [quick|full] [target:page:<route>|target:role:<role>|target:section:<section>]
-allowed-tools: Read, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_wait_for, mcp__playwright__browser_resize, mcp__playwright__browser_evaluate
+allowed-tools: Read, Glob, Grep, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_wait_for, mcp__playwright__browser_resize, mcp__playwright__browser_evaluate
 ---
 
 ## Step 0 — Mode + target detection
@@ -15,21 +15,35 @@ Parse `$ARGUMENTS`:
 **Mode** (controls page roster breadth):
 - `quick` → 5 key pages only
 - `full` → all routes from sitemap, both themes
-- No mode keyword → **standard** (10 pages, light + dark)
+- No mode keyword → **standard** — all routes from `docs/sitemap.md` (light + dark)
+- `critique` → deep-dive on a single `target:page:` (required). Skips scoring table; produces Gestalt + hierarchy diagnosis + concrete redesign proposals per Critical/Major finding, invoking `/frontend-design` for before/after. Must be paired with `target:page:<route>`.
 
 **Target** (filters the page roster):
 - `target:page:/compensi` → only that exact route
 - `target:role:collab` → collab-accessible routes only
 - `target:role:resp` → resp-accessible routes only
 - `target:role:admin` → admin-accessible routes only
-- `target:section:corsi` → routes whose path contains "corsi"
+- `target:section:rimborsi` → routes whose path contains "rimborsi" (example — any section name is valid)
 - `target:section:<name>` → routes whose path contains `<name>`
-- No target → no filter (use all pages from the mode roster)
+- No target → NO filter — use ALL pages from the mode roster per sitemap.md
 
 Mode and target are **independent** — `quick target:role:collab` means "run quick mode but limit to collab routes".
 
+**STRICT PARSING — mandatory**: derive mode and target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → apply NO filter (use all pages from the mode roster per sitemap.md).
+
 Announce at start:
 `Running visual-audit in [STANDARD | QUICK | FULL] mode — scope: [FULL | target: <resolved description>]`
+
+---
+
+## Step 0.5 — Screenshot directory setup
+
+Before any navigation, create the temp screenshot directory:
+```bash
+mkdir -p /tmp/sm-audit/visual
+```
+
+All screenshots in this session use label prefix `/tmp/sm-audit/visual/`. This keeps screenshots outside the project directory and prevents git pollution.
 
 ---
 
@@ -62,25 +76,28 @@ Record the base URL that responded — use it for all subsequent navigations.
 
 ## Step 3 — Visual evaluation framework
 
-Apply these 8 dimensions to every screenshot captured.
+Apply these 11 dimensions to every screenshot captured.
 
 | Dim | Name | What to look for | Target score |
 |---|---|---|---|
 | **V1** | Typographic hierarchy | H1 vs body weight contrast; label vs value distinction; font size spread; muted-foreground on secondary text. **Quantitative anchor**: ≤ 5 distinct font sizes in use (from computed check); 2 font weights (semibold for headings, regular for body). Flag if computed check reveals > 5 sizes. | ≥ 4 |
-| **V2** | Spatial rhythm | Consistent padding inside similar components; visual breathing room; margin harmony between sections; card internal padding uniformity. **Quantitative anchor**: padding values should be multiples of 4px (8px preferred). Flag non-grid values (14px, 6px, 10px) when identified by computed check. | ≥ 4 |
+| **V2** | Spatial rhythm | Consistent padding inside similar components; visual breathing room; margin harmony between sections; card internal padding uniformity. **Quantitative anchor**: padding values should be multiples of 4px (8px preferred). Flag non-grid values (14px, 6px, 10px) from the 3-element spot check in computed checks. | ≥ 4 |
 | **V3** | Visual focal point | Primary CTA is the most prominent element; user's eye is guided to the most important content; no competing elements of equal weight | ≥ 4 |
 | **V4** | Colour discipline | Brand colour used sparingly and intentionally; status colours follow semantic convention (green=done, amber=pending, red=destructive); no arbitrary colour decoration; `bg-brand` reserved for primary CTAs not row-level buttons. **APCA anchors** (source: APCA/WCAG 3 working draft): body text on card background should achieve APCA Lc ≥ 60 equivalent; label/muted text ≥ Lc 45 for large font sizes; non-text contrast (borders, icons) ≥ Lc 15. Evaluate in both themes. | ≥ 4 |
 | **V5** | Information density | Appropriate density for the page type (list = dense, form = airy); tables scannable at a glance; no cognitive overload; no empty visual regions | ≥ 3 |
-| **V6** | Dark-mode polish | Dark theme looks intentional, not inverted; borders visible without being harsh; badge colours adapt; no washed-out text; card backgrounds distinguishable from page background. **OKLCH note**: shadcn uses OKLCH colour space for dark tokens — verify converted colours retain intended luminance and hue (no washed-out off-whites, no over-saturated brand colours in dark context, no unexpected hue shifts at the OKLCH→sRGB boundary). | ≥ 4 |
+| **V6** | Dark-mode polish | Dark theme looks intentional, not inverted; borders visible without being harsh; badge colours adapt; no washed-out text; card backgrounds distinguishable from page background. **OKLCH note**: shadcn uses OKLCH colour space for dark tokens — verify converted colours retain intended luminance and hue. **Score anchors**: 5 = bg-card distinguishable from bg-background, borders visible without harshness, brand colour appropriately saturated, all badges legible; 3 = 1-2 issues (washed-out text OR desaturated badges OR card/background indistinguishable in some sections); 1 = dark mode inverted — text illegible in key areas, borders invisible, or unexpected OKLCH hue shifts. | ≥ 4 |
 | **V7** | Micro-polish | Hover/focus states visible; transitions not jarring; empty states and skeletons look professional; icon–text alignment clean; status badges correct size relative to surrounding text. **Timing anchor**: transitions < 100ms are imperceptible (no feedback value); > 400ms feels sluggish. Flag when computed check reveals out-of-range transition durations on interactive elements. | ≥ 3 |
 | **V8** | Contrast & legibility | Computed contrast ratios for key text elements against their backgrounds in both light and dark themes. References APCA thresholds: Lc 75 preferred for body text, Lc 60 minimum, Lc 45 for large/label text, Lc 15 for non-text (borders, icons). Specifically checks `text-muted-foreground` on `bg-card` — a common silent failure in dark mode. Uses computed style values from browser_evaluate. | ≥ 4 |
+| **V9** | Gestalt compliance | Evaluate 4 Gestalt principles: (1) **Proximity** — related elements grouped with tighter spacing than unrelated ones; flag if label↔value gap ≥ gap between distinct sections; (2) **Figure/ground** — content distinguishable from chrome without effort; flag dark mode text indistinguishable from bg; (3) **Similarity** — components with same function look the same cross-section; flag Badge same state with different colour/size on different pages; (4) **Continuity** — lists, columns, card grids guide the eye linearly; flag variable card sizes or inconsistent column widths. **Score anchors**: 5 = all 4 respected; 3 = 1-2 localised violations; 1 = disorienting layout. | ≥ 4 |
+| **V10** | Typographic quality | From code inspection + computed check: flag `lineHeight/fontSize` ratio < 1.4 or > 1.8 on body/label text; flag negative `letterSpacing` on font < 14px; flag paragraph or td width > 680px (≈75 chars). **Score anchors**: 5 = all in range; 3 = 1 value out of range; 1 = text in conditions that impair legibility. | ≥ 4 |
+| **V11** | Interaction state design | From code inspection (Step 5a) + screenshots: for every interactive element, verify: (1) hover — bg change ≥ 10 lightness points or border appearance; (2) focus-visible — ring visible on all backgrounds including bg-brand contexts; (3) active/pressed — visually distinct from hover; (4) disabled — desaturated colour + opacity, not just opacity; (5) loading skeleton — shape matches expected content layout. **Score anchors**: 5 = all 5 states designed; 3 = 2-3 states absent or indistinguishable; 1 = no interaction feedback. | ≥ 3 |
 
 Score scale: **1** = poor · **2** = needs work · **3** = acceptable · **4** = good · **5** = excellent
 
 **Scoring rules:**
 - Score 1–2 on any dimension → Critical finding
-- Score 3 on V1, V3, V4, V8 → Major finding (highest visual and accessibility impact)
-- Score 3 on V2, V5, V6, V7 → Minor finding
+- Score 3 on V1, V3, V4, V8, V9, V10 → Major finding (highest visual and accessibility impact)
+- Score 3 on V2, V5, V6, V7, V11 → Minor finding
 - Write one concrete, actionable observation per dimension per page (not just a number)
 - **Never write a vague observation like "good overall"** — every line must name what specifically works or what specifically is wrong
 
@@ -90,29 +107,36 @@ Score scale: **1** = poor · **2** = needs work · **3** = acceptable · **4** =
 
 ## Step 4 — Page roster
 
-### Standard mode (10 pages)
+### Standard mode (default) and Full mode
 
-| # | Route | Role | Priority | What to focus on |
-|---|---|---|---|---|
-| P01 | `/login` | — | High | First impression, brand presence, form clarity |
-| P02 | `/` | collab | High | Dashboard hierarchy, widget balance, CTA prominence |
-| P03 | `/compensi` | collab | High | List density, status badge clarity, filter chips |
-| P04 | `/rimborsi/nuova` | collab | High | Form airy-ness, stepper legibility, progress bar |
-| P05 | `/ticket` | collab | Medium | List layout, empty state quality |
-| P06 | `/ticket/nuova` | collab | Medium | Form simplicity, CTA weight |
-| P07 | `/approvazioni` | resp | High | KPI cards, table density, tab clarity |
-| P08 | `/` | resp | Medium | Dashboard card balance, KPI visual weight |
-| P09 | `/coda` | admin | High | Table density, bulk action bar, status strip |
-| P10 | `/comunicazioni` | collab | Low | Content card rhythm, empty state |
+Both derive the working roster from `docs/sitemap.md` already loaded in Step 1. Use **all routes with a page file** (exclude `/auth/callback` — it is a route handler with no renderable UI). Group by sitemap section:
 
-### Quick mode (5 pages): P02, P03, P04, P07, P09
+- Pre-auth (login, pending, change-password, onboarding)
+- Common routes (all roles)
+- Collaboratore routes
+- Responsabile Compensi routes
+- Multi-role routes
+- Admin-only routes
 
-### Full mode: all routes from `docs/sitemap.md`, grouped by role.
+**How to pick the role/credential for each route**: use the "Roles" column from sitemap.md. For routes accessible by multiple roles, default to the role that sees the most UI (usually `collab` for shared routes, `admin` for admin routes). For routes with explicit role variants (e.g. `/` has collab / resp / resp_citt / admin dashboards), screenshot each variant separately under its own label.
 
-### Roster currency check (run before starting any mode)
-Cross-reference the Standard roster above against `docs/sitemap.md`. Flag any route present in the sitemap but absent from the Standard roster with:
-> ⚠️ Roster gap: `/[route]` exists in sitemap but is not in the Standard roster. Add it to the next roster update or include it manually in Full mode.
-This ensures pages added after the roster was last written are not silently skipped.
+Announce total route count at start: "Standard mode — N routes from sitemap.md."
+
+`full` keyword is retained as an explicit synonym for scripting/pipeline use — behaviour is identical to standard.
+
+### Quick mode (5 representative pages — use when speed matters)
+
+| Route | Role | What to focus on |
+|---|---|---|
+| `/login` | — | First impression, brand presence, form clarity |
+| `/` | collab | Dashboard hierarchy, widget balance, CTA prominence |
+| `/compensi` | collab | List density, status badge clarity |
+| `/approvazioni` | resp | KPI cards, table density, tab clarity |
+| `/coda` | admin | Table density, bulk action bar, status strip |
+
+### Critique mode
+
+Single route only — requires `target:page:<route>`. See Step 0.
 
 ---
 
@@ -127,6 +151,8 @@ Specifically note:
 - Whether `bg-brand` appears on any row-level or inline button (→ V4 flag)
 - Whether semantic tokens (`text-foreground`, `text-muted-foreground`, `bg-card`) are used consistently
 - Whether empty state, loading, and error states are handled in the component
+- **Empty state quality** (→ V7/V11): does the empty state have a CTA guiding to the next action (not just "Nessun record trovato")? Is the empty state text role-aware (collab vs admin see different CTAs)? Does the error state name the specific problem and suggest a recovery action?
+- **Interaction states** (→ V11): for every custom interactive element, verify hover/focus/active/disabled/loading states are explicitly defined in the component code
 
 This code context MUST inform the scoring in Step 6 — reference it explicitly when writing observations.
 
@@ -177,11 +203,16 @@ For each page in roster:
        .filter(Boolean)
    )].sort((a, b) => a - b);
 
-   // Spacing grid — spot check first Card-like container
-   const card = document.querySelector(
-     '[data-slot="card"], [class*="rounded"][class*="border"], main > div'
-   );
-   const cardPad = card ? parseInt(getComputedStyle(card).paddingTop) : null;
+   // Spacing grid — spot check 3 heterogeneous elements (V2 extended)
+   const checkEls = [
+     document.querySelector('[data-slot="card"]'),
+     document.querySelector('td'),
+     document.querySelector('[data-slot="dialog-content"]') || document.querySelector('form')
+   ].filter(Boolean);
+   const paddings = checkEls.map(el => ({
+     tag: el.tagName, pad: parseInt(getComputedStyle(el).paddingTop)
+   }));
+   const misaligned = paddings.filter(({pad}) => pad % 4 !== 0);
 
    // Transition timing — check interactive elements
    const transitions = [...document.querySelectorAll('button, a[href], [role="button"]')]
@@ -197,18 +228,18 @@ For each page in roster:
    return {
      fontSizeCount: fontSizes.length,
      fontSizes,
-     cardPaddingTopPx: cardPad,
-     cardPaddingIsGridAligned: cardPad !== null ? cardPad % 4 === 0 : null,
+     paddingSpotCheck: paddings,
+     paddingMisaligned: misaligned,
      transitionCount: transitions.length,
      transitionsOutOfRange: transitions.filter(ms => ms > 0 && (ms < 100 || ms > 400)),
      mutedForegroundColor: mutedColor,
      cardBackgroundColor: cardBg
    };
    ```
-   Record results. Use to inform V1 (font scale), V2 (grid alignment), V7 (transition timing), V8 (contrast).
+   Record results. Use to inform V1 (font scale), V2 (padding spot-check + misaligned), V7 (transition timing), V8 (contrast).
 
 7. **Light mode screenshot**: ensure sidebar theme toggle shows "Light mode" (click to switch if needed)
-   - `browser_take_screenshot` → label `visual-[P##]-light`
+   - `browser_take_screenshot` → label `/tmp/sm-audit/visual/visual-[P##]-light`
 
 8. **Dark mode**: click sidebar theme toggle → `browser_wait_for` 500ms
    - Run the contrast portion of computed checks again in dark mode:
@@ -222,7 +253,7 @@ For each page in roster:
        bodyBg: getComputedStyle(document.body).backgroundColor
      };
      ```
-   - `browser_take_screenshot` → label `visual-[P##]-dark`
+   - `browser_take_screenshot` → label `/tmp/sm-audit/visual/visual-[P##]-dark`
 
 9. **Immediately analyse** both screenshots + computed data against V1–V8 using the code context from Step 5a
 
@@ -247,7 +278,7 @@ For each page, produce:
 
 **Computed data**:
 - Font sizes: [N distinct values — list]
-- Card padding: [Npx — grid-aligned: yes/no]
+- Padding spot-check: [{tag: tagName, pad: Npx}] · Misaligned: [list or "none"]
 - Transitions out of range: [list ms values, or "none"]
 - Muted foreground (light): [rgb value]
 - Card background (light): [rgb value]
@@ -257,15 +288,18 @@ For each page, produce:
 | Dim | Score | Observation | Action needed |
 |---|---|---|---|
 | V1 Typographic hierarchy | N/5 | [specific observation — reference fontSizeCount from computed data] | [fix or "none"] |
-| V2 Spatial rhythm | N/5 | [specific observation — reference cardPaddingIsGridAligned] | [fix or "none"] |
+| V2 Spatial rhythm | N/5 | [specific observation — reference paddingMisaligned from computed data] | [fix or "none"] |
 | V3 Visual focal point | N/5 | [specific observation] | [fix or "none"] |
 | V4 Colour discipline | N/5 | [specific observation — note if bg-brand on row buttons; note APCA-level concern if muted text appears low-contrast] | [fix or "none"] |
 | V5 Information density | N/5 | [specific observation] | [fix or "none"] |
-| V6 Dark-mode polish | N/5 | [specific observation from dark screenshot — note any OKLCH hue shifts or washed-out tones] | [fix or "none"] |
-| V7 Micro-polish | N/5 | [specific observation — reference transitionsOutOfRange from computed data] | [fix or "none"] |
+| V6 Dark-mode polish | N/5 | [specific observation from dark screenshot — reference score anchors; note OKLCH hue shifts, washed-out tones, badge legibility] | [fix or "none"] |
+| V7 Micro-polish | N/5 | [specific observation — reference transitionsOutOfRange; note empty state CTA quality from Step 5a] | [fix or "none"] |
 | V8 Contrast & legibility | N/5 | [specific observation — reference computed muted/card color pairs for both themes; flag if muted text appears to fall below Lc 45 anchor] | [fix or "none"] |
+| V9 Gestalt compliance | N/5 | [proximity grouping, figure/ground distinction, similarity across sections, continuity of lists/grids — specific observation] | [fix or "none"] |
+| V10 Typographic quality | N/5 | [line-height ratio, letter-spacing on small fonts, line length on text/td — reference computed data if available] | [fix or "none"] |
+| V11 Interaction state design | N/5 | [hover/focus/active/disabled/loading states — reference code inspection from Step 5a] | [fix or "none"] |
 
-**Page score**: [sum]/40 — [label: Excellent ≥32 | Good 24–31 | Needs work 16–23 | Poor <16]
+**Page score**: [sum]/55 — [label: Excellent ≥44 | Good 33–43 | Needs work 22–32 | Poor <22]
 **Critical findings on this page**: [list or "none"]
 ```
 
@@ -280,8 +314,10 @@ After all pages, identify:
 3. **Worst offenders**: the 2 pages with lowest scores → highest ROI for improvement
 4. **Theme gap**: average V6 score vs average of V1–V5 → if V6 is ≥ 1 point lower, dark mode needs dedicated attention
 5. **Contrast gap**: average V8 score vs V6 → if V8 is lower in dark mode, OKLCH conversion or token values need review
-6. **Typography discipline**: pages where fontSizeCount > 5 → systemic type scale violation
-7. **Code pattern violations**: list any systematic code patterns observed across pages that cause visual problems (e.g., "bg-brand on row buttons appears on 4 pages: [list]")
+6. **Typography discipline**: pages where fontSizeCount > 5 → systemic type scale violation; pages where V10 scores ≤ 3 → line-height or line-length issues
+7. **Gestalt patterns**: pages where V9 scores ≤ 3 → proximity or similarity violations across sections
+8. **Interaction debt**: pages where V11 scores ≤ 3 → missing hover/focus/loading states (cross-reference with V7)
+9. **Code pattern violations**: list any systematic code patterns observed across pages that cause visual problems (e.g., "bg-brand on row buttons appears on 4 pages: [list]")
 
 ---
 
@@ -307,6 +343,9 @@ After all pages, identify:
 | V6 Dark-mode polish | N.N/5 | ↑/→/↓ |
 | V7 Micro-polish | N.N/5 | ↑/→/↓ |
 | V8 Contrast & legibility | N.N/5 | ↑/→/↓ |
+| V9 Gestalt compliance | N.N/5 | ↑/→/↓ |
+| V10 Typographic quality | N.N/5 | ↑/→/↓ |
+| V11 Interaction state design | N.N/5 | ↑/→/↓ |
 | **Total** | **N.N/5** | |
 
 ---
@@ -315,7 +354,7 @@ After all pages, identify:
 
 | Page | Route | Score | Weakest dim | Critical? |
 |---|---|---|---|---|
-| P01 Login | /login | N/40 | V[N] | yes/no |
+| P01 Login | /login | N/55 | V[N] | yes/no |
 ...
 
 ---
@@ -364,8 +403,8 @@ Critical first, then by impact (pages affected × dimension weight):
 
 ### Worst offenders (highest ROI)
 
-1. [Page]: score N/40 — [top 3 fixes that would most improve it]
-2. [Page]: score N/40 — [top 3 fixes]
+1. [Page]: score N/55 — [top 3 fixes that would most improve it]
+2. [Page]: score N/55 — [top 3 fixes]
 ```
 
 ---
@@ -376,14 +415,26 @@ After the report:
 
 > "Vuoi che approfondisca o che generi proposte visive concrete? Posso:
 >
+> - **Critique mode**: `/visual-audit critique target:page:<route>` — deep-dive su singola pagina: diagnosi Gestalt + gerarchia + proposte di redesign concrete con before/after via `/frontend-design`
 > - **Mockup via Figma MCP**: leggere le Foundation TB direttamente da Figma (`get_variable_defs` su file `p9kUAQ2qNVg4PojTBEkSmC`) e generare un'alternativa migliorata fedele al design system reale
 > - **Mockup standalone**: invocare `/frontend-design` per generare un'alternativa migliorata (HTML standalone, fedele ai token del progetto)
 > - **Fix mirato**: applicare direttamente i miglioramenti che non richiedono decisioni di design (es. spaziatura padding, pesi tipografici, token mancanti)
 > - **Dark mode pass**: concentrarmi esclusivamente sul miglioramento del tema scuro su tutte le pagine
 > - **Contrast pass**: verificare e correggere i valori token per `text-muted-foreground` e `border-border` su entrambi i temi alla luce dei risultati V8
-> - **Singola pagina**: analisi approfondita di una pagina specifica con wireframe comparativo before/after"
+> - **Gestalt pass**: analisi approfondita V9 su tutte le pagine con fix concreti per proximity e similarity violations"
 
 **Do NOT apply visual changes without confirmation.** Many of the fixes touch spacing and typography — they affect multiple components and require design decision, not just code.
+
+---
+
+## Step 10 — Screenshot cleanup
+
+After the report is delivered and the improvement offer is presented, clean up the temp directory:
+```bash
+rm -rf /tmp/sm-audit/visual
+```
+
+Run this unconditionally at session end — screenshots are only needed during analysis and must not persist.
 
 ---
 
@@ -395,4 +446,4 @@ After the report:
 - **V7 micro-polish on mobile**: not in scope for this skill — use `/responsive-audit` for that.
 - **Screenshots must be analysed fresh** — do not rely on memory from previous sessions. If a screenshot shows unexpected content (wrong role, empty state when data expected), note it and analyse what's visible.
 - **Preflight failures**: if more than 2 pages fail preflight, stop and report the issue before continuing — likely a dev server or auth problem, not a page-specific issue.
-- **Score denominator changed to /40** (8 dimensions × 5) — update any stored baselines accordingly.
+- **Score denominator is /55** (11 dimensions × 5) — update any stored baselines accordingly.

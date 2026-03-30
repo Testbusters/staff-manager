@@ -5,7 +5,7 @@ user-invocable: true
 model: opus
 context: fork
 argument-hint: [quick|full|wcag] [target:page:<route>|target:role:<role>|target:section:<section>]
-allowed-tools: Read, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_resize, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_wait_for, mcp__playwright__browser_evaluate
+allowed-tools: Read, Glob, Grep, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_resize, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_wait_for, mcp__playwright__browser_evaluate
 ---
 
 ## Step 0 — Mode + target detection
@@ -22,14 +22,27 @@ Parse `$ARGUMENTS`:
 - `target:role:collab` → collab-accessible routes only
 - `target:role:resp` → responsabile_compensi routes only
 - `target:role:resp_citt` → responsabile_cittadino routes only
-- `target:section:corsi` → routes whose path contains "corsi"
+- `target:section:rimborsi` → routes whose path contains "rimborsi" (example — any section name is valid)
 - `target:section:<name>` → routes whose path contains `<name>`
-- No target → all routes from the mode roster
+- No target → NO filter — ALL R-flagged routes from sitemap.md per the selected mode
 
-Mode and target are **independent** — `full wcag target:section:corsi` = all breakpoints + WCAG, corsi routes only.
+Mode and target are **independent** — `full wcag target:section:rimborsi` = all breakpoints + WCAG, rimborsi routes only (example).
+
+**STRICT PARSING — mandatory**: derive mode and target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → apply NO filter (all R-flagged routes from sitemap.md per the selected mode).
 
 Announce at start:
 `Running responsive-audit in [QUICK | FULL | WCAG] mode — scope: [FULL | target: <resolved description>]`
+
+---
+
+## Step 0.5 — Screenshot directory setup
+
+Before any navigation, create the temp screenshot directory:
+```bash
+mkdir -p /tmp/sm-audit/responsive
+```
+
+All screenshots in this session use label prefix `/tmp/sm-audit/responsive/`. This keeps screenshots outside the project directory and prevents git pollution.
 
 ---
 
@@ -166,7 +179,7 @@ For each session × route × breakpoint:
    If `hasMain === false` OR `noError === false`:
    > ⚠️ Route [route] @ BP[N] failed preflight. Skipping — record as WARN in report.
    If `vpWidth` does not match the requested width: log the discrepancy and proceed anyway.
-5. `browser_take_screenshot` — save with label `responsive/[route-slug]-[role]-[bp]`
+5. `browser_take_screenshot` — save with label `/tmp/sm-audit/responsive/[route-slug]-[role]-[bp]`
 6. **Overflow check** (run immediately after screenshot):
    ```js
    (() => {
@@ -269,7 +282,12 @@ From `tableOverflows` array:
 Report the specific table class and overflow amount.
 
 **R3 — Text truncation (visual check)**
-From screenshot: flag if text is cut off mid-word (intentional `line-clamp` with ellipsis is acceptable, but text cut at viewport edge is not).
+From screenshot: flag ALL of the following:
+- Text cut at viewport edge (not intentional `line-clamp`) → FAIL
+- Card or tile labels truncated with "..." that obscure identifying information (type name, action label, entity name) → FAIL. Example: "Corsi assegnati (D..." hides the type — user cannot identify the content.
+- Labels that wrap across 2+ lines breaking the label/value pairing visually → WARN
+- Any heading or title that wraps to 3+ lines due to font size disproportionate to the viewport width → WARN
+Intentional `line-clamp` on long body text (e.g. descriptions, notes) is acceptable — only flag when the truncation hides operationally critical content.
 
 **R4 — Tap target size** (BP0 + BP1 only)
 From `tooSmall` array: flag elements with `w < 44 OR h < 44`.
@@ -279,6 +297,7 @@ Note: 44px is the minimum threshold (Apple HIG). Elements between 44-47px pass b
 
 **R5 — Stacked layout**
 At BP1: grid/flex containers with `sm:grid-cols-2` or `md:grid-cols-3` should stack to single column. Check from screenshot — if columns don't stack, flag.
+Additionally: verify that stacked cells have sufficient height and padding — stacking without spacing adjustments produces visually compressed rows.
 
 **R6 — Modal/dialog usability**
 If a Dialog is triggered: verify it does not overflow the viewport, has visible close affordance, and the confirm button is reachable without scrolling.
@@ -302,6 +321,59 @@ From sidebar check:
 
 ---
 
+### Visual responsiveness checks (Opus screenshot analysis — BP0 + BP1 only)
+
+Apply to EVERY screenshot at mobile breakpoints. These are pure visual checks — no DOM queries. They are page-agnostic and apply equally to dashboards, forms, lists, detail pages, and content pages.
+
+**VR1 — Hero / header section reflow**
+If the page has a header or hero section (greeting, profile card, page title + metadata, avatar + name + date): does it reflow gracefully at 375px?
+Check for:
+- Multi-column layout in the header that has not collapsed to vertical stack at mobile
+- Secondary elements (date, role badge, metadata) floating without clear visual anchor
+- Avatar or icon competing for horizontal space with text content causing awkward wrapping
+Severity: FAIL if the header is visually broken or creates a confusing hierarchy. WARN if layout is intact but sub-optimal (e.g. wastes vertical space).
+
+**VR2 — Card content density**
+In any card, KPI tile, or list cell: are all labels, values, and subtitles readable at this viewport width?
+Check for:
+- Labels that are truncated with "..." where the truncated portion contains operationally important information
+- Label/value pairs where the value wraps unexpectedly below the label, breaking the intended two-line structure
+- Cards so narrow that font-size, padding, and content no longer fit proportionally
+Severity: FAIL if content is unreadable or identifying information is lost. WARN if visual polish is degraded.
+
+**VR3 — Typography proportionality**
+Is the font size distribution proportional to the 375px viewport?
+Check for:
+- Any heading that consumes 3+ lines, dominating the viewport and pushing content below fold
+- Any body or label text that appears smaller than approximately 14px (visually too small to read comfortably on mobile)
+- Inconsistent text sizes within the same section (e.g. two adjacent labels at noticeably different sizes) that break visual rhythm
+Severity: WARN.
+
+**VR4 — Primary CTA above fold**
+Is the primary action for this page (submit button, main CTA, primary navigation link) visible within the first viewport height (~812px at BP1) without scrolling?
+Exception: pages that are explicitly long-form (wizard steps, long forms) — the primary CTA at the bottom of a form is expected. Flag only if the CTA is non-obvious or the page appears to have no visible primary action above fold.
+Severity: WARN.
+
+**VR5 — Grid density at mobile**
+Any 2-column grid at 375px: are each of the cells visually readable? Minimum readable card width at 375px: ~140px.
+Check for:
+- Cells with labels that wrap or are cut off because the cell is too narrow
+- Numeric values or icons that appear crowded within their cell
+- Chip/badge rows that overflow or wrap in a way that breaks the grid rhythm
+Severity: FAIL if content is unreadable. WARN if layout is intact but visually crowded.
+
+**VR6 — Content hierarchy at mobile**
+Does the page have a clear visual hierarchy at 375px? The most important content should be immediately visible; secondary content below.
+Check for:
+- Decorative or secondary sections (empty state illustrations, informational banners) appearing above primary content
+- Sections with no visible content at 375px (collapsed but no visible affordance to expand)
+- Equal visual weight between primary and secondary sections (no clear focus point)
+Severity: WARN.
+
+Severity scale for visual checks: **FAIL** = layout is broken or content is unreadable → fix before Phase 6. **WARN** = layout is functional but visually sub-optimal → flag in report, fix in dedicated UI improvement block.
+
+---
+
 ## Step 5b — WCAG 1.4.4 Resize Text check (wcag mode only)
 
 **Skip this step if `wcag` flag was not set.**
@@ -318,7 +390,7 @@ For each:
    ```
 4. Wait 500ms for reflow
 5. Run overflow check (same query as Step 5 item 6)
-6. `browser_take_screenshot` — save as `responsive/[route-slug]-resize200`
+6. `browser_take_screenshot` — save as `/tmp/sm-audit/responsive/[route-slug]-resize200`
 7. Check:
    - `hasHorizontalScroll === true` → FAIL — WCAG 1.4.4 violation. Content lost or broken at 200% text size.
    - Any interactive element no longer reachable (visually clipped) → FAIL
@@ -378,10 +450,10 @@ Legend: PASS = no issues · WARN = minor (scroll container present, 44-47px targ
 
 For each WARN or FAIL:
 - **Route**: [url] — **Role**: [role] — **Breakpoint**: [bp]
-- **Check**: R[N] — [check name]
-- **Detail**: [description — include overflowPx and offendingElements for R1/R2; gap values for R8; sidebar state for R9]
+- **Check**: R[N] or VR[N] — [check name]
+- **Detail**: [description — for R1/R2: include overflowPx and offendingElements; for R8: gap values; for R9: sidebar state; for VR checks: describe exactly what was observed in the screenshot]
 - **Screenshot**: [filename]
-- **Fix hint**: [suggested CSS fix]
+- **Fix hint**: [suggested CSS fix or layout change]
 
 ### WCAG compliance (wcag mode only)
 
@@ -417,3 +489,14 @@ After the report:
 > - WCAG compliance pass: correggo le violazioni 1.4.10 e 1.4.4 trovate in modalità `wcag`"
 
 **Do NOT apply any changes until confirmed.**
+
+---
+
+## Step 9 — Screenshot cleanup
+
+After the report is delivered and the improvement offer is presented, clean up the temp directory:
+```bash
+rm -rf /tmp/sm-audit/responsive
+```
+
+Run this unconditionally at session end — screenshots are only needed during analysis.

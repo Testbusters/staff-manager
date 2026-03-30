@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import type { CandidaturaStato } from '@/lib/types';
+
+const STATO_RITIRATA: CandidaturaStato = 'ritirata';
 
 const CreateCollabSchema = z.object({
   tipo: z.enum(['docente_lezione', 'qa_lezione']),
@@ -47,7 +50,7 @@ export async function POST(req: NextRequest) {
       .eq('corso_id', corso_id)
       .eq('city_user_id', user.id)
       .eq('tipo', 'citta_corso')
-      .neq('stato', 'ritirata')
+      .neq('stato', STATO_RITIRATA)
       .maybeSingle();
 
     if (existing) {
@@ -104,7 +107,7 @@ export async function POST(req: NextRequest) {
     .eq('lezione_id', lezione_id)
     .eq('collaborator_id', collab.id)
     .eq('tipo', tipo)
-    .neq('stato', 'ritirata')
+    .neq('stato', STATO_RITIRATA)
     .maybeSingle();
 
   if (existing) {

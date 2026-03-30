@@ -29,6 +29,7 @@ Parse `$ARGUMENTS` for a `target:` token.
 | `target:role:admin` | Focus on admin routes |
 | `target:section:corsi` | Focus on all corsi-domain routes (derive from docs/sitemap.md API routes section) |
 | `target:section:export` | Focus on all export/bulk-data routes |
+| `target:section:<other>` | Read `docs/sitemap.md` — find rows matching the section keyword, resolve to API routes and related route files |
 | No argument | Full audit — all API routes |
 
 Announce: `Running security-audit — scope: [FULL | target: <resolved>]`
@@ -60,7 +61,7 @@ Apply target scope from Step 0 before proceeding.
 
 Launch a **single Explore subagent** (model: haiku) with the full route file list:
 
-"Run all 12 checks on the provided API route files (`app/api/**/*.ts`) and adjacent files as noted.
+"Run all 14 checks on the provided API route files (`app/api/**/*.ts`) and adjacent files as noted.
 
 **CHECK A1 — Missing auth check at route entry**
 Pattern: route handler function body does NOT contain any of the following within the first 20 lines of the handler:
@@ -73,10 +74,14 @@ Pattern: routes under `app/api/admin/` must contain a role check within 20 lines
 Grep: in `app/api/admin/` files — search for `amministrazione|role ===|role !==|is_active|checkRole` within 20 lines of function start.
 Flag: any admin route without an explicit role assertion.
 
-**CHECK A3 — Zod validation on POST/PUT/PATCH bodies**
-Pattern: route files handling POST/PUT/PATCH should import Zod and use `safeParse` or `parse`.
+**CHECK A3 — Zod validation on request body, path params, and query params**
+Pattern A (body): route files handling POST/PUT/PATCH should import Zod and use `safeParse` or `parse`.
 Grep: in all write route files, check for `z\.object|zod|safeParse|\.parse\(`.
-Flag: any write route without Zod validation.
+Flag: any write route without Zod validation on the request body.
+Pattern B (path params): grep all route files for `params\.id|params\.collaboratoreId|params\.corsoId` (or any `params.<field>`) used directly in a DB query without passing through `z.string().uuid().parse()` or equivalent.
+Flag: raw `params.*` fed into `.eq('id', params.id)` without UUID format validation — an invalid format causes a DB error, leaking implementation details; a KSUID/short-id mismatch could silently return wrong records.
+Pattern C (query params): grep all route files for `searchParams\.get\(` or `url\.searchParams` whose return value is used in a `.eq(`, `.filter(`, or `.in(` DB call without an explicit allowlist or Zod enum validation.
+Flag: unvalidated query params used as DB filter inputs.
 
 **CHECK A4 — Raw user input in SQL/queries**
 Pattern: template literals or string concatenation used to build Supabase queries with user-provided values.
@@ -128,7 +133,24 @@ Pattern:
   Step 1: find lines with `const body = await req.json()|const data = await req.json()`
   Step 2: in the same file, check if `body` or `data` (the whole object) is passed directly to `.insert(body)|.update(body)|.upsert(body)` or `.insert(data)|.update(data)|.upsert(data)`.
 Flag: any route where the raw request body object is passed wholesale to a DB write without explicit field destructuring (e.g. `const { field1, field2 } = body`).
-Note: routes that use a Zod `schema.parse(body)` result (not the raw `body`) before inserting are safe — exclude those."
+Note: routes that use a Zod `schema.parse(body)` result (not the raw `body`) before inserting are safe — exclude those.
+
+**CHECK A13 — Horizontal access control / IDOR**
+Scope: all route files with dynamic segments (`[id]`, `[collaboratoreId]`, `[corsoId]`, `[compensationId]`, `[ticketId]`, etc.).
+For each dynamic route:
+Step 1 — identify how the caller's identity is resolved (grep for `getSession|getUser|get_my_collaborator_id|user\.id|session\.user`).
+Step 2 — verify that the DB query filters by the caller's identity OR community membership, not just by the URL parameter alone.
+Correct pattern: `.eq('collaborator_id', myCollaboratorId)` or `.eq('creator_user_id', user.id)` alongside `.eq('id', params.id)`.
+Insecure pattern: `.eq('id', params.id)` as the ONLY filter — any authenticated user can access any record by guessing or enumerating IDs.
+Exception: admin routes (`app/api/admin/`) that already enforce role check (A2) — still flag if a responsabile could access records from another community by ID.
+Flag: each route where ownership/community scope is not enforced server-side in the query.
+
+**CHECK A14 — State machine enforcement on transition routes**
+Scope: route files handling state transitions — grep for patterns like `stato.*APPROVATO|stato.*RIFIUTATO|stato.*PAGATO|stato.*FIRMATO|stato.*INVIATO|stato.*DA_FIRMARE` in PATCH/POST handler bodies, or route paths containing `approva|rifiuta|pagamento|firma|invia`.
+For each match:
+Step 1 — verify the route reads the CURRENT state from the DB before applying the transition (grep for a SELECT query before the UPDATE in the same handler).
+Step 2 — verify `canTransition` from `lib/transitions.ts` (or equivalent) is called with the current state. If only the client-supplied target state is accepted without verifying the current state, a caller can jump to any state directly.
+Flag: any transition route that does NOT verify current state server-side before applying the update. Note: skipping a required intermediate state (e.g. IN_ATTESA → PAGATO directly) is both a business logic violation and a potential abuse path for financial manipulation."
 
 ---
 
@@ -211,6 +233,27 @@ If `npm audit` exits with non-zero but the JSON output is parseable, continue. I
 
 ---
 
+## Step 3d — Code-level RLS completeness check
+
+Complement Step 3b (Supabase advisors) with a grep-based check on migration files.
+
+Glob `supabase/migrations/*.sql` — read the most recent 10 migrations plus any that reference `CREATE TABLE`.
+
+**RLS-1 — Tables with RLS disabled**
+Grep all migration files for `CREATE TABLE` statements. For each table name found, check if a corresponding `ALTER TABLE <name> ENABLE ROW LEVEL SECURITY` appears anywhere in the migration history.
+Flag: any table where `ENABLE ROW LEVEL SECURITY` is absent. Default Postgres behavior without RLS: all authenticated and service-role reads bypass per-row checks entirely.
+Note: tables with only service-role access (e.g. internal log tables) may legitimately skip RLS — verify from context.
+
+**RLS-2 — Tables with RLS enabled but no policies**
+For each table with `ENABLE ROW LEVEL SECURITY`, grep for `CREATE POLICY.*ON <tablename>` in the full migration history.
+Flag: any table with RLS enabled but zero policies. With RLS enabled and no policies, the default is DENY for all roles except table owner — this can cause silent 0-row returns rather than errors, masking bugs.
+
+**RLS-3 — Missing WITH CHECK on INSERT/UPDATE policies**
+Grep: `CREATE POLICY` statements on tables with financial or sensitive data (`compensations`, `expense_reimbursements`, `documents`, `tickets`, `user_profiles`, `collaborators`) that use `FOR INSERT` or `FOR UPDATE` without a `WITH CHECK` clause.
+Flag: each match. `USING` controls which rows are visible; `WITH CHECK` controls which rows can be written. A missing `WITH CHECK` allows inserting/updating rows the user cannot see.
+
+---
+
 ## Step 4 — HTTP security headers check
 
 **Static check**: read `next.config.ts`. Verify these headers are configured:
@@ -253,12 +296,34 @@ Read `proxy.ts`. Verify:
 ```
 ## Security Audit — [DATE] — [TARGET]
 
+### Executive summary
+- [2-8 bullets: lead with the most critical risk. One bullet per Critical/High finding or notable PASS cluster. Be specific — name the route, table, or pattern.]
+
+### Scope reviewed
+- Routes / entry points: [N routes, list categories]
+- Auth/session layer: proxy.ts + [lib/auth helpers reviewed]
+- Validation layer: Zod schemas in [N] route files
+- DB/RLS layer: [N] migration files + Supabase advisors
+- Headers: next.config.ts + live curl on staging
+- Assumptions: [e.g. "Server Actions not present — N/A"]
+
+### Security maturity assessment
+| Dimension | Rating | Notes |
+|---|---|---|
+| Auth coverage | low/medium/high | [summary] |
+| Authorization quality (RBAC + ownership) | low/medium/high | [summary] |
+| Input validation coverage | low/medium/high | [summary] |
+| Data exposure control | low/medium/high | [summary] |
+| RLS / row isolation | low/medium/high | [summary] |
+| Config hardening (headers, proxy) | low/medium/high | [summary] |
+| Release readiness | low/medium/high | [summary] |
+
 ### Auth & Authorization (API routes)
 | # | Check | Routes flagged | Severity | Verdict |
 |---|---|---|---|---|
 | A1 | Missing auth check | N | Critical | ✅/❌ |
 | A2 | Missing role check (admin routes) | N | Critical | ✅/❌ |
-| A3 | Missing Zod validation | N | High | ✅/❌ |
+| A3 | Missing Zod validation (body/params/query) | N | High | ✅/❌ |
 | A4 | Raw input in queries | N | Critical | ✅/❌ |
 | A5 | Sensitive fields in responses | N | High | ✅/❌ |
 | A6 | Cron routes missing secret | N | Critical | ✅/❌ |
@@ -268,6 +333,8 @@ Read `proxy.ts`. Verify:
 | A10 | Storage public URL on private bucket | N | High | ✅/❌ |
 | A11 | Open redirect | N | High | ✅/❌ |
 | A12 | Mass assignment | N | High | ✅/❌ |
+| A13 | Horizontal AC / IDOR (dynamic routes) | N | High | ✅/❌ |
+| A14 | State machine enforcement | N | High | ✅/❌ |
 
 ### Response Shape Review
 | # | Check | Verdict | Notes |
@@ -277,6 +344,13 @@ Read `proxy.ts`. Verify:
 | R3 | Error message verbosity | ✅/❌ | |
 | R4 | Domain data scoping (entity-manifest × rbac-matrix) | ✅/❌ | |
 | R5 | Rate limiting on high-value endpoints | ✅/❌ | |
+
+### RLS — Code-level check
+| # | Check | Tables flagged | Verdict |
+|---|---|---|---|
+| RLS-1 | Tables missing ENABLE ROW LEVEL SECURITY | N | ✅/❌ |
+| RLS-2 | RLS enabled but zero policies | N | ✅/❌ |
+| RLS-3 | INSERT/UPDATE policies missing WITH CHECK | N | ✅/❌ |
 
 ### Supabase Security Advisors
 | Level | Count | Items |
@@ -307,32 +381,55 @@ Read `proxy.ts`. Verify:
 | Jobs whitelist is narrow (no wildcard) | ✅/❌ | |
 | No forgeable bypass header trusted | ✅/❌ | |
 
-### ❌ Critical findings ([N])
-[route/file — check# — issue — exploit scenario — recommended fix]
+### Prioritized findings (Critical → High → Medium → Low)
+Format: `[SEVERITY] route/file:line — check# — issue — exploit path — recommended fix — effort`
+Example: `[HIGH] app/api/compensations/[id]/route.ts:31 — A13 — no ownership filter on PATCH — any authenticated user can modify any compensation by guessing its UUID — add .eq('collaborator_id', myCollaboratorId) before .update() — low effort`
 
-### ⚠️ High findings ([N])
-[route/file — check# — issue — recommended fix]
+### Quick wins
+[findings that are isolated, low-risk fixes — e.g. add ownership filter, add Zod enum on query param, add WITH CHECK to policy]
 
-### 🔶 Medium findings ([N])
-[route/file — check# — issue — recommended fix]
+### Strategic refactors
+[findings requiring broader changes — e.g. state machine enforcement across all transition routes, centralized response serializers, RLS policy overhaul]
 
-### ℹ️ Low / Informational ([N])
-[route/file — check# — note]
+### Validation checklist
+After applying fixes, verify:
+- [ ] Unauthenticated request (no token) to each fixed route → 401
+- [ ] Wrong-role request (e.g. collaboratore calling admin route) → 403
+- [ ] Horizontal AC: request with valid token but different owner's ID → 403 or 404
+- [ ] State machine: PATCH with invalid transition target on current state → 422
+- [ ] Zod path param: request with non-UUID id param → 400
+- [ ] RLS: direct Supabase anon client query on fixed tables → 0 rows (not error)
+- [ ] Supabase advisors re-run after migrations → 0 `error` level items
 ```
 
-### Write to backlog
+### Backlog decision gate
 
-For each Critical or High finding, append to `docs/refactoring-backlog.md`:
+Present all findings with severity Medium or above as a numbered decision list, sorted Critical → High → Medium:
+
+```
+Trovati N finding Medium o superiori. Quali aggiungere al backlog?
+
+[1] [CRITICAL] SEC-? — route/file — one-line description
+[2] [HIGH]     SEC-? — route/file — one-line description
+[3] [MEDIUM]   SEC-? — route/file — one-line description
+...
+
+Rispondi con i numeri da includere (es. "1 2 4"), "tutti", o "nessuno".
+```
+
+**Wait for explicit user response before writing anything.**
+
+Then write ONLY the approved entries to `docs/refactoring-backlog.md`:
 - Assign ID: `SEC-[n]`
 - Add to priority index
 - Add full detail section with exploit scenario and recommended fix
 
 ### Severity guide
 
-- **Critical**: unauthenticated route exposing or modifying data; RLS bypass; service role key in client code; NEXT_PUBLIC_ secret; cron route with no secret check; raw input in queries; Supabase advisor `level: error`
-- **High**: admin route without role check; sensitive field (CF, IBAN, P.IVA) exposed to non-owner; export route without role check; storage public URL on private bucket; open redirect; mass assignment; Supabase advisor `level: warning`; critical/high CVE in production dependency
-- **Medium**: missing Zod on write route; error message leaking DB internals; missing security header; no rate limiting on high-value endpoints
-- **Low**: header best-practice gap; informational Supabase advisor; moderate/low CVE not directly exploitable
+- **Critical**: unauthenticated route exposing or modifying data; RLS bypass; service role key in client code; NEXT_PUBLIC_ secret; cron route with no secret check; raw input in queries; Supabase advisor `level: error`; table missing `ENABLE ROW LEVEL SECURITY` on financial/personal data (RLS-1)
+- **High**: admin route without role check; sensitive field (CF, IBAN, P.IVA) exposed to non-owner; export route without role check; storage public URL on private bucket; open redirect; mass assignment; horizontal AC / IDOR on financial records (A13); state machine bypass on compensation/document transitions (A14); missing `WITH CHECK` on financial table INSERT/UPDATE policies (RLS-3); Supabase advisor `level: warning`; critical/high CVE in production dependency
+- **Medium**: missing Zod on write route body; unvalidated path param or query param used in DB filter (A3B/C); error message leaking DB internals; missing security header; no rate limiting on high-value endpoints; RLS enabled but zero policies (RLS-2)
+- **Low**: header best-practice gap; informational Supabase advisor; moderate/low CVE not directly exploitable; state machine bypass on low-risk status fields
 
 ---
 
@@ -342,4 +439,5 @@ For each Critical or High finding, append to `docs/refactoring-backlog.md`:
 - Do NOT test exploits or trigger requests against the production DB (`nyajqcjqmgxctlqighql`). Staging only.
 - Supabase advisors MCP call: always use `project_id: "gjwkvgfwkdwzqlvudgqr"` (staging).
 - SEO, robots.txt, meta tags, sitemaps, and public indexing are explicitly OUT OF SCOPE.
+- **Server Actions**: this app currently uses Route Handlers only — no `'use server'` files. If Server Actions are introduced in future blocks, they must be treated as directly-reachable POST endpoints and audited with the same auth/authz/validation checks as Route Handlers. Note as N/A if absent.
 - After the report, ask: "Vuoi che implementi i fix Critical/High identificati?"

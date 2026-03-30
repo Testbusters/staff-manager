@@ -58,43 +58,53 @@ export default function DashboardCorsiKpi({ kpi }: { kpi: CorsiKpiData }) {
           value={kpi.assegnatiDocente}
           sub="programmato / attivo"
         />
-        <KpiBox
-          label="Corsi svolti (Docente)"
-          value={kpi.svoltiDocente}
-          sub="con valutazione"
-        />
+        {kpi.assegnatiDocente > 0 && (
+          <KpiBox
+            label="Corsi svolti (Docente)"
+            value={kpi.svoltiDocente}
+            sub="con valutazione"
+          />
+        )}
         <KpiBox
           label="CoCoDà assegnati"
           value={kpi.assegnatiCocoda}
           sub="programmato / attivo"
         />
-        <KpiBox
-          label="CoCoDà svolti"
-          value={kpi.svoltiCocoda}
-          sub="con valutazione"
-        />
-        <KpiBox
-          label="Valutazione media Docente"
-          value={kpi.valMediaDocente !== null ? kpi.valMediaDocente.toFixed(1) : '—'}
-          sub="su 10"
-          highlight={kpi.valMediaDocente !== null}
-        />
-        <KpiBox
-          label="Valutazione media CoCoDà"
-          value={kpi.valMediaCocoda !== null ? kpi.valMediaCocoda.toFixed(1) : '—'}
-          sub="su 10"
-          highlight={kpi.valMediaCocoda !== null}
-        />
+        {kpi.assegnatiCocoda > 0 && (
+          <KpiBox
+            label="CoCoDà svolti"
+            value={kpi.svoltiCocoda}
+            sub="con valutazione"
+          />
+        )}
+        {kpi.assegnatiDocente > 0 && (
+          <KpiBox
+            label="Valutazione media Docente"
+            value={kpi.valMediaDocente !== null ? kpi.valMediaDocente.toFixed(1) : '—'}
+            sub="su 10"
+            highlight={kpi.valMediaDocente !== null}
+          />
+        )}
+        {kpi.assegnatiCocoda > 0 && (
+          <KpiBox
+            label="Valutazione media CoCoDà"
+            value={kpi.valMediaCocoda !== null ? kpi.valMediaCocoda.toFixed(1) : '—'}
+            sub="su 10"
+            highlight={kpi.valMediaCocoda !== null}
+          />
+        )}
         <KpiBox
           label="Q&A assegnati"
           value={kpi.assegnatiQA}
           sub={kpi.oreAssegnatiQA > 0 ? `${fmtOre(kpi.oreAssegnatiQA)} ore · programmato / attivo` : 'programmato / attivo'}
         />
-        <KpiBox
-          label="Q&A svolti"
-          value={kpi.svoltiQA}
-          sub={kpi.oreSvoltiQA > 0 ? `${fmtOre(kpi.oreSvoltiQA)} ore · con valutazione` : 'con valutazione'}
-        />
+        {kpi.assegnatiQA > 0 && (
+          <KpiBox
+            label="Q&A svolti"
+            value={kpi.svoltiQA}
+            sub={kpi.oreSvoltiQA > 0 ? `${fmtOre(kpi.oreSvoltiQA)} ore · con valutazione` : 'con valutazione'}
+          />
+        )}
       </div>
     </div>
   );

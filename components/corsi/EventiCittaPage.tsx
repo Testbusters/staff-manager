@@ -28,6 +28,14 @@ const TIPO_COLORS: Record<EventTipo, string> = {
   Altro:            'bg-muted border-border text-muted-foreground',
 };
 
+const TIPO_LABELS: Record<EventTipo, string> = {
+  Convention:       'Convention',
+  Attivita_interna: 'Attività interna',
+  Workshop:         'Workshop',
+  Formazione:       'Formazione',
+  Altro:            'Altro',
+};
+
 const TIPO_OPTIONS: { value: EventTipo; label: string }[] = [
   { value: 'Convention',       label: 'Convention' },
   { value: 'Attivita_interna', label: 'Attività interna' },
@@ -229,7 +237,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                   <TableCell>
                     {ev.tipo ? (
                       <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${TIPO_COLORS[ev.tipo as EventTipo] ?? TIPO_COLORS.Altro}`}>
-                        {ev.tipo}
+                        {TIPO_LABELS[ev.tipo as EventTipo] ?? ev.tipo}
                       </span>
                     ) : '—'}
                   </TableCell>

@@ -1,6 +1,6 @@
 # Sitemap — Staff Manager
 
-Last updated: 2026-03-22
+Last updated: 2026-03-28
 
 Columns: **Route** | **Page file** | **Roles** | **Layout** | **Componenti chiave** | **loading.tsx** | **Access notes** | **Audit**
 
@@ -125,7 +125,6 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/corsi/eventi-citta` | `app/(app)/corsi/eventi-citta/page.tsx` | resp.cittadino | `full-list` | EventiCittaPage, Table, Dialog, AlertDialog, RichTextEditor | ✅ | Create/edit/delete city-scoped events. citta auto-set from resp.citt profile. Ownership enforced on PATCH/DELETE. | `UI` `R` `UX` |
 | `/corsi/nuovo` | `app/(app)/corsi/nuovo/page.tsx` | admin | `form` | CorsoForm, Select, Input, Button | ✅ | Create new corso. Admin-only. | `UI` `UX` |
 | `/corsi/[id]` | `app/(app)/corsi/[id]/page.tsx` | admin + resp.cittadino + collab | `tabs` | Tabs, CorsoForm, LezioniTab, CandidatureCittaTab, LezioniTabCollab, LezioniTabRespCitt | ✅ | Admin: 3 tabs (Dettaglio/Lezioni/Candidature città). Resp.citt: lezioni + candidature with Accetta/Rifiuta/Revoca; capacity badges; blacklist badge + Q&A metadata (materie/città/qaSvolti). Collab: lezioni list + candidatura actions + allegati. | `UI` `R` `UX` |
-| `/monitoraggio` | `app/(app)/monitoraggio/page.tsx` | admin | `tabs` | Tabs, Badge, Table, auto-refresh | ✅ | System monitoring: access logs, emails, DB performance, app errors | `UI` `UX` |
 | `/feedback` | `app/(app)/feedback/page.tsx` | admin | `full-list` | Table, EmptyState | ✅ | User feedback/suggestions | `UI` `UX` |
 
 ---
@@ -216,7 +215,7 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Responsive notes**: Profile form is multi-column on desktop. Tab navigation should remain scrollable on narrow viewports.
 
 ### `/impostazioni`
-- **Tabs / states**: 5 tabs — Community · Notifiche · Contratti · Template mail · Monitoraggio. Community tab: list + Dialog editor. Notifiche tab: notification settings matrix (event × role toggles). Contratti tab: template upload + preview. Template mail tab: 12 email templates with inline editor. Monitoraggio tab: redirects or links to `/monitoraggio`.
+- **Tabs / states**: 5 tabs — Community · Notifiche · Contratti · Template mail · Monitoraggio + additional tabs (Banner, Blacklist, Allegati corsi). Community tab: list + Dialog editor. Notifiche tab: notification settings matrix (event × role toggles). Contratti tab: template upload + preview. Template mail tab: email templates with inline editor. Monitoraggio tab: system monitoring section embedded within this page (not a separate route) — access logs, emails, DB performance, app errors.
 - **Key interactions**: Admin — configure community metadata, toggle notification events per role, upload/replace contract templates, edit email template HTML.
 - **Empty states**: Community tab uses EmptyState when no communities exist.
 - **Responsive notes**: Notification settings matrix (event × role) is a wide table — horizontal scroll allowed here. Template editor (Tiptap/textarea) needs adequate height.

@@ -15,17 +15,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { GraduationCap } from 'lucide-react';
-import { getCorsoStato } from '@/lib/corsi-utils';
+import { getCorsoStato, CORSO_STATO_BADGE } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
 import CorsiFilterBar from '@/components/corsi/CorsiFilterBar';
 import CorsiPageCollab from '@/components/corsi/CorsiPageCollab';
-
-const STATO_BADGE: Record<CorsoStato, string> = {
-  programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  attivo: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  concluso: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-};
 
 export default async function CorsiPage({
   searchParams,
@@ -261,13 +255,13 @@ export default async function CorsiPage({
                     {corso.citta ?? <span className="italic text-xs">candidatura aperta</span>}
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATO_BADGE[corso.stato as CorsoStato]}`}>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CORSO_STATO_BADGE[corso.stato as CorsoStato]}`}>
                       {CORSO_STATO_LABELS[corso.stato as CorsoStato]}
                     </span>
                   </TableCell>
                   <TableCell className="text-center">{corso.lezioni_count}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {corso.data_inizio} → {corso.data_fine}
+                    {new Date(corso.data_inizio).toLocaleDateString('it-IT')} → {new Date(corso.data_fine).toLocaleDateString('it-IT')}
                   </TableCell>
                   <TableCell>
                     <Link

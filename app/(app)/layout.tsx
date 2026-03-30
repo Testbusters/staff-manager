@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
@@ -13,25 +14,37 @@ import { Toaster } from '@/components/ui/sonner';
 import { NAV_BY_ROLE } from '@/lib/nav';
 import type { Role } from '@/lib/types';
 
+const getSessionProfile = cache(async (userId: string) => {
+  const supabase = await createClient();
+  return supabase
+    .from('user_profiles')
+    .select('role, is_active, member_status, theme_preference')
+    .eq('user_id', userId)
+    .single();
+});
+
+const getSessionCollaborator = cache(async (userId: string) => {
+  const supabase = await createClient();
+  return supabase
+    .from('collaborators')
+    .select('id, nome, cognome, foto_profilo_url')
+    .eq('user_id', userId)
+    .single();
+});
+
+export { getSessionProfile, getSessionCollaborator };
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('role, is_active, member_status, theme_preference')
-    .eq('user_id', user.id)
-    .single();
+  const { data: profile } = await getSessionProfile(user.id);
 
   if (!profile || !profile.is_active) redirect('/pending');
 
-  const { data: collaborator } = await supabase
-    .from('collaborators')
-    .select('id, nome, cognome, foto_profilo_url')
-    .eq('user_id', user.id)
-    .single();
+  const { data: collaborator } = await getSessionCollaborator(user.id);
 
   const role = profile.role as Role;
   const navItems = NAV_BY_ROLE[role];
@@ -99,7 +112,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             )}
             {/* AppHeader — persistent across all viewports */}
             <header className="flex items-center h-12 px-4 border-b border-border flex-shrink-0">
-              <span className="md:hidden">
+              <span>
                 <SidebarTrigger aria-label="Apri menu" />
               </span>
               <div className="flex-1" />

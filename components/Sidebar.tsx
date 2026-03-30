@@ -147,19 +147,22 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
           </div>
         </div>
         <div
+          role="button"
+          tabIndex={0}
           className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
                      text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition mb-1 cursor-pointer"
           onClick={handleToggleTheme}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggleTheme(); } }}
           suppressHydrationWarning
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && handleToggleTheme()}
+          aria-label={resolvedTheme === 'dark' ? 'Passa a light mode' : 'Passa a dark mode'}
+          aria-pressed={resolvedTheme === 'dark'}
         >
           <Switch
             checked={resolvedTheme === 'dark'}
-            onCheckedChange={handleToggleTheme}
             suppressHydrationWarning
-            aria-label="Toggle dark mode"
+            aria-hidden="true"
+            tabIndex={-1}
+            className="h-6 w-10 pointer-events-none"
           />
           <span suppressHydrationWarning className="select-none">
             {resolvedTheme === 'dark' ? 'Dark mode' : 'Light mode'}

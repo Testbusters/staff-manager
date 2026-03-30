@@ -248,11 +248,13 @@ export default function ApprovazioniCompensazioni({
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <DataTable columns={columns} data={filtered} pagination pageSize={20} />
-          </CardContent>
-        </Card>
+        <div className="overflow-x-auto">
+          <Card>
+            <CardContent className="p-0">
+              <DataTable columns={columns} data={filtered} pagination pageSize={20} />
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
     </>

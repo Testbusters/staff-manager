@@ -252,7 +252,7 @@ tickets
 - *(ticket_messages_insert WITH CHECK added in migration 062; communications restricted to amministrazione in migration 063)*
 - **Remaining open gap (backlog DB4)**: all 90+ policies have `TO {public}` instead of `TO authenticated` — does not allow unauthenticated access (RLS is enforced) but adds overhead and widens surface.
 
-**RLS performance:** all policies use `(select auth.uid())` subquery form (per-statement evaluation) since migration 063.
+**RLS performance:** ⚠️ 39 policies still use bare `auth.uid()` (per-row evaluation) — migration 063 did not complete the rewrite. Tracked as backlog DB3. Remaining policies pending conversion to `(select auth.uid())` subquery form.
 
 ---
 

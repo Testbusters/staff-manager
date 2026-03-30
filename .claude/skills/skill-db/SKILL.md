@@ -1,8 +1,8 @@
 ---
 name: skill-db
-description: Database schema and query quality audit for staff-manager. Reviews normalization, index coverage (including FK columns, partial indexes, GIN for arrays), RLS completeness and performance (function caching, TO clause, SELECT-before-UPDATE, views), constraint gaps, data type antipatterns (timestamp/timestamptz, varchar(n), serial vs identity), N+1 query patterns, and unbounded queries. Uses docs/db-map.md as authoritative schema reference. Outputs findings to docs/refactoring-backlog.md.
+description: Database schema and query quality audit for staff-manager. Reviews normalization, index coverage (including FK columns, partial indexes, GIN for arrays), RLS completeness and performance (function caching, TO clause, SELECT-before-UPDATE, views), constraint gaps (NOT NULL, CHECK, composite UNIQUE), data type antipatterns (timestamp/timestamptz, varchar(n), serial vs identity), N+1 query patterns, unbounded queries, and migration safety (lock-heavy DDL, reversibility, unsafe backfills). Uses docs/db-map.md as authoritative schema reference. Outputs findings to docs/refactoring-backlog.md.
 user-invocable: true
-model: sonnet
+model: opus
 context: fork
 argument-hint: [target:section:<section>|target:table:<table>]
 ---
@@ -15,18 +15,24 @@ Parse `$ARGUMENTS` for a `target:` token.
 
 | Pattern | Meaning |
 |---|---|
-| `target:section:corsi` | Focus on corsi/lezioni/candidature/assegnazioni/blacklist/allegati_globali tables (migrations 055–060) |
-| `target:section:compensi` | Focus on compensations, expense_reimbursements, compensation_competenze |
-| `target:section:contenuti` | Focus on content tables (comunicazioni, eventi, opportunita, sconti, risorse) |
-| `target:table:<tablename>` | Focus on a specific table and its direct FKs |
-| No argument | Full audit — all tables in db-map.md |
+| `target:section:documenti` | Focus on documents, document_attachments (example — any section name is valid) |
+| `target:section:compensi` | Focus on compensations, expense_reimbursements, compensation_competenze, compensation_attachments (example) |
+| `target:section:contenuti` | Focus on content tables: comunicazioni, eventi, opportunita, sconti, risorse (example) |
+| `target:section:tickets` | Focus on tickets, ticket_messages, ticket_attachments (example) |
+| `target:section:auth` | Focus on collaborators, user_profiles, collaborator_communities, user_community_access (example) |
+| `target:section:<other>` | Resolve to matching tables in db-map.md whose name contains `<other>` |
+| `target:table:<tablename>` | Focus on a specific table and its direct FKs. **Migration safety (Step 2.5) is skipped for this target type.** |
+| No argument | **Full audit — ALL tables in docs/db-map.md. Maximum depth across every check (S1–S7, Step 2.5).** |
+
+**STRICT PARSING — mandatory**: derive target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → full audit of the entire schema in db-map.md at maximum depth. When a target IS provided → act with maximum depth and completeness on that specific scope only.
 
 Announce: `Running skill-db — scope: [FULL | target: <resolved>]`
-Apply the target filter to the schema analysis in Steps 2–4.
+
+**Target filter semantics**: apply the filter in Steps 2–4 as follows — S1 (only indexes on targeted tables and their FK children), S2/S3/S2b (only columns of targeted tables), S4 (only policies on targeted tables), S5/S6/S7 (only targeted tables). Step 2.5 (migration safety) scans only migration files that touch the targeted section; for `target:table:` it is skipped entirely.
 
 **Critical constraints**:
 - `docs/db-map.md` is the authoritative schema reference. Read it first — do NOT query the live DB to discover schema unless verifying a specific detail.
-- `docs/sitemap.md` provides the API route inventory for checking query patterns.
+- `docs/sitemap.md` provides the API route inventory for query pattern checks.
 - `docs/prd/01-rbac-matrix.md` is the authority for expected role access — use it as the baseline for RLS policy completeness.
 - Do NOT make schema changes. Audit only.
 - All findings go to `docs/refactoring-backlog.md`.
@@ -35,18 +41,15 @@ Apply the target filter to the schema analysis in Steps 2–4.
 
 ## Step 1 — Read schema reference
 
-Read `docs/db-map.md` in full. Note:
-- Tables and their key columns (including nullable/NOT NULL status)
-- FK graph (all FK relationships and referenced tables)
-- Existing indexes (B-tree, GIN, partial)
-- RLS summary and flagged gaps
-- Ownership patterns (`user_id`, `collaborator_id`, `creator_user_id`)
+Read these files in order before proceeding:
 
-Read `docs/prd/01-rbac-matrix.md` — extract the role × entity × action matrix. This is the baseline for S4 RLS completeness.
+1. `docs/db-map.md` — full read. Note: tables and key columns (nullable/NOT NULL), FK graph, existing indexes (B-tree, GIN, partial), RLS summary and ⚠️ gaps, ownership patterns (`user_id`, `collaborator_id`, `creator_user_id`).
+2. `docs/prd/01-rbac-matrix.md` — extract the role × entity × action matrix. Baseline for S4 RLS completeness.
+3. `docs/sitemap.md` — extract API route inventory. Required for S1A filter-column cross-reference and Step 3 scope.
+4. `docs/contracts/` — read the contracts relevant to the targeted section (all contracts for full audit). Required for S2b composite UNIQUE evaluation — business rules are defined here, not derivable from schema alone.
+5. `docs/refactoring-backlog.md` — scan existing `DB-[n]` entries to avoid duplicate reporting.
 
-Read `docs/refactoring-backlog.md` to avoid duplicate reporting.
-
-Output: structured understanding of schema. Do not proceed until complete.
+Do not proceed until all five reads are complete.
 
 ---
 
@@ -55,98 +58,163 @@ Output: structured understanding of schema. Do not proceed until complete.
 **S1 — Index coverage: filter columns + FK columns**
 
 *Part A — Common filter columns*
-Cross-reference the "Missing indexes" section of `db-map.md` with query patterns described in the sitemap. For each table frequently filtered/ordered by a column not in the index list, flag it.
+Cross-reference the "Missing indexes" section of `db-map.md` with the API route list from `docs/sitemap.md`. For each table frequently filtered or ordered by a column that lacks an index, flag it.
 
-Priority columns to verify:
-- `compensations.data_competenza` — date range filters in export
+Priority patterns to scan:
+- Any table with `ORDER BY created_at DESC` in API handlers (notifications, tickets, compensations, expense_reimbursements)
+- `compensations.data_competenza` — date range filters in export routes
 - `expense_reimbursements.data_spesa` — date filters
-- `notifications.created_at` — recency ordering in bell + page
-- `tickets.last_message_at` — recency sort
-- Any table with `ORDER BY created_at DESC` usage in API routes
+- `lezioni.data_ora` — recency and range filters in corsi routes
+- `tickets.last_message_at` — sort in list endpoints
+- `candidature.stato` and `assegnazioni.stato` — filter by active state in corsi routes
+
+Also scan `app/api/` for `.order('column_name'` or `.gte('column_name'` patterns not already in the index list.
 
 *Part B — FK column coverage*
-For every FK relationship in the FK graph, verify that the **child** FK column is indexed (parent primary keys are indexed by default — child columns must be explicitly indexed).
-Unindexed FK columns cause sequential scans on every `ON DELETE` cascade and on every JOIN.
+For every FK relationship in the FK graph, verify that the **child** FK column is indexed. Parent primary keys are indexed by default — child FK columns must be explicitly indexed. An unindexed FK child column causes sequential scans on every JOIN and on every `ON DELETE` cascade operation.
+
 Run in Step 4 (live DB):
 ```sql
 SELECT
-  tc.conname AS fk_name,
+  c.conname AS fk_name,
   tbl.relname AS table_name,
-  att.attname AS fk_column,
-  idx.indexname AS index_name
-FROM pg_constraint tc
-JOIN pg_attribute att ON att.attrelid = tc.conrelid AND att.attnum = ANY(tc.conkey)
-JOIN pg_class tbl ON tbl.oid = tc.conrelid
-LEFT JOIN pg_indexes idx ON idx.tablename = tbl.relname
-  AND idx.indexdef LIKE '%' || att.attname || '%'
-WHERE tc.contype = 'f'
-ORDER BY tbl.relname, att.attname;
+  a.attname AS fk_column,
+  EXISTS (
+    SELECT 1 FROM pg_index i
+    WHERE i.indrelid = c.conrelid
+      AND a.attnum = ANY(i.indkey)
+  ) AS is_indexed
+FROM pg_constraint c
+JOIN pg_class tbl ON tbl.oid = c.conrelid
+JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+WHERE c.contype = 'f'
+  AND tbl.relname NOT LIKE 'pg_%'
+ORDER BY tbl.relname, a.attname;
 ```
-Flag: any FK column where `index_name IS NULL`.
+Flag as High: any row where `is_indexed = false` on a table with expected write volume (compensations, expense_reimbursements, notifications, candidature, assegnazioni, lezioni).
+Flag as Medium: `is_indexed = false` on lower-traffic tables.
 
 *Part C — Partial index opportunity on state machine columns*
-Tables with `stato` columns (compensations, expense_reimbursements, tickets, documents, corsi, candidature) are frequently filtered by active states (`IN_ATTESA`, `DA_FIRMARE`, `APERTA`).
-Check: does each such table have either (a) a B-tree index on `stato`, or (b) a partial index (e.g. `WHERE stato = 'IN_ATTESA'`)?
-A full B-tree on `stato` has low cardinality and provides limited benefit. A partial index is preferable when the active-state subset is < 20% of rows.
-Flag as Low: missing any index on state machine columns. Suggest partial index strategy.
+Tables with `stato` columns (compensations, expense_reimbursements, tickets, documents, corsi, candidature) are frequently filtered by active states. A full B-tree on `stato` has low cardinality and limited benefit. A partial index is preferable for the active-state working set.
+
+Run in Step 4 to check distribution:
+```sql
+SELECT 'compensations' AS tbl, stato, COUNT(*) FROM compensations GROUP BY stato
+UNION ALL
+SELECT 'expense_reimbursements', stato, COUNT(*) FROM expense_reimbursements GROUP BY stato
+UNION ALL
+SELECT 'tickets', stato, COUNT(*) FROM tickets GROUP BY stato
+UNION ALL
+SELECT 'candidature', stato, COUNT(*) FROM candidature GROUP BY stato
+ORDER BY tbl, stato;
+```
+If any active-state subset is < 30% of total rows and no partial index exists on that table, flag as Low with suggested partial index.
 
 *Part D — GIN index for UUID[] array columns*
-`community_ids UUID[]` columns on content tables (comunicazioni, eventi, opportunita, sconti, risorse) cannot be efficiently queried with B-tree indexes.
-Verify from `db-map.md` indexes section: do any content tables have GIN indexes on `community_ids`?
-Note: in-memory filtering is currently used (documented in CLAUDE.md — not a violation), but if PostgREST array operators are ever used, a GIN index will be required.
-Flag as Low if GIN index is absent, with a note that it becomes necessary if query strategy changes.
+`community_ids UUID[]` columns on content tables cannot be efficiently queried with B-tree indexes.
+Note: in-memory filtering is the current strategy (documented in CLAUDE.md as intentional). Flag as Low only if query strategy changes, with note: "becomes Critical if PostgREST array operators are ever used."
 
-**S2 — Normalization issues**
-Check for:
-- Repeated denormalized data (e.g. `last_message_author_name` on `tickets` — denormalized from auth.users)
-- Fields stored as `text` that should be an enum or FK (e.g. `stato` on all state machines — text instead of ENUM type)
-- `jsonb` columns used as arrays when a junction table would be cleaner (`community_ids UUID[]` on content tables)
+**S2 — Normalization and modeling**
+Focus only on structural/modeling issues NOT covered by S2b (constraints), S5 (types), or S6 (FK behavior).
 
-For each: assess trade-off. The `community_ids[]` pattern is intentional (documented in CLAUDE.md) — note it as known, not a violation.
+Check:
+- `tickets.last_message_author_name`: denormalized from auth.users. If a user renames, existing tickets show a stale name. Assess: is there an update path? If no sync mechanism exists, flag as Low ("acceptable for read performance, but stale on profile rename — document the trade-off").
+- `compensation_history` / `expense_history`: verify these tables exist and cover all state transitions. If a state machine table has no history table, flag as Medium — financial records require an audit trail.
+- `stato` columns on all state machines stored as `text`: from a modeling standpoint this means the schema expresses no valid-value contract at the DB level. The risk is covered in S2b Part A (CHECK constraint). Note it here only as a modeling observation, not a separate finding — avoid double-reporting with S2b.
+- `community_ids UUID[]` on content tables instead of a junction table: this is a known intentional design (CLAUDE.md). Note as "documented trade-off — acceptable." Do not flag as a finding.
+
+For each: state whether the denormalization has a documented rationale. Only flag when the rationale is absent AND the risk is real.
 
 **S3 — Missing NOT NULL constraints**
-From `db-map.md`, identify columns that are `is_nullable=YES` but should logically never be null in a valid record (e.g. `compensations.importo_lordo`, `collaborators.data_ingresso` for active users).
-Flag as Medium if the column is used in calculations without null guards in application code.
-PostgreSQL best practice: "the majority of columns should be marked NOT NULL" — err toward NOT NULL, not nullable.
+From `db-map.md` Column specs, identify columns that are nullable but should logically never be null in a valid record.
+
+Run in Step 4:
+```sql
+SELECT table_name, column_name, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND is_nullable = 'YES'
+  AND column_name IN (
+    'importo_lordo', 'importo', 'importo_netto', 'ritenuta_acconto',
+    'data_competenza', 'data_spesa', 'data_ora',
+    'stato', 'collaborator_id', 'creator_user_id',
+    'community_id', 'lezione_id', 'corso_id', 'data_ingresso'
+  )
+ORDER BY table_name, column_name;
+```
+For each row returned: evaluate whether null is a valid business state or an oversight.
+Flag as Medium: columns used in financial calculations (`importo_lordo`, `importo_netto`, `ritenuta_acconto`) that are nullable without null guards in application code.
+PostgreSQL best practice: the majority of columns should be NOT NULL — err toward NOT NULL unless null has a documented semantic meaning.
+
+**S2b — Constraint completeness (CHECK + composite UNIQUE)**
+
+The project relies on application-layer validation (Zod) for most business rules. Identify where DB-level constraints are missing for invariants that should hold even under direct service-role access or migration scripts.
+
+*Part A — CHECK constraints*
+Evaluate each candidate after the ritenuta scale is confirmed in Step 4 (run S4 ritenuta query first to determine if scale is 20 or 0.20 before proposing the range):
+- `compensations.importo_lordo` — should be `> 0`
+- `expense_reimbursements.importo` — should be `> 0`
+- `compensations.ritenuta_acconto` — range depends on confirmed scale: `BETWEEN 0 AND 100` if stored as percentage (20), `BETWEEN 0 AND 1` if stored as decimal (0.20). **Do not propose the CHECK before confirming scale.**
+- `stato` columns — `CHECK (stato IN ('IN_ATTESA', 'APPROVATO_RESP', ...))` on each state machine table. Enumerate valid values from `lib/transitions.ts` or entity contracts.
+- `collaborators.data_ingresso` — `CHECK (data_ingresso <= CURRENT_DATE)`
+
+For each: "if a row were inserted directly via service role with an invalid value, would the DB catch it?" If no, and the value drives financial calculations or state machine logic, flag as Medium.
+
+*Part B — Composite UNIQUE constraints*
+Cross-reference `docs/contracts/` business rules against the schema:
+- `candidature (lezione_id, collaborator_id)`: can a collaborator submit two candidature for the same lezione? If the contracts say no, flag missing UNIQUE.
+- `assegnazioni (lezione_id, collaborator_id)`: same logic — can a collaborator be assigned twice to the same lezione?
+- `blacklist (lezione_id, collaborator_id)`: should a blacklist entry for the same pair be unique?
+- `notification_settings (event_key, recipient_role)`: should this pair be unique?
+
+For each: anchor to the business rule from the contract, not to implementation preference. Flag as Medium if the absence would allow duplicate records currently prevented only by application code.
 
 **S4 — RLS completeness and performance**
 
 *Part A — Policy existence (RBAC cross-reference)*
-From the "⚠️ RLS gaps" section of `db-map.md`, evaluate each flagged gap:
-
-1. `communications.announcements_admin_write` grants ALL to `responsabile_compensi` — verify if intended (responsabili CAN publish announcements per requirements) or accidental over-grant.
-2. `compensation_attachments.comp_attachments_own_insert` — no WITH CHECK clause. Can any authenticated user insert attachments for any compensation?
+From the "⚠️ RLS gaps" section of `db-map.md`, evaluate each flagged gap against current evidence:
+1. `communications.announcements_admin_write` grants ALL to `responsabile_compensi` — cross-check `docs/prd/01-rbac-matrix.md` to verify if this is intentional or an over-grant.
+2. `compensation_attachments.comp_attachments_own_insert` — no WITH CHECK. Any authenticated user can insert attachments for any compensation?
 3. `expense_attachments.exp_attachments_own_insert` — same.
-4. `ticket_messages.ticket_messages_insert` — no WITH CHECK. Any authenticated user can post to any ticket.
+4. `ticket_messages.ticket_messages_insert` — no WITH CHECK. Any authenticated user can post to any ticket?
 
-For all other tables: cross-reference policies in `db-map.md` RLS Summary against `docs/prd/01-rbac-matrix.md`. Flag any table with a documented access right but no matching policy.
+For all tables: cross-reference policies in `db-map.md` RLS Summary against `docs/prd/01-rbac-matrix.md`. Flag any table with a documented access right but no matching policy.
 
 *Part B — Function call caching*
-Supabase recommendation: wrap `auth.uid()` and `auth.role()` in `(select ...)` to enable per-statement caching instead of per-row evaluation.
+Supabase recommendation: wrap `auth.uid()` in `(select auth.uid())` to enable per-statement caching instead of per-row evaluation. On tables with thousands of rows, bare `auth.uid()` is called once per row.
+
 Run in Step 4:
 ```sql
-SELECT policyname, tablename, qual, with_check
+SELECT policyname, tablename,
+  CASE WHEN qual LIKE '%auth.uid()%' AND qual NOT LIKE '%(select auth.uid())%'
+    THEN 'qual' ELSE '' END ||
+  CASE WHEN with_check LIKE '%auth.uid()%' AND with_check NOT LIKE '%(select auth.uid())%'
+    THEN ' with_check' ELSE '' END AS bare_uid_in
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND (qual LIKE '%auth.uid()%' OR with_check LIKE '%auth.uid()%')
-  AND (qual NOT LIKE '%(select auth.uid())%' AND with_check NOT LIKE '%(select auth.uid())%'
-       OR (with_check IS NULL AND qual NOT LIKE '%(select auth.uid())%'));
+  AND (
+    (qual LIKE '%auth.uid()%' AND qual NOT LIKE '%(select auth.uid())%')
+    OR
+    (with_check LIKE '%auth.uid()%' AND with_check NOT LIKE '%(select auth.uid())%')
+  );
 ```
-Flag as Medium: each policy using bare `auth.uid()` instead of `(select auth.uid())`. On tables with many rows, this can cause the function to be called once per row instead of once per statement.
+Flag as Medium: each policy using bare `auth.uid()` not wrapped in `(select ...)`. Report table + policy name + which clause is affected.
 
 *Part C — Explicit TO clause*
-Policies without a `TO` clause execute for ALL roles (including anon), creating unnecessary overhead.
+Policies without a `TO` clause apply to ALL roles including `anon`, creating unnecessary overhead and surface area.
+
 Run in Step 4:
 ```sql
-SELECT tablename, policyname, roles
+SELECT tablename, policyname, roles, cmd
 FROM pg_policies
 WHERE schemaname = 'public'
   AND roles = '{public}';
 ```
-Flag as Low: policies that apply to `{public}` where a specific role (`authenticated`, `anon`) would be more precise.
+Flag as Low: policies applying to `{public}` where `authenticated` or a specific role would be more precise. Exception: policies explicitly intended for unauthenticated access (e.g. public read on announcements).
 
 *Part D — SELECT policy before UPDATE*
-Supabase requires a matching SELECT policy to be present for UPDATE to function correctly. A table with UPDATE but no SELECT policy will silently fail to return updated rows.
+A table with an UPDATE RLS policy but no SELECT policy causes `supabase-js` to silently return `null` after updates — the row was written but the client cannot read it back.
+
 Run in Step 4:
 ```sql
 SELECT DISTINCT tablename
@@ -157,30 +225,27 @@ SELECT DISTINCT tablename
 FROM pg_policies
 WHERE schemaname = 'public' AND cmd IN ('SELECT', 'ALL');
 ```
-Flag as High: any table with UPDATE policy but no SELECT policy.
+Flag as High: any table returned by this query.
 
 *Part E — Views without security_invoker*
-Views bypass RLS by default unless `security_invoker = true` (Postgres 15+).
+Views bypass RLS by default in Postgres unless `security_invoker = true` (Postgres 15+). A view over an RLS-protected table exposes all rows to any caller with view access.
+
 Run in Step 4:
 ```sql
 SELECT viewname, definition
 FROM pg_views
 WHERE schemaname = 'public';
 ```
-For each view found: check if the underlying tables have RLS policies. If yes, flag as High unless `security_invoker = true` is set.
+For each view: check if the underlying tables have RLS policies. If yes, flag as High unless `security_invoker = true` is explicitly set.
 
 **S5 — Data type choices**
 
-*Known antipatterns (source: wiki.postgresql.org/wiki/Don%27t_Do_This):*
+Flag questionable data type choices from `db-map.md` Column specs. Source: wiki.postgresql.org/wiki/Don%27t_Do_This.
 
-Flag questionable data type choices from `db-map.md` Column specs section:
-- **`timestamp` without timezone** → should be `timestamptz`. Plain `timestamp` stores a "picture of a clock" without timezone context — arithmetic errors across timezones. Expected: all timestamp columns use `timestamptz`.
-- **`varchar(n)` with arbitrary length limits** → should be `text`. `varchar(n)` takes identical storage to `text` but adds an arbitrary rejection constraint. Prefer `text` with `CHECK (length(col) <= N)` when a limit is genuinely required.
-- **`serial` columns** → should use `IDENTITY` (Postgres 10+). `serial` creates hidden sequences with "weird permission and dependency behaviours". `GENERATED ALWAYS AS IDENTITY` is the standard.
-- **`money` type** → use `numeric` instead. `money` has rounding behaviour tied to locale and doesn't store currency.
-- **State machine columns as `text`** → no ENUM constraint, risk of invalid values. Flag as Medium — consider CHECK constraint or Postgres ENUM.
-- `ritenuta_acconto` stored as `numeric` (correct) vs percentage (verify: is it 20 or 0.20?)
-- `community_ids UUID[]` on content tables — no FK enforcement, silent invalid UUIDs possible
+- **`timestamp` without timezone** → should be `timestamptz`. Plain `timestamp` stores no timezone context — arithmetic errors across timezones. Expected: all timestamp columns use `timestamptz`.
+- **`varchar(n)` with arbitrary length limits** → should be `text`. `varchar(n)` takes identical storage to `text` but adds an arbitrary rejection constraint. Prefer `text + CHECK (length(col) <= N)` when a limit is genuinely required.
+- **`serial` columns** → should use `IDENTITY` (Postgres 10+). `serial` creates hidden sequences with non-obvious permission and dependency behavior. `GENERATED ALWAYS AS IDENTITY` is the standard.
+- **State machine columns as `text`** → no valid-value contract at DB level. Flag as Medium — consider CHECK constraint (see S2b).
 
 Run in Step 4:
 ```sql
@@ -191,13 +256,13 @@ WHERE table_schema = 'public'
   AND data_type = 'timestamp without time zone';
 
 -- Detect varchar(n) columns
-SELECT table_name, column_name, data_type, character_maximum_length
+SELECT table_name, column_name, character_maximum_length
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND data_type = 'character varying'
   AND character_maximum_length IS NOT NULL;
 
--- Detect serial (uses sequences with serial ownership)
+-- Detect serial (sequences with auto-ownership)
 SELECT s.relname AS seq_name, d.refobjid::regclass AS table_name
 FROM pg_class s
 JOIN pg_depend d ON d.objid = s.oid
@@ -207,7 +272,8 @@ WHERE s.relkind = 'S'
 ```
 
 **S6 — FK cascade behavior**
-For each FK in the FK graph, verify delete cascade behavior. Flag any FK without explicit `ON DELETE` handling where orphaned records are a risk (e.g. if a `collaborator` is deleted, what happens to `compensations`?).
+For each FK in the FK graph, verify delete cascade behavior and evaluate whether it reflects the intended parent-child semantics.
+
 Run in Step 4:
 ```sql
 SELECT
@@ -225,90 +291,148 @@ FROM pg_constraint c
 WHERE c.contype = 'f'
 ORDER BY c.conrelid::regclass::text;
 ```
-Flag: any FK with `NO ACTION` where orphaned children would be a data integrity risk. Flag: any unexpected `CASCADE` that could cause unintended mass deletes.
+
+Evaluation criteria for `NO ACTION` results:
+- **Flag as Medium** (potential orphan risk): FK from a dependent-entity table (compensations, documents, tickets, assegnazioni, candidature, notifications) to collaborators, corsi, or lezioni with `NO ACTION`. If the parent record is deleted, orphaned children become invisible to application queries but remain in the DB.
+- **Do NOT flag** (intentional): FK from a lookup/reference table to a parent where the application explicitly controls deletion order (e.g. admin delete flow that removes children first). Check `app/api/admin/` for explicit child-deletion patterns before flagging.
+- **Flag as Critical**: any `CASCADE` on a path that could trigger mass deletion of financial records (compensations, expense_reimbursements) or audit history.
+- **Flag as High**: `SET NULL` on a FK column that is NOT NULL — this combination would cause the DELETE to fail at runtime with a constraint violation.
 
 **S7 — Unused indexes**
-Indexes that are never used by the query planner waste write I/O (every INSERT/UPDATE/DELETE must maintain them).
+Indexes with zero query planner usage waste write I/O on every INSERT/UPDATE/DELETE.
+
 Run in Step 4:
 ```sql
 SELECT
-  schemaname,
   tablename,
   indexname,
   idx_scan,
-  pg_size_pretty(pg_relation_size(indexrelid)) AS index_size
+  pg_size_pretty(pg_relation_size(indexrelid)) AS index_size,
+  (SELECT reltuples::bigint FROM pg_class WHERE relname = tablename) AS est_row_count
 FROM pg_stat_user_indexes
 WHERE schemaname = 'public'
   AND idx_scan = 0
+  AND indexname NOT LIKE '%_pkey'
 ORDER BY pg_relation_size(indexrelid) DESC;
 ```
-Flag as Low: any index with 0 scans. Note that staging DB may have low traffic — treat as a hint, not a definitive finding.
+Interpretation: staging DB has low traffic so `idx_scan = 0` is expected for most indexes. Flag as Low only when: (a) the index is not on a column listed as a known filter in S1A, AND (b) estimated row count > 100 (non-trivial table), AND (c) the index was not created in the most recent 3 migrations (newly created indexes will show 0 scans even if correct).
+
+---
+
+## Step 2.5 — Migration safety review
+
+Read migration files from `supabase/migrations/`.
+
+**Scope**:
+- `target:section:*`: scan only migration files that touch the targeted tables (filter by filename convention or by grepping table names).
+- No argument (full audit): scan all migration files. If count > 30, prioritize: (1) all files containing `DROP`, `TRUNCATE`, `ALTER TYPE`, `RENAME`; (2) the 15 most recent files (highest-numbered); (3) any remaining files only if time permits.
+- `target:table:*`: **skip this step entirely** — announced at Step 0.
+
+For each file in scope, evaluate these four risks:
+
+**M1 — Lock-heavy DDL**
+Operations that take an `ACCESS EXCLUSIVE` lock, blocking all reads and writes:
+- `CREATE INDEX` without `CONCURRENTLY` — locks the table for the full index build. Flag as High for any table with expected rows > 1000.
+- `CREATE INDEX CONCURRENTLY` inside a `BEGIN`/`COMMIT` block — **this fails in PostgreSQL**. CONCURRENTLY cannot run inside a transaction. Grep for files containing both `BEGIN` (or `START TRANSACTION`) and `CREATE INDEX CONCURRENTLY` in the same file. Flag as Critical.
+- `ADD COLUMN col type NOT NULL` without a DEFAULT — fails immediately on tables with existing rows. Flag as High.
+- `ADD COLUMN col type NOT NULL DEFAULT <volatile_expr>` — triggers a full table rewrite (e.g. `DEFAULT now()` is volatile). Flag as High; suggest: add as nullable first, backfill, then add NOT NULL constraint.
+- `ALTER COLUMN ... TYPE` that requires a cast and full rewrite — flag as High.
+- `RENAME COLUMN` / `RENAME TABLE` — takes ACCESS EXCLUSIVE but completes instantly; flag as Medium only if the renamed object has active API consumers (verify in sitemap.md).
+- `ALTER TYPE ... RENAME VALUE` — takes ACCESS EXCLUSIVE lock on all tables using that type; flag as Medium with the note that it is safe but blocking.
+
+**M2 — Non-reversible operations without rollback comment**
+Check each file for: `DROP COLUMN`, `DROP TABLE`, `TRUNCATE`, `ALTER TYPE ... RENAME VALUE`, or irreversible `UPDATE` statements.
+
+Per CLAUDE.md Known Patterns: destructive migrations MUST have a rollback SQL comment at the top: `-- ROLLBACK: ...`.
+Flag as High: any destructive migration lacking a rollback comment block.
+Flag as Critical: a destructive migration that has already been applied to staging (verify: `SELECT * FROM supabase_migrations.schema_migrations WHERE version = 'NNN'` — if found, it's applied).
+
+**M3 — Unsafe backfills**
+`UPDATE table SET col = value` without batching on a high-traffic table holds a lock for the full duration, generating excessive WAL and causing replication lag.
+
+Flag as Medium: any `UPDATE` in a migration touching compensations, expense_reimbursements, notifications, or collaborators without evidence of batching (`WHERE id BETWEEN ... AND ...` or explicit loop comment).
+
+**M4 — Constraint sequencing**
+Per CLAUDE.md Known Patterns: if a migration changes a status/enum value, it must follow the sequence: (1) DROP CONSTRAINT, (2) UPDATE data, (3) ADD CONSTRAINT — all in one migration for atomicity.
+
+Check: any migration with `UPDATE ... SET stato = ...` or similar value rename. Verify the DROP CONSTRAINT → UPDATE → ADD CONSTRAINT sequence is present. If a migration has only the UPDATE without constraint handling, flag as High (would fail on tables with existing CHECK constraints).
+
+**Migration safety output**:
+Report only files with at least one ⚠️. For clean files, report count only (e.g. "12 files reviewed, 10 clean"). For each flagged file: filename, issue code (M1/M2/M3/M4), severity, and the specific SQL line that raised the concern.
 
 ---
 
 ## Step 3 — API query pattern check (Explore agent)
 
-Launch a **single Explore subagent** (model: haiku) to check API routes for query anti-patterns.
+Launch a **single Explore subagent** (model: haiku) with the following instructions. Pass the API route file list from `docs/sitemap.md` as the file scope.
 
-File scope: all files in `app/api/` (from sitemap.md API routes list).
+```
+Run these 5 checks on all files under app/api/. For each check, return results in this exact format:
+MATCH | check_code | file:line | matched_pattern | severity
 
-"Run these 5 checks on the provided API route files:
+CHECK Q1 — N+1 queries in list endpoints
+Step 1 (fast): grep -n "\.from(" across all route files to get all lines with DB calls.
+Step 2 (contextual): for each match, read 15 lines of surrounding context. Flag if the .from() call appears inside a for/forEach/.map( block. Multi-line patterns are common — a loop opener on line N and a .from() on line N+5 inside the same block counts as N+1.
+Severity: High on list endpoints, Medium on single-record endpoints.
 
-**CHECK Q1 — N+1 queries in list endpoints**
-Pattern A: a `.from(table).select(...)` inside a `.map(` callback or `for` loop.
-Grep: `\.from\(` inside `\.map\(|for\s*\(|forEach\(`
-Pattern B: `for...of` loop with `await svc.from(` or `await supabase.from(` inside the loop body (sequential awaits = N+1).
-Grep: `for\s*\(.*of\s|for\s+await` — then check if `await.*\.from\(` appears within the same block.
-Flag: each match with file:line. A single JOIN query or batch `.in()` query should replace any N+1 pattern.
+CHECK Q2 — Missing await on Supabase calls
+Grep: lines containing "svc.from(" or "supabase.from(" — check each match for the presence of "await" on the SAME line, OR that the call is part of a promise chain (.then(). Flag lines where neither condition is true.
+Pattern to flag: "svc.from(" not preceded by "await" on the same line and not inside a .then( context.
+Severity: High (fire-and-forget DB calls cause silent failures).
 
-**CHECK Q2 — Missing await on Supabase calls**
-Pattern: `svc.from(` or `supabase.from(` not preceded by `await` or assigned to a promise chain.
-Grep: `[^=\s]svc\.from\(|[^=\s]supabase\.from\(`
-Flag: each match.
+CHECK Q3 — Select * (unbounded column fetch)
+Grep: '.select("*")' or ".select('*')"
+Flag each match. Note whether the route returns the full object to the client (check if the result is spread into a response or filtered first).
+Severity: Medium if result is returned directly to client, Low if filtered before response.
 
-**CHECK Q3 — Select * (unbounded column fetch)**
-Pattern: `.select('*')` in API routes — fetches all columns including potentially sensitive ones.
-Grep: `\.select\('\*'\)`
-Flag: each match. Evaluate if the route returns the full object to the client.
+CHECK Q4 — Missing error handling on DB writes
+Grep: lines with .insert(, .update(, .delete(, .upsert( — check within 5 lines for one of these patterns:
+  - const { error } = await ...
+  - const { data, error } = await ...
+  - if (error) or if (insertError) or similar
+Flag if none of these patterns appear within 5 lines after the write call.
+Severity: High (silent write failures cause data loss without error response).
 
-**CHECK Q4 — Missing error handling on DB writes**
-Pattern: `await svc.from(table).insert/update/delete(` without a subsequent `if (error)` check.
-Grep: `await svc\.from\(.*\)\.(insert|update|delete)` — flag any call not followed within 3 lines by `if.*error` or `.catch`.
-Flag: each match.
+CHECK Q5 — Unbounded queries on large tables
+Grep for: .from('compensations'), .from('expense_reimbursements'), .from('notifications'), .from('tickets'), .from('candidature'), .from('assegnazioni'), .from('lezioni')
+For each match, check within 15 lines for: .limit(, .range(, pageSize, or a comment indicating it is an intentional full export (// export, // all records).
+Flag: any collection endpoint that fetches without bounds and is not an export route.
+Severity: High on production-volume tables.
 
-**CHECK Q5 — Unbounded queries (no limit on large tables)**
-Pattern: `.from(table).select(...)` without `.limit(N)`, `.range(from, to)`, or a `pageSize` parameter on tables that can grow unboundedly (compensations, expense_reimbursements, notifications, tickets, candidature, assegnazioni, lezioni).
-Grep for each of those table names: `\.from\('(compensations|expense_reimbursements|notifications|tickets|candidature|assegnazioni|lezioni)'\)` — then verify if `.limit(` or `pageSize` appears within 10 lines.
-Flag: any collection endpoint that fetches without bounds. Exception: admin export routes that intentionally fetch all records for CSV/XLSX export."
+Return ALL matches in the MATCH | check_code | file:line | matched_pattern | severity format. If a check has zero matches, return: CLEAN | check_code | no matches found.
+```
 
 ---
 
 ## Step 4 — Live DB verification
 
-Run all queries marked "Run in Step 4" from Step 2 against the staging DB (project_id: `gjwkvgfwkdwzqlvudgqr`). Group them by check:
+Run all SQL queries marked "Run in Step 4" from Step 2 against the staging DB (`project_id: gjwkvgfwkdwzqlvudgqr`). Group by check:
 
-1. S1B — FK column index coverage (full FK × index join query above)
-2. S4B — Function call caching (`auth.uid()` without `select`)
-3. S4C — Policies without explicit `TO` clause
-4. S4D — UPDATE without matching SELECT policy
-5. S4E — Views without security_invoker
-6. S5 — Data type antipatterns (timestamp, varchar(n), serial)
-7. S6 — FK cascade behavior
+1. **S1B** — FK column index coverage
+2. **S1C** — stato column row distribution
+3. **S3** — nullable columns on key financial/ownership fields
+4. **S4B** — policies with bare `auth.uid()`
+5. **S4C** — policies without explicit TO clause
+6. **S4D** — UPDATE policies without matching SELECT
+7. **S4E** — views in public schema
+8. **S5** — data type antipatterns (timestamp, varchar(n), serial)
+9. **S6** — FK cascade behavior
 
 Additionally:
 ```sql
--- Verify ritenuta_acconto scale (is it 20 or 0.20?)
+-- Confirm ritenuta_acconto scale (required before S2b Part A)
 SELECT MIN(ritenuta_acconto), MAX(ritenuta_acconto), AVG(ritenuta_acconto)
 FROM compensations
 WHERE ritenuta_acconto IS NOT NULL;
+
+-- Check for invalid stato values
+SELECT 'compensations' AS tbl, stato, COUNT(*) FROM compensations GROUP BY stato
+UNION ALL SELECT 'expense_reimbursements', stato, COUNT(*) FROM expense_reimbursements GROUP BY stato
+UNION ALL SELECT 'tickets', stato, COUNT(*) FROM tickets GROUP BY stato
+ORDER BY tbl, stato;
 ```
 
-```sql
--- Check for invalid stato values (text instead of ENUM risk)
-SELECT stato, COUNT(*) FROM compensations GROUP BY stato ORDER BY stato;
-SELECT stato, COUNT(*) FROM expense_reimbursements GROUP BY stato ORDER BY stato;
-SELECT stato, COUNT(*) FROM tickets GROUP BY stato ORDER BY stato;
-```
+**Empty result handling**: if a query returns no rows or all-NULL values (common on staging with low data volume), record as "not verifiable on staging — [table] has insufficient data" rather than ✅. Do not treat absence of data as absence of a problem.
 
 ---
 
@@ -318,16 +442,37 @@ SELECT stato, COUNT(*) FROM tickets GROUP BY stato ORDER BY stato;
 
 ```
 ## Skill-DB Audit — [DATE] — [SCOPE]
-### Sources: Supabase RLS docs, PostgreSQL docs (indexes, constraints), wiki.postgresql.org/Don't_Do_This
+Sources: Supabase RLS docs, PostgreSQL docs (indexes, constraints), wiki.postgresql.org/Don't_Do_This
+
+### Executive summary
+[2-5 bullets — Critical and High findings only. Write concrete facts: table names, column names, line counts.
+If nothing Critical/High: state that explicitly ("No Critical or High findings — schema is production-ready for this scope").
+Example bullets:
+- "assegnazioni.lezione_id FK is unindexed — every lesson fetch JOIN causes a sequential scan (S1B)"
+- "2 migrations lack rollback comments for irreversible DROP COLUMN (M2): 045_..., 051_..."
+- "S4B: 7 RLS policies use bare auth.uid() on notifications and compensations — per-row function call on all reads"]
+
+### DB maturity assessment
+| Dimension | Rating | Notes |
+|---|---|---|
+| Schema integrity | strong / adequate / weak | [nullable gaps, type antipatterns, constraint gaps] |
+| Index quality | strong / adequate / weak | [unindexed FKs, missing filter indexes, unused indexes] |
+| RLS / security posture | strong / adequate / weak | [policy gaps, unsafe views, function caching] |
+| Query quality | strong / adequate / weak | [N+1, unbounded, missing error handling] |
+| Migration safety | strong / adequate / weak | [lock-heavy DDL, missing rollbacks, unsafe backfills] |
+| Release readiness | ready / conditional / blocked | [blocked = any Critical finding; conditional = High findings present but workarounded] |
+
+Rating guide: strong = no significant issues; adequate = issues exist but low production risk; weak = issues that should be resolved before next production release.
 
 ### Schema Checks
-| # | Check | Verdict | Notes |
+| # | Check | Verdict | Findings |
 |---|---|---|---|
 | S1A | Index — filter columns | ✅/⚠️ | [columns flagged] |
-| S1B | Index — FK column coverage | ✅/⚠️ | [N FK columns unindexed] |
+| S1B | Index — FK column coverage | ✅/⚠️ | [N unindexed FK columns] |
 | S1C | Index — partial on stato columns | ✅/⚠️ | |
 | S1D | Index — GIN for UUID[] arrays | ✅/⚠️ | |
-| S2 | Normalization | ✅/⚠️ | |
+| S2 | Normalization and modeling | ✅/⚠️ | |
+| S2b | Constraint completeness (CHECK + composite UNIQUE) | ✅/⚠️ | |
 | S3 | Missing NOT NULL | ✅/⚠️ | |
 | S4A | RLS — policy completeness | ✅/⚠️ | |
 | S4B | RLS — function call caching | ✅/⚠️ | [N policies with bare auth.uid()] |
@@ -336,41 +481,70 @@ SELECT stato, COUNT(*) FROM tickets GROUP BY stato ORDER BY stato;
 | S4E | RLS — views security_invoker | ✅/⚠️ | |
 | S5 | Data type choices | ✅/⚠️ | [timestamp/varchar/serial hits] |
 | S6 | FK cascade behavior | ✅/⚠️ | |
-| S7 | Unused indexes | ✅/⚠️ | [N indexes with 0 scans] |
+| S7 | Unused indexes | ✅/⚠️ | [N with 0 scans and qualifying criteria] |
+
+### Migration Safety Checks
+[Only list files with at least one ⚠️. For clean files report summary count.]
+| File | M1 Lock | M2 Rollback | M3 Backfill | M4 Constraint seq | Notes |
+|---|---|---|---|---|---|
+| [migration filename] | ✅/⚠️ | ✅/⚠️ | ✅/⚠️ | ✅/⚠️ | [specific SQL line] |
 
 ### Query Pattern Checks (API routes)
 | # | Check | Matches | Verdict |
 |---|---|---|---|
-| Q1 | N+1 queries (map/for/for..of) | N | ✅/⚠️ |
+| Q1 | N+1 queries | N | ✅/⚠️ |
 | Q2 | Missing await | N | ✅/⚠️ |
 | Q3 | Select * | N | ✅/⚠️ |
-| Q4 | Missing error handling | N | ✅/⚠️ |
+| Q4 | Missing error handling on writes | N | ✅/⚠️ |
 | Q5 | Unbounded queries | N | ✅/⚠️ |
 
-### Findings requiring action ([N] total)
-[table/file — check# — issue — impact — suggested fix]
+### Prioritized findings
+For each finding with severity Medium or above:
+[SEVERITY] [ID] [check#] — [table/file:line] — [issue] — [business impact] — [fix] — [effort: S=<1h / M=half day / L=day+]
+Example:
+[HIGH] DB-41 [S1B] — assegnazioni.lezione_id — FK column unindexed — sequential scan on every lesson JOIN — CREATE INDEX CONCURRENTLY idx_assegnazioni_lezione_id ON assegnazioni(lezione_id) — S
+
+### Quick wins
+[List findings that meet ALL three criteria: (a) Medium or High severity AND (b) effort S (<1 hour) AND (c) only DB migration OR only code change, not both simultaneously]
+Format: "DB-[n]: [one-line description] — [migration or code change]"
+If no quick wins: state explicitly.
 ```
 
-### Write to backlog
+### Backlog decision gate
 
-For each finding with severity Medium or above, append to `docs/refactoring-backlog.md`:
-- Assign ID: `DB-[n]`
+Present all findings with severity Medium or above as a numbered decision list, sorted Critical → High → Medium:
+
+```
+Trovati N finding Medium o superiori. Quali aggiungere al backlog?
+
+[1] [CRITICAL] DB-? — table/check — one-line description
+[2] [HIGH]     DB-? — table/check — one-line description
+[3] [MEDIUM]   DB-? — table/check — one-line description
+...
+
+Rispondi con i numeri da includere (es. "1 2 4"), "tutti", o "nessuno".
+```
+
+**Wait for explicit user response before writing anything.**
+
+Then write ONLY the approved entries to `docs/refactoring-backlog.md`:
+- Assign ID: `DB-[n]` (next available after existing DB entries)
 - Add row to priority index
-- Add full detail section
+- Add full detail section with: issue, evidence, impacted tables/files, fix, effort, migration risk
 
 ### Severity guide
 
-- **Critical**: RLS gap that allows unauthorized data access (S4A); UPDATE policy without SELECT (S4D); view bypassing RLS on sensitive table (S4E); cascade DELETE that would destroy live data (S6)
-- **High**: N+1 on a list endpoint (Q1); unbounded query on large table (Q5); unindexed FK column on a high-traffic table (S1B); missing index on a column with >1000 rows filtered frequently (S1A); bare `auth.uid()` on large tables (S4B)
-- **Medium**: Text stato without ENUM/CHECK constraint (S5); missing NOT NULL on logically required column (S3); timestamp without timezone (S5); varchar(n) with arbitrary limit (S5); serial instead of IDENTITY (S5); policies without `TO` clause (S4C)
-- **Low**: Unused indexes with 0 scans (S7); normalization opportunity with known trade-off (S2); missing GIN for UUID[] (S1D); partial index opportunity (S1C)
+- **Critical**: RLS gap that allows unauthorized data access (S4A); UPDATE policy without SELECT (S4D); view bypassing RLS on sensitive table (S4E); `CASCADE` that would destroy financial records (S6); `CREATE INDEX CONCURRENTLY` inside a BEGIN block (M1); destructive migration applied to staging without rollback comment (M2)
+- **High**: N+1 on a list endpoint (Q1); missing await on a DB write call (Q2); unbounded query on a high-volume table (Q5); unindexed FK on a write-heavy table (S1B); bare `auth.uid()` on a table with thousands of rows (S4B); `CREATE INDEX` without CONCURRENTLY on a production-size table (M1); missing constraint DROP before status-value UPDATE (M4); `ADD COLUMN NOT NULL` without safe staging pattern (M1)
+- **Medium**: Missing CHECK constraint on financial column (S2b); missing composite UNIQUE where business rules require it (S2b); nullable column used in financial calculations (S3); `timestamp` without timezone (S5); `varchar(n)` with arbitrary limit (S5); `serial` instead of IDENTITY (S5); unsafe backfill on high-traffic table (M3); `stato` as unconstrained text (S2b/S5); `SET NULL` on a NOT NULL FK column (S6)
+- **Low**: Unused indexes with 0 scans meeting all qualifying criteria (S7); normalization observation with documented trade-off (S2); missing GIN for UUID[] (S1D); partial index opportunity where distribution warrants it (S1C); policies with `{public}` scope where a narrower role would be more precise (S4C)
 
 ---
 
 ## Execution notes
 
 - Do NOT apply migrations or modify the schema.
-- Do NOT report gaps already documented in `db-map.md` "⚠️ RLS gaps" section unless you have new evidence of actual exploitation risk or the gap is now resolvable.
+- For gaps already documented in `db-map.md` ⚠️ RLS gaps section: do not re-describe them from scratch. Instead report their current status (open / resolved / risk-changed) and escalate if the gap has been open for more than 2 completed blocks without a scheduled fix. A documented gap that remains unfixed is not a reason to silence it — it is a reason to increase urgency.
 - If `docs/db-map.md` is not in the worktree, read from `/Users/MarcoG/Projects/staff-manager/docs/db-map.md`.
-- S1D (GIN for UUID[]) and the in-memory filtering pattern are documented in CLAUDE.md as intentional — note them as known patterns unless query strategy changes.
+- S1D (GIN for UUID[]) and the in-memory filtering pattern are documented as intentional in CLAUDE.md. Note as known trade-off — do not flag unless query strategy changes.
 - After the report, ask: "Vuoi che prepari le migration SQL per i fix identificati?"

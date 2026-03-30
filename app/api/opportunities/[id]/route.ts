@@ -95,5 +95,5 @@ export async function DELETE(
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
-  return NextResponse.json({}, { status: 204 });
+  return new NextResponse(null, { status: 204 });
 }

@@ -105,6 +105,7 @@ export default function DashboardUpdates({
 
   return (
     <Tabs
+      id="dashboard-updates-tabs"
       value={activeTab}
       onValueChange={handleTabChange}
       className="rounded-2xl bg-card border border-border"

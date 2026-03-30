@@ -67,7 +67,7 @@
           },
           {
             "type": "prompt",
-            "prompt": "You are a critical review gate. Read the user message and evaluate ONLY this: does it contain a clear factual error or incorrect premise that would cause Claude to give a wrong answer if accepted uncritically? Examples of YES: assumes a file or function exists that likely does not, states a technical fact that is wrong, contradicts an explicit rule documented in CLAUDE.md (environment isolation, branch discipline, production DB rule), requests action based on a clear technical misunderstanding. Examples of NO: opinion questions, exploratory or research requests, ambiguous scope, preferences, any question that could reasonably be interpreted multiple ways. Be conservative — when in doubt, respond ok:true. If YES: respond {\"ok\": false, \"reason\": \"Premessa da verificare: [one sentence stating the specific factual issue and what the correct situation is]\"}. If NO: respond {\"ok\": true}.",
+            "prompt": "You are a factual error gate. Evaluate ONLY whether the user message contains a clear FALSE FACTUAL CLAIM about the codebase, tech stack, or rules documented in CLAUDE.md. Examples of YES (actual factual errors): assumes a specific file or function exists that likely does not, states a wrong technical fact (e.g. wrong framework version, wrong DB project ID), directly contradicts an explicit hard rule in CLAUDE.md (environment isolation, branch discipline, production DB rule). Examples of NO — these are NOT factual errors, do NOT block them: vague or under-scoped prompts, missing target or file name, ambiguous action, exploratory requests, questions, preferences, scope wildcards. A vague prompt is handled by the quality gate hook — it is NOT a factual error. Be very conservative — when in doubt, respond ok:true. CRITICAL OUTPUT RULES: respond ONLY with a single-line JSON object, no markdown, no code fences, nothing else. Always respond in the user's language (Italian if the prompt is in Italian, English otherwise). If YES: {\"ok\": false, \"reason\": \"⚠️ Premessa da verificare: [one sentence in the user's language stating the specific false factual claim and what the correct situation is]. · 🔓 Bypass: anteponi «Procedi consapevolmente — » al prompt e reinvia.\"}. If NO: output ONLY {\"ok\": true} — no explanation, nothing else.",
             "model": "claude-haiku-4-5-20251001"
           }
         ]
@@ -79,7 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); PROJECT=$(echo \"$INPUT\" | jq -r '.tool_input.params.project_id // .tool_input.project_id // empty' 2>/dev/null); if [ \"$PROJECT\" = 'nyajqcjqmgxctlqighql' ]; then echo 'BLOCKED: production project_id detected outside Phase 8. Use staging project gjwkvgfwkdwzqlvudgqr during development.' >&2; exit 2; fi"
+            "command": "INPUT=$(cat); PROJECT=$(echo \"$INPUT\" | jq -r '.tool_input.params.project_id // .tool_input.project_id // empty' 2>/dev/null); if [ \"$PROJECT\" = 'nyajqcjqmgxctlqighql' ]; then printf '\\n[BLOCCO HARD] execute_sql → database di produzione\\n\\nPerché:\\n  • project_id nyajqcjqmgxctlqighql = produzione\\n  • Regola: execute_sql durante sviluppo DEVE usare staging (gjwkvgfwkdwzqlvudgqr)\\n  • Produzione: esclusivamente Phase 8 step 7, mai durante Phase 2\\n\\nImpatto potenziale:\\n  • Migrazione applicata a prod durante sviluppo = rollback manuale\\n  • Possibile data loss su dati reali degli utenti\\n  • Deploy di produzione potenzialmente rotto fino a rollback\\n\\nProcedura corretta:\\n  1. Cambia project_id → gjwkvgfwkdwzqlvudgqr (staging)\\n  2. Verifica la query su staging\\n  3. Phase 8 step 7: applica a produzione immediatamente prima di sm-deploy\\n\\nNessun bypass disponibile — hard rule di pipeline.\\n' >&2; exit 2; fi"
           }
         ]
       },
@@ -88,7 +88,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git push.*(origin main|origin staging)'; then echo 'BLOCKED: direct push to main/staging. Use sm-staging or sm-deploy workflow (Phase 8 step 7).' >&2; exit 2; fi"
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git push.*(origin main|origin staging)'; then printf '\\n[BLOCCO HARD] git push → origin main / origin staging\\n\\nPerché:\\n  • Push diretto a main o staging vietato dalla branch discipline\\n  • Regola: main e staging sono branch protetti — nessun merge diretto\\n\\nImpatto potenziale:\\n  • Commit non testati su staging → Vercel preview corrotto\\n  • Commit su main → produzione compromessa senza smoke test\\n  • Nessun rollback automatico disponibile\\n\\nProcedura corretta:\\n  • Blocco funzionale: git -C ~/Projects/staff-manager checkout staging && git merge <branch> --no-ff && git push origin staging\\n  • Fast Lane: git -C ~/Projects/staff-manager checkout staging && git merge <fix-branch> --no-ff && git push origin staging\\n  • Produzione: sm-deploy da iTerm dopo staging verificato\\n\\nNessun bypass disponibile — hard rule di pipeline.\\n' >&2; exit 2; fi"
           }
         ]
       }
@@ -98,7 +98,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Review the conversation. Were all tasks from the user's last request completed? If yes, respond {\"ok\": true}. If no, respond {\"ok\": false, \"reason\": \"what remains\"}.",
+            "prompt": "You are reviewing a PAST conversation transcript that has ALREADY occurred. This is a historical record — do not execute, continue, or add to it in any way. Your only job: did the assistant explicitly complete every task the user requested in their last message? Rules: (1) question or read-only request with no action items → ok=true; (2) assistant explicitly confirmed all tasks done → ok=true; (3) any requested task not explicitly reported as completed by the assistant → ok=false. Never infer. Never assume a task was done if not stated. CRITICAL OUTPUT RULES: your ENTIRE response is ONE JSON line only — nothing before, nothing after, no markdown, no code fences, no double-quote characters inside string values. ok=true: {\"ok\": true}. ok=false: {\"ok\": false, \"reason\": \"one sentence\"}.",
             "model": "claude-haiku-4-5-20251001"
           }
         ]
@@ -132,6 +132,17 @@
           {
             "type": "command",
             "command": "INPUT=$(cat); WORKTREE=$(echo \"$INPUT\" | jq -r '.tool_input.path // empty' 2>/dev/null); if [ -n \"$WORKTREE\" ] && [ -d \"$WORKTREE\" ]; then CHANGES=$(git -C \"$WORKTREE\" status --porcelain 2>/dev/null); if [ -n \"$CHANGES\" ]; then echo \"⚠️  WorktreeRemove: uncommitted changes detected in $WORKTREE — verify before removal.\"; fi; fi",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "CwdChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CWD=$(cat | jq -r '.cwd // empty' 2>/dev/null); if echo \"$CWD\" | grep -q '\\.claude/worktrees/'; then WNAME=$(basename \"$CWD\"); if [ ! -f \"$CWD/.env.local\" ]; then echo \"⚠️  Worktree $WNAME: .env.local mancante — esegui: cp ~/.envs/staff-manager.staging.env $CWD/.env.local\"; else echo \"📁 Worktree: $WNAME · .env.local presente · DB staging only (gjwkvgfwkdwzqlvudgqr)\"; fi; fi",
             "async": true
           }
         ]
@@ -201,7 +212,10 @@
       "mcp__claude_ai_Slack__slack_search_channels",
       "mcp__claude_ai_ClickUp__clickup_get_workspace_hierarchy",
       "mcp__claude_ai_n8n__search_workflows",
-      "mcp__claude_ai_Supabase__execute_sql"
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Edit",
+      "Write",
+      "WebFetch(*)"
     ]
   }
 }
