@@ -200,7 +200,8 @@ export default async function ImpostazioniPage({
       </div>
 
       {/* Tab bar — always full width so all tabs are visible */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="relative mb-6 after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-10 after:bg-gradient-to-l after:from-background after:to-transparent">
+      <div className="flex gap-2 overflow-x-auto pb-1 pr-10">
         <Link href="?tab=utenti" className={tabCls('utenti')}>Utenti</Link>
         <Link href="?tab=community" className={tabCls('community')}>Community</Link>
         <Link href="?tab=collaboratori" className={tabCls('collaboratori')}>Collaboratori</Link>
@@ -211,6 +212,7 @@ export default async function ImpostazioniPage({
         <Link href="?tab=banner" className={tabCls('banner')}>Banner</Link>
         <Link href="?tab=blacklist" className={tabCls('blacklist')}>Blacklist</Link>
         <Link href="?tab=allegati_corsi" className={tabCls('allegati_corsi')}>Allegati Corsi</Link>
+      </div>
       </div>
 
       {/* Content — narrow (max-w-3xl) for simple tabs, full-width for mail+monitoring */}

@@ -6,6 +6,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   id: string;
@@ -56,21 +57,25 @@ export default function FeedbackActions({ id, stato }: Props) {
 
       <div className="flex items-center gap-2 shrink-0">
         {stato === 'nuovo' && (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleComplete}
             disabled={loading !== null}
-            className="text-xs px-2.5 py-1 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition disabled:opacity-50"
+            className="text-green-700 dark:text-green-400 hover:text-green-700 dark:hover:text-green-400"
           >
             {loading === 'complete' ? '…' : 'Completa'}
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setShowDeleteDialog(true)}
           disabled={loading !== null}
-          className="text-xs px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition disabled:opacity-50"
+          className="text-red-700 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
         >
           Rimuovi
-        </button>
+        </Button>
 
       </div>
     </>

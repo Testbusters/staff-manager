@@ -32,7 +32,7 @@ Defined in `app/globals.css` via `@theme inline`. These are the Tailwind class n
 | `secondary-foreground` | `--base-800` | `--base-200` | Text on secondary |
 | `accent` | `--base-200` | `--base-800` | Hover highlight |
 | `destructive` | `oklch(0.577 0.245 27.325)` ≈ `#dc2626` | `oklch(0.704 0.191 22.216)` ≈ `#f87171` | Destructive actions |
-| `brand` | `oklch(0.546 0.245 262.881)` ≈ `#2563eb` | same | CTA buttons (stable) |
+| `brand` | `oklch(0.628 0.258 29.2)` ≈ `#ff3300` | same | CTA buttons (stable) |
 | `brand-foreground` | `#ffffff` | `#ffffff` | Text on brand buttons |
 | `link` | `oklch(0.488 0.243 264.376)` ≈ `#1d4ed8` | `oklch(0.707 0.165 254.624)` ≈ `#60a5fa` | Clickable text |
 | `info` | same as `link` | same as `link` | Alert info variant |

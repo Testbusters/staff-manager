@@ -304,7 +304,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
                 </div>
 
                 {uploadFile && (
-                  <label className="flex items-start gap-3 cursor-pointer rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/40 px-4 py-3">
+                  <label className="flex items-start gap-3 cursor-pointer rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/40 px-4 py-3 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition">
                     <Checkbox
                       checked={confirmed}
                       onCheckedChange={(v) => setConfirmed(!!v)}

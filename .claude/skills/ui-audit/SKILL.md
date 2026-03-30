@@ -27,6 +27,7 @@ Parse `$ARGUMENTS` for a `target:` token.
 | `target:page:/compensi` | Restrict scope to that exact route and its key components |
 | `target:role:collab` | Restrict to all routes accessible by collaboratore |
 | `target:role:resp` | Restrict to all routes accessible by responsabile_compensi |
+| `target:role:resp_citt` | Restrict to all routes accessible by responsabile_cittadino (`/`, `/corsi/assegnazione`, `/corsi/valutazioni`) |
 | `target:role:admin` | Restrict to all routes accessible by amministrazione |
 | `target:section:rimborsi` | Restrict to routes whose path contains "rimborsi" (example — any section name is valid) |
 | `target:section:<name>` | Restrict to routes whose path contains `<name>` |

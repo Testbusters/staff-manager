@@ -68,6 +68,28 @@ check whether a mapped component exists here.
 
 ---
 
+## Status Color System
+
+Applies to non-badge status UI: alert boxes, info panels, confirmation labels, inline warnings.
+Use these pairings consistently — never invent new color combos for semantic states.
+
+| Semantic | bg light | bg dark | border light | border dark | text light | text dark |
+|---|---|---|---|---|---|---|
+| Success / confirmed | `bg-green-50` | `dark:bg-green-900/20` | `border-green-200` | `dark:border-green-700/40` | `text-green-700` | `dark:text-green-400` |
+| Warning / pending | `bg-yellow-50` | `dark:bg-yellow-900/20` | `border-yellow-200` | `dark:border-yellow-800/40` | `text-yellow-800` | `dark:text-yellow-200` |
+| Danger / error | `bg-red-50` | `dark:bg-red-900/30` | `border-red-200` | `dark:border-red-800/40` | `text-red-700` | `dark:text-red-400` |
+| Info / neutral | `bg-muted/60` | `dark:bg-muted/60` | `border-border` | `border-border` | `text-foreground` | `text-foreground` |
+
+**Row-level action buttons** (appearing on every row of a list/table): always `<Button variant="outline" size="sm">`.
+- For semantic intent, add text color only: e.g. `className="text-green-700 dark:text-green-400 hover:text-green-700 dark:hover:text-green-400"`.
+- Never apply filled color backgrounds (`bg-green-50`, `bg-red-50`) on row-level buttons — reserve those for alert panels.
+
+**Interactive labels** (checkbox/radio with `cursor-pointer`): always add a hover state so the element signals interactivity.
+- Standard: `hover:bg-muted/60 rounded transition`
+- Status-specific: match the semantic background, e.g. `hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition` for a yellow confirmation panel.
+
+---
+
 ## Dialog / Sheet — Pattern
 
 ```tsx

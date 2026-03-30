@@ -26,6 +26,8 @@ Parse `$ARGUMENTS` for a `target:` token.
 |---|---|
 | `target:page:/api/compensations` | Restrict scope to that route only |
 | `target:role:collab` | Focus on routes accessible/relevant to collaboratore |
+| `target:role:resp` | Focus on routes accessible/relevant to responsabile_compensi |
+| `target:role:resp_citt` | Focus on routes accessible/relevant to responsabile_cittadino (`/api/corsi`, `/api/assegnazioni`, `/api/candidature`) |
 | `target:role:admin` | Focus on admin routes |
 | `target:section:corsi` | Focus on all corsi-domain routes (derive from docs/sitemap.md API routes section) |
 | `target:section:export` | Focus on all export/bulk-data routes |
