@@ -72,6 +72,25 @@ Compare Step 1 findings against Step 2 state. For each gap found, classify it:
 - Changes that could affect existing workflow behavior
 - Anything touching the pipeline phase gates
 
+Every RECOMMEND must include: (1) specific file path(s) to modify, (2) section or line reference, (3) proposed change in one sentence. A RECOMMEND without a file target is incomplete — do not emit it.
+
+**File target map for common divergence types** — use this when classifying findings:
+
+| Divergence area | Files to update | Classification |
+|---|---|---|
+| Hook event name changed or deprecated | `.claude/settings.json` (hook key) | RECOMMEND |
+| Hook JSON response schema changed (new/removed fields) | `.claude/settings.json` (hook prompt inline) + `.claude/rules/prompt-quality-rubric.md` (Block output format section) | RECOMMEND |
+| Hook prompt logic updated (trigger conditions, exclusions, bypass format) | `.claude/settings.json` (hook prompt inline) + `.claude/rules/prompt-quality-rubric.md` (matching section) | RECOMMEND — both files always updated together; hook is authoritative, rubric follows |
+| Deprecated model ID in hook | `.claude/settings.json` (`model:` field in hook entry) | AUTO-FIX |
+| New hook event worth adding | `.claude/settings.json` (new hook entry) | RECOMMEND |
+| Pipeline phase gate wording | `.claude/rules/pipeline.md` | RECOMMEND |
+| CLAUDE.md instruction addition | `CLAUDE.md` | RECOMMEND |
+| Skill model ID deprecated | `.claude/skills/<name>/SKILL.md` (`model:` frontmatter) | AUTO-FIX |
+| Skill missing `context: fork` | `.claude/skills/<name>/SKILL.md` (frontmatter) | AUTO-FIX |
+| Skill missing `allowed-tools` | `.claude/skills/<name>/SKILL.md` (frontmatter) | AUTO-FIX |
+| claudemd-standards.md outdated | `.claude/rules/claudemd-standards.md` (relevant section + `Last verified` date) | RECOMMEND |
+| pipeline-standards.md outdated | `.claude/rules/pipeline-standards.md` (relevant section + `Last verified` date) | RECOMMEND |
+
 ## Step 3b — Internal ecosystem consistency checks
 
 **Execution strategy — two tiers**:
@@ -311,13 +330,13 @@ Current expected state:
 | api-design | sonnet | REST pattern judgment + internal haiku Explore agent |
 | perf-audit | sonnet | Bundle analysis, server/client boundary judgment + internal haiku Explore agent |
 | skill-dev | sonnet | Coupling/abstraction judgment + internal haiku Explore agent |
-| skill-db | sonnet | Schema normalization + RLS reasoning + internal haiku Explore agent |
+| skill-db | opus | Deep schema normalization + RLS policy reasoning requires Opus — internal haiku Explore agent for dep scan |
 | responsive-audit | opus | Multi-viewport screenshot judgment — visual reasoning requires Opus |
 | resend-verify | sonnet | Delivery verification, MCP tool orchestration, template content inspection |
 
 Batch command: `grep -A1 "^name:" .claude/skills/*/SKILL.md | grep "model:"` — compare each result against the table above.
 FAIL: any skill using `model: haiku` as top-level model (only Explore *subagents within* skills should use haiku, not the skill itself).
-WARN: any skill using `model: opus` **unless** it is one of the three visual/UX skills (`visual-audit`, `ux-audit`, `responsive-audit`) — these intentionally use Opus for screenshot-based visual reasoning. All other skills should use sonnet.
+WARN: any skill using `model: opus` **unless** it is one of the intentional Opus skills: `visual-audit`, `ux-audit`, `responsive-audit` (screenshot-based visual reasoning) or `skill-db` (deep schema normalization + RLS policy reasoning). All other skills should use sonnet.
 
 ## Step 3e — Pipeline.md compliance check
 
@@ -403,9 +422,65 @@ Output results in the Step 6 report under a new section:
 - PE12 Commit discipline: [PASS/WARN]
 ```
 
+## Step H1 — Hook compliance check
+
+Using hook documentation fetched in Step 1 (`https://code.claude.com/docs/en/hooks`) and `settings.json` read in Step 2, verify the project's hook configuration against current Anthropic spec.
+
+**H1a — Event name currency**
+Check: every event name in `settings.json` hooks matches the current official event list.
+Run: `grep -o '"SessionStart"\|"UserPromptSubmit"\|"PreToolUse"\|"PostToolUse"\|"Stop"\|"WorktreeCreate"\|"WorktreeRemove"\|"PostCompact"\|"PreCompact"\|"InstructionsLoaded"\|"Notification"\|"TaskCompleted"' .claude/settings.json | sort -u`
+Pass: all events appear in the Step 1 documentation. Any unrecognized event → RECOMMEND removal or rename.
+
+**H1b — JSON response field compliance (prompt hooks)**
+For each hook with `"type": "prompt"` in settings.json: check that response fields (`ok`, `reason`, `decision`, `updatedInput`) match the documented schema.
+Source: Step 1 hooks doc content.
+If divergence found → RECOMMEND (never AUTO-FIX): specify both files that need updating:
+- `.claude/settings.json` — the hook prompt inline text (authoritative)
+- `.claude/rules/prompt-quality-rubric.md` — the "Block output format" section (documentation, follows the hook)
+
+**H1c — Bypass mechanism visibility**
+Check: every `UserPromptSubmit` hook with `type: prompt` that can return a blocking response (`ok: false`) must include bypass instructions in the `reason` field.
+Pass: the prompt text for each blocking hook explicitly instructs the model to include bypass guidance (e.g. `Procedi consapevolmente`) in the `reason` output.
+Fail → RECOMMEND update to add bypass instructions.
+
+**H1d — Hook type fitness**
+For each hook, verify `type` matches intent:
+- `command` — shell execution, dynamic state (git, files, env)
+- `prompt` — static/contextual text injection, no shell needed
+- `agent` — multi-step async logic
+Flag as RECOMMEND (not AUTO-FIX) any `command` hook that only outputs static text and could be simplified to `prompt`.
+
+**H1e — Rubric-hook drift check**
+Check: `.claude/rules/prompt-quality-rubric.md` must stay in sync with the inline logic in the `UserPromptSubmit` prompt hooks in `settings.json`. Drift = the rubric documents behavior that the hook no longer implements (or vice versa).
+
+Run these two greps and compare results:
+- T3 wildcards in rubric: `grep "T3" .claude/rules/prompt-quality-rubric.md`
+- T3 wildcards in hook: `grep "T3" .claude/settings.json`
+
+Also check output format sync:
+- Rubric block format: `grep -A5 "Block output format" .claude/rules/prompt-quality-rubric.md`
+- Hook output format: look for the `If a trigger matches` instruction in the settings.json hook prompt
+
+Pass: T3 wildcard lists match; rubric output format matches hook output format structure.
+Fail → AUTO-FIX: update the rubric to match the hook (hook is authoritative — rubric is documentation). Update `Last updated` date in rubric.
+
+**H1f — New events to consider**
+Based on Step 1 changelog, list any new hook events released since the last audit that have a concrete use case in staff-manager. Classify each as RECOMMEND (never AUTO-FIX — adding hooks changes behavior and requires user decision).
+
+Add results to Step 6 report under:
+```
+### Hook compliance (H1a–H1e)
+- H1a Event name currency: [PASS/FAIL — list unknown events if any]
+- H1b JSON response fields: [PASS/FAIL — list non-compliant fields if any]
+- H1c Bypass visibility: [PASS/FAIL — list hooks missing bypass guidance]
+- H1d Hook type fitness: [PASS/WARN — list command→prompt candidates]
+- H1e Rubric-hook drift: [PASS/FAIL — list any T3 or format divergences found]
+- H1f New events: [list relevant new events, or "none since last audit"]
+```
+
 ## Step 4 — Apply AUTO-FIX changes
 
-For each AUTO-FIX from Step 3 and Step 3b: apply the change, note the file and line modified.
+For each AUTO-FIX from Step 3, Step 3b, and Step H1: apply the change, note the file and line modified.
 
 ## Step 5 — Update timestamp
 
@@ -427,6 +502,24 @@ Output a structured report in this exact format:
 
 ### 📋 Recommendations ([N] items)
 - [Priority: High/Medium/Low] [description] — [why it matters]
+
+### 🎯 Decision guide
+
+For each item in Recommendations above, output one decision card in this format:
+
+**[Priority] — [Short title]**
+- **Project context**: why this recommendation matters specifically for staff-manager (not generic advice — ground it in actual files, workflows, or risks present in this codebase)
+- **Benefit if applied**: concrete outcome in one sentence (measurable or observable)
+- **Cost / effort**: what it takes to implement — file count, phase required, risk of regression
+- **Verdict**: one of:
+  - `✅ Apply now` — clear win, low risk, fits current phase
+  - `⏸ Defer` — valid but not urgent; include a trigger condition (e.g. "apply when pipeline grows beyond N phases")
+  - `⛔ Skip` — recommendation is technically valid but does not apply to this project's actual usage patterns; explain why
+
+The goal of this section is to let the user make an informed yes/no decision on each item without reading the full compliance rationale. Generic benefits ("improves clarity") are not acceptable — every card must be grounded in a specific staff-manager workflow, file, or failure mode.
+
+### 🎯 Decision guide
+[one decision card per Recommendation item — see Step 6 instructions]
 
 ### ✓ Compliant (no action needed)
 - [area]: [brief confirmation]

@@ -40,11 +40,13 @@ Parse `$ARGUMENTS` for `target:` and `mode:` tokens.
 **Target resolution:**
 | Pattern | Meaning |
 |---|---|
-| `target:section:corsi` | Focus on corsi/lezioni/candidature/assegnazioni components and routes |
-| `target:section:compensi` | Focus on compensation and expense components |
-| `target:page:/dashboard` | Focus on the dashboard and its component tree |
+| `target:section:rimborsi` | Focus on rimborsi components and routes (example — any section name is valid) |
+| `target:section:compensi` | Focus on compensation and expense components (example) |
+| `target:page:/dashboard` | Focus on the dashboard and its component tree (example) |
 | `target:section:<other>` | Read `docs/sitemap.md` — find rows matching the section keyword, resolve to page files and their "Componenti chiave" column |
-| No argument | Full audit — all files from sitemap |
+| No argument | **Full audit — ALL page files + layout files + lib files + API routes from sitemap.md. Maximum depth.** |
+
+**STRICT PARSING — mandatory**: derive target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → full audit across ALL files from sitemap.md at maximum depth. When a target IS provided → act with maximum depth and completeness on that specific scope only.
 
 Announce: `Running perf-audit — scope: [FULL | target: <resolved>] — mode: [audit | apply]`
 Apply the target filter to the file list in Step 1.
@@ -259,7 +261,7 @@ Scoring: 🟢 = 0 High/Critical findings · 🟡 = 1-2 Medium findings · 🔴 =
 ### Findings requiring action ([N] total)
 [Sorted Critical → High → Medium → Low]
 Format: `[SEVERITY] file:line — check# — issue — impact — suggested fix`
-Example: `[HIGH] app/(app)/corsi/page.tsx:14 — B5 — sequential await for corsi + assegnazioni — adds ~200ms latency on every page load — replace with Promise.all([getCorsi(), getAssegnazioni()])`
+Example: `[HIGH] app/(app)/rimborsi/page.tsx:14 — B5 — sequential await for two independent queries — adds ~200ms latency on every page load — replace with Promise.all([getA(), getB()])`
 
 ### Quick wins (implement in < 1 hour each)
 [findings that are isolated, low-risk, and self-contained — e.g. add Promise.all, add next/dynamic wrapper]

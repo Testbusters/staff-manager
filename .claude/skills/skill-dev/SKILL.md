@@ -29,15 +29,16 @@ Parse `$ARGUMENTS` for a `target:` token.
 
 | Pattern | Meaning |
 |---|---|
-| `target:section:corsi` | Focus on corsi/lezioni/candidature/assegnazioni components and API routes |
-| `target:section:compensi` | Focus on compensation and expense components |
-| `target:section:notifications` | Focus on notification system (lib/notification-utils.ts, NotificationBell, NotificationPageClient) |
-| `target:section:tickets` | Focus on ticket components and API routes |
-| `target:section:documents` | Focus on document upload, signing, and generation components |
-| `target:section:profile` | Focus on collaborator profile and onboarding components |
-| `target:section:content` | Focus on content tables (communications, events, opportunities, discounts) |
-| `target:page:/corsi` | Focus on the corsi page and its direct component dependencies |
-| No argument | Full audit — all files from sitemap |
+| `target:section:notifications` | Focus on notification system (lib/notification-utils.ts, NotificationBell, NotificationPageClient) (example — any section name is valid) |
+| `target:section:compensi` | Focus on compensation and expense components (example) |
+| `target:section:tickets` | Focus on ticket components and API routes (example) |
+| `target:section:documents` | Focus on document upload, signing, and generation components (example) |
+| `target:section:profile` | Focus on collaborator profile and onboarding components (example) |
+| `target:section:content` | Focus on content tables (communications, events, opportunities, discounts) (example) |
+| `target:page:/compensi` | Focus on the compensi page and its direct component dependencies (example) |
+| No argument | **Full audit — the ENTIRE codebase: all page files, all components, all lib/ files, all API routes, all types. Build from sitemap.md + filesystem scan of components/ and lib/. Maximum depth.** |
+
+**STRICT PARSING — mandatory**: derive target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → full codebase audit at maximum depth. When a target IS provided → act with maximum depth and completeness on that specific scope only.
 
 Announce: `Running skill-dev — scope: [FULL | target: <resolved>]`
 Apply the target filter to the file list in Step 1.

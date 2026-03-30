@@ -15,14 +15,16 @@ Parse `$ARGUMENTS` for a `target:` token.
 
 | Pattern | Meaning |
 |---|---|
-| `target:section:corsi` | Focus on corsi/lezioni/candidature/assegnazioni/blacklist/allegati_globali (migrations 055–060) |
-| `target:section:compensi` | Focus on compensations, expense_reimbursements, compensation_competenze, compensation_attachments |
-| `target:section:contenuti` | Focus on content tables: comunicazioni, eventi, opportunita, sconti, risorse |
-| `target:section:tickets` | Focus on tickets, ticket_messages, ticket_attachments |
-| `target:section:documenti` | Focus on documents, document_attachments |
-| `target:section:auth` | Focus on collaborators, user_profiles, collaborator_communities, user_community_access |
+| `target:section:documenti` | Focus on documents, document_attachments (example — any section name is valid) |
+| `target:section:compensi` | Focus on compensations, expense_reimbursements, compensation_competenze, compensation_attachments (example) |
+| `target:section:contenuti` | Focus on content tables: comunicazioni, eventi, opportunita, sconti, risorse (example) |
+| `target:section:tickets` | Focus on tickets, ticket_messages, ticket_attachments (example) |
+| `target:section:auth` | Focus on collaborators, user_profiles, collaborator_communities, user_community_access (example) |
+| `target:section:<other>` | Resolve to matching tables in db-map.md whose name contains `<other>` |
 | `target:table:<tablename>` | Focus on a specific table and its direct FKs. **Migration safety (Step 2.5) is skipped for this target type.** |
-| No argument | Full audit — all tables in db-map.md |
+| No argument | **Full audit — ALL tables in docs/db-map.md. Maximum depth across every check (S1–S7, Step 2.5).** |
+
+**STRICT PARSING — mandatory**: derive target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → full audit of the entire schema in db-map.md at maximum depth. When a target IS provided → act with maximum depth and completeness on that specific scope only.
 
 Announce: `Running skill-db — scope: [FULL | target: <resolved>]`
 

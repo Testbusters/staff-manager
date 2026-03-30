@@ -28,9 +28,11 @@ Parse `$ARGUMENTS` for a `target:` token.
 | `target:role:collab` | Restrict to all routes accessible by collaboratore |
 | `target:role:resp` | Restrict to all routes accessible by responsabile_compensi |
 | `target:role:admin` | Restrict to all routes accessible by amministrazione |
-| `target:section:corsi` | Restrict to routes whose path contains "corsi" |
-| `target:section:contenuti` | Restrict to routes in the contenuti functional area |
-| No target argument | Full audit — all routes in sitemap |
+| `target:section:rimborsi` | Restrict to routes whose path contains "rimborsi" (example — any section name is valid) |
+| `target:section:<name>` | Restrict to routes whose path contains `<name>` |
+| No target argument | Full audit — ALL routes in sitemap.md |
+
+**STRICT PARSING — mandatory**: derive target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → full audit, all routes in sitemap.
 
 Announce at start: `Running ui-audit — scope: [FULL | target resolved to: N pages]`
 

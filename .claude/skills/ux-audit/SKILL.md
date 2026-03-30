@@ -5,7 +5,7 @@ user-invocable: true
 model: opus
 context: fork
 argument-hint: [flow:<flow-id>|role:<role>|full] [target:page:<route>|target:role:<role>|target:section:<section>]
-allowed-tools: Read, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_wait_for, mcp__playwright__browser_evaluate, mcp__playwright__browser_fill_form, mcp__playwright__browser_press_key
+allowed-tools: Read, Glob, Grep, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_type, mcp__playwright__browser_click, mcp__playwright__browser_wait_for, mcp__playwright__browser_evaluate, mcp__playwright__browser_fill_form, mcp__playwright__browser_press_key
 ---
 
 ## Step 0 — Mode + target detection
@@ -23,13 +23,26 @@ Parse `$ARGUMENTS`:
 - `target:role:collab` → only collab flows
 - `target:role:resp` → only responsabile flows
 - `target:role:resp_citt` → only responsabile_cittadino flows
-- `target:section:corsi` → only flows in the corsi functional area
-- No target → no filter
+- `target:section:rimborsi` → only flows in the rimborsi functional area (example — any section name is valid)
+- No target → no filter — run ALL flows in the selected mode across ALL routes in sitemap.md
 
-Mode and target are **independent**. `full target:section:corsi` = all corsi flows including P2.
+Mode and target are **independent**. `full target:section:rimborsi` = all rimborsi flows including P2 (example).
+
+**STRICT PARSING — mandatory**: derive mode and target ONLY from the explicit text in `$ARGUMENTS`. Do NOT infer target from conversation context, recent work, active block names, or project memory. If `$ARGUMENTS` contains no `target:` token → apply NO filter (run all flows in the selected mode). If `$ARGUMENTS` is empty → STANDARD mode, full scope (all P1 flows, no filter).
 
 Announce at start:
 `Running ux-audit in [STANDARD | FLOW:<id> | ROLE:<role> | FULL] mode — scope: [FULL | target: <resolved description>]`
+
+---
+
+## Step 0.5 — Screenshot directory setup
+
+Before any navigation, create the temp screenshot directory:
+```bash
+mkdir -p /tmp/sm-audit/ux
+```
+
+All screenshots in this session use label prefix `/tmp/sm-audit/ux/`. This keeps screenshots outside the project directory and prevents git pollution.
 
 ---
 
@@ -68,7 +81,19 @@ Apply these 7 dimensions to every flow simulated. Dimensions are anchored to ISO
 | **D4 — Navigation clarity** | Efficiency | H4 Consistency · H6 Recognition | Does the user always know where they are? | Page titles, breadcrumbs, back affordances, active state in sidebar, role-specific routes |
 | **D5 — Cognitive load** | Efficiency | H8 Minimalist design | How many decisions or pieces of info per screen? | Form fields per step, actions per card, info density, label clarity; Baymard optimal: ≤8 fields per step |
 | **D6 — Error recovery** | Effectiveness | H9 Recognize/diagnose/recover | When something goes wrong, is the path forward clear? | Validation messages, retry affordances, empty state guidance, rejection states |
-| **D7 — User confidence** | **Satisfaction** | H3 User control · H5 Error prevention | Does the user feel in control and certain of the outcome? | Confirmation dialogs before destructive/irreversible actions; cancel/Annulla paths in all dialogs and forms; reassurance copy on irreversible operations; no silent success (action appears to work but no visible state change); positive feedback beyond toast (page reflects new state) |
+| **D7 — User confidence** | **Satisfaction** | H3 User control · H5 Error prevention | Does the user feel in control and certain of the outcome? | **Structured C1-C5 checks** (apply per flow — see framework below): C1 Cancel path in all dialogs/forms; C2 Irreversible actions guarded by confirmation; C3 State-changing action has visible confirmation; C4 Read-only constraints explicitly communicated; C5 Multi-step flows confirm outcome. |
+
+**D7 structured framework — apply per flow:**
+
+| Check | What to verify | PASS | FAIL |
+|---|---|---|---|
+| C1 — Cancel path | Every dialog and multi-step form has functional Cancel/Annulla | Returns to correct state, no side effect | No cancel, or cancel causes data loss |
+| C2 — Destructive guard | Irreversible actions trigger confirmation BEFORE execution | Confirmation dialog with action name + consequence | Single-click delete/revoke/mark-liquidato |
+| C3 — Silent success prevention | Every state-changing action has visible confirmation | Toast + page reflects new state (status badge changes) | Toast absent OR page unchanged after action |
+| C4 — Constraint visibility | Read-only constraints explicitly communicated | Label, tooltip, or disabled button with explanation | Functionality silently absent |
+| C5 — Positive feedback | Multi-step flows confirm outcome explicitly | Explicit success state, not just redirect | Redirect to list with no success indication |
+
+Record per flow: `C1:[✅/❌/N/A] C2:[✅/❌/N/A] C3:[✅/❌/N/A] C4:[✅/❌/N/A] C5:[✅/❌/N/A]`
 
 **Severity scale:**
 - **Critical** — user cannot complete a core task (blocker)
@@ -122,7 +147,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 5. Attach file (if field present — verify field is visible, skip actual upload)
 6. Submit
 7. Verify: redirect or modal close + success toast + record appears in list
-8. **D7 check**: trigger validation on a required field (leave blank, submit) → is a confirmation needed before submit? Is cancel button present?
+8. **D7**: C1:[Annulla button in rimborso form?] C2:[submission not irreversible, N/A] C3:[success toast + record appears in list] C4:[N/A] C5:[N/A]
 
 **Evaluate**: D1 (can user find the CTA?), D3 (success toast + BF1 message quality), D5 (field count vs BF6), D6 (validation messages specific per BF1?), D7 (cancel path present? Reassurance copy?)
 
@@ -146,7 +171,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 3. Fill: oggetto, categoria, descrizione
 4. Submit
 5. Verify: redirect to ticket detail + status APERTO visible
-6. **D7 check**: is there an Annulla button? Does it return to /ticket without creating a draft?
+6. **D7**: C1:[Annulla button present — returns to /ticket without draft?] C2:[N/A] C3:[redirect to ticket detail + APERTO badge visible] C4:[N/A] C5:[N/A]
 
 **Evaluate**: D1, D3 (BF1 message quality), D5 (form length ≤6 per BF6?), D2 (consistent with rimborso form pattern?), D7 (cancel path, no accidental submission)
 
@@ -160,7 +185,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 4. Inspect a compensation row — check available info (collaboratore, importo, stato, data)
 5. Switch to Rimborsi tab
 6. Verify read-only state (no approve/reject buttons — responsabile_compensi cannot approve reimbursements)
-7. **D7 check**: is the read-only constraint explicitly communicated (label, tooltip, disabled state with explanation) or silently absent?
+7. **D7**: C1:[N/A — read-only review, no forms] C2:[N/A] C3:[N/A] C4:[rimborsi tab read-only constraint — label/tooltip/disabled with explanation present?] C5:[N/A]
 
 **Evaluate**: D2 (read-only constraint clearly communicated?), D4 (active tab visually clear? — H6 recognition), D5 (info density per row appropriate?), D7 (user feels informed, not confused by missing actions)
 
@@ -185,7 +210,7 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 4. Check detail page: lezioni tab, candidatura actions visible
 5. If a candidatura button is present: verify its label and confirm toast appears on action
 6. Navigate back
-7. **D7 check**: if candidatura results in an irreversible state, is there a confirmation step?
+7. **D7**: C1:[Annulla on candidatura dialog?] C2:[candidatura irreversible — confirmation step?] C3:[candidatura action → toast + state change visible in list] C4:[N/A] C5:[N/A]
 
 **Evaluate**: D1 (candidatura CTA discoverable?), D2 (detail page follows same tab pattern?), D3 (state change feedback + BF1 quality), D5 (lezioni data density), D4 (back navigation), D7 (confirmation for irreversible action?)
 
@@ -200,9 +225,27 @@ This code context MUST be referenced in the D1–D7 analysis. Don't rely purely 
 4. Find a lezione → assign a CoCoD'à via dropdown
 5. Verify: toast success + assignment visible in the row
 6. Try to remove the assignment (rimuovi button if present)
-7. **D7 check**: does remove trigger a confirmation dialog? (H5 Error Prevention — assignment removal is destructive)
+7. **D7**: C1:[Annulla path on assignment dialog?] C2:[rimuovi assignment — confirmation dialog? H5 — destructive action] C3:[assign success: toast + row reflects change; remove success: row updated] C4:[N/A] C5:[N/A]
 
 **Evaluate**: D1 (assignment CTA clear?), D3 (success feedback on assign + remove + BF1 quality), D5 (info per lezione row — scannable?), D6 (empty state if no eligible collaboratori), D7 (removal guarded by confirmation per H5?)
+
+#### F-onboarding — Collaboratore: wizard di onboarding
+**Role**: collab · **Priority**: 1
+**Credential**: collaboratore_tb_test@test.com / Testbusters123 (requires `onboarding_completed=false`)
+**Prerequisite**: account must have `onboarding_completed=false` + `must_change_password=false`. If not: use staging DB to reset `onboarding_completed=false` for the test account before running.
+**Read before simulating**: `app/(app)/onboarding/` — all steps
+**Steps**:
+1. Login → verify redirect to `/onboarding` (proxy check in `proxy.ts`)
+2. Step 1: fill personal data fields
+3. Step 2: fill fiscal data fields
+4. Step 3: community + città selection
+5. Step 4: verify document upload field present (skip actual upload)
+6. Submit final step → verify redirect to `/` + `onboarding_completed=true` in DB
+7. **D7**: C1:[back between steps possible without losing data?] C2:[final submit guarded by confirmation?] C3:[onboarding completion explicitly confirmed — welcoming dashboard state?] C4:[N/A] C5:[explicit success state on completion, not just redirect?]
+
+**Evaluate**: D1 (BF5 — "Passo N di M" visible per step?), D3 (feedback on each step + BF3 positive validation), D5 (BF6 — ≤8 fields per step?), D6 (if a step fails, can user continue or go back?), D7 (C1-C5)
+
+---
 
 ### Priority 2 flows (full mode only)
 
@@ -257,7 +300,7 @@ For each flow in scope:
    })
    ```
    If `hasMain === false` → flag and report, do not simulate the flow.
-4. **Execute steps** as listed, taking a screenshot at each significant state change:
+4. **Execute steps** as listed, taking a screenshot at each significant state change. Use label format `/tmp/sm-audit/ux/ux-[F#]-[step-description]` (e.g. `/tmp/sm-audit/ux/ux-F1-initial`, `/tmp/sm-audit/ux/ux-F1-after-submit`):
    - Initial page load
    - After each interaction (form open, field filled, submitted, redirected)
    - Error state (if triggerable without data setup)
@@ -348,6 +391,7 @@ Record each heuristic check result as: ✅ Pass / ⚠️ Issue found / ❌ Viola
 - **Task completion**: [steps taken] / [total clicks] clicks / [wasted clicks] wasted
 - **Form**: [field count] fields · Error messages: Specific ✅/Generic ⚠️/Absent ❌ · Cancel path: Yes/No · Confirmation on destructive: Yes/No/N/A
 - **Baymard form**: BF1:[✅/⚠️] BF2:[✅/⚠️] BF3:[✅/⚠️] BF4:[✅/⚠️] BF5:[✅/⚠️] BF6:[✅/⚠️]
+- **D7 user confidence**: C1:[✅/❌/N/A] C2:[✅/❌/N/A] C3:[✅/❌/N/A] C4:[✅/❌/N/A] C5:[✅/❌/N/A]
 - **Code context**: [key finding from reading the component — 2-3 bullet points]
 - **Outcome**: ✅ Completed without friction / ⚠️ Completed with friction / ❌ Could not complete
 
@@ -417,3 +461,14 @@ After the report:
 > - Generare una checklist di fix da integrare nel backlog (`docs/refactoring-backlog.md`)"
 
 **Do NOT apply code changes directly.** UX findings must be validated with the user before implementation — they often require design decisions, not just code fixes.
+
+---
+
+## Step 10 — Screenshot cleanup
+
+After the report is delivered and the improvement offer is presented, clean up the temp directory:
+```bash
+rm -rf /tmp/sm-audit/ux
+```
+
+Run this unconditionally at session end — screenshots are only needed during analysis.

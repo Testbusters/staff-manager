@@ -114,52 +114,17 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - **All clarification questions arising during design review must use the `AskUserQuestion` tool** — same rule as Phase 1, no inline open questions.
 - *** STOP — present Plan subagent output. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before writing code. ***
 
-**Phase 1.6 — Visual & UX Design** *(run when triggered by the conditions below)*
+**Phase 1.6 — Visual & UX Design** *(run when triggered)*
 
-**Triggers — this phase is required when the block:**
-- Creates a new page route or full-page redesign
-- Introduces a new layout pattern, component hierarchy, or navigation structure
-- Changes the information architecture of an existing page (sections, tabs, panels)
-- Adds a complex interactive pattern (multi-step flow, bulk actions, split views)
+**Triggers**: new page route or full-page redesign · new layout pattern or navigation structure · change to information architecture of existing page · new complex interactive pattern (multi-step flow, bulk actions, split views).
 
-**Skip**: block modifies only an internal section of an existing page without changing the main layout or navigation structure → skip Phase 1.6. Use Phase 1.5 if an architectural decision is involved.
+**Skip**: block modifies only an internal section of an existing page without layout or navigation change → skip. Use Phase 1.5 if architectural decision involved.
 
-> **Model — MANDATORY**: Phase 1.6 runs on **Opus 4.6** for maximum design quality. Before step 0: switch with `/model opus`. Switch back to Sonnet after the Phase 1.6 STOP gate is confirmed.
+> **Model — MANDATORY**: switch to Opus 4.6 before executing (`/model opus`). Switch back to Sonnet only after STOP confirmed.
 
-**When triggered, always execute in this order:**
+**Execute**: invoke Skill tool with `skill: "phase-design"`. Full procedure in `.claude/skills/phase-design/SKILL.md` (steps 0–6: consistency check → wireframe → HTML preview → UX rationale → design system mapping → Design Quality Gate (10 criteria) → session persist).
 
-0. **Consistency check** — before producing any wireframe, read `docs/ui-components.md` and identify existing pages with similar patterns (lists, forms, detail panels, state machines). State which existing patterns will be reused and which will diverge, and why. No region in the wireframe should introduce a new pattern if an existing one fits.
-
-1. **ASCII wireframe** — call the **Skill tool** (`skill: "frontend-design"`) with an explicit wireframe prompt. **Do NOT generate the wireframe inline in text** — the Skill tool must be invoked. Prompt must request:
-   - Full page layout with named regions
-   - Column structure for tables/lists
-   - Action placement and grouping
-   - **All UI states**: loading, empty, error, partial (data partially loaded), 403/permission-denied
-   - **Mobile breakpoint (375px) — mandatory if block modifies collab or responsabile routes**; skip for admin-only routes
-
-2. **HTML preview** — call the **Skill tool** (`skill: "frontend-design"`) a second time with a full component generation prompt. Two paths:
-   - **Path A — Figma MCP**: fetch design tokens with `get_variable_defs` on Foundation TB file (`p9kUAQ2qNVg4PojTBEkSmC`), include in Skill tool prompt. Use when block introduces new UI components or token-sensitive layouts. **If `get_variable_defs` fails or Figma MCP is unavailable → fall back to Path B immediately, do not retry.**
-   - **Path B — standalone**: self-contained HTML with inline Tailwind CDN. Use when focus is structure/layout and tokens are already established in the codebase.
-   Approved output = visual contract for Phase 2; generated code is reference only, not committed.
-
-3. **UX rationale** — for each layout decision, state explicitly:
-   - What mental model it maps to (inbox, pipeline, kanban, wizard…)
-   - Why **at least 2 competing alternatives** were discarded — "no alternatives considered" is not acceptable
-   - For **new pages**: primary design goal of the chosen mental model. For **redesigns**: single most important improvement over the current state.
-
-4. **Design system mapping** — map every wireframe region to the correct shadcn component and token before writing any code. No region should be "TBD" at this stage.
-
-5. **Design Quality Gate** — the design contract must explicitly address all of the following before the STOP. Any missing item = incomplete contract, do not proceed to STOP.
-   - **Accessibility plan**: heading hierarchy (h1→h2→h3), focus order in dialogs/sheets, aria-label strategy for icon-only buttons, semantic tokens only (no hardcoded color pairs)
-   - **Dark mode plan**: for every region, confirm which semantic token covers it in both themes. Flag any region where light/dark rendering differs structurally
-   - **Responsive plan**: if route is collab/responsabile — confirm 375px wireframe is in step 1. State which columns collapse, which actions move to overflow, which tables scroll
-   - **Selector strategy**: define `data-attribute` names for all stateful elements (badges, rows, dialogs) that Phase 4 Playwright e2e will need. These are part of the implementation contract
-   - **State coverage**: confirm loading, empty, error, partial, 403 states are all in step 1 wireframe. Missing state = incomplete wireframe
-   - **Pattern consistency**: confirm step 0 check was completed; no new pattern introduced without explicit justification
-
-6. **Persist design contract** — append the approved wireframe (ASCII) and UX rationale to the session file (`.claude/session/block-[name].md`) before proceeding. This ensures the design contract survives `/compact` and remains the Phase 2 reference.
-
-7. **STOP — present wireframe + HTML preview + UX rationale + component map + Design Quality Gate checklist. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding to Phase 2. Switch back to Sonnet (`/model sonnet`) only after the user confirms. The approved output is the implementation contract — Phase 2 must match it.**
+7. **STOP — present wireframe + HTML preview + UX rationale + component map + Design Quality Gate checklist. Wait for execution keyword before proceeding to Phase 2. Switch back to Sonnet (`/model sonnet`) only after the user confirms. The approved output is the implementation contract — Phase 2 must match it.**
 
 **Plan lock + context reset** *(after Phase 1, 1.5, or 1.6 STOP gate is confirmed — mandatory before every Phase 2)*
 - **Pre-compact check**: verify the session file (`.claude/session/block-[name].md`) is up to date with all decisions made — scope from Phase 1, architectural contract from Phase 1.5 (if run), design contract from Phase 1.6 (if run). Update it now if any decision is missing. This file is the only persistent state that survives `/compact`.
@@ -351,27 +316,31 @@ Test credentials — always use canonical accounts from `memory/test_credentials
 **Phase 5d — Block-scoped quality audit** *(two tracks — apply whichever match the block type; both may apply)*
 
 **Track A — UI audit** *(if block adds/modifies UI routes or components — runs on localhost)*
-- **Dev server health check first**: verify the server is still up before any Track A audit: `curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN | grep -q "200\|302" || echo "SERVER DOWN"`. If down: restart using the Phase 5b Step 2 procedure before proceeding.
-- **Multi-route syntax**: for blocks with multiple new/modified routes, pass them as a space-separated list: `target:page:/route1 target:page:/route2`. All matching skills accept this form. Scope to only the routes changed in this block — do not audit the entire app.
-- Run `/ui-audit target:page:<route(s)>` scoped to the block's new/modified routes only (token compliance, shadcn usage, empty states, loading.tsx). For new UI components: also verify against `docs/ui-components.md` — confirm no duplicate component was created and, if the component is genuinely new, it is documented there.
-- Run `/visual-audit target:page:<route(s)>` scoped to the block's new/modified pages (7 visual dimensions: typography, spacing, hierarchy, colour, density, dark-mode, micro-polish).
-- Run `/ux-audit target:page:<route(s)>` scoped to the block's user flows (task completion, feedback clarity, cognitive load).
-- Run `/responsive-audit target:page:<route(s)>` **only** if the block modifies collab or responsabile routes (Admin routes = desktop-only, skip).
-- **Execution order**: `/ui-audit` is static — launch it concurrently with the first Playwright-based skill. `/visual-audit` → `/ux-audit` → `/responsive-audit` (if applicable) must run **sequentially** — they share the MCP Playwright session and cannot run in parallel without conflicts.
+- **Dev server health check**: `curl -s -o /dev/null -w "%{http_code}" http://localhost:NNNN | grep -q "200\|302" || echo "SERVER DOWN"`. If down: restart per Phase 5b Step 2.
+- **Multi-route syntax**: `target:page:/route1 target:page:/route2`. Scope to block's modified routes only.
+- **Execution** (sequential — shared Playwright session; ui-audit is static and runs concurrently):
+  - `/ui-audit target:page:<route(s)>` — concurrent with first Playwright skill
+  - `/visual-audit target:page:<route(s)>` → `/ux-audit target:page:<route(s)>` → `/responsive-audit target:page:<route(s)>` — sequential
+  - Skip `/responsive-audit` for admin-only routes (desktop-only by design)
+- **Server shutdown** (worktree only): `kill $(lsof -ti:NNNN) 2>/dev/null; sleep 1; kill -9 $(lsof -ti:NNNN) 2>/dev/null || true` (replace NNNN with the port declared in Phase 5b — two-step kill handles Next.js child worker processes). Track B audits may run after shutdown. Main repo: server was started by the user — do not stop it. If Track A fails mid-way and the server remains live, run the shutdown command manually before continuing.
 
 **Track B — API/DB audit** *(if block creates/modifies API routes or applies migrations — static analysis, no dev server needed)*
 - Run `/security-audit target:section:<section>` if the block creates or modifies any API route (auth, Zod, RLS, cron secret, export roles, sensitive data exposure).
-- Run `/api-design target:section:<section>` if the block adds new API routes (verb correctness, response shape, status codes, ZodError `.issues` convention, pagination).
+- Run `/api-design target:section:<section>` if the block adds new API routes OR substantially modifies existing ones (response shape, verb, status codes, auth logic).
 - `/security-audit` and `/api-design` are both static — run them concurrently.
 - Run `/skill-db target:section:<section>` **only** if the block applies migrations (index coverage, RLS completeness, cascade behavior, data type choices).
 
-**Severity handling — both tracks**:
+**Track C — Performance audit** *(static, no dev server needed — run after Track A server shutdown if applicable)*
+- **Trigger**: block adds ≥1 new page component, Server Component, or `lib/` utility imported by ≥5 consumers.
+- Run `/perf-audit target:section:<section>` — covers `'use client'` sprawl, provider placement, sequential await waterfalls, missing `use cache`/`React.cache`, bundle health (`serverExternalPackages`, `optimizePackageImports`).
+- Skip for migration-only blocks, doc-only blocks, and pure API route additions with no new components.
+- Bundle analyzer checks require a prior `npm run build` — if Phase 3 build was run, they are included automatically; otherwise the skill skips them.
+
+**Severity handling — all tracks**:
 - **Critical**: fix before Phase 6. Do not proceed with open Critical issues.
 - **Major**: flag in Phase 6 checklist with planned resolution sprint.
 - **Medium / Minor**: append to `docs/refactoring-backlog.md` immediately — assign the correct ID prefix matching the backlog's existing scheme (`PERF-` performance, `DEV-` code quality, `SEC-`/`SEC` security, `DB-`/`B-` schema, `A-` architecture, `S-` structure, `T-` TypeScript, `N-` naming) and add to the priority index. Do not defer or accumulate silently.
 - Output per skill: one-paragraph summary only — do not paste full reports.
-
-**Server shutdown (worktree context only)**: after all Track A audits complete, stop the dev server started in Phase 5b: `kill $(lsof -ti:NNNN) 2>/dev/null; sleep 1; kill -9 $(lsof -ti:NNNN) 2>/dev/null || true` (replace NNNN with the port declared in Phase 5b — two-step kill handles Next.js child worker processes). Track B audits may run after shutdown. **Main repo**: server was started by the user — do not stop it. If Track A fails mid-way and the server remains live, run the shutdown command manually before continuing.
 
 **Phase 6 — Outcome checklist + confirmation**
 Present the checklist from `@docs/phase6-checklist-template.md` filled with actual results, then wait for explicit confirmation before proceeding to Phase 8.
@@ -461,6 +430,7 @@ Branch prefix `fix/` activates this pipeline automatically.
 - **Scope confirmation (compact)**: before writing any code, apply the Interaction Protocol (CLAUDE.md § Plan-then-Confirm) in compact form — state the exact files to modify, the specific change in each, and flag any irreversible operation. Wait for an execution keyword (`Esegui` · `Procedi` · `Confermo` · `Execute` · `Proceed`) before proceeding.
 - No dependency scan (unless a shared utility is touched — then do a quick grep).
 - Write the fix. Run `npx tsc --noEmit`. Run `npx vitest run`. Must be green.
+- **If the fix modifies any file under `app/api/`**: run `/security-audit target:section:<section>` (static, no dev server needed). Critical findings block the commit and escalate to full pipeline. Medium/Low: append to `docs/refactoring-backlog.md` and proceed.
 - Run `/commit` (Conventional Commits skill) to stage and commit with correct type+scope. Do NOT use manual `git commit -m "..."` — the skill ensures Conventional Commits 1.0.0 compliance.
 - No intermediate docs update unless `CLAUDE.md` genuinely needs a pattern correction.
 
