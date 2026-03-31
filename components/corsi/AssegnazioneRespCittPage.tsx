@@ -78,6 +78,11 @@ interface Props {
   blacklistedIds: Set<string>;
 }
 
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 interface CocodaPanelProps {
   lezioni: CorsoLezione[];
   collabsPerCocoda: CollabOption[];
@@ -121,7 +126,7 @@ function CocodaPanel({
           return (
             <div key={lezione.id} className="flex items-center gap-3 flex-wrap">
               <span className="text-xs text-muted-foreground whitespace-nowrap w-24 shrink-0">
-                {lezione.data}
+                {fmtDate(lezione.data)}
               </span>
               <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
                 {lezione.orario_inizio}–{lezione.orario_fine}
@@ -361,7 +366,7 @@ export default function AssegnazioneRespCittPage({
                           </span>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                          {corso.data_inizio} → {corso.data_fine}
+                          {fmtDate(corso.data_inizio)} → {fmtDate(corso.data_fine)}
                         </TableCell>
                         <TableCell>
                           {candidatura ? (
@@ -469,7 +474,7 @@ export default function AssegnazioneRespCittPage({
                         {CORSO_STATO_LABELS[stato]}
                       </span>
                       <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                        {corso.data_inizio} → {corso.data_fine}
+                        {fmtDate(corso.data_inizio)} → {fmtDate(corso.data_fine)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-4">

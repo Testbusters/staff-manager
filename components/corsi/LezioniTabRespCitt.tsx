@@ -37,6 +37,11 @@ interface Props {
   collabMetadata: Record<string, { materie: string[]; citta: string; qaSvolti: number }>;
 }
 
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 const TIPO_LABEL: Record<string, string> = {
   docente_lezione: 'Docente',
   qa_lezione: 'Q&A',
@@ -108,7 +113,7 @@ export default function LezioniTabRespCitt({
           <div key={lezione.id} className="rounded-2xl bg-card border border-border overflow-hidden w-full">
             {/* Lezione header */}
             <div className="flex items-center gap-4 px-4 py-3 border-b border-border bg-muted/30">
-              <span className="text-sm font-medium text-foreground">{lezione.data}</span>
+              <span className="text-sm font-medium text-foreground">{fmtDate(lezione.data)}</span>
               <span className="text-sm text-muted-foreground">
                 {lezione.orario_inizio} – {lezione.orario_fine}
               </span>

@@ -40,6 +40,11 @@ import { CalendarDays } from 'lucide-react';
 import { MATERIA_COLORS } from '@/lib/corsi-utils';
 import type { Lezione } from '@/lib/types';
 
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 interface Props {
   corsoId: string;
   initialLezioni: Lezione[];
@@ -163,7 +168,7 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
             <TableBody>
               {lezioni.map((l) => (
                 <TableRow key={l.id} className="hover:bg-muted/60">
-                  <TableCell className="whitespace-nowrap">{l.data}</TableCell>
+                  <TableCell className="whitespace-nowrap">{fmtDate(l.data)}</TableCell>
                   <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                     {l.orario_inizio.slice(0, 5)} – {l.orario_fine.slice(0, 5)}
                   </TableCell>

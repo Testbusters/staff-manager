@@ -16,6 +16,11 @@ interface CorsoWithStato {
   stato: CorsoStato;
 }
 
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 const STATO_BADGE: Record<CorsoStato, string> = {
   programmato: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   attivo: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
@@ -59,7 +64,7 @@ export default function CorsiListCollab({ corsi }: { corsi: CorsoWithStato[] }) 
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            {corso.data_inizio} → {corso.data_fine}
+            {fmtDate(corso.data_inizio)} → {fmtDate(corso.data_fine)}
           </p>
         </Link>
       ))}
