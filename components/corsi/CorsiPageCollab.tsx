@@ -110,12 +110,10 @@ export default function CorsiPageCollab({
     })
     .filter((e): e is CalEntry => e !== null);
 
-  // Section 2: Docenza — community corsi filtered by city for in_aula
-  const corsiDocenza = corsiComunita.filter((c) => {
-    if (c.modalita === 'online') return true;
-    if (!collabCitta) return true; // no city set → show all
-    return c.citta === collabCitta;
-  });
+  // Section 2: Docenza — only courses with a city matching the collaborator's city
+  const corsiDocenza = corsiComunita.filter((c) =>
+    !!c.citta && c.citta === collabCitta
+  );
 
   // Section 3: Q&A — all community corsi (no city filter)
   const corsiQA = corsiComunita;
@@ -158,8 +156,8 @@ export default function CorsiPageCollab({
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
           {collabCitta
-            ? `Corsi online + in aula a ${collabCitta} per ${communityName}.`
-            : `Corsi programmati per ${communityName}.`}
+            ? `Corsi in aula a ${collabCitta} per ${communityName}.`
+            : `Nessuna città assegnata al tuo profilo.`}
         </p>
         {corsiDocenza.length === 0 ? (
           <EmptyState
