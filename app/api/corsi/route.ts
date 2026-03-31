@@ -16,7 +16,7 @@ const CreateCorsoSchema = z.object({
   data_inizio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   data_fine: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   max_docenti_per_lezione: z.number().int().min(1).optional(),
-  max_qa_per_lezione: z.number().int().min(1).optional(),
+  max_qa_per_lezione: z.number().int().min(0).optional(),
   link_lw: z.string().nullable().optional(),
   link_zoom: z.string().nullable().optional(),
   link_telegram_corsisti: z.string().nullable().optional(),

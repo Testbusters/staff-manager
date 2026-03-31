@@ -216,7 +216,7 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
         </div>
         <div className={fieldCls}>
           <label className={labelCls}>Max Q&A per lezione</label>
-          <Input type="number" min={1} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
+          <Input type="number" min={0} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
         </div>
       </div>
 
