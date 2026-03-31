@@ -43,10 +43,27 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [activeRoles, setActiveRoles] = useState<Set<string>>(
+    () => new Set(Object.keys(RUOLO_CONFIG))
+  );
+
+  function toggleRole(ruolo: string) {
+    setActiveRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(ruolo)) {
+        if (next.size === 1) return prev; // keep at least one active
+        next.delete(ruolo);
+      } else {
+        next.add(ruolo);
+      }
+      return next;
+    });
+  }
 
   const lezioniByDay = useMemo(() => {
     const map = new Map<number, CalEntry[]>();
     for (const e of entries) {
+      if (!activeRoles.has(e.ruolo)) continue;
       const d = new Date(e.data);
       if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
         const day = d.getDate();
@@ -54,7 +71,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
       }
     }
     return map;
-  }, [entries, currentYear, currentMonth]);
+  }, [entries, currentYear, currentMonth, activeRoles]);
 
   const firstDow = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -111,19 +128,28 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
           </Button>
         </div>
 
-        {/* Legend */}
+        {/* Role filter toggles */}
         {totalEntries > 0 && (
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2">
             {Object.entries(roleCounts).map(([ruolo, count]) => {
               const config = RUOLO_CONFIG[ruolo];
               if (!config) return null;
+              const isActive = activeRoles.has(ruolo);
               return (
-                <div key={ruolo} className="flex items-center gap-1.5">
-                  <span className={`h-2 w-2 rounded-full ${config.dot}`} />
-                  <span className="text-xs text-muted-foreground">
-                    {config.label} <span className="tabular-nums font-medium text-foreground">{count}</span>
-                  </span>
-                </div>
+                <button
+                  key={ruolo}
+                  onClick={() => toggleRole(ruolo)}
+                  aria-label={`Filtra ${config.label}`}
+                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors border ${
+                    isActive
+                      ? `${config.bg} ${config.text} border-transparent`
+                      : 'bg-transparent text-muted-foreground border-border opacity-50 hover:opacity-75'
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${isActive ? config.dot : 'bg-muted-foreground'}`} />
+                  {config.label}
+                  <span className="tabular-nums font-medium">{count}</span>
+                </button>
               );
             })}
           </div>
