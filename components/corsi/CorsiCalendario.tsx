@@ -8,6 +8,8 @@ export interface CalEntry {
   ruolo: string;
   data: string; // YYYY-MM-DD
   orario_inizio: string; // HH:MM or HH:MM:SS
+  orario_fine: string; // HH:MM or HH:MM:SS
+  ore: number;
   corso_codice: string;
 }
 
@@ -214,14 +216,14 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                       <div
                         key={j}
                         className={`flex items-center gap-1 rounded-md px-1.5 py-[3px] ${config.bg}`}
-                        title={`${e.corso_codice} · ${e.orario_inizio.slice(0, 5)} · ${config.label}`}
+                        title={`${e.corso_codice} · ${e.orario_inizio.slice(0, 5)}-${e.orario_fine.slice(0, 5)}, ${e.ore}h · ${config.label}`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${config.dot}`} />
                         <span className={`text-[11px] font-medium leading-none truncate ${config.text}`}>
                           {e.corso_codice}
                         </span>
                         <span className="text-[10px] text-muted-foreground leading-none tabular-nums ml-auto shrink-0">
-                          {e.orario_inizio.slice(0, 5)}
+                          {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}, {e.ore}h
                         </span>
                       </div>
                     );
