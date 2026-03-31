@@ -126,34 +126,41 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
           <Button variant="outline" size="icon" onClick={nextMonth} aria-label="Mese successivo" className="h-8 w-8">
             <ChevronRight className="h-4 w-4" />
           </Button>
+          {!isCurrentMonth && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => { setCurrentYear(today.getFullYear()); setCurrentMonth(today.getMonth()); }}
+            >
+              Oggi
+            </Button>
+          )}
         </div>
 
-        {/* Role filter toggles */}
-        {totalEntries > 0 && (
-          <div className="hidden sm:flex items-center gap-2">
-            {Object.entries(roleCounts).map(([ruolo, count]) => {
-              const config = RUOLO_CONFIG[ruolo];
-              if (!config) return null;
-              const isActive = activeRoles.has(ruolo);
-              return (
-                <button
-                  key={ruolo}
-                  onClick={() => toggleRole(ruolo)}
-                  aria-label={`Filtra ${config.label}`}
-                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors border ${
-                    isActive
-                      ? `${config.bg} ${config.text} border-transparent`
-                      : 'bg-transparent text-muted-foreground border-border opacity-50 hover:opacity-75'
-                  }`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${isActive ? config.dot : 'bg-muted-foreground'}`} />
-                  {config.label}
-                  <span className="tabular-nums font-medium">{count}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Role filter toggles — always visible */}
+        <div className="hidden sm:flex items-center gap-2">
+          {Object.entries(RUOLO_CONFIG).map(([ruolo, config]) => {
+            const count = roleCounts[ruolo] ?? 0;
+            const isActive = activeRoles.has(ruolo);
+            return (
+              <button
+                key={ruolo}
+                onClick={() => toggleRole(ruolo)}
+                aria-label={`Filtra ${config.label}`}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors border ${
+                  isActive
+                    ? `${config.bg} ${config.text} border-transparent`
+                    : 'bg-transparent text-muted-foreground border-border opacity-50 hover:opacity-75'
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${isActive ? config.dot : 'bg-muted-foreground'}`} />
+                {config.label}
+                <span className="tabular-nums font-medium">{count}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Calendar grid */}
@@ -261,15 +268,13 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
         </div>
       </div>
 
-      {/* Footer — month summary */}
-      {totalEntries > 0 && (
-        <div className="px-5 py-2.5 border-t border-border bg-muted/30">
-          <span className="text-xs text-muted-foreground">
-            <span className="tabular-nums font-medium text-foreground">{totalEntries}</span>
-            {' '}{totalEntries === 1 ? 'lezione' : 'lezioni'} in {monthName.toLowerCase()} {currentYear}
-          </span>
-        </div>
-      )}
+      {/* Footer — month summary, always visible */}
+      <div className="px-5 py-2.5 border-t border-border bg-muted/30">
+        <span className="text-xs text-muted-foreground">
+          <span className="tabular-nums font-medium text-foreground">{totalEntries}</span>
+          {' '}{totalEntries === 1 ? 'lezione' : 'lezioni'} in {monthName.toLowerCase()} {currentYear}
+        </span>
+      </div>
     </div>
   );
 }
