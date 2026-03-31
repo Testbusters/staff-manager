@@ -159,6 +159,7 @@ export default async function CorsoDetailPage({
         <LezioniTabCollab
           lezioni={lezioni ?? []}
           corsoId={id}
+          corsoLinea={corso.linea ?? null}
           maxDocenti={corso.max_docenti_per_lezione}
           maxQA={corso.max_qa_per_lezione}
           ownCandidature={ownCandidature ?? []}

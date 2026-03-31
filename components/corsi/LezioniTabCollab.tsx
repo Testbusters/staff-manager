@@ -38,6 +38,7 @@ import { GraduationCap, ChevronDown } from 'lucide-react';
 interface Props {
   lezioni: Lezione[];
   corsoId: string;
+  corsoLinea: string | null;
   maxDocenti: number;
   maxQA: number;
   ownCandidature: Candidatura[];
@@ -58,6 +59,7 @@ function formatDate(d: string) {
 export default function LezioniTabCollab({
   lezioni,
   corsoId,
+  corsoLinea,
   maxDocenti,
   maxQA,
   ownCandidature: initialOwnCandidature,
@@ -148,6 +150,7 @@ export default function LezioniTabCollab({
               <TableHead>Orario</TableHead>
               <TableHead>Ore</TableHead>
               <TableHead>Materia</TableHead>
+              <TableHead>Linea</TableHead>
               <TableHead>La tua partecipazione</TableHead>
               <TableHead>Docente <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
               <TableHead>Q&A <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
@@ -175,6 +178,9 @@ export default function LezioniTabCollab({
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white ${materiaColor}`}>
                       {lezione.materia}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    {corsoLinea ?? '—'}
                   </TableCell>
 
                   {/* Partecipazione column */}
