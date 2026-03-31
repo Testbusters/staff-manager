@@ -11,7 +11,24 @@ export interface CalEntry {
   orario_fine: string; // HH:MM or HH:MM:SS
   ore: number;
   corso_codice: string;
+  materia: string;
 }
+
+const MATERIA_PILL: Record<string, { bg: string; text: string; dot: string }> = {
+  Logica:      { bg: 'bg-red-100 dark:bg-red-900/30',    text: 'text-red-700 dark:text-red-300',    dot: 'bg-red-500' },
+  Biologia:    { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', dot: 'bg-green-500' },
+  Chimica:     { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' },
+  Fisica:      { bg: 'bg-blue-100 dark:bg-blue-900/30',  text: 'text-blue-700 dark:text-blue-300',  dot: 'bg-blue-500' },
+  Matematica:  { bg: 'bg-blue-100 dark:bg-blue-900/30',  text: 'text-blue-700 dark:text-blue-300',  dot: 'bg-blue-500' },
+  Simulazione: { bg: 'bg-gray-100 dark:bg-gray-800',     text: 'text-gray-700 dark:text-gray-300',  dot: 'bg-gray-500' },
+  'CoCoDà':   { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', dot: 'bg-yellow-500' },
+};
+
+const RUOLO_LABEL: Record<string, string> = {
+  docente: 'Docenza',
+  cocoda: "CoCoD'à",
+  qa: 'Q&A',
+};
 
 const RUOLO_CONFIG: Record<string, { icon: typeof GraduationCap; label: string; bg: string; text: string; dot: string }> = {
   docente: {
@@ -202,7 +219,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
               <div
                 key={i}
                 className={`rounded-lg p-1.5 transition-colors ${
-                  hasEntries ? 'min-h-[72px]' : 'min-h-[52px]'
+                  hasEntries ? 'min-h-[80px]' : 'min-h-[52px]'
                 } ${
                   isToday
                     ? 'ring-1 ring-brand/50 ring-inset'
@@ -245,18 +262,22 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                       text: 'text-foreground',
                       dot: 'bg-muted-foreground',
                     };
+                    const pill = MATERIA_PILL[e.materia] ?? { bg: 'bg-muted', text: 'text-foreground', dot: 'bg-muted-foreground' };
+                    const ruoloLabel = RUOLO_LABEL[e.ruolo] ?? e.ruolo;
                     return (
                       <div
                         key={j}
-                        className={`flex items-center gap-1 rounded-md px-1.5 py-[3px] ${config.bg}`}
-                        title={`${e.corso_codice} · ${e.orario_inizio.slice(0, 5)}-${e.orario_fine.slice(0, 5)}, ${e.ore}h · ${config.label}`}
+                        className={`flex flex-col gap-0.5 rounded-md px-1.5 py-1 ${pill.bg}`}
+                        title={`${e.corso_codice} · ${ruoloLabel} · ${e.orario_inizio.slice(0, 5)}-${e.orario_fine.slice(0, 5)}, ${e.ore}h`}
                       >
-                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${config.dot}`} />
-                        <span className={`text-[11px] font-medium leading-none truncate ${config.text}`}>
-                          {e.corso_codice}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground leading-none tabular-nums ml-auto shrink-0">
-                          {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}, {e.ore}h
+                        <div className="flex items-center gap-1">
+                          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${pill.dot}`} />
+                          <span className={`text-[11px] font-medium leading-none truncate ${pill.text}`}>
+                            {e.corso_codice}
+                          </span>
+                        </div>
+                        <span className={`text-[10px] leading-none tabular-nums pl-2.5 ${pill.text} opacity-80`}>
+                          {ruoloLabel} · {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}
                         </span>
                       </div>
                     );
