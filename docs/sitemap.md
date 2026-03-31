@@ -32,6 +32,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | collaboratore | collaboratore_tb_test@test.com | Testbusters123 | staging smoke tests (TB community). Production: collaboratore_test@test.com |
 | responsabile_compensi | responsabile_compensi_test@test.com | Testbusters123 | smoke tests |
 | amministrazione | admin_test@test.com | Testbusters123 | smoke tests |
+| responsabile_cittadino | responsabile_cittadino_test@test.com | Testbusters123 | smoke tests |
 
 > These accounts are for `/responsive-audit` and `/ux-audit` skill use. `/ui-audit` static mode needs no login.
 > For Playwright-based skills: login sequence → email field → password field → submit → wait for `/` redirect.

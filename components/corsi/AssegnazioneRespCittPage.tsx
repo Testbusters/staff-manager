@@ -330,9 +330,8 @@ export default function AssegnazioneRespCittPage({
             description="Non ci sono corsi senza città al momento."
           />
         ) : (
-          <div className="overflow-x-auto">
-          <div className="rounded-2xl bg-card border border-border overflow-hidden">
-              <Table className="table-fixed">
+          <div className="w-fit rounded-2xl bg-card border border-border overflow-hidden">
+              <Table className="w-auto table-fixed">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
                     <TableHead className="text-xs w-[145px]">Codice</TableHead>
@@ -427,7 +426,6 @@ export default function AssegnazioneRespCittPage({
                   })}
                 </TableBody>
               </Table>
-          </div>
           </div>
         )}
       </div>

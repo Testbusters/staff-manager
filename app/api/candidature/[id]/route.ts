@@ -20,11 +20,12 @@ export async function PATCH(
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, citta_responsabile')
+    .select('role, is_active, citta_responsabile')
     .eq('user_id', user.id)
     .single();
 
-  const role = profile?.role;
+  if (!profile?.is_active) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const role = profile.role;
   const { id } = await params;
 
   const svc = createServiceClient(

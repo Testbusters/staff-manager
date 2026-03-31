@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { GraduationCap, BookOpen, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato } from '@/lib/types';
-import CorsiCalendario from './CorsiCalendario';
 import type { CalEntry } from './CorsiCalendario';
+
+const CorsiCalendario = dynamic(() => import('./CorsiCalendario'), { ssr: false });
 
 interface CorsoFlat {
   id: string;
