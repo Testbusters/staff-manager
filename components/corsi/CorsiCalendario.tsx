@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight, GraduationCap, Users, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +12,8 @@ export interface CalEntry {
   orario_fine: string; // HH:MM or HH:MM:SS
   ore: number;
   corso_codice: string;
+  corso_id: string;
+  lezione_id: string;
   materia: string;
 }
 
@@ -265,9 +268,10 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                     const pill = MATERIA_PILL[e.materia] ?? { bg: 'bg-muted', text: 'text-foreground', dot: 'bg-muted-foreground' };
                     const ruoloLabel = RUOLO_LABEL[e.ruolo] ?? e.ruolo;
                     return (
-                      <div
+                      <Link
                         key={j}
-                        className={`flex flex-col gap-0.5 rounded-md px-1.5 py-1 ${pill.bg}`}
+                        href={`/corsi/${e.corso_id}`}
+                        className={`flex flex-col gap-0.5 rounded-md px-1.5 py-1 ${pill.bg} hover:brightness-95 dark:hover:brightness-110 transition-[filter]`}
                         title={`${e.corso_codice} · ${ruoloLabel} · ${e.orario_inizio.slice(0, 5)}-${e.orario_fine.slice(0, 5)}, ${e.ore}h`}
                       >
                         <div className="flex items-center gap-1">
@@ -279,7 +283,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                         <span className={`text-[10px] leading-none tabular-nums pl-2.5 ${pill.text} opacity-80`}>
                           {ruoloLabel} · {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}
                         </span>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>

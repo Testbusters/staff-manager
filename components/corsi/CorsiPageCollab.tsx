@@ -111,6 +111,8 @@ export default function CorsiPageCollab({
         orario_fine: l.orario_fine,
         ore: l.ore,
         corso_codice: corsoCodeMap.get(l.corso_id) ?? '—',
+        corso_id: l.corso_id,
+        lezione_id: l.id,
         materia: l.materia,
       };
     })
