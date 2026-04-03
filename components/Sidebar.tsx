@@ -8,6 +8,7 @@ import {
   Megaphone, Gift, Users, ShieldCheck,
   LayoutDashboard, Inbox, UsersRound, FileDown, Files,
   LifeBuoy, LayoutGrid, SlidersHorizontal, MessageSquarePlus,
+  Ban, Star,
   type LucideIcon,
 } from 'lucide-react';
 import type { Role } from '@/lib/types';
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Megaphone, Gift, Users,
   LayoutDashboard, Inbox, UsersRound, FileDown, Files,
   LifeBuoy, LayoutGrid, SlidersHorizontal, MessageSquarePlus,
+  Ban, Star,
 };
 import AppLogo from '@/components/ui/AppLogo';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';

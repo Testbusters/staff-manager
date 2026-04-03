@@ -57,20 +57,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Errore durante il salvataggio' }, { status: 500 });
   }
 
-  // Upload screenshot if present (non-blocking — feedback is saved regardless)
+  // Upload screenshot if present (fire-and-forget — does not block the 201 response)
   const screenshotFile = fd.get('screenshot');
   if (screenshotFile instanceof File && screenshotFile.size > 0) {
     const ext = screenshotFile.name.split('.').pop()?.toLowerCase() ?? 'png';
-    const path = `${created.id}/screenshot.${ext}`;
-    const buffer = Buffer.from(await screenshotFile.arrayBuffer());
-
-    const { error: uploadError } = await svc.storage
-      .from('feedback')
-      .upload(path, buffer, { contentType: screenshotFile.type });
-
-    if (!uploadError) {
-      await svc.from('feedback').update({ screenshot_path: path }).eq('id', created.id);
-    }
+    const uploadPath = `${created.id}/screenshot.${ext}`;
+    const { type, name: _name } = screenshotFile;
+    screenshotFile.arrayBuffer().then((ab) => {
+      const buffer = Buffer.from(ab);
+      return svc.storage.from('feedback').upload(uploadPath, buffer, { contentType: type });
+    }).then(({ error: uploadError }) => {
+      if (!uploadError) {
+        svc.from('feedback').update({ screenshot_path: uploadPath }).eq('id', created.id).then(() => {});
+      }
+    }).catch(() => {});
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });

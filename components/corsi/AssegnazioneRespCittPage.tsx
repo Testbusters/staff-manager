@@ -67,15 +67,23 @@ interface CocodaAssegnazione {
   collaborator_id: string;
 }
 
+interface QAAssegnazione {
+  id: string;
+  lezione_id: string;
+  collaborator_id: string;
+}
+
 interface Props {
   corsiDisponibili: Corso[];
-  mieiCorsi: Corso[];
+  mieiCorsi: (Corso & { max_qa_per_lezione?: number; max_docenti_per_lezione?: number })[];
   ownCandidature: OwnCandidatura[];
   cittaResp: string | null;
   mieiCorsiLezioni: CorsoLezione[];
   collabsPerCocoda: CollabOption[];
   cocodaAssegnazioni: CocodaAssegnazione[];
+  qaAssegnazioni: QAAssegnazione[];
   blacklistedIds: Set<string>;
+  maxQAPerCorso: Record<string, number>;
 }
 
 function fmtDate(iso: string): string {
@@ -222,13 +230,20 @@ export default function AssegnazioneRespCittPage({
   mieiCorsiLezioni,
   collabsPerCocoda,
   cocodaAssegnazioni: initialCocodaAssegnazioni,
+  qaAssegnazioni: initialQAAssegnazioni,
   blacklistedIds,
+  maxQAPerCorso,
 }: Props) {
   const [candidature, setCandidature] = useState<OwnCandidatura[]>(ownCandidature);
   const [cocodaAssegnazioni, setCocodaAssegnazioni] = useState<CocodaAssegnazione[]>(initialCocodaAssegnazioni);
+  const [qaAssegnazioni, setQAAssegnazioni] = useState<QAAssegnazione[]>(initialQAAssegnazioni);
   const [loading, setLoading] = useState<string | null>(null);
   const [expandedCorsoId, setExpandedCorsoId] = useState<string | null>(null);
   const [selectedCollabMap, setSelectedCollabMap] = useState<Record<string, string>>({});
+  // Corso-level bulk assignment state
+  // Key format: `${corsoId}|cocoda|0`, `${corsoId}|cocoda|1`, `${corsoId}|qa|0`, etc.
+  const [bulkSlots, setBulkSlots] = useState<Record<string, string>>({});
+  const [bulkLoading, setBulkLoading] = useState<string | null>(null);
 
   const getCandidatura = (corsoId: string) =>
     candidature.find((c) => c.corso_id === corsoId);
@@ -317,6 +332,93 @@ export default function AssegnazioneRespCittPage({
       }
     } finally {
       setLoading(null);
+    }
+  }
+
+  // Helpers: corso-level unique collaborators
+  function getCorsoCocodaCollabs(corsoId: string): string[] {
+    const lezioni = lezioniByCorso[corsoId] ?? [];
+    const lezioniIds = new Set(lezioni.map((l) => l.id));
+    const seen = new Set<string>();
+    for (const a of cocodaAssegnazioni) {
+      if (lezioniIds.has(a.lezione_id)) seen.add(a.collaborator_id);
+    }
+    return [...seen];
+  }
+
+  function getCorsoQACollabs(corsoId: string): string[] {
+    const lezioni = lezioniByCorso[corsoId] ?? [];
+    const lezioniIds = new Set(lezioni.map((l) => l.id));
+    const seen = new Set<string>();
+    for (const a of qaAssegnazioni) {
+      if (lezioniIds.has(a.lezione_id)) seen.add(a.collaborator_id);
+    }
+    return [...seen];
+  }
+
+  function getCorsoAssegnazioniForCollab(corsoId: string, collaboratorId: string, ruolo: 'cocoda' | 'qa'): string[] {
+    const lezioni = lezioniByCorso[corsoId] ?? [];
+    const lezioniIds = new Set(lezioni.map((l) => l.id));
+    const source = ruolo === 'cocoda' ? cocodaAssegnazioni : qaAssegnazioni;
+    return source.filter((a) => lezioniIds.has(a.lezione_id) && a.collaborator_id === collaboratorId).map((a) => a.id);
+  }
+
+  async function assignCorsoRuolo(corsoId: string, collaboratorIds: string[], ruolo: 'cocoda' | 'qa') {
+    if (collaboratorIds.length === 0) return;
+    setBulkLoading(`${corsoId}|${ruolo}`);
+    try {
+      const res = await fetch('/api/assegnazioni/corso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ corso_id: corsoId, collaborator_ids: collaboratorIds, ruolo }),
+      });
+      if (res.ok) {
+        const { created } = await res.json();
+        toast.success(`${created} assegnazioni create`);
+        // Optimistic: add virtual assegnazioni for all lezioni of this corso
+        const lezioni = lezioniByCorso[corsoId] ?? [];
+        const newAssegnazioni = lezioni.flatMap((l) =>
+          collaboratorIds.map((cid) => ({ id: `tmp-${l.id}-${cid}`, lezione_id: l.id, collaborator_id: cid }))
+        );
+        if (ruolo === 'cocoda') {
+          setCocodaAssegnazioni((prev) => [...prev, ...newAssegnazioni]);
+        } else {
+          setQAAssegnazioni((prev) => [...prev, ...newAssegnazioni]);
+        }
+        // Clear used slots
+        setBulkSlots((prev) => {
+          const next = { ...prev };
+          for (let i = 0; i < collaboratorIds.length; i++) {
+            delete next[`${corsoId}|${ruolo}|${i}`];
+          }
+          return next;
+        });
+      } else {
+        const { error } = await res.json().catch(() => ({ error: 'Errore sconosciuto' }));
+        toast.error(error ?? 'Assegnazione fallita');
+      }
+    } finally {
+      setBulkLoading(null);
+    }
+  }
+
+  async function removeCorsoCollab(corsoId: string, collaboratorId: string, ruolo: 'cocoda' | 'qa') {
+    const assegnazioneIds = getCorsoAssegnazioniForCollab(corsoId, collaboratorId, ruolo);
+    const key = `remove-corso-${corsoId}-${collaboratorId}-${ruolo}`;
+    setBulkLoading(key);
+    try {
+      await Promise.all(
+        assegnazioneIds.map((id) =>
+          fetch(`/api/assegnazioni/${id}`, { method: 'DELETE' })
+        )
+      );
+      if (ruolo === 'cocoda') {
+        setCocodaAssegnazioni((prev) => prev.filter((a) => !(a.collaborator_id === collaboratorId && assegnazioneIds.includes(a.id))));
+      } else {
+        setQAAssegnazioni((prev) => prev.filter((a) => !(a.collaborator_id === collaboratorId && assegnazioneIds.includes(a.id))));
+      }
+    } finally {
+      setBulkLoading(null);
     }
   }
 
@@ -459,6 +561,10 @@ export default function AssegnazioneRespCittPage({
               const hasLezioni = lezioni.length > 0;
               const hasCollabs = collabsPerCocoda.length > 0;
               const canExpand = hasLezioni && hasCollabs;
+              const maxQA = maxQAPerCorso[corso.id] ?? 0;
+              const corsoCocodaCollabs = getCorsoCocodaCollabs(corso.id);
+              const corsoQACollabs = getCorsoQACollabs(corso.id);
+              const showQASection = corso.modalita === 'online' && maxQA > 0;
 
               return (
                 <div key={corso.id} className="rounded-2xl bg-card border border-border overflow-hidden">
@@ -504,6 +610,152 @@ export default function AssegnazioneRespCittPage({
                       )}
                     </div>
                   </div>
+
+                  {/* Corso-level CoCoD'à assignment */}
+                  {hasLezioni && hasCollabs && (
+                    <div className="border-t border-border bg-muted/10 px-4 py-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-muted-foreground">CoCoD&apos;à del corso</p>
+                        <span className="text-xs text-muted-foreground">{corsoCocodaCollabs.length} / 2</span>
+                      </div>
+                      {corsoCocodaCollabs.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {corsoCocodaCollabs.map((cid) => {
+                            const c = collabMap.get(cid);
+                            const name = c ? `${c.nome} ${c.cognome}` : cid;
+                            const rKey = `remove-corso-${corso.id}-${cid}-cocoda`;
+                            return (
+                              <div key={cid} className="flex items-center gap-1">
+                                <Badge variant="outline" className="text-xs">{name}</Badge>
+                                <button
+                                  className="text-xs text-muted-foreground hover:text-destructive"
+                                  disabled={bulkLoading === rKey}
+                                  onClick={() => removeCorsoCollab(corso.id, cid, 'cocoda')}
+                                  aria-label={`Rimuovi ${name} da tutte le lezioni`}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {corsoCocodaCollabs.length < 2 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {[0, 1].filter((i) => corsoCocodaCollabs.length + i < 2 ? true : i === 0).slice(0, 2 - corsoCocodaCollabs.length).map((i) => {
+                            const slotKey = `${corso.id}|cocoda|${i}`;
+                            const taken = new Set([
+                              ...corsoCocodaCollabs,
+                              ...([0, 1].filter((j) => j !== i).map((j) => bulkSlots[`${corso.id}|cocoda|${j}`]).filter(Boolean)),
+                            ]);
+                            return (
+                              <select
+                                key={i}
+                                className="h-7 text-xs rounded-md border border-input bg-background px-2 text-foreground min-w-[160px]"
+                                value={bulkSlots[slotKey] ?? ''}
+                                onChange={(e) => setBulkSlots((prev) => ({ ...prev, [slotKey]: e.target.value }))}
+                              >
+                                <option value="">Seleziona CoCoD&apos;à {i + 1 + corsoCocodaCollabs.length}...</option>
+                                {collabsPerCocoda.filter((c) => !taken.has(c.id)).map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
+                                  </option>
+                                ))}
+                              </select>
+                            );
+                          })}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7"
+                            disabled={
+                              bulkLoading === `${corso.id}|cocoda` ||
+                              ![0, 1].some((i) => bulkSlots[`${corso.id}|cocoda|${i}`])
+                            }
+                            onClick={() => {
+                              const ids = [0, 1].map((i) => bulkSlots[`${corso.id}|cocoda|${i}`]).filter(Boolean);
+                              assignCorsoRuolo(corso.id, ids, 'cocoda');
+                            }}
+                          >
+                            Assegna a tutte le lezioni
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Corso-level Q&A assignment (online only) */}
+                  {showQASection && hasLezioni && (
+                    <div className="border-t border-border bg-muted/10 px-4 py-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-muted-foreground">Q&A del corso</p>
+                        <span className="text-xs text-muted-foreground">{corsoQACollabs.length} / {maxQA}</span>
+                      </div>
+                      {corsoQACollabs.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {corsoQACollabs.map((cid) => {
+                            const c = collabMap.get(cid);
+                            const name = c ? `${c.nome} ${c.cognome}` : cid;
+                            const rKey = `remove-corso-${corso.id}-${cid}-qa`;
+                            return (
+                              <div key={cid} className="flex items-center gap-1">
+                                <Badge variant="outline" className="text-xs">{name}</Badge>
+                                <button
+                                  className="text-xs text-muted-foreground hover:text-destructive"
+                                  disabled={bulkLoading === rKey}
+                                  onClick={() => removeCorsoCollab(corso.id, cid, 'qa')}
+                                  aria-label={`Rimuovi ${name} Q&A da tutte le lezioni`}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {corsoQACollabs.length < maxQA && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {Array.from({ length: maxQA - corsoQACollabs.length }).map((_, i) => {
+                            const slotKey = `${corso.id}|qa|${i}`;
+                            const taken = new Set([
+                              ...corsoQACollabs,
+                              ...Array.from({ length: maxQA - corsoQACollabs.length }).map((__, j) => j !== i ? bulkSlots[`${corso.id}|qa|${j}`] : '').filter(Boolean),
+                            ]);
+                            return (
+                              <select
+                                key={i}
+                                className="h-7 text-xs rounded-md border border-input bg-background px-2 text-foreground min-w-[160px]"
+                                value={bulkSlots[slotKey] ?? ''}
+                                onChange={(e) => setBulkSlots((prev) => ({ ...prev, [slotKey]: e.target.value }))}
+                              >
+                                <option value="">Q&A slot {i + 1 + corsoQACollabs.length}...</option>
+                                {collabsPerCocoda.filter((c) => !taken.has(c.id)).map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
+                                  </option>
+                                ))}
+                              </select>
+                            );
+                          })}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7"
+                            disabled={
+                              bulkLoading === `${corso.id}|qa` ||
+                              !Array.from({ length: maxQA - corsoQACollabs.length }).some((_, i) => bulkSlots[`${corso.id}|qa|${i}`])
+                            }
+                            onClick={() => {
+                              const ids = Array.from({ length: maxQA - corsoQACollabs.length }).map((_, i) => bulkSlots[`${corso.id}|qa|${i}`]).filter(Boolean);
+                              assignCorsoRuolo(corso.id, ids, 'qa');
+                            }}
+                          >
+                            Assegna a tutte le lezioni
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* CoCoD'à panel */}
                   {isExpanded && (

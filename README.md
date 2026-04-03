@@ -85,7 +85,7 @@ lib/
 
 proxy.ts          Auth middleware: active check → must_change_password → onboarding → app
 supabase/migrations/  057 migrations applied in sequence (see docs/migrations-log.md)
-__tests__/        319 Vitest tests (unit + API schema validation)
+__tests__/        369 Vitest tests (unit + API schema validation)
 e2e/              Playwright specs (suspended — see CLAUDE.local.md)
 docs/             Product specs, implementation checklist, migration log, sitemap
 ```

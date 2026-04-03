@@ -136,6 +136,38 @@ export async function PATCH(
     }
   }
 
+  // Enforce per-lezione limits when accepting qa_lezione or docente_lezione
+  if (stato === 'accettata' && candidatura.lezione_id && ['qa_lezione', 'docente_lezione'].includes(candidatura.tipo)) {
+    const isQA = candidatura.tipo === 'qa_lezione';
+
+    // Fetch limit from corsi
+    const { data: lez } = await svc.from('lezioni').select('corso_id').eq('id', candidatura.lezione_id).single();
+    if (lez) {
+      const { data: corso } = await svc
+        .from('corsi')
+        .select('max_qa_per_lezione, max_docenti_per_lezione')
+        .eq('id', lez.corso_id)
+        .single();
+
+      if (corso) {
+        const limit = isQA ? corso.max_qa_per_lezione : corso.max_docenti_per_lezione;
+        if (limit > 0) {
+          const { count } = await svc
+            .from('candidature')
+            .select('id', { count: 'exact', head: true })
+            .eq('lezione_id', candidatura.lezione_id)
+            .eq('tipo', candidatura.tipo)
+            .eq('stato', 'accettata');
+
+          if ((count ?? 0) >= limit) {
+            const msg = isQA ? 'Limite Q&A raggiunto per questa lezione' : 'Limite docenti raggiunto per questa lezione';
+            return NextResponse.json({ error: msg }, { status: 422 });
+          }
+        }
+      }
+    }
+  }
+
   const { data, error } = await svc
     .from('candidature')
     .update({ stato })
