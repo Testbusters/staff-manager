@@ -30,6 +30,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: 'Home',                       href: '/',                   iconName: 'Home' },
     { label: 'Candidatura e Assegnazione', href: '/corsi/assegnazione', iconName: 'GraduationCap' },
     { label: 'Valutazione Corsi',          href: '/corsi/valutazioni',  iconName: 'Star' },
+    { label: 'Lista nera',                 href: '/lista-nera',         iconName: 'Ban' },
     { label: 'Creazione Eventi',           href: '/corsi/eventi-citta', iconName: 'CalendarDays' },
   ],
 

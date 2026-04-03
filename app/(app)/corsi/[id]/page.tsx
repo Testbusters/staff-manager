@@ -233,14 +233,22 @@ export default async function CorsoDetailPage({
     const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
     const lezioniIds = (lezioni ?? []).map((l: { id: string }) => l.id);
 
-    const { data: candidature } = lezioniIds.length > 0
-      ? await svc.from('candidature').select('*').in('lezione_id', lezioniIds).neq('stato', 'ritirata')
-      : { data: [] };
+    const [
+      { data: candidature },
+      { data: collabsPerCitta },
+    ] = await Promise.all([
+      lezioniIds.length > 0
+        ? svc.from('candidature').select('*').in('lezione_id', lezioniIds).neq('stato', 'ritirata')
+        : Promise.resolve({ data: [] }),
+      cittaResp
+        ? svc.from('collaborators').select('id, nome, cognome, username').eq('citta', cittaResp).order('cognome')
+        : Promise.resolve({ data: [] }),
+    ]);
 
-    // Fetch collaborator names + metadata + blacklist
+    // Fetch collaborator names + metadata + blacklist + direct docente assegnazioni
     const collabIds = [...new Set((candidature ?? []).map((c: { collaborator_id: string | null }) => c.collaborator_id).filter(Boolean) as string[])];
 
-    const [blacklistResult, collabDetailsResult, qaCountResult] = await Promise.all([
+    const [blacklistResult, collabDetailsResult, qaCountResult, docenteAssegnazioniResult] = await Promise.all([
       svc.from('blacklist').select('collaborator_id'),
       collabIds.length > 0
         ? svc.from('collaborators').select('id, nome, cognome, materie_insegnate, citta').in('id', collabIds)
@@ -248,9 +256,13 @@ export default async function CorsoDetailPage({
       collabIds.length > 0
         ? svc.from('assegnazioni').select('collaborator_id').eq('ruolo', 'qa').not('valutazione', 'is', null).in('collaborator_id', collabIds)
         : Promise.resolve({ data: [] as { collaborator_id: string }[] }),
+      lezioniIds.length > 0
+        ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'docente')
+        : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
     ]);
 
     const blacklistedIds = new Set((blacklistResult.data ?? []).map((b: { collaborator_id: string }) => b.collaborator_id));
+    const docenteAssegnazioni = docenteAssegnazioniResult.data ?? [];
 
     const collabMap: Record<string, { nome: string; cognome: string }> = {};
     const collabMetadata: Record<string, { materie: string[]; citta: string; qaSvolti: number }> = {};
@@ -291,6 +303,8 @@ export default async function CorsoDetailPage({
           maxQA={corso.max_qa_per_lezione}
           blacklistedIds={blacklistedIds}
           collabMetadata={collabMetadata}
+          collabsPerCitta={collabsPerCitta ?? []}
+          docenteAssegnazioni={docenteAssegnazioni}
         />
       </div>
     );

@@ -29,7 +29,7 @@ export default async function CorsiAssegnazionePage() {
   const [{ data: corsiDisponibili }, { data: mieicitta_corsi }] = await Promise.all([
     svc.from('corsi').select('id, nome, codice_identificativo, modalita, data_inizio, data_fine').is('citta', null).order('data_inizio', { ascending: true }),
     cittaResp
-      ? svc.from('corsi').select('id, nome, codice_identificativo, modalita, data_inizio, data_fine, citta').eq('citta', cittaResp).order('data_inizio', { ascending: true })
+      ? svc.from('corsi').select('id, nome, codice_identificativo, modalita, data_inizio, data_fine, citta, max_qa_per_lezione, max_docenti_per_lezione').eq('citta', cittaResp).order('data_inizio', { ascending: true })
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -52,16 +52,26 @@ export default async function CorsiAssegnazionePage() {
       : Promise.resolve({ data: [] }),
   ]);
 
-  // Fetch existing cocoda assegnazioni for miei corsi lezioni + blacklist
+  // Fetch existing assegnazioni for miei corsi lezioni + blacklist
   const lezioniIds = (mieiCorsiLezioni ?? []).map((l: { id: string }) => l.id);
-  const [cocodaResult, blacklistResult] = await Promise.all([
+  const [cocodaResult, qaResult, blacklistResult] = await Promise.all([
     lezioniIds.length > 0
       ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'cocoda')
+      : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
+    lezioniIds.length > 0
+      ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'qa')
       : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
     svc.from('blacklist').select('collaborator_id'),
   ]);
   const cocodaAssegnazioni = cocodaResult.data;
+  const qaAssegnazioni = qaResult.data;
   const blacklistedIds = new Set((blacklistResult.data ?? []).map((b: { collaborator_id: string }) => b.collaborator_id));
+
+  // Compute maxQAPerCorso from miei corsi data
+  const maxQAPerCorso: Record<string, number> = {};
+  for (const c of mieicitta_corsi ?? []) {
+    maxQAPerCorso[c.id] = (c as { max_qa_per_lezione: number }).max_qa_per_lezione ?? 0;
+  }
 
   if (!cittaResp) {
     return (
@@ -83,7 +93,9 @@ export default async function CorsiAssegnazionePage() {
               mieiCorsiLezioni={[]}
               collabsPerCocoda={[]}
               cocodaAssegnazioni={[]}
+              qaAssegnazioni={[]}
               blacklistedIds={blacklistedIds}
+              maxQAPerCorso={{}}
             />
           </div>
         )}
@@ -103,7 +115,9 @@ export default async function CorsiAssegnazionePage() {
         mieiCorsiLezioni={mieiCorsiLezioni ?? []}
         collabsPerCocoda={collabsPerCocoda ?? []}
         cocodaAssegnazioni={cocodaAssegnazioni ?? []}
+        qaAssegnazioni={qaAssegnazioni ?? []}
         blacklistedIds={blacklistedIds}
+        maxQAPerCorso={maxQAPerCorso}
       />
     </div>
   );

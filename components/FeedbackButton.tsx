@@ -48,17 +48,20 @@ export default function FeedbackButton() {
     fd.append('messaggio', messaggio);
     if (file) fd.append('screenshot', file);
 
-    const res = await fetch('/api/feedback', { method: 'POST', body: fd });
-    setLoading(false);
+    try {
+      const res = await fetch('/api/feedback', { method: 'POST', body: fd });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? 'Errore durante l\'invio.', { duration: 5000 });
-      return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? 'Errore durante l\'invio.', { duration: 5000 });
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => closeModal(), 2000);
+    } finally {
+      setLoading(false);
     }
-
-    setSuccess(true);
-    setTimeout(() => closeModal(), 2000);
   };
 
   return (
