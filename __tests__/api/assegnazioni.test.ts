@@ -132,4 +132,26 @@ describe('POST /api/assegnazioni', () => {
     expect(error).not.toBeNull();
     expect(error?.code).toBe('23505'); // unique_violation
   });
+
+  it('service role insert with ruolo=docente succeeds', async () => {
+    // Gap #2: docente is a new accepted ruolo value alongside cocoda
+    const { data, error } = await svc
+      .from('assegnazioni')
+      .insert({
+        lezione_id: testLezioneId,
+        collaborator_id: COLLAB_ID,
+        ruolo: 'docente',
+        created_by: ADMIN_USER_ID,
+      })
+      .select('id, ruolo')
+      .single();
+
+    expect(error).toBeNull();
+    expect(data?.ruolo).toBe('docente');
+
+    // Cleanup
+    if (data?.id) {
+      await svc.from('assegnazioni').delete().eq('id', data.id);
+    }
+  }, 15000);
 });

@@ -9,7 +9,7 @@ import { getCollaboratorInfo } from '@/lib/notification-helpers';
 const schema = z.object({
   lezione_id: z.string().uuid(),
   collaborator_id: z.string().uuid(),
-  ruolo: z.enum(['cocoda']),
+  ruolo: z.enum(['cocoda', 'docente']),
 });
 
 export async function POST(req: NextRequest) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
-  // E13: send assignment email for CoCoD'à fire-and-forget
+  // E13: send assignment email fire-and-forget
   try {
     const info = await getCollaboratorInfo(collaborator_id, svc);
     if (info?.email) {
@@ -97,10 +97,11 @@ export async function POST(req: NextRequest) {
       if (lez) {
         const { data: corso } = await svc.from('corsi').select('nome').eq('id', lez.corso_id).single();
         if (corso) {
+          const ruoloLabel = ruolo === 'docente' ? 'Docente' : "CoCoD'à";
           const { subject, html } = emailAssegnazioneCorsi({
             nome: info.nome,
             corso: corso.nome,
-            ruolo: "CoCoD'à",
+            ruolo: ruoloLabel,
           });
           sendEmail(info.email, subject, html).catch(() => {});
         }
