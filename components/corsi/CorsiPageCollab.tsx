@@ -20,6 +20,7 @@ interface CorsoFlat {
   data_inizio: string;
   data_fine: string;
   stato: CorsoStato;
+  max_qa_per_lezione: number;
 }
 
 interface CollabAssegnazione {
@@ -40,7 +41,7 @@ interface LezioneFlat {
 interface Props {
   communityName: string;
   collabCitta: string | null;
-  corsiAssegnati: CorsoFlat[];
+  corsiAssegnati: { corso: CorsoFlat; ruoli: string[] }[];
   corsiComunita: CorsoFlat[];
   assegnazioni: CollabAssegnazione[];
   lezioni: LezioneFlat[];
@@ -57,7 +58,7 @@ const STATO_BADGE: Record<CorsoStato, string> = {
   concluso: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
 };
 
-function CorsoCard({ corso }: { corso: CorsoFlat }) {
+function CorsoCard({ corso, ruoli }: { corso: CorsoFlat; ruoli?: string[] }) {
   return (
     <Link
       href={`/corsi/${corso.id}`}
@@ -79,6 +80,15 @@ function CorsoCard({ corso }: { corso: CorsoFlat }) {
         {corso.citta && (
           <Badge variant="outline" className="text-xs">{corso.citta}</Badge>
         )}
+        {ruoli && ruoli.includes('cocoda') && (
+          <Badge className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">CoCoD&apos;à</Badge>
+        )}
+        {ruoli && ruoli.includes('docente') && (
+          <Badge className="text-xs bg-brand/10 text-brand">Docenza</Badge>
+        )}
+        {ruoli && ruoli.includes('qa') && (
+          <Badge className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Q&amp;A</Badge>
+        )}
       </div>
       <p className="text-xs text-muted-foreground mt-3">
         {fmtDate(corso.data_inizio)} → {fmtDate(corso.data_fine)}
@@ -97,7 +107,7 @@ export default function CorsiPageCollab({
 }: Props) {
   // Build lookup maps
   const lezioneMap = new Map(lezioni.map((l) => [l.id, l]));
-  const corsoCodeMap = new Map(corsiAssegnati.map((c) => [c.id, c.codice_identificativo]));
+  const corsoCodeMap = new Map(corsiAssegnati.map(({ corso }) => [corso.id, corso.codice_identificativo]));
 
   // Calendar entries
   const calEntries: CalEntry[] = assegnazioni
@@ -118,13 +128,15 @@ export default function CorsiPageCollab({
     })
     .filter((e): e is CalEntry => e !== null);
 
-  // Section 2: Docenza — only courses with a city matching the collaborator's city
+  // Section 2: Docenza — online courses + in_aula in the collaborator's city
   const corsiDocenza = corsiComunita.filter((c) =>
-    !!c.citta && c.citta === collabCitta
+    c.modalita === 'online' || c.citta === collabCitta
   );
 
-  // Section 3: Q&A — all community corsi (no city filter)
-  const corsiQA = corsiComunita;
+  // Section 3: Q&A — online courses only, with at least 1 Q&A slot available
+  const corsiQA = corsiComunita.filter((c) =>
+    c.modalita === 'online' && (c.max_qa_per_lezione ?? 0) >= 1
+  );
 
   return (
     <div className="space-y-8">
@@ -151,7 +163,7 @@ export default function CorsiPageCollab({
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {corsiAssegnati.map((c) => <CorsoCard key={c.id} corso={c} />)}
+            {corsiAssegnati.map(({ corso, ruoli }) => <CorsoCard key={corso.id} corso={corso} ruoli={ruoli} />)}
           </div>
         )}
       </div>
@@ -164,8 +176,8 @@ export default function CorsiPageCollab({
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
           {collabCitta
-            ? `Corsi in aula a ${collabCitta} per ${communityName}.`
-            : `Nessuna città assegnata al tuo profilo.`}
+            ? `Corsi online + in aula a ${collabCitta} per ${communityName}.`
+            : `Solo corsi online — nessuna città assegnata al profilo.`}
         </p>
         {corsiDocenza.length === 0 ? (
           <EmptyState

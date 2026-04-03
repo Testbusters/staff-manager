@@ -115,6 +115,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Candidatura already exists' }, { status: 409 });
   }
 
+  // Bug #6: prevent qa_lezione candidatura on in_aula courses
+  if (tipo === 'qa_lezione') {
+    const { data: lezioneRow } = await svc.from('lezioni').select('corso_id').eq('id', lezione_id).single();
+    if (lezioneRow) {
+      const { data: corsoRow } = await svc.from('corsi').select('modalita').eq('id', lezioneRow.corso_id).single();
+      if (corsoRow?.modalita === 'in_aula') {
+        return NextResponse.json({ error: 'Q&A candidature not available for in_aula courses' }, { status: 422 });
+      }
+    }
+  }
+
   const { data, error } = await svc
     .from('candidature')
     .insert({ tipo, lezione_id, collaborator_id: collab.id })

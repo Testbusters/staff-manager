@@ -154,11 +154,11 @@ export default async function CorsoDetailPage({
                   <span className="text-sm font-medium text-foreground">Gruppo Telegram corsisti</span>
                 </a>
               )}
-              {corso.link_qa_assignments && (
+              {corso.modalita === 'online' && corso.link_qa_assignments && (
                 <a href={corso.link_qa_assignments} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:bg-muted/70 transition-colors group">
                   <HelpCircle className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                  <span className="text-sm font-medium text-foreground">Assegnazioni Q&A</span>
+                  <span className="text-sm font-medium text-foreground">Assegnazioni Q&amp;A</span>
                 </a>
               )}
               {corso.link_questionari && (
@@ -200,6 +200,7 @@ export default async function CorsoDetailPage({
           lezioni={lezioni ?? []}
           corsoId={id}
           corsoLinea={corso.linea ?? null}
+          corsoModalita={corso.modalita}
           maxDocenti={corso.max_docenti_per_lezione}
           maxQA={corso.max_qa_per_lezione}
           ownCandidature={ownCandidature ?? []}

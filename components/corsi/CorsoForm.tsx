@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -109,10 +110,12 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
       if (mode === 'create') {
         router.push(`/corsi/${json.corso.id}`);
       } else {
+        toast.success('Corso aggiornato');
         router.refresh();
       }
     } catch {
       setError('Errore di rete');
+      toast.error('Errore di rete');
     } finally {
       setSaving(false);
     }
@@ -214,10 +217,12 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
           <label className={labelCls}>Max docenti per lezione</label>
           <Input type="number" min={1} value={form.max_docenti_per_lezione} onChange={set('max_docenti_per_lezione')} />
         </div>
-        <div className={fieldCls}>
-          <label className={labelCls}>Max Q&A per lezione</label>
-          <Input type="number" min={0} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
-        </div>
+        {form.modalita === 'online' && (
+          <div className={fieldCls}>
+            <label className={labelCls}>Max Q&A per lezione</label>
+            <Input type="number" min={0} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -246,10 +251,12 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
             <label className={labelCls}>Telegram corsisti</label>
             <Input value={form.link_telegram_corsisti} onChange={set('link_telegram_corsisti')} placeholder="https://t.me/..." />
           </div>
-          <div className={fieldCls}>
-            <label className={labelCls}>Q&A assignments</label>
-            <Input value={form.link_qa_assignments} onChange={set('link_qa_assignments')} placeholder="https://..." />
-          </div>
+          {form.modalita === 'online' && (
+            <div className={fieldCls}>
+              <label className={labelCls}>Q&A assignments</label>
+              <Input value={form.link_qa_assignments} onChange={set('link_qa_assignments')} placeholder="https://..." />
+            </div>
+          )}
           <div className={fieldCls}>
             <label className={labelCls}>Questionari</label>
             <Input value={form.link_questionari} onChange={set('link_questionari')} placeholder="https://..." />
