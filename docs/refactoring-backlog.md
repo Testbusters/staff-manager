@@ -114,6 +114,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | C1 | `STATO_BADGE` corso stato color map duplicated in 5 corsi files — extract to `lib/corsi-utils.ts` as `CORSO_STATO_COLORS` | LOW |
 | C2 | Corsi page date display: cards use raw ISO format (`2025-01-01`), table rows use `DD/MM/YYYY` — apply consistent `formatDate()` in `CorsiPageCollab` | LOW |
 | C3 | `AssegnazioneRespCittPage` section 1 uses native `<table>` instead of shadcn `<Table>` — migrate for component consistency | LOW |
+| VI-8 | `/rimborsi/[id]` IN_ATTESA state feels sparse (V5) — add timeline section even when empty with a single "Richiesta creata" event to fill vertical space and give context | MEDIUM |
+| VI-9 | `/rimborsi/[id]` rejection note (V9) — same visual weight as attachments card despite higher semantic importance; increase left border thickness or text size to signal hierarchy | LOW |
 | C4 | CoCoD'à toggle button in `AssegnazioneRespCittPage` should show disabled state with Tooltip when `!hasLezioni` or `!hasCollabs` — explain why the feature is unavailable | LOW |
 | C5 | `/corsi` admin list — "Date" column truncated at right edge of viewport on standard 1280px screens; combine data_inizio/data_fine into a single column or reduce total column count | LOW |
 | C6 | `/corsi` admin list — "Apri" link text is barely distinguishable from foreground text in dark mode; verify it uses `text-link` token | LOW |
@@ -123,6 +125,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | C10 | `/corsi/nuovo` — "Annulla" button border invisible in light mode (outline variant stroke not rendering); investigate `border` token contrast in light theme | LOW |
 | C11 | `/corsi` collab list — "Corsi programmati — Docenza" and "Q&A programmati" sections show duplicates for collabs already assigned; add disambiguating subtitle or split into Assegnati/Disponibili tabs | LOW |
 | C12 | `/corsi/assegnazione` — "Azioni" column header absent in "Corsi disponibili" table; "I miei corsi" section has no column headers at all — apply consistent "Azioni" header pattern across both sections | LOW |
+| C13 | `CorsoForm.tsx`, `LezioniTab.tsx`, `EventiCittaPage.tsx`, `ValutazioniRespCittPage.tsx` — `<label>` elements have no `htmlFor` attribute and target inputs have no `id` — screen readers cannot associate labels with fields | MEDIUM |
+| C14 | `GET /api/candidature` handler missing — sitemap.md declares GET for roles C, RC, A; route file only exports POST — all GET requests return 405 Method Not Allowed | HIGH |
 | API1 | ~~42 routes call `request.json()` without `.catch()`~~ — **RESOLVED** api-design audit 2026-03-30: all 53 routes with `request.json()` use `.catch(() => null)` pattern; original count was wrong | ~~MEDIUM~~ |
 | API2 | `canTransition` failure returns 403 for both "wrong role" and "wrong state" — state conflicts should return 409 | MEDIUM |
 | API3 | `documents/[id]/sign` state check (DA_FIRMARE), `tickets/[id]/messages` closed-ticket check, `approve-bulk` IN_ATTESA check, `onboarding/complete` already-completed check all return 400 for state conflicts — should be 409 | MEDIUM |
@@ -142,7 +146,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | PERF-6 | 5 raw `<img>` tags without `width`/`height` attributes — CLS risk on avatar images in dashboard hero, `/sconti/[id]` logo, and `SignaturePad` preview | MEDIUM |
 | PERF-7 | `select('*')` on 20+ API routes — over-fetches all columns including large `body`/`content` text fields on `tickets`, `expense_reimbursements`, `compensations` list endpoints | MEDIUM |
 | PERF-8 | Bundle analyzer not configured — neither `@next/bundle-analyzer` nor `next experimental-analyze` documented in `package.json` scripts; developers cannot inspect bundle composition without manual setup | LOW |
-| PERF-11 | `components/corsi/CorsiPageCollab.tsx:9` — `CorsiCalendario` statically imported, no `next/dynamic` wrapper — loads eagerly in initial bundle for all collaboratore users on `/corsi` | MEDIUM |
+| PERF-11 | ~~`components/corsi/CorsiPageCollab.tsx:9` — `CorsiCalendario` statically imported, no `next/dynamic` wrapper~~ — **RESOLVED** 2026-03-30: converted to `dynamic(() => import('./CorsiCalendario'), { ssr: false })` | ~~MEDIUM~~ |
 | UI1 | G4: 6 bare `<p>` empty states in import sections and constrained UI contexts (NotificationBell, TicketDetailModal) — replace with `<EmptyState>` | LOW |
 | UI2 | S2: 7 native `<button>` elements — filter chips in CompensationList/ExpenseList/ApprovazioniRimborsi/ApprovazioniCompensazioni + MonitoraggioSection (×2) + SignaturePad (×2) | LOW |
 | UI3 | S4: Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files — consolidate | LOW |

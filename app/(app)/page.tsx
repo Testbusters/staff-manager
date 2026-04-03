@@ -279,7 +279,7 @@ export default async function DashboardPage() {
     const candidatureSottomesseCount = (ownCandidature ?? []).length;
 
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8">
         {/* Hero */}
         <div className="flex items-center gap-4">
           {ownCollab?.foto_profilo_url ? (
@@ -507,7 +507,7 @@ export default async function DashboardPage() {
       .filter(Boolean).map((n) => n!.charAt(0).toUpperCase()).join('') || '?';
 
     return (
-      <div className="p-6 max-w-5xl space-y-6">
+      <div className="p-6 max-w-5xl space-y-8">
 
         {/* Hero */}
         <ResponsabileAvatarHero
@@ -1001,12 +1001,26 @@ export default async function DashboardPage() {
       });
     }
 
+    // ── Corsi KPI (admin global view) ────────────────────────
+    const [corsiAllRes, candidatureInAttesaRes] = await Promise.all([
+      svc.from('corsi').select('id, data_inizio, data_fine'),
+      svc.from('candidature').select('id').eq('stato', 'in_attesa'),
+    ]);
+    const todayAdmin = new Date().toISOString().slice(0, 10);
+    const allCorsi = (corsiAllRes.data ?? []) as { id: string; data_inizio: string; data_fine: string }[];
+    const corsiKpi = {
+      corsiTotali: allCorsi.length,
+      corsiAttivi: allCorsi.filter((c) => c.data_inizio <= todayAdmin && c.data_fine >= todayAdmin).length,
+      candidatureInAttesa: (candidatureInAttesaRes.data ?? []).length,
+    };
+
     const dashData: AdminDashboardData = {
       kpis,
       communityCards,
       periodMetrics,
       feedItems,
       blockItems,
+      corsiKpi,
       hero: {
         nome:            adminCollab?.nome ?? null,
         cognome:         adminCollab?.cognome ?? null,
@@ -1357,7 +1371,7 @@ export default async function DashboardPage() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-4xl space-y-6">
+    <div className="p-6 max-w-4xl space-y-8">
 
       {/* Hero — avatar + saluto + data */}
       <div className="flex items-start justify-between gap-4">
@@ -1387,14 +1401,14 @@ export default async function DashboardPage() {
                 {materieInsegnate.map((m) => (
                   <span
                     key={m}
-                    className="inline-flex items-center rounded-full bg-muted border border-border px-2 py-0.5 text-[11px] text-foreground"
+                    className="inline-flex items-center rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-foreground"
                   >
                     {m}
                   </span>
                 ))}
               </div>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-muted border border-border px-2 py-0.5 text-[11px] text-muted-foreground italic mt-2">
+              <span className="inline-flex items-center rounded-full bg-muted border border-border px-2 py-0.5 text-xs text-muted-foreground italic mt-2">
                 Materie: non configurato
               </span>
             )}
@@ -1441,7 +1455,7 @@ export default async function DashboardPage() {
         {/* Da firmare */}
         <Link href="/profilo?tab=documenti" className={sectionCls + ' p-4 flex flex-col gap-2 hover:bg-muted/60 transition'}>
           <span className="text-xs text-muted-foreground">Da firmare</span>
-          <p className={`text-2xl font-bold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}`}>
+          <p className={`text-lg font-semibold tabular-nums leading-tight ${daFirmareCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}`}>
             {daFirmareCount}
           </p>
           <p className="text-xs text-muted-foreground">document{daFirmareCount === 1 ? 'o' : 'i'}</p>

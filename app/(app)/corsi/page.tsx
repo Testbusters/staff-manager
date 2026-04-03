@@ -72,7 +72,7 @@ export default async function CorsiPage({
 
     const [{ data: community }, { data: corsiComunitaRaw }, { data: assegnazioniRaw }, { data: allegatiRes }] = await Promise.all([
       svc.from('communities').select('name').eq('id', communityId).single(),
-      svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine')
+      svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine, max_qa_per_lezione')
         .eq('community_id', communityId).order('data_inizio', { ascending: true }),
       collabRow?.id
         ? svc.from('assegnazioni').select('lezione_id, ruolo').eq('collaborator_id', collabRow.id)
@@ -101,18 +101,28 @@ export default async function CorsiPage({
     const lezioneIds = [...new Set((assegnazioniRaw ?? []).map((a) => a.lezione_id))];
     const [{ data: lezioniRaw }] = await Promise.all([
       lezioneIds.length > 0
-        ? svc.from('lezioni').select('id, corso_id, data, orario_inizio').in('id', lezioneIds)
-        : Promise.resolve({ data: [] as { id: string; corso_id: string; data: string; orario_inizio: string }[] }),
+        ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, ore, materia').in('id', lezioneIds)
+        : Promise.resolve({ data: [] as { id: string; corso_id: string; data: string; orario_inizio: string; orario_fine: string; ore: number; materia: string }[] }),
     ]);
+
+    // Build Map<corso_id, Set<ruolo>> from lezioni + assegnazioni
+    const lezioneToCorsoMap = new Map((lezioniRaw ?? []).map((l) => [l.id, l.corso_id]));
+    const corsoRuoliMap = new Map<string, Set<string>>();
+    for (const a of assegnazioniRaw ?? []) {
+      const corsoId = lezioneToCorsoMap.get(a.lezione_id);
+      if (!corsoId) continue;
+      if (!corsoRuoliMap.has(corsoId)) corsoRuoliMap.set(corsoId, new Set());
+      corsoRuoliMap.get(corsoId)!.add(a.ruolo);
+    }
 
     const corsiAssegnatiIds = [...new Set((lezioniRaw ?? []).map((l) => l.corso_id))];
     const { data: corsiAssegnatiRaw } = corsiAssegnatiIds.length > 0
-      ? await svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine').in('id', corsiAssegnatiIds)
+      ? await svc.from('corsi').select('id, nome, codice_identificativo, modalita, citta, data_inizio, data_fine, max_qa_per_lezione').in('id', corsiAssegnatiIds)
       : { data: [] as typeof corsiComunitaRaw };
 
     const corsiAssegnati = (corsiAssegnatiRaw ?? []).map((c) => ({
-      ...c,
-      stato: getCorsoStato(c.data_inizio, c.data_fine) as CorsoStato,
+      corso: { ...c, stato: getCorsoStato(c.data_inizio, c.data_fine) as CorsoStato },
+      ruoli: [...(corsoRuoliMap.get(c.id) ?? new Set<string>())],
     }));
 
     return (

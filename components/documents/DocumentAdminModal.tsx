@@ -193,7 +193,7 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
                 <p className="text-xs text-muted-foreground">{file.name} ({(file.size / 1024).toFixed(0)} KB)</p>
               )}
               {isDaFirmare && (
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer rounded px-1 py-0.5 hover:bg-muted/60 transition">
                   <Checkbox
                     checked={markSigned}
                     onCheckedChange={(v) => setMarkSigned(v === true)}

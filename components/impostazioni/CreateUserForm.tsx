@@ -235,7 +235,7 @@ export default function CreateUserForm() {
       </ButtonGroup>
 
       {/* Auth */}
-      <div>
+      <div className="rounded-xl border border-border p-4">
         <p className={sectionTitle}>Accesso</p>
         <div className="space-y-3">
           <div>
@@ -258,7 +258,7 @@ export default function CreateUserForm() {
 
       {/* Responsabile → community assignment */}
       {role === 'responsabile_compensi' && communities.length > 0 && (
-        <div>
+        <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Comunità gestite</p>
           <div className="space-y-2">
             {communities.map((c) => (
@@ -278,7 +278,7 @@ export default function CreateUserForm() {
 
       {/* Tipo rapporto — sempre OCCASIONALE */}
       {needsContract && (
-        <div>
+        <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Tipo rapporto</p>
           <div className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
             <div>
@@ -294,7 +294,7 @@ export default function CreateUserForm() {
 
       {/* Data fine contratto — in both modes */}
       {needsContract && (
-        <div>
+        <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Durata contratto</p>
           <div>
             <label className={labelCls}>Data fine contratto <span className="text-destructive">*</span></label>
@@ -312,7 +312,7 @@ export default function CreateUserForm() {
 
       {/* Invito rapido: nome + cognome + data_ingresso required */}
       {needsContract && mode === 'quick' && (
-        <div>
+        <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Dati personali</p>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -359,7 +359,7 @@ export default function CreateUserForm() {
 
       {/* Invito completo: anagrafica richiesta (pre-fill per l'onboarding) */}
       {needsContract && mode === 'full' && (
-        <div>
+        <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Dati personali</p>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -475,7 +475,7 @@ export default function CreateUserForm() {
           </div>
 
           {/* Dati fiscali */}
-          <div className="mt-4">
+          <div className="mt-4 rounded-xl border border-border p-4">
             <p className={sectionTitle}>Dati fiscali</p>
             <div className="space-y-3">
               <label className="flex items-start gap-3 cursor-pointer">

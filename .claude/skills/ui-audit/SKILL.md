@@ -27,6 +27,7 @@ Parse `$ARGUMENTS` for a `target:` token.
 | `target:page:/compensi` | Restrict scope to that exact route and its key components |
 | `target:role:collab` | Restrict to all routes accessible by collaboratore |
 | `target:role:resp` | Restrict to all routes accessible by responsabile_compensi |
+| `target:role:resp_citt` | Restrict to all routes accessible by responsabile_cittadino (derive route list from sitemap.md — filter rows where the `resp_citt` access column is marked) |
 | `target:role:admin` | Restrict to all routes accessible by amministrazione |
 | `target:section:rimborsi` | Restrict to routes whose path contains "rimborsi" (example — any section name is valid) |
 | `target:section:<name>` | Restrict to routes whose path contains `<name>` |
@@ -234,8 +235,8 @@ Run: `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000`
 
 ```
 1. mcp__playwright__browser_navigate to http://localhost:3000/<route>
-   (If redirected to /login: log in with collaboratore_tb_test@test.com / Testbusters123 first,
-    then navigate to the target route)
+   (If redirected to /login: read test account credentials from the "Test accounts" section
+    of docs/sitemap.md, use the collaboratore account, then navigate to the target route)
 
 2. mcp__playwright__browser_evaluate:
    // Inject axe-core from CDN

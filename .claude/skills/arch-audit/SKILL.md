@@ -101,7 +101,7 @@ Every RECOMMEND must include: (1) specific file path(s) to modify, (2) section o
 
 | Check | Command | Pass condition |
 |---|---|---|
-| C2 | `grep -rn "backlog-refinement" .claude/skills/ .claude/cheatsheet.md` | 0 matches |
+| C2 | `grep -rn "backlog-refinement\|shadcn-migration\|phase6-checklist-template" .claude/skills/ .claude/cheatsheet.md docs/` | 0 matches |
 | C4 | `grep -n "ln -s" .claude/rules/pipeline.md` | 0 matches |
 | C6 | `grep -A3 "Phase 5b" .claude/rules/pipeline.md \| grep -i "dev\|server\|localhost"` | ≥1 match |
 | C9 | `grep -c "\*\*\* STOP" .claude/rules/pipeline.md` | ≥5 |
@@ -120,11 +120,11 @@ Collect batch results, then run judgment-tier checks below. For each FAIL: class
 Check: does the `## Tech Stack → Deploy` entry describe the actual deploy platform?
 Expected: Vercel + `staff-staging.peerpetual.it` / `staff.peerpetual.it`. Any mention of "Replit" = FAIL.
 
-**C2 — Skill output file references (all skills + cheatsheet)**
-Check: no skill SKILL.md or cheatsheet.md must reference `docs/backlog-refinement.md` — the correct output path for all audit findings is `docs/refactoring-backlog.md`.
-Run: `grep -rn "backlog-refinement" .claude/skills/ .claude/cheatsheet.md`
+**C2 — Deleted file references (all skills, cheatsheet, docs)**
+Check: no file must reference `docs/backlog-refinement.md`, `docs/shadcn-migration.md`, or `docs/phase6-checklist-template.md` — these files have been deleted. The correct output path for all audit findings is `docs/refactoring-backlog.md`.
+Run: `grep -rn "backlog-refinement\|shadcn-migration\|phase6-checklist-template" .claude/skills/ .claude/cheatsheet.md docs/`
 Expected: 0 matches. Any match = FAIL.
-AUTO-FIX: replace every `backlog-refinement.md` → `refactoring-backlog.md` occurrence in all matching files.
+AUTO-FIX: replace stale references → `refactoring-backlog.md` for backlog entries; remove references to deleted files.
 
 **C3 — files-guide.md: CLAUDE.local.md description is not live state**
 Check: does the CLAUDE.local.md section in files-guide.md contain specific current content descriptions (e.g. "Phase 4/5 suspended") rather than a generic description of the file's purpose?

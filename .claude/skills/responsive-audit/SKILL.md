@@ -134,20 +134,20 @@ Apply the working route list from Step 1 (already filtered by target).
 For each route: check `docs/sitemap.md` 'Tabs/states' and 'Page sub-hierarchies' sections for tabs, sections, and components to verify at each breakpoint.
 
 ### Collab session routes
-Login with `collaboratore_tb_test@test.com` / `Testbusters123`.
+Read collaboratore test account credentials from the "Test accounts" section of `docs/sitemap.md`.
 
 Include all routes from sitemap.md with role `collab` or `multi-role` and `R` in the Audit column.
 For each route: note tabs and multi-section layouts from sitemap sub-hierarchies.
 For routes with calendar or grid components (identified from 'Componenti chiave' in sitemap): skip in quick mode unless specifically targeted.
 
 ### Resp session routes (responsabile_compensi)
-Login with `responsabile_compensi_test@test.com` / `Testbusters123`.
+Read responsabile_compensi test account credentials from the "Test accounts" section of `docs/sitemap.md`.
 
 Include all routes from sitemap.md with role `resp` or `multi-role` and `R` in the Audit column.
 
 ### Resp cittadino session routes
-Login with `responsabile_cittadino_test@test.com` / `Testbusters123`.
-**Prerequisite**: if this account does not exist, skip this session block entirely and log:
+Read responsabile_cittadino test account credentials from the "Test accounts" section of `docs/sitemap.md`.
+**Prerequisite**: if this account does not exist in sitemap.md, skip this session block entirely and log:
 "Resp cittadino routes SKIPPED — test account not found. Create it before running this section."
 
 Include all routes from sitemap.md with role `resp.cittadino` or `multi-role` and `R` in the Audit column.
@@ -408,8 +408,8 @@ Log results in the WCAG compliance section of the report.
 1. browser_navigate http://localhost:3000/login
 2. If already at / (session active): check current role matches needed role
    - If wrong role: click "Esci" → confirm AlertDialog → wait for /login
-3. browser_type [email field] [email]
-4. browser_type [password field] Testbusters123
+3. browser_type [email field] [email from sitemap.md "Test accounts"]
+4. browser_type [password field] [password from sitemap.md "Test accounts"]
 5. browser_click [submit button]
 6. browser_wait_for url = http://localhost:3000/
 ```
@@ -439,9 +439,7 @@ Log results in the WCAG compliance section of the report.
 
 | Route | Role | BP0 320px | BP1 375px | BP2 768px | BP3 1024px | Issues |
 |---|---|---|---|---|---|---|
-| / | collab | WCAG✅/❌ | PASS/WARN/FAIL | — | — | [description] |
-| /corsi | collab | — | PASS/WARN/FAIL | — | — | |
-| /corsi/assegnazione | resp_citt | — | PASS/WARN/FAIL | — | — | |
+| [route from sitemap.md] | [role] | WCAG✅/❌ | PASS/WARN/FAIL | PASS/WARN/FAIL | PASS/WARN/FAIL | [description] |
 | ... | | | | | | |
 
 Legend: PASS = no issues · WARN = minor (scroll container present, 44-47px targets, preflight skipped) · FAIL = broken (overflow, truncation, unusable layout) · WCAG✅ = passes 1.4.10 reflow · WCAG❌ = fails 1.4.10

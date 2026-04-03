@@ -71,9 +71,9 @@ Each check has a specific, verifiable pass/fail condition.
 
 ## C7 — Size compliance
 
-**Run**: `wc -l MEMORY.md` (project root) and `wc -l ~/.claude/projects/.../memory/MEMORY.md` (auto-memory)
-**Pass**: both files < 150 lines.
-**Fail**: extract oldest or least-referenced patterns into a topic file under `.claude/` and replace the section with a link.
+**Run**: `wc -l ~/.claude/projects/-Users-MarcoG-Projects-staff-manager/memory/MEMORY.md` (auto-memory)
+**Pass**: file < 150 lines.
+**Fail**: extract oldest or least-referenced patterns into a new section of the auto-memory file or remove obsolete entries.
 
 ---
 

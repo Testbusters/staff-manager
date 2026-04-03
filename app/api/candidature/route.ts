@@ -23,11 +23,12 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role')
+    .select('role, is_active')
     .eq('user_id', user.id)
     .single();
 
-  const role = profile?.role;
+  if (!profile?.is_active) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const role = profile.role;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -112,6 +113,17 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     return NextResponse.json({ error: 'Candidatura already exists' }, { status: 409 });
+  }
+
+  // Bug #6: prevent qa_lezione candidatura on in_aula courses
+  if (tipo === 'qa_lezione') {
+    const { data: lezioneRow } = await svc.from('lezioni').select('corso_id').eq('id', lezione_id).single();
+    if (lezioneRow) {
+      const { data: corsoRow } = await svc.from('corsi').select('modalita').eq('id', lezioneRow.corso_id).single();
+      if (corsoRow?.modalita === 'in_aula') {
+        return NextResponse.json({ error: 'Q&A candidature not available for in_aula courses' }, { status: 422 });
+      }
+    }
   }
 
   const { data, error } = await svc

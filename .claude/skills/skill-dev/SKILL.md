@@ -74,8 +74,7 @@ Expected: flag each cross-feature import as an explicit coupling.
 
 **CHECK D2 — Duplicated inline color maps**
 Pattern: object literals mapping status strings to CSS classes (e.g. `{ IN_ATTESA: 'bg-yellow-', APPROVATO: 'bg-green-' }`).
-Grep: `IN_ATTESA.*bg-|APPROVATO.*bg-|LIQUIDATO.*bg-|RIFIUTATO.*bg-|ACCETTATA.*bg-|CONFERMATA.*bg-|RITIRATA.*bg-`
-*Context*: candidatura states (ACCETTATA, RIFIUTATA, CONFERMATA, RITIRATA) are corsi-domain values that may have inline maps in collab/resp_citt components.
+Derive current state values from `docs/entity-manifest.md` (State values lines per entity) and build the grep pattern from them (e.g. `IN_ATTESA.*bg-|APPROVATO.*bg-|...`). Include both uppercase and lowercase variants.
 Flag: any file with this pattern NOT already using `ContentStatusBadge` or importing from a shared badge-maps utility.
 Expected: all status color maps centralised.
 
@@ -100,7 +99,7 @@ Flag: identical guard patterns in 3+ routes that are not using a shared Zod sche
 **CHECK D6 — Magic strings and magic numbers**
 *Magic strings* — state machine values hardcoded as string literals in component files:
 Grep in `.tsx` files (not API routes, not type definitions):
-`'IN_ATTESA'|'APPROVATO'|'LIQUIDATO'|'RIFIUTATO'|'INVIATO'|'DA_FIRMARE'|'FIRMATO'|'ACCETTATA'|'CONFERMATA'|'RITIRATA'|'APERTO'|'IN_GESTIONE'|'CHIUSO'`
+Derive current state values from `docs/entity-manifest.md` (State values lines per entity) and build the grep pattern from them. Current example: `'IN_ATTESA'|'APPROVATO'|'LIQUIDATO'|'RIFIUTATO'|'DA_FIRMARE'|'FIRMATO'|'NON_RICHIESTO'|'APERTO'|'IN_LAVORAZIONE'|'CHIUSO'|'in_attesa'|'accettata'|'ritirata'`
 Flag: any string literal that should reference a shared enum/constant.
 *Magic numbers* — hardcoded numeric business-rule literals in `lib/` and `app/api/` only (exclude `app/(app)/`, test files, `*.config.*`):
 Grep: `(?<![a-zA-Z_])(0\.20|0\.60|50000|86400)(?![a-zA-Z_])` — withholding rates, fiscal limits, TTL durations.
@@ -117,7 +116,7 @@ Grep: `@ts-ignore|@ts-expect-error|@ts-nocheck` across all files.
 `@ts-ignore` is highest severity. `@ts-expect-error` is acceptable only with a description comment. Flag both.
 Pattern B — Explicit `any`:
 Grep: `:\s*any\b|as\s+any\b|<any>|Promise<any>` in non-test `.ts` and `.tsx` files.
-Exclude: `lib/supabase.ts`, `lib/supabase-server.ts`, `*.d.ts`, and `SupabaseClient<any, any, any>` in notification helpers (intentional — see CLAUDE.md).
+Exclude: `lib/supabase.ts`, `lib/supabase-server.ts`, `*.d.ts`, and any `SupabaseClient` type usage exempted in CLAUDE.md Known Patterns.
 Flag: each remaining `any` usage.
 Pattern C — Floating promises (unhandled async in component event handlers):
 Grep in `.tsx` component files (not API routes): `^\s*(fetch\(|router\.(push|replace|refresh)\(|supabase\.|svc\.)`.
@@ -287,5 +286,4 @@ Each entry **must** include a `Regression risk` field:
 ## Execution notes
 
 - Do NOT make any code changes.
-- `SupabaseClient<any, any, any>` in `lib/notification-helpers.ts` is intentional — do not flag as D8 (documented in CLAUDE.md Known Patterns).
 - After producing the report, ask: "Vuoi che implementi i fix di priorità High/Critical identificati?"

@@ -168,3 +168,55 @@ describe('RLS — anon cannot insert candidature', () => {
     expect(error).not.toBeNull();
   });
 });
+
+// ── Bug #6 — API rejects qa_lezione on in_aula courses ────────────────────────
+// The DB has no constraint; enforcement is in the API route (422 business rule).
+// HTTP 422 requires an authenticated collaboratore session — verified in Phase 5c smoke test.
+
+describe('Bug #6 — in_aula corso fixtures for 422 guard', () => {
+  let inAulaCorsoId = '';
+  let inAulaLezioneId = '';
+
+  beforeAll(async () => {
+    await svc.from('corsi').delete().like('codice_identificativo', 'TEST-INAULAB-%');
+
+    const { data: corso } = await svc.from('corsi').insert({
+      nome: 'Corso In Aula Bug6',
+      codice_identificativo: 'TEST-INAULAB-001',
+      community_id: TB_COMMUNITY_ID,
+      modalita: 'in_aula',
+      citta: 'Roma',
+      data_inizio: '2026-09-01',
+      data_fine: '2026-12-31',
+      max_docenti_per_lezione: 4,
+      max_qa_per_lezione: 0,
+      created_by: ADMIN_USER_ID,
+    }).select().single();
+    inAulaCorsoId = corso?.id ?? '';
+
+    const { data: lezione } = await svc.from('lezioni').insert({
+      corso_id: inAulaCorsoId,
+      data: '2026-09-20',
+      orario_inizio: '09:00',
+      orario_fine: '11:00',
+      materia: 'Logica',
+    }).select().single();
+    inAulaLezioneId = lezione?.id ?? '';
+  }, 15000);
+
+  afterAll(async () => {
+    if (inAulaLezioneId) await svc.from('lezioni').delete().eq('id', inAulaLezioneId).then(() => {});
+    if (inAulaCorsoId) await svc.from('corsi').delete().eq('id', inAulaCorsoId).then(() => {});
+  });
+
+  it('DB confirms corso is in_aula and has no DB-level block on qa candidature', async () => {
+    const { data } = await svc.from('corsi').select('modalita, max_qa_per_lezione').eq('id', inAulaCorsoId).single();
+    expect(data?.modalita).toBe('in_aula');
+    expect(data?.max_qa_per_lezione).toBe(0);
+  }, 15000);
+
+  it('DB confirms lezione belongs to in_aula corso (route can look it up for 422 check)', async () => {
+    const { data } = await svc.from('lezioni').select('corso_id').eq('id', inAulaLezioneId).single();
+    expect(data?.corso_id).toBe(inAulaCorsoId);
+  }, 15000);
+});

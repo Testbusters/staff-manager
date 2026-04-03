@@ -135,7 +135,7 @@ Grep: `'no-store'` or `"no-store"` in `app/**/layout.tsx` files (use exact strin
 Flag: each match with impact explanation.
 
 **CHECK B9 — Missing lazy loading for heavy client components**
-Heavy components known to this project: `CorsiCalendario`, Tiptap editor (`@tiptap/*`), chart components, large modal/sheet forms.
+Heavy components for this project: read `docs/sitemap.md` "Componenti chiave" column and identify calendar, chart, Tiptap editor, and large modal/sheet components — these are the lazy-loading candidates. Also always include `@tiptap/*` imports as client-heavy.
 Two-pass approach (run each grep separately — do not combine with `|`):
 Pass 1 — run four separate greps in `app/**/*.tsx`:
   - `import CorsiCalendario`
@@ -313,7 +313,6 @@ Then write ONLY the approved entries to `docs/refactoring-backlog.md`:
 
 - In `mode:audit` (default): do NOT make any code changes — report only. After producing the report, ask: "Vuoi che implementi le ottimizzazioni di priorità High/Critical?"
 - In `mode:apply`: apply only the fixes listed in Quick wins (isolated, non-breaking). Describe each change before writing it. Do not apply Strategic refactors without explicit user confirmation. Do NOT ask the closing question — the user already expressed intent via `mode:apply`.
-- Do NOT flag `SupabaseClient<any, any, any>` type workaround in notification helpers — intentional pattern per CLAUDE.md.
 - `pdfjs-dist` and `pdf-lib` in `serverExternalPackages` are intentional and documented — note as correctly configured.
 - Tiptap in `'use client'` files is acceptable — it requires browser APIs. Only flag if used in a read-only display context.
 - `app/(app)/layout.tsx` with `'use client'` and `cookies()` is intentional — session and theme synchronization. Do NOT flag under B1 Flag B or B8 Pattern A.

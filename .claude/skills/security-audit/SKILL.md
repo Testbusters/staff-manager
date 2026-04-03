@@ -26,6 +26,8 @@ Parse `$ARGUMENTS` for a `target:` token.
 |---|---|
 | `target:page:/api/compensations` | Restrict scope to that route only |
 | `target:role:collab` | Focus on routes accessible/relevant to collaboratore |
+| `target:role:resp` | Focus on routes accessible/relevant to responsabile_compensi |
+| `target:role:resp_citt` | Focus on routes accessible/relevant to responsabile_cittadino (derive from `docs/sitemap.md` API Routes section — filter rows where Roles column contains `RC`) |
 | `target:role:admin` | Focus on admin routes |
 | `target:section:corsi` | Focus on all corsi-domain routes (derive from docs/sitemap.md API routes section) |
 | `target:section:export` | Focus on all export/bulk-data routes |
@@ -146,7 +148,7 @@ Exception: admin routes (`app/api/admin/`) that already enforce role check (A2) 
 Flag: each route where ownership/community scope is not enforced server-side in the query.
 
 **CHECK A14 — State machine enforcement on transition routes**
-Scope: route files handling state transitions — grep for patterns like `stato.*APPROVATO|stato.*RIFIUTATO|stato.*PAGATO|stato.*FIRMATO|stato.*INVIATO|stato.*DA_FIRMARE` in PATCH/POST handler bodies, or route paths containing `approva|rifiuta|pagamento|firma|invia`.
+Scope: route files handling state transitions — derive the current state values from `docs/entity-manifest.md` (see "State values" lines per entity) and build a grep pattern from them. Also include route paths containing `transition|approva|rifiuta|liquidat|firma`.
 For each match:
 Step 1 — verify the route reads the CURRENT state from the DB before applying the transition (grep for a SELECT query before the UPDATE in the same handler).
 Step 2 — verify `canTransition` from `lib/transitions.ts` (or equivalent) is called with the current state. If only the client-supplied target state is accepted without verifying the current state, a caller can jump to any state directly.
@@ -249,7 +251,7 @@ For each table with `ENABLE ROW LEVEL SECURITY`, grep for `CREATE POLICY.*ON <ta
 Flag: any table with RLS enabled but zero policies. With RLS enabled and no policies, the default is DENY for all roles except table owner — this can cause silent 0-row returns rather than errors, masking bugs.
 
 **RLS-3 — Missing WITH CHECK on INSERT/UPDATE policies**
-Grep: `CREATE POLICY` statements on tables with financial or sensitive data (`compensations`, `expense_reimbursements`, `documents`, `tickets`, `user_profiles`, `collaborators`) that use `FOR INSERT` or `FOR UPDATE` without a `WITH CHECK` clause.
+Derive the list of financial and sensitive tables from `docs/entity-manifest.md` (entities with "Sensitive fields" entries). Grep `CREATE POLICY` statements on those tables that use `FOR INSERT` or `FOR UPDATE` without a `WITH CHECK` clause.
 Flag: each match. `USING` controls which rows are visible; `WITH CHECK` controls which rows can be written. A missing `WITH CHECK` allows inserting/updating rows the user cannot see.
 
 ---

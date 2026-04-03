@@ -37,6 +37,11 @@ interface Props {
   collabMetadata: Record<string, { materie: string[]; citta: string; qaSvolti: number }>;
 }
 
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 const TIPO_LABEL: Record<string, string> = {
   docente_lezione: 'Docente',
   qa_lezione: 'Q&A',
@@ -102,13 +107,13 @@ export default function LezioniTabRespCitt({
       <div className="inline-flex flex-col gap-6">
       {lezioni.map((lezione) => {
         const lezioneCandidature = getCandidatureForLezione(lezione.id);
-        const materiaStyle = MATERIA_COLORS[lezione.materia] ?? MATERIA_COLORS['default'];
+        const materiaStyle = MATERIA_COLORS[lezione.materia] ?? 'bg-gray-500';
 
         return (
           <div key={lezione.id} className="rounded-2xl bg-card border border-border overflow-hidden w-full">
             {/* Lezione header */}
             <div className="flex items-center gap-4 px-4 py-3 border-b border-border bg-muted/30">
-              <span className="text-sm font-medium text-foreground">{lezione.data}</span>
+              <span className="text-sm font-medium text-foreground">{fmtDate(lezione.data)}</span>
               <span className="text-sm text-muted-foreground">
                 {lezione.orario_inizio} – {lezione.orario_fine}
               </span>
@@ -157,7 +162,7 @@ export default function LezioniTabRespCitt({
                                 {meta.materie.map((m) => (
                                   <span
                                     key={m}
-                                    className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ${MATERIA_COLORS[m] ?? MATERIA_COLORS['default']}`}
+                                    className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ${MATERIA_COLORS[m] ?? 'bg-gray-500'}`}
                                   >
                                     {m}
                                   </span>
@@ -187,7 +192,8 @@ export default function LezioniTabRespCitt({
                                 <AlertDialogTrigger asChild>
                                   <Button
                                     size="sm"
-                                    className="bg-brand hover:bg-brand/90 text-white text-xs h-7"
+                                    variant="outline"
+                                    className="text-xs h-7"
                                     disabled={loading === cand.id}
                                   >
                                     Accetta

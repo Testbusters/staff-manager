@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { BookOpen, Video, MessageCircle, HelpCircle, ClipboardList, PhoneCall } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CorsoForm from '@/components/corsi/CorsoForm';
@@ -127,15 +128,54 @@ export default async function CorsoDetailPage({
           </div>
         </div>
 
-        {/* Link group */}
+        {/* Link risorse corso */}
         {(corso.link_lw || corso.link_zoom || corso.link_telegram_corsisti || corso.link_qa_assignments || corso.link_questionari || corso.link_emergenza) && (
-          <div className="flex flex-wrap gap-3 mb-6 text-sm">
-            {corso.link_lw && <a href={corso.link_lw} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">LW</a>}
-            {corso.link_zoom && <a href={corso.link_zoom} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Zoom</a>}
-            {corso.link_telegram_corsisti && <a href={corso.link_telegram_corsisti} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Telegram</a>}
-            {corso.link_qa_assignments && <a href={corso.link_qa_assignments} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Q&A Assignments</a>}
-            {corso.link_questionari && <a href={corso.link_questionari} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Questionari</a>}
-            {corso.link_emergenza && <a href={corso.link_emergenza} target="_blank" rel="noopener noreferrer" className="text-link hover:text-link/80">Emergenza</a>}
+          <div className="rounded-2xl bg-card border border-border p-5 mb-6">
+            <h2 className="text-sm font-semibold text-foreground mb-4">Risorse del corso</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {corso.link_lw && (
+                <a href={corso.link_lw} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:bg-muted/70 transition-colors group">
+                  <BookOpen className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <span className="text-sm font-medium text-foreground">Materiale LW</span>
+                </a>
+              )}
+              {corso.link_zoom && (
+                <a href={corso.link_zoom} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:bg-muted/70 transition-colors group">
+                  <Video className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <span className="text-sm font-medium text-foreground">Lezione Zoom</span>
+                </a>
+              )}
+              {corso.link_telegram_corsisti && (
+                <a href={corso.link_telegram_corsisti} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:bg-muted/70 transition-colors group">
+                  <MessageCircle className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <span className="text-sm font-medium text-foreground">Gruppo Telegram corsisti</span>
+                </a>
+              )}
+              {corso.modalita === 'online' && corso.link_qa_assignments && (
+                <a href={corso.link_qa_assignments} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:bg-muted/70 transition-colors group">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <span className="text-sm font-medium text-foreground">Assegnazioni Q&amp;A</span>
+                </a>
+              )}
+              {corso.link_questionari && (
+                <a href={corso.link_questionari} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 hover:bg-muted/70 transition-colors group">
+                  <ClipboardList className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <span className="text-sm font-medium text-foreground">Questionari</span>
+                </a>
+              )}
+              {corso.link_emergenza && (
+                <a href={corso.link_emergenza} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/40 px-4 py-3 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors group">
+                  <PhoneCall className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
+                  <span className="text-sm font-medium text-red-700 dark:text-red-400">Chiamata d&apos;emergenza</span>
+                </a>
+              )}
+            </div>
           </div>
         )}
 
@@ -159,6 +199,8 @@ export default async function CorsoDetailPage({
         <LezioniTabCollab
           lezioni={lezioni ?? []}
           corsoId={id}
+          corsoLinea={corso.linea ?? null}
+          corsoModalita={corso.modalita}
           maxDocenti={corso.max_docenti_per_lezione}
           maxQA={corso.max_qa_per_lezione}
           ownCandidature={ownCandidature ?? []}

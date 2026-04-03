@@ -19,11 +19,12 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role')
+    .select('role, is_active, citta_responsabile')
     .eq('user_id', user.id)
     .single();
 
-  if (profile?.role !== 'responsabile_cittadino') {
+  if (!profile?.is_active) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (profile.role !== 'responsabile_cittadino') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -45,6 +46,27 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  // Defense-in-depth: verify lezione's corso belongs to the resp.citt's city
+  if (profile.citta_responsabile) {
+    const { data: lezione } = await svc
+      .from('lezioni')
+      .select('corso_id')
+      .eq('id', lezione_id)
+      .single();
+
+    if (lezione) {
+      const { data: corso } = await svc
+        .from('corsi')
+        .select('citta')
+        .eq('id', lezione.corso_id)
+        .single();
+
+      if (!corso || corso.citta !== profile.citta_responsabile) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+  }
 
   // Duplicate check
   const { data: existing } = await svc

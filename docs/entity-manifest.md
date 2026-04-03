@@ -38,6 +38,8 @@
 
 **Notification triggers**: E1 (invite), E2 (password reset)
 **Key surfaces**: `/profilo`, `/collaboratori/[id]`, `/onboarding`, `/impostazioni/collaboratori`
+**Member status values**: `attivo` | `uscente_con_compenso` | `uscente_senza_compenso` (from `lib/types.ts` → `MemberStatus`; lowercase)
+**Sensitive fields**: `codice_fiscale`, `iban`, `partita_iva`, `data_nascita` — RBAC matrix defines per-role edit access
 
 ---
 
@@ -55,6 +57,8 @@
 **State machine**: `IN_ATTESA → APPROVATO → LIQUIDATO`, `IN_ATTESA/APPROVATO → RIFIUTATO → IN_ATTESA (reopen)`
 **Notification triggers**: creation (E3), approval (E4), rejection (E5), liquidation (E6)
 **Key surfaces**: `/coda` (admin), `/compensi` (collab), `/approvazioni` (resp), `/import` (GSheet)
+**State values**: `IN_ATTESA` | `APPROVATO` | `RIFIUTATO` | `LIQUIDATO` (from `lib/types.ts` → `CompensationStatus`)
+**Sensitive fields**: `importo`, `iban`, `codice_fiscale`, `partita_iva` — never exposed without role check
 **Notes**: `community_id` always null (since migration 030). `competenza` FK → `compensation_competenze.key`. Massimale check on approve.
 
 ---
@@ -71,6 +75,8 @@
 | `amministrazione` | ❌ | All | ✅ | ✅ | ✅ |
 
 **State machine**: identical to Compensation
+**State values**: `IN_ATTESA` | `APPROVATO` | `RIFIUTATO` | `LIQUIDATO` (from `lib/types.ts` → `ExpenseStatus`)
+**Sensitive fields**: `importo`, `iban` — never exposed without role check
 **Notification triggers**: creation (E3b), approval (E4b), rejection (E5b), liquidation (E6b)
 **Key surfaces**: `/coda` (admin), `/rimborsi` (collab), `/approvazioni` (resp)
 **Notes**: file attachments stored in `file_urls[]`. Rejection requires `rejection_note`.
@@ -89,6 +95,7 @@
 | `amministrazione` | ✅ | All | ✅ | ✅ | ❌ (admin can reset stato) |
 
 **State machine**: `DA_FIRMARE → FIRMATO`, `NON_RICHIESTO` (final, no transition)
+**State values**: `DA_FIRMARE` | `FIRMATO` | `NON_RICHIESTO` (from `lib/types.ts` → `DocumentSignStatus`)
 **Key surfaces**: `/documenti` (collab+admin+resp), `/documenti/[id]` (collab detail)
 **Document types**: `CONTRATTO_OCCASIONALE`, `CU`, `RICEVUTA_PAGAMENTO`
 **Notes**: generated via `lib/pdf-utils.ts` (pdf-lib) or `docxtemplater`. Storage in private bucket. Signed URLs (1h TTL).
@@ -107,6 +114,7 @@
 | `amministrazione` | ✅ | All | ✅ | ✅ | ✅ |
 
 **State machine**: `APERTO → IN_LAVORAZIONE → CHIUSO`
+**State values**: `APERTO` | `IN_LAVORAZIONE` | `CHIUSO` (from `lib/types.ts` → `TicketStatus`)
 **Notification triggers**: new ticket (E7), reply (E9)
 **Key surfaces**: `/ticket` (collab), `/ticket` (resp+admin — filtered by community)
 **Notes**: `creator_user_id` (not `collaborator_id`) for ownership. `serviceClient` mandatory in API routes.
@@ -144,6 +152,8 @@
 | `amministrazione` | ✅ (all) | ✅ | ✅ | ✅ (full) | ✅ (full) |
 
 **Stato**: computed from `data_inizio`/`data_fine` via `getCorsoStato()` — no physical column.
+**Corso state values**: `programmato` | `attivo` | `concluso` (from `lib/types.ts` → `CorsoStato`; lowercase; computed — no DB column)
+**Candidatura state values**: `in_attesa` | `accettata` | `ritirata` (from `lib/types.ts` → `CandidaturaStato`; lowercase)
 **Notification triggers**: none in corsi-1 (corsi-4)
 **Key surfaces**: `/corsi` (admin list), `/corsi/nuovo` (create), `/corsi/[id]` (detail tabs), `/impostazioni?tab=blacklist`, `/impostazioni?tab=allegati_corsi`
 **Notes**: `lezioni.ore` is a GENERATED ALWAYS AS column (computed from orario_inizio/orario_fine). `candidature` requires exactly one of `lezione_id` or `corso_id`. `blacklist` enforces UNIQUE on `collaborator_id`. `allegati_globali` enforces UNIQUE on `(tipo, community_id)` — use UPSERT for updates.

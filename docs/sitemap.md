@@ -32,6 +32,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | collaboratore | collaboratore_tb_test@test.com | Testbusters123 | staging smoke tests (TB community). Production: collaboratore_test@test.com |
 | responsabile_compensi | responsabile_compensi_test@test.com | Testbusters123 | smoke tests |
 | amministrazione | admin_test@test.com | Testbusters123 | smoke tests |
+| responsabile_cittadino | responsabile_cittadino_test@test.com | Testbusters123 | smoke tests |
 
 > These accounts are for `/responsive-audit` and `/ux-audit` skill use. `/ui-audit` static mode needs no login.
 > For Playwright-based skills: login sequence → email field → password field → submit → wait for `/` redirect.
@@ -255,6 +256,169 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Key interactions**: Collab — browse and open detail pages for opportunities and discounts.
 - **Empty states**: Both tabs use EmptyState when no items are visible for the user's community.
 - **Responsive notes**: Card grid should adapt from multi-column (desktop) to single column (mobile).
+
+---
+
+## API Routes
+
+> Used by skills with `target:section:<section>` to scope audits to specific functional areas.
+> Role abbreviations: `C` = collaboratore · `R` = responsabile_compensi · `RC` = responsabile_cittadino · `A` = amministrazione
+
+### Section: compensi
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/compensations` | GET, POST | C (own), R (community), A | List + create |
+| `/api/compensations/[id]` | GET, PATCH, DELETE | C (own), R, A | Detail + edit |
+| `/api/compensations/[id]/transition` | POST | R (reject only), A | State machine transitions |
+| `/api/compensations/[id]/edit` | PATCH | A | Admin-only field edit |
+| `/api/compensations/approve-all` | POST | A | Bulk approve all IN_ATTESA |
+| `/api/compensations/bulk-approve` | POST | A | Bulk approve selected |
+| `/api/compensations/bulk-liquidate` | POST | A | Bulk liquidate selected |
+| `/api/compensations/communities` | GET | C, R, A | Community list for filters |
+| `/api/compensations/competenze` | GET | R, A | Competenze lookup |
+| `/api/compensations/import/preview` | POST | R, A | GSheet import preview |
+| `/api/compensations/import/confirm` | POST | R, A | GSheet import confirm |
+| `/api/liquidazione-requests` | GET, POST, PATCH | R, A | Liquidazione request management |
+
+### Section: rimborsi
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/expenses` | GET, POST | C (create+own), R (community read), A | List + create |
+| `/api/expenses/[id]` | GET, PATCH | C (own), R, A | Detail + edit |
+| `/api/expenses/[id]/transition` | POST | A | State machine transitions |
+| `/api/expenses/[id]/attachments` | GET, POST | C (own), A | File attachments |
+| `/api/expenses/approve-all` | POST | A | Bulk approve all IN_ATTESA |
+| `/api/expenses/bulk-approve` | POST | A | Bulk approve selected |
+| `/api/expenses/bulk-liquidate` | POST | A | Bulk liquidate selected |
+
+### Section: corsi
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/corsi` | GET, POST | C, RC, A | List + create (A only) |
+| `/api/corsi/[id]` | GET, PATCH, DELETE | RC, A | Detail + admin edit |
+| `/api/corsi/[id]/lezioni` | GET, POST | A | Lessons list + create |
+| `/api/corsi/[id]/lezioni/[lid]` | PATCH, DELETE | A | Lesson edit + delete |
+| `/api/corsi/[id]/valutazioni` | PATCH | RC | Resp.citt ratings |
+| `/api/candidature` | GET, POST | C, RC, A | Candidatura submit |
+| `/api/candidature/[id]` | PATCH | C, RC | Revoke or accept |
+| `/api/assegnazioni` | GET, POST | RC, A | CoCoD'à assignments |
+| `/api/assegnazioni/[id]` | DELETE | RC, A | Remove assignment |
+| `/api/assegnazioni/export` | GET | RC, A | Export CSV |
+
+### Section: documenti
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/documents` | GET | C, R, A | List (role-filtered by RLS) |
+| `/api/documents/[id]` | GET, PATCH, DELETE | C (own), R, A | Detail + admin ops |
+| `/api/documents/[id]/sign` | POST | C | Self-guided signature |
+| `/api/documents/[id]/sign-guided` | POST | A | Admin-assisted signature |
+| `/api/documents/[id]/recompile` | POST | A | Regenerate document |
+| `/api/documents/cu-batch` | POST | A | Batch CU generation |
+| `/api/documents/generate-receipts` | POST | A | Batch receipt generation |
+| `/api/documents/receipts/preview` | POST | A | Receipt preview |
+
+### Section: ticket
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/tickets` | GET, POST | C, R, A | List + create |
+| `/api/tickets/[id]` | GET | C, R, A | Detail (`serviceClient` mandatory) |
+| `/api/tickets/[id]/messages` | GET, POST | C, R, A | Thread messages |
+| `/api/tickets/[id]/status` | PATCH | R, A | Status transition |
+
+### Section: contenuti
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/communications` | GET, POST | C, R (read), A | Communications |
+| `/api/communications/[id]` | GET, PATCH, DELETE | A | Admin CRUD |
+| `/api/events` | GET, POST | C, R (read), A | Events |
+| `/api/events/[id]` | GET, PATCH, DELETE | A | Admin CRUD |
+| `/api/opportunities` | GET, POST | C, R (read), A | Opportunities |
+| `/api/opportunities/[id]` | GET, PATCH, DELETE | A | Admin CRUD |
+| `/api/discounts` | GET, POST | C, R (read), A | Discounts |
+| `/api/discounts/[id]` | GET, PATCH, DELETE | A | Admin CRUD |
+| `/api/resources` | GET, POST | C, R (read), A | Resources / guides |
+| `/api/resources/[id]` | GET, PATCH, DELETE | A | Admin CRUD |
+
+### Section: notifiche
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/notifications` | GET | C, R, A | Notification bell feed |
+| `/api/notifications/[id]` | PATCH | C, R, A | Mark as read |
+
+### Section: profilo
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/profile` | GET, PATCH | C, R, A | Own profile read + edit |
+| `/api/profile/avatar` | POST, DELETE | C, R, A | Avatar upload/remove |
+| `/api/profile/communities` | GET, PATCH | A | Community assignment (admin only) |
+| `/api/profile/password` | POST | C, R, A | Password change |
+| `/api/profile/theme` | PATCH | C, R, A | Theme preference |
+
+### Section: export
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/export/gsheet` | POST | A | Export to Google Sheet |
+| `/api/export/history` | GET | A | Export run history |
+| `/api/export/mark-paid` | POST | A | Mark batch as paid |
+
+### Section: import
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/import/collaboratori/preview` | POST | A | Collaboratori import preview |
+| `/api/import/collaboratori/run` | POST | A | Collaboratori import run |
+| `/api/import/contratti/preview` | POST | A | Contratti import preview |
+| `/api/import/contratti/run` | POST | A | Contratti import run |
+| `/api/import/cu/preview` | POST | A | CU import preview |
+| `/api/import/cu/run` | POST | A | CU import run |
+| `/api/import/history` | GET | A | Import run history |
+
+### Section: admin
+
+All routes below require `amministrazione` role.
+
+| Path | Methods | Notes |
+|---|---|---|
+| `/api/admin/collaboratori` | GET, POST | List + invite collaborator |
+| `/api/admin/collaboratori/[id]` | GET, PATCH, DELETE | Profile management |
+| `/api/admin/collaboratori/[id]/profile` | PATCH | Profile field editing |
+| `/api/admin/banner/[communityId]` | GET, PATCH | Community banner |
+| `/api/admin/communities` | GET, PATCH | Community settings |
+| `/api/admin/notification-settings` | GET, PATCH | Notification matrix |
+| `/api/admin/contract-templates` | GET, POST | Contract templates |
+| `/api/admin/contract-templates/[id]` | GET, PATCH, DELETE | Template detail |
+| `/api/admin/email-templates` | GET | Email template list |
+| `/api/admin/email-templates/[id]` | GET, PATCH | Email template edit |
+| (+ additional admin routes — see `app/api/admin/` for full listing) | | |
+
+### Section: auth
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/auth/change-password` | POST | C, R, A | Force-change on first login |
+| `/api/auth/clear-force-change` | POST | C, R, A | Clear must_change_password flag |
+| `/api/onboarding/complete` | POST | C, R | Mark onboarding done |
+
+### System routes
+
+| Path | Methods | Roles | Notes |
+|---|---|---|---|
+| `/api/health` | GET | Public | Health check (no auth required) |
+| `/api/errors` | GET | A | Error log viewer |
+| `/api/feedback` | GET, POST | C, R, A | User feedback |
+| `/api/feedback/[id]` | PATCH | A | Feedback management |
+| `/api/lookup-options` | GET | A | Lookup options (città, materie) |
+| `/api/webhooks/resend` | POST | Public (WEBHOOK_SECRET) | Resend delivery webhooks |
+| `/api/jobs/lesson-reminders` | POST | Public (CRON_SECRET) | Vercel cron — lesson reminders |
 
 ---
 

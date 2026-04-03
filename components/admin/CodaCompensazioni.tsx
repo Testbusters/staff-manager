@@ -118,7 +118,7 @@ function ArchiveTable({
   onCycleSort: () => void;
 }) {
   return (
-    <Table className="w-auto">
+    <Table>
       <TableHeader>
         <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border">
           <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>
@@ -378,7 +378,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
   return (
     <div className="space-y-3">
       {/* ── SECTION 1 — Da processare ──────────────────────────── */}
-      <Collapsible open={section1Open} onOpenChange={setSection1Open} className="w-fit rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
+      <Collapsible open={section1Open} onOpenChange={setSection1Open} className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card overflow-hidden">
         <div className={`flex items-center gap-3 px-4 py-3 bg-amber-500/5 ${section1Open ? 'border-b border-border' : ''}`}>
           <SectionToggle
             label="Da processare"
@@ -423,7 +423,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               <EmptyState icon={CheckCircle} title="Nessun compenso in attesa" description="Tutti i compensi sono stati processati." />
             </div>
           ) : (
-            <Table className="w-auto">
+            <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
@@ -506,7 +506,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
       </Collapsible>
 
       {/* ── SECTION 2 — Approvati · da liquidare ──────────────── */}
-      <Collapsible open={section2Open} onOpenChange={setSection2Open} className="w-fit rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
+      <Collapsible open={section2Open} onOpenChange={setSection2Open} className="rounded-xl border border-border border-l-4 border-l-green-500 bg-card overflow-hidden">
         <div className={`flex items-center gap-3 px-4 py-3 bg-green-500/5 ${section2Open ? 'border-b border-border' : ''}`}>
           <SectionToggle
             label="Approvati · da liquidare"
@@ -551,7 +551,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
               <EmptyState icon={CreditCard} title="Nessun compenso da liquidare" description="Non ci sono compensi approvati in attesa di liquidazione." />
             </div>
           ) : (
-            <Table className="w-auto">
+            <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
@@ -634,7 +634,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
       </Collapsible>
 
       {/* ── SECTION 3 — Archivio ──────────────────────────────── */}
-      <Collapsible open={section3Open} onOpenChange={setSection3Open} className="w-fit rounded-xl border border-border border-l-4 border-l-border bg-card overflow-hidden">
+      <Collapsible open={section3Open} onOpenChange={setSection3Open} className="rounded-xl border border-border border-l-4 border-l-border bg-card overflow-hidden">
         <CollapsibleTrigger asChild>
           <button
             className="group w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/60 transition-colors"

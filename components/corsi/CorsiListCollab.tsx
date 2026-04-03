@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +14,11 @@ interface CorsoWithStato {
   data_inizio: string;
   data_fine: string;
   stato: CorsoStato;
+}
+
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
 }
 
 const STATO_BADGE: Record<CorsoStato, string> = {
@@ -61,7 +64,7 @@ export default function CorsiListCollab({ corsi }: { corsi: CorsoWithStato[] }) 
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            {corso.data_inizio} → {corso.data_fine}
+            {fmtDate(corso.data_inizio)} → {fmtDate(corso.data_fine)}
           </p>
         </Link>
       ))}

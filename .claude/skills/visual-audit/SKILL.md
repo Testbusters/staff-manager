@@ -22,6 +22,7 @@ Parse `$ARGUMENTS`:
 - `target:page:/compensi` → only that exact route
 - `target:role:collab` → collab-accessible routes only
 - `target:role:resp` → resp-accessible routes only
+- `target:role:resp_citt` → responsabile_cittadino routes only (`/`, `/corsi/assegnazione`, `/corsi/valutazioni`)
 - `target:role:admin` → admin-accessible routes only
 - `target:section:rimborsi` → routes whose path contains "rimborsi" (example — any section name is valid)
 - `target:section:<name>` → routes whose path contains `<name>`
@@ -170,6 +171,7 @@ This code context MUST inform the scoring in Step 6 — reference it explicitly 
 Credentials:
 - collaboratore: `collaboratore_tb_test@test.com`
 - responsabile: `responsabile_compensi_test@test.com`
+- responsabile_cittadino: `responsabile_cittadino_test@test.com`
 - admin: `admin_test@test.com`
 
 ### 5c — Per-page capture loop

@@ -38,6 +38,8 @@ import { GraduationCap, ChevronDown } from 'lucide-react';
 interface Props {
   lezioni: Lezione[];
   corsoId: string;
+  corsoLinea: string | null;
+  corsoModalita: string;
   maxDocenti: number;
   maxQA: number;
   ownCandidature: Candidatura[];
@@ -58,6 +60,8 @@ function formatDate(d: string) {
 export default function LezioniTabCollab({
   lezioni,
   corsoId,
+  corsoLinea,
+  corsoModalita,
   maxDocenti,
   maxQA,
   ownCandidature: initialOwnCandidature,
@@ -148,9 +152,12 @@ export default function LezioniTabCollab({
               <TableHead>Orario</TableHead>
               <TableHead>Ore</TableHead>
               <TableHead>Materia</TableHead>
+              <TableHead>Linea</TableHead>
               <TableHead>La tua partecipazione</TableHead>
               <TableHead>Docente <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
-              <TableHead>Q&A <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
+              {corsoModalita === 'online' && (
+                <TableHead>Q&amp;A <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -175,6 +182,9 @@ export default function LezioniTabCollab({
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white ${materiaColor}`}>
                       {lezione.materia}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    {corsoLinea ?? '—'}
                   </TableCell>
 
                   {/* Partecipazione column */}
@@ -208,23 +218,25 @@ export default function LezioniTabCollab({
                   </TableCell>
 
                   {/* Q&A candidatura column */}
-                  <TableCell>
-                    <div className="space-y-1">
-                      <CandidaturaCell
-                        candidatura={candidaturaQA}
-                        tipo="qa_lezione"
-                        lezioneId={lezione.id}
-                        isBlacklisted={isBlacklisted}
-                        isAssigned={isAssigned}
-                        isLoading={loading === `${lezione.id}:qa_lezione` || loading === candidaturaQA?.id}
-                        onSubmit={() => submitCandidatura(lezione.id, 'qa_lezione')}
-                        onWithdraw={() => setWithdrawTarget(candidaturaQA)}
-                      />
-                      <p className="text-[11px] text-muted-foreground">
-                        {postiQA}/{maxQA} assegnati
-                      </p>
-                    </div>
-                  </TableCell>
+                  {corsoModalita === 'online' && (
+                    <TableCell>
+                      <div className="space-y-1">
+                        <CandidaturaCell
+                          candidatura={candidaturaQA}
+                          tipo="qa_lezione"
+                          lezioneId={lezione.id}
+                          isBlacklisted={isBlacklisted}
+                          isAssigned={isAssigned}
+                          isLoading={loading === `${lezione.id}:qa_lezione` || loading === candidaturaQA?.id}
+                          onSubmit={() => submitCandidatura(lezione.id, 'qa_lezione')}
+                          onWithdraw={() => setWithdrawTarget(candidaturaQA)}
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          {postiQA}/{maxQA} assegnati
+                        </p>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}

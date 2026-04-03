@@ -16,7 +16,7 @@ const CreateCorsoSchema = z.object({
   data_inizio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   data_fine: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   max_docenti_per_lezione: z.number().int().min(1).optional(),
-  max_qa_per_lezione: z.number().int().min(1).optional(),
+  max_qa_per_lezione: z.number().int().min(0).optional(),
   link_lw: z.string().nullable().optional(),
   link_zoom: z.string().nullable().optional(),
   link_telegram_corsisti: z.string().nullable().optional(),
@@ -48,10 +48,18 @@ export async function GET(req: NextRequest) {
   );
 
   const { searchParams } = new URL(req.url);
-  const community_id = searchParams.get('community_id');
+  const community_id_raw = searchParams.get('community_id');
   const stato_filter = searchParams.get('stato');
 
-  let query = svc.from('corsi').select('*, community:communities(id, name)').order('data_inizio', { ascending: false });
+  const community_id_parsed = community_id_raw
+    ? z.string().uuid().safeParse(community_id_raw)
+    : null;
+  if (community_id_parsed && !community_id_parsed.success) {
+    return NextResponse.json({ error: 'Invalid community_id' }, { status: 400 });
+  }
+  const community_id = community_id_parsed?.data ?? null;
+
+  let query = svc.from('corsi').select('*, community:communities(id, name)').order('data_inizio', { ascending: false }).limit(500);
   if (community_id) query = query.eq('community_id', community_id);
 
   const { data, error } = await query;

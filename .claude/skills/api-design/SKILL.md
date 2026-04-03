@@ -38,7 +38,10 @@ Parse `$ARGUMENTS` for `target:` and `mode:` tokens.
 | `target:section:rimborsi` | Only rimborsi-domain routes (example — any section name is valid) |
 | `target:section:compensi` | Only `/api/compensations/`, `/api/expenses/` routes (example) |
 | `target:section:export` | Only export/bulk routes (example) |
-| `target:role:resp` | Routes relevant to responsabile role |
+| `target:role:collab` | Routes relevant to collaboratore role |
+| `target:role:resp` | Routes relevant to responsabile_compensi role |
+| `target:role:resp_citt` | Routes relevant to responsabile_cittadino role (`/api/corsi`, `/api/assegnazioni`, `/api/candidature`) |
+| `target:role:admin` | Routes relevant to amministrazione role (`/api/admin/`) |
 | `target:section:<other>` | Resolve by reading `docs/sitemap.md` API routes section, filtering for routes whose path or group label contains `<other>`. Announce the resolved route list before proceeding. |
 | No argument | **Full audit — ALL API routes across the entire codebase. Maximum depth.** |
 
