@@ -22,6 +22,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | DEV-9 | `lib/username.ts` uses `svc: any` parameter type instead of the project-standard `SupabaseClient<any, any, any>` — inconsistent with notification-helpers pattern | LOW |
 | DEV-10 | `pdf-utils.ts` uses `as any` twice (`pdfjsLib` import and `sigImage`) — missing typed wrappers for pdfjs-dist and pdf-lib types | LOW |
 | DB9 | `GET /api/compensations` and `GET /api/expenses` fully unbounded — no pagination | HIGH |
+| DEV-11 | `GET /api/blacklist` has no pagination — unbounded query; acceptable for current scale (<100 entries) but should add limit/offset before backoffice grows | LOW |
 | DB10 | `GET /api/tickets` fully unbounded — no pagination | HIGH |
 | SEC7 | ~~`corsi-allegati` bucket missing from DB~~ — **RESOLVED** migration 062 (verified security-audit 2026-03-30, public bucket confirmed) | ~~HIGH~~ |
 | SEC8 | `expenses` bucket missing from DB — expense attachment uploads silently fail | HIGH |
