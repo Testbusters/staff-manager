@@ -39,10 +39,14 @@ export async function PATCH(
 
   if (!collab) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  await Promise.all([
+  const [updateResult] = await Promise.all([
     svc.from('collaborators').update({ telegram_chat_id: null }).eq('id', id),
     svc.from('telegram_tokens').delete().eq('collaborator_id', id),
   ]);
+
+  if (updateResult.error) {
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -50,7 +50,6 @@ type Props = {
   email: string;
   community: string;
   communities: { id: string; name: string }[];
-  allCommunities: { id: string; name: string }[];
   guidaFigli: GuideContent;
 };
 
@@ -101,7 +100,7 @@ function GuideBox({ guide }: { guide: GuideContent }) {
   );
 }
 
-export default function ProfileForm({ collaborator, role, email, community, communities, allCommunities, guidaFigli }: Props) {
+export default function ProfileForm({ collaborator, role, email, community, communities, guidaFigli }: Props) {
   // Editable personal data
   const [emailVal, setEmailVal]       = useState(email);
   const [nome, setNome]               = useState(collaborator?.nome ?? '');
@@ -130,10 +129,8 @@ export default function ProfileForm({ collaborator, role, email, community, comm
   // Avatar
   const [avatarUrl, setAvatarUrl] = useState(collaborator?.foto_profilo_url ?? '');
 
-  // Communities (collaboratore self-edit — single community)
-  const [selectedCommunityId, setSelectedCommunityId] = useState<string>(
-    communities[0]?.id ?? '',
-  );
+  // Community is read-only for collaboratori — only admin can change it via /admin/collaboratori/[id]
+  const currentCommunityName = communities[0]?.name ?? null;
 
   // Activity — città + materie
   const [citta, setCitta]                   = useState(collaborator?.citta ?? '');
@@ -195,19 +192,7 @@ export default function ProfileForm({ collaborator, role, email, community, comm
       await supabase.auth.refreshSession();
     }
 
-    // Save community in the same transaction if applicable
-    if (role === 'collaboratore' && selectedCommunityId) {
-      const commRes = await fetch('/api/profile/communities', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ community_ids: [selectedCommunityId] }),
-      });
-      const commData = await commRes.json();
-      setLoading(false);
-      if (!commRes.ok) { toast.error(commData.error ?? 'Errore salvataggio community.', { duration: 5000 }); return; }
-    } else {
-      setLoading(false);
-    }
+    setLoading(false);
 
     toast.success('Profilo salvato.');
   };
@@ -609,27 +594,16 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         </DialogContent>
       </Dialog>
 
-      {/* Community — collaboratore self-edit */}
-      {role === 'collaboratore' && allCommunities.length > 0 && (
+      {/* Community — read-only for collaboratori (admin assigns via /admin/collaboratori/[id]) */}
+      {role === 'collaboratore' && (
         <div className={sectionCls}>
           <div className={sectionHeader}>
             <h2 className="text-sm font-medium text-foreground">Community</h2>
           </div>
-          <div className="p-5 space-y-4">
-            <Select
-              value={selectedCommunityId}
-              onValueChange={setSelectedCommunityId}
-              disabled={loading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="— Seleziona community —" />
-              </SelectTrigger>
-              <SelectContent>
-                {allCommunities.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="p-5">
+            <p className="text-sm text-foreground">
+              {currentCommunityName ?? <span className="text-muted-foreground">—</span>}
+            </p>
           </div>
         </div>
       )}

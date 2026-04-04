@@ -33,10 +33,14 @@ export async function DELETE(_req: NextRequest): Promise<NextResponse> {
 
   if (!collab) return NextResponse.json({ error: 'Collaborator not found' }, { status: 404 });
 
-  await Promise.all([
+  const [updateResult] = await Promise.all([
     svc.from('collaborators').update({ telegram_chat_id: null }).eq('id', collab.id),
     svc.from('telegram_tokens').delete().eq('collaborator_id', collab.id),
   ]);
+
+  if (updateResult.error) {
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

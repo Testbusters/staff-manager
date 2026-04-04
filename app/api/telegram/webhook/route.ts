@@ -48,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const token = text.replace('/start ', '').trim();
-  if (!token) return NextResponse.json({ ok: true });
+  if (!token || token.length > 128) return NextResponse.json({ ok: true });
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

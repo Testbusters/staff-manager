@@ -6,7 +6,6 @@ import DocumentList from '@/components/documents/DocumentList';
 import DocumentUploadForm from '@/components/documents/DocumentUploadForm';
 import PasswordChangeForm from '@/components/profilo/PasswordChangeForm';
 import TelegramConnect from '@/components/profilo/TelegramConnect';
-import { Button } from '@/components/ui/button';
 
 export default async function ProfiloPage({
   searchParams,
@@ -22,7 +21,6 @@ export default async function ProfiloPage({
     { data: profile },
     { data: collaborator },
     { data: guidaFigliRow },
-    { data: allCommunitiesData },
   ] = await Promise.all([
     supabase
       .from('user_profiles')
@@ -48,10 +46,6 @@ export default async function ProfiloPage({
       .contains('tag', ['detrazioni-figli'])
       .limit(1)
       .maybeSingle(),
-    supabase
-      .from('communities')
-      .select('id, name')
-      .order('name'),
   ]);
 
   // PostgREST returns a single object (not array) when UNIQUE constraint exists on the FK column.
@@ -65,8 +59,6 @@ export default async function ProfiloPage({
       return Array.isArray(c) ? c : [c];
     },
   );
-
-  const allCommunities = (allCommunitiesData ?? []) as { id: string; name: string }[];
 
   // Derive community slug for lookup_options API
   const communitySlug = communities[0]?.name?.toLowerCase().replace(/\s+/g, '') ?? 'testbusters';
@@ -105,7 +97,6 @@ export default async function ProfiloPage({
           email={user.email ?? ''}
           community={communitySlug}
           communities={communities}
-          allCommunities={allCommunities}
           guidaFigli={guidaFigliRow ?? null}
         />
       </div>
@@ -185,7 +176,6 @@ export default async function ProfiloPage({
             email={user.email ?? ''}
             community={communitySlug}
             communities={communities}
-            allCommunities={allCommunities}
             guidaFigli={guidaFigliRow ?? null}
           />
           <div className="bg-card border border-border rounded-xl p-6">
