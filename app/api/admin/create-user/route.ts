@@ -10,10 +10,10 @@ import { generatePassword } from '@/lib/password';
 
 const schema = z.object({
   email: z.string().email(),
-  role: z.enum(['collaboratore', 'responsabile_cittadino', 'responsabile_compensi', 'responsabile_servizi_individuali', 'amministrazione']),
-  community_ids: z.array(z.string().uuid()).optional(),
-  // Tipo rapporto: always OCCASIONALE
-  tipo_contratto: z.literal('OCCASIONALE').optional(),
+  community_id: z.string().uuid(),
+  tipo_contratto: z.enum(['OCCASIONALE', 'OCCASIONALE_P4M']),
+  citta: z.string().min(1),
+  salta_firma: z.boolean().optional(),
   // Anagrafica (opzionale — pre-fill per l'onboarding)
   username:            z.string().min(3).max(50).regex(/^[a-z0-9_]+$/, 'Solo lettere minuscole, numeri e _').optional(),
   nome:                z.string().min(1).max(100).optional(),
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   }
 
   const {
-    email, role, community_ids, tipo_contratto,
+    email, community_id, tipo_contratto, citta, salta_firma,
     username: usernameInput,
     nome, cognome, codice_fiscale, data_nascita,
     luogo_nascita, provincia_nascita,
@@ -73,10 +73,7 @@ export async function POST(request: Request) {
     data_fine_contratto, sono_un_figlio_a_carico, importo_lordo_massimale,
   } = parsed.data;
 
-  // tipo_contratto is required for collaboratore and responsabile_compensi
-  if (['collaboratore', 'responsabile_compensi'].includes(role) && !tipo_contratto) {
-    return NextResponse.json({ error: 'Tipo rapporto obbligatorio' }, { status: 400 });
-  }
+  const role = 'collaboratore';
 
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -110,6 +107,7 @@ export async function POST(request: Request) {
     is_active: true,
     must_change_password: true,
     onboarding_completed: false,
+    skip_contract_on_onboarding: salta_firma ?? false,
     theme_preference: 'dark',
   });
 
@@ -118,62 +116,62 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Errore creazione profilo' }, { status: 500 });
   }
 
-  // 3. Assign communities for responsabile_compensi
-  if (role === 'responsabile_compensi' && community_ids?.length) {
-    await admin.from('user_community_access').insert(
-      community_ids.map((cid) => ({ user_id: userId, community_id: cid })),
-    );
-  }
+  // 3. Create collaborators record with citta and tipo_contratto
+  const nomeTrimmed    = nome?.trim() || null;
+  const cognomeTrimmed = cognome?.trim() || null;
 
-  // 4. Create collaborators record for collaboratore and responsabile_compensi
-  //    (tipo_contratto is stored here; anagrafica fields are pre-fill — completed during onboarding)
-  if (['collaboratore', 'responsabile_compensi'].includes(role) && tipo_contratto) {
-    const nomeTrimmed    = nome?.trim() || null;
-    const cognomeTrimmed = cognome?.trim() || null;
-
-    // Resolve username: explicit (validate uniqueness) or auto-generate
-    let resolvedUsername: string | null = null;
-    if (usernameInput) {
-      // Admin provided a specific username — strict uniqueness check
-      const { data: existing } = await admin
-        .from('collaborators')
-        .select('id')
-        .eq('username', usernameInput)
-        .maybeSingle();
-      if (existing) {
-        await admin.auth.admin.deleteUser(userId);
-        return NextResponse.json({ error: 'Username già in uso' }, { status: 409 });
-      }
-      resolvedUsername = usernameInput;
-    } else if (nomeTrimmed && cognomeTrimmed) {
-      // Auto-generate with uniqueness suffix
-      const base = generateUsername(nomeTrimmed, cognomeTrimmed);
-      resolvedUsername = base ? await generateUniqueUsername(base, admin) : null;
+  // Resolve username: explicit (validate uniqueness) or auto-generate
+  let resolvedUsername: string | null = null;
+  if (usernameInput) {
+    const { data: existing } = await admin
+      .from('collaborators')
+      .select('id')
+      .eq('username', usernameInput)
+      .maybeSingle();
+    if (existing) {
+      await admin.auth.admin.deleteUser(userId);
+      return NextResponse.json({ error: 'Username già in uso' }, { status: 409 });
     }
-
-    await admin.from('collaborators').insert({
-      user_id:             userId,
-      email,
-      tipo_contratto,
-      username:            resolvedUsername,
-      nome:                nomeTrimmed,
-      cognome:             cognomeTrimmed,
-      codice_fiscale:      codice_fiscale ?? null,
-      data_nascita:        data_nascita ?? null,
-      luogo_nascita:       luogo_nascita ?? null,
-      provincia_nascita:   provincia_nascita ?? null,
-      comune:              comune ?? null,
-      provincia_residenza: provincia_residenza ?? null,
-      indirizzo:           indirizzo ?? null,
-      civico_residenza:    civico_residenza ?? null,
-      telefono:            telefono ?? null,
-      intestatario_pagamento:  intestatario_pagamento ?? null,
-      data_ingresso:           data_ingresso ?? null,
-      data_fine_contratto:     data_fine_contratto ?? null,
-      sono_un_figlio_a_carico: sono_un_figlio_a_carico ?? false,
-      importo_lordo_massimale: importo_lordo_massimale ?? null,
-    });
+    resolvedUsername = usernameInput;
+  } else if (nomeTrimmed && cognomeTrimmed) {
+    const base = generateUsername(nomeTrimmed, cognomeTrimmed);
+    resolvedUsername = base ? await generateUniqueUsername(base, admin) : null;
   }
+
+  const { data: newCollab, error: collabError } = await admin.from('collaborators').insert({
+    user_id:             userId,
+    email,
+    tipo_contratto,
+    citta,
+    username:            resolvedUsername,
+    nome:                nomeTrimmed,
+    cognome:             cognomeTrimmed,
+    codice_fiscale:      codice_fiscale ?? null,
+    data_nascita:        data_nascita ?? null,
+    luogo_nascita:       luogo_nascita ?? null,
+    provincia_nascita:   provincia_nascita ?? null,
+    comune:              comune ?? null,
+    provincia_residenza: provincia_residenza ?? null,
+    indirizzo:           indirizzo ?? null,
+    civico_residenza:    civico_residenza ?? null,
+    telefono:            telefono ?? null,
+    intestatario_pagamento:  intestatario_pagamento ?? null,
+    data_ingresso:           data_ingresso ?? null,
+    data_fine_contratto:     data_fine_contratto ?? null,
+    sono_un_figlio_a_carico: sono_un_figlio_a_carico ?? false,
+    importo_lordo_massimale: importo_lordo_massimale ?? null,
+  }).select('id').single();
+
+  if (collabError || !newCollab) {
+    await admin.auth.admin.deleteUser(userId);
+    return NextResponse.json({ error: 'Errore creazione collaboratore' }, { status: 500 });
+  }
+
+  // 4. Assign community
+  await admin.from('collaborator_communities').insert({
+    collaborator_id: newCollab.id,
+    community_id,
+  });
 
   // 5. Send invitation email (fire-and-forget — never blocks the response)
   getRenderedEmail('E8', { email, password, ruolo: role }).then(({ subject, html }) => {
