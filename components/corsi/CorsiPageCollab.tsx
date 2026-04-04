@@ -128,10 +128,10 @@ export default function CorsiPageCollab({
     })
     .filter((e): e is CalEntry => e !== null);
 
-  // Section 2: Docenza — online courses + in_aula in the collaborator's city
-  const corsiDocenza = corsiComunita.filter((c) =>
-    c.modalita === 'online' || c.citta === collabCitta
-  );
+  // Section 2: Docenza — courses in the collaborator's city (both online and in_aula)
+  const corsiDocenza = collabCitta
+    ? corsiComunita.filter((c) => c.citta === collabCitta)
+    : [];
 
   // Section 3: Q&A — online courses only, with at least 1 Q&A slot available
   const corsiQA = corsiComunita.filter((c) =>
