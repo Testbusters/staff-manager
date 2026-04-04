@@ -281,7 +281,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                           </span>
                         </div>
                         <span className={`text-[10px] leading-none tabular-nums pl-2.5 ${pill.text} opacity-80`}>
-                          {ruoloLabel} · {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}
+                          {ruoloLabel} · {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}, {e.ore}h
                         </span>
                       </Link>
                     );

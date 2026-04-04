@@ -544,3 +544,29 @@ export function emailEsitoLiquidazione(p: {
     html: layout(body),
   };
 }
+
+// ── E17 — Nuovo corso programmato nella tua città ─────────────
+export function emailNuovoCorsoInCitta(p: {
+  nome: string;
+  corso: string;
+  citta: string;
+  dataInizio: string;
+  dataFine: string;
+  link?: string;
+}): { subject: string; html: string } {
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText(`È stato programmato un nuovo corso nella tua città: <strong>${p.citta}</strong>.`)}
+    ${highlight([
+      { label: 'Corso', value: p.corso },
+      { label: 'Città', value: p.citta },
+      { label: 'Periodo', value: `${p.dataInizio} → ${p.dataFine}` },
+    ])}
+    ${bodyText('Accedi all\'app per consultare i dettagli e candidarti come docente.')}
+    ${ctaButton('Vai ai corsi', p.link ?? `${APP_URL}/corsi`)}
+  `;
+  return {
+    subject: `Nuovo corso a ${p.citta} — ${p.corso}`,
+    html: layout(body),
+  };
+}
