@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getCorsoStato } from '@/lib/corsi-utils';
+import { getCollaboratoriForCity } from '@/lib/notification-helpers';
+import { sendEmail } from '@/lib/email';
+import { emailNuovoCorsoInCitta } from '@/lib/email-templates';
 
 const CreateCorsoSchema = z.object({
   nome: z.string().min(1),
@@ -105,6 +108,32 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
+
+  // Notify collaboratori in the corso's city — fire-and-forget
+  if (parsed.data.citta) {
+    const citta = parsed.data.citta;
+    const communityId = parsed.data.community_id;
+    const corsoNome = data.nome as string;
+    const dataInizio = new Date(data.data_inizio).toLocaleDateString('it-IT');
+    const dataFine = new Date(data.data_fine).toLocaleDateString('it-IT');
+
+    getCollaboratoriForCity(citta, [communityId], svc)
+      .then((collaboratori) => {
+        for (const c of collaboratori) {
+          if (!c.email) continue;
+          const { subject, html } = emailNuovoCorsoInCitta({
+            nome: c.nome,
+            corso: corsoNome,
+            citta,
+            dataInizio,
+            dataFine,
+          });
+          sendEmail(c.email, subject, html).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }
+
   return NextResponse.json(
     { corso: { ...data, stato: getCorsoStato(data.data_inizio, data.data_fine) } },
     { status: 201 },
