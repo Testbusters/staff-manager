@@ -115,24 +115,38 @@ export async function PATCH(
     return NextResponse.json({ error: 'Can only revert to in_attesa from accettata' }, { status: 409 });
   }
 
-  // resp.citt: verify the lezione's corso belongs to their city
-  if (role === 'responsabile_cittadino' && candidatura.tipo !== 'citta_corso') {
+  // resp.citt: verify city authorization for all candidatura types
+  if (role === 'responsabile_cittadino') {
     if (!profile?.citta_responsabile) {
       return NextResponse.json({ error: 'Forbidden — no citta_responsabile set' }, { status: 403 });
     }
 
-    const { data: lezione } = await svc
-      .from('lezioni')
-      .select('corso_id')
-      .eq('id', candidatura.lezione_id!)
-      .single();
+    if (candidatura.tipo !== 'citta_corso') {
+      // docente_lezione / qa_lezione: verify the course belongs to resp.citt's city
+      const { data: lezione } = await svc
+        .from('lezioni')
+        .select('corso_id')
+        .eq('id', candidatura.lezione_id!)
+        .single();
 
-    const { data: corso } = lezione
-      ? await svc.from('corsi').select('citta').eq('id', lezione.corso_id).single()
-      : { data: null };
+      const { data: corso } = lezione
+        ? await svc.from('corsi').select('citta').eq('id', lezione.corso_id).single()
+        : { data: null };
 
-    if (!corso || corso.citta !== profile.citta_responsabile) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (!corso || corso.citta !== profile.citta_responsabile) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // citta_corso: verify the candidatura was submitted by a resp.citt from the same city
+      const { data: applicantProfile } = await svc
+        .from('user_profiles')
+        .select('citta_responsabile')
+        .eq('user_id', candidatura.city_user_id)
+        .single();
+
+      if (!applicantProfile || applicantProfile.citta_responsabile !== profile.citta_responsabile) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
   }
 
