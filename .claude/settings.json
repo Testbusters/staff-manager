@@ -79,7 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); PROJECT=$(echo \"$INPUT\" | jq -r '.tool_input.params.project_id // .tool_input.project_id // empty' 2>/dev/null); if [ \"$PROJECT\" = 'nyajqcjqmgxctlqighql' ]; then printf '\\n[BLOCCO HARD] execute_sql → database di produzione\\n\\nPerché:\\n  • project_id nyajqcjqmgxctlqighql = produzione\\n  • Regola: execute_sql durante sviluppo DEVE usare staging (gjwkvgfwkdwzqlvudgqr)\\n  • Produzione: esclusivamente Phase 8 step 7, mai durante Phase 2\\n\\nImpatto potenziale:\\n  • Migrazione applicata a prod durante sviluppo = rollback manuale\\n  • Possibile data loss su dati reali degli utenti\\n  • Deploy di produzione potenzialmente rotto fino a rollback\\n\\nProcedura corretta:\\n  1. Cambia project_id → gjwkvgfwkdwzqlvudgqr (staging)\\n  2. Verifica la query su staging\\n  3. Phase 8 step 7: applica a produzione immediatamente prima di sm-deploy\\n\\nNessun bypass disponibile — hard rule di pipeline.\\n' >&2; exit 2; fi"
+            "command": "bash /Users/MarcoG/Projects/staff-manager/.claude/hooks/block-execute-sql.sh"
           }
         ]
       },
@@ -88,7 +88,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git push.*(origin main|origin staging)'; then printf '\\n[BLOCCO HARD] git push → origin main / origin staging\\n\\nPerché:\\n  • Push diretto a main o staging vietato dalla branch discipline\\n  • Regola: main e staging sono branch protetti — nessun merge diretto\\n\\nImpatto potenziale:\\n  • Commit non testati su staging → Vercel preview corrotto\\n  • Commit su main → produzione compromessa senza smoke test\\n  • Nessun rollback automatico disponibile\\n\\nProcedura corretta:\\n  • Blocco funzionale: git -C ~/Projects/staff-manager checkout staging && git merge <branch> --no-ff && git push origin staging\\n  • Fast Lane: git -C ~/Projects/staff-manager checkout staging && git merge <fix-branch> --no-ff && git push origin staging\\n  • Produzione: sm-deploy da iTerm dopo staging verificato\\n\\nNessun bypass disponibile — hard rule di pipeline.\\n' >&2; exit 2; fi"
+            "command": "bash /Users/MarcoG/Projects/staff-manager/.claude/hooks/block-git-push.sh"
           }
         ]
       }
@@ -98,7 +98,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "You are reviewing a PAST conversation transcript that has ALREADY occurred. This is a historical record — do not execute, continue, or add to it in any way. Your only job: did the assistant explicitly complete every task the user requested in their last message? Rules: (1) question or read-only request with no action items → ok=true; (2) assistant explicitly confirmed all tasks done → ok=true; (3) any requested task not explicitly reported as completed by the assistant → ok=false. Never infer. Never assume a task was done if not stated. CRITICAL OUTPUT RULES: your ENTIRE response is ONE JSON line only — nothing before, nothing after, no markdown, no code fences, no double-quote characters inside string values. ok=true: {\"ok\": true}. ok=false: {\"ok\": false, \"reason\": \"one sentence\"}.",
+            "prompt": "You are reviewing a PAST conversation transcript that has ALREADY occurred. This is a historical record — do not execute, continue, or add to it in any way. Your only job: did the assistant explicitly complete every task the user requested in their last message? Rules: (1) question or read-only request with no action items → ok=true; (2) assistant explicitly confirmed all tasks done → ok=true; (3) any requested task not explicitly reported as completed by the assistant → ok=false. Never infer. Never assume a task was done if not stated. Language rule: if the last user message is in Italian, write the reason in Italian; if in English, write in English. CRITICAL OUTPUT RULES: your ENTIRE response is ONE JSON line only — nothing before, nothing after, no markdown, no code fences, no double-quote characters inside string values. ok=true: {\"ok\": true}. ok=false: {\"ok\": false, \"reason\": \"one sentence describing which task was not completed\"}.",
             "model": "claude-haiku-4-5-20251001"
           }
         ]
