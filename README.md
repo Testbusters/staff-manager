@@ -1,6 +1,6 @@
 # Staff Manager
 
-Internal admin portal for managing collaborators across Testbusters and Peer4Med communities. Handles personal profiles, compensation approvals, reimbursements, document signing, support tickets, and content publishing. Role-based access control (invite-only, email/password) via Supabase Auth.
+Internal admin portal for managing collaborators across the Testbusters and Peer4Med communities: profiles, compensation approvals, reimbursements, document signing, support tickets, and content publishing. Invite-only, role-based auth via Supabase (email/password).
 
 ---
 
@@ -84,7 +84,7 @@ lib/
   password.ts     generatePassword() — shared across invite + admin reset flows
 
 proxy.ts          Auth middleware: active check → must_change_password → onboarding → app
-supabase/migrations/  057 migrations applied in sequence (see docs/migrations-log.md)
+supabase/migrations/  065 migrations applied in sequence (see docs/migrations-log.md)
 __tests__/        369 Vitest tests (unit + API schema validation)
 e2e/              Playwright specs (suspended — see CLAUDE.local.md)
 docs/             Product specs, implementation checklist, migration log, sitemap
@@ -249,17 +249,17 @@ E2e specs in `e2e/` cover: dashboard (all 3 roles), compensation/reimbursement f
 
 ## Deployment
 
-Currently hosted on **Replit** using standalone Next.js output.
+Deployed on **Vercel**. Preview: `staff-staging.peerpetual.it` (staging branch). Production: `staff.peerpetual.it` (main branch).
 
 ```bash
-# Build
+# Standalone build (used in non-Vercel environments)
 npm install && npm run build && cp -r .next/static .next/standalone/.next/static
 
-# Run
+# Run standalone
 HOSTNAME=0.0.0.0 node .next/standalone/server.js
 ```
 
-**Vercel migration is planned** — the `output: standalone` config in `next.config.ts` will be removed and standard Vercel deployment will be used once the migration is complete.
+The `output: standalone` config in `next.config.ts` is retained for portability.
 
 ---
 
@@ -267,7 +267,7 @@ HOSTNAME=0.0.0.0 node .next/standalone/server.js
 
 See [`docs/implementation-checklist.md`](docs/implementation-checklist.md) for the full log of implemented blocks, test results, and next planned work.
 
-Current status (as of 2026-03-12):
+Current status (as of 2026-04-04):
 - ✅ Auth + onboarding wizard + forced password change
 - ✅ Compensation + reimbursement workflows (full state machine)
 - ✅ Document upload, signing flow, CU batch import
