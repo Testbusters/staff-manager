@@ -1,6 +1,11 @@
 /**
  * Unit test: Zod schema validation for POST /api/admin/create-user
- * Verifies that role values are correct after Blocco 1 rename.
+ * Verifies new schema after admin-invite-gaps block:
+ * - role removed (hardcoded to collaboratore)
+ * - community_id required UUID
+ * - tipo_contratto accepts OCCASIONALE and OCCASIONALE_P4M
+ * - citta required
+ * - salta_firma optional boolean
  */
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
@@ -8,50 +13,79 @@ import { z } from 'zod';
 // Mirror the schema from the route (without the server context)
 const schema = z.object({
   email: z.string().email(),
-  role: z.enum([
-    'collaboratore',
-    'responsabile_cittadino',
-    'responsabile_compensi',
-    'responsabile_servizi_individuali',
-    'amministrazione',
-  ]),
-  tipo_contratto: z.literal('OCCASIONALE').optional(),
+  community_id: z.string().uuid(),
+  tipo_contratto: z.enum(['OCCASIONALE', 'OCCASIONALE_P4M']),
+  citta: z.string().min(1),
+  salta_firma: z.boolean().optional(),
 });
 
-describe('create-user role schema', () => {
-  it('accepts collaboratore', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'collaboratore' }).success).toBe(true);
+const VALID_UUID = 'a1b2c3d4-e5f6-4789-a012-a3b4c5d6e7f8';
+
+const BASE = {
+  email: 'a@b.com',
+  community_id: VALID_UUID,
+  tipo_contratto: 'OCCASIONALE' as const,
+  citta: 'Roma',
+};
+
+describe('create-user schema (admin-invite-gaps)', () => {
+  it('accepts valid payload with OCCASIONALE', () => {
+    expect(schema.safeParse(BASE).success).toBe(true);
   });
 
-  it('accepts responsabile_compensi', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'responsabile_compensi' }).success).toBe(true);
+  it('accepts OCCASIONALE_P4M', () => {
+    expect(schema.safeParse({ ...BASE, tipo_contratto: 'OCCASIONALE_P4M' }).success).toBe(true);
   });
 
-  it('accepts responsabile_cittadino', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'responsabile_cittadino' }).success).toBe(true);
+  it('accepts salta_firma true', () => {
+    expect(schema.safeParse({ ...BASE, salta_firma: true }).success).toBe(true);
   });
 
-  it('accepts responsabile_servizi_individuali', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'responsabile_servizi_individuali' }).success).toBe(true);
+  it('accepts salta_firma false', () => {
+    expect(schema.safeParse({ ...BASE, salta_firma: false }).success).toBe(true);
   });
 
-  it('accepts amministrazione', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'amministrazione' }).success).toBe(true);
+  it('accepts when salta_firma is omitted', () => {
+    expect(schema.safeParse(BASE).success).toBe(true);
   });
 
-  it('rejects old role value "responsabile"', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'responsabile' }).success).toBe(false);
+  it('rejects invalid community_id (not a UUID)', () => {
+    expect(schema.safeParse({ ...BASE, community_id: 'not-a-uuid' }).success).toBe(false);
   });
 
-  it('rejects unknown role', () => {
-    expect(schema.safeParse({ email: 'a@b.com', role: 'super_admin' }).success).toBe(false);
+  it('rejects missing community_id', () => {
+    const { community_id: _, ...rest } = BASE;
+    expect(schema.safeParse(rest).success).toBe(false);
+  });
+
+  it('rejects invalid tipo_contratto value', () => {
+    expect(schema.safeParse({ ...BASE, tipo_contratto: 'COCOCO' }).success).toBe(false);
+  });
+
+  it('rejects missing tipo_contratto', () => {
+    const { tipo_contratto: _, ...rest } = BASE;
+    expect(schema.safeParse(rest).success).toBe(false);
+  });
+
+  it('rejects empty citta', () => {
+    expect(schema.safeParse({ ...BASE, citta: '' }).success).toBe(false);
+  });
+
+  it('rejects missing citta', () => {
+    const { citta: _, ...rest } = BASE;
+    expect(schema.safeParse(rest).success).toBe(false);
   });
 
   it('rejects missing email', () => {
-    expect(schema.safeParse({ role: 'collaboratore' }).success).toBe(false);
+    const { email: _, ...rest } = BASE;
+    expect(schema.safeParse(rest).success).toBe(false);
   });
 
   it('rejects invalid email format', () => {
-    expect(schema.safeParse({ email: 'not-an-email', role: 'collaboratore' }).success).toBe(false);
+    expect(schema.safeParse({ ...BASE, email: 'not-an-email' }).success).toBe(false);
+  });
+
+  it('rejects non-boolean salta_firma', () => {
+    expect(schema.safeParse({ ...BASE, salta_firma: 'yes' }).success).toBe(false);
   });
 });

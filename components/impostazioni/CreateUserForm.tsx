@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CONTRACT_TEMPLATE_LABELS, type ContractTemplateType } from '@/lib/types';
+import { CONTRACT_TEMPLATE_LABELS } from '@/lib/types';
+import { getContractTemplateTipo } from '@/lib/ritenuta';
 import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -9,25 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
-type Role = 'collaboratore' | 'responsabile_cittadino' | 'responsabile_compensi' | 'responsabile_servizi_individuali' | 'amministrazione';
 type Credentials = { email: string; password: string };
 type Community = { id: string; name: string; is_active: boolean };
-type TemplateStatus = { tipo: ContractTemplateType; file_name: string } | null;
-
-const ROLE_OPTIONS: { value: Role; label: string }[] = [
-  { value: 'collaboratore',                    label: 'Collaboratore' },
-  { value: 'responsabile_cittadino',           label: 'Responsabile Cittadino' },
-  { value: 'responsabile_compensi',            label: 'Responsabile Compensi' },
-  { value: 'responsabile_servizi_individuali', label: 'Responsabile Servizi Individuali' },
-  { value: 'amministrazione',                  label: 'Amministrazione' },
-];
-
-
-// Roles that require tipo_contratto and have anagrafica pre-fill
-const ROLES_WITH_CONTRACT: Role[] = ['collaboratore', 'responsabile_compensi'];
-
+type LookupOption = { id: string; nome: string };
 
 const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 
@@ -35,14 +23,24 @@ const sectionTitle = 'text-xs font-semibold text-muted-foreground uppercase trac
 
 export default function CreateUserForm() {
   // Auth fields
-  const [email, setEmail]     = useState('');
-  const [role, setRole]       = useState<Role>('collaboratore');
+  const [email, setEmail] = useState('');
 
-  // Communities (responsabile assignment + contract community)
+  // Community selection
   const [communities, setCommunities] = useState<Community[]>([]);
-  const [selectedCommunities, setSelectedCommunities] = useState<string[]>([]);
+  const [selectedCommunity, setSelectedCommunity] = useState('');
+  const [selectedCommunityName, setSelectedCommunityName] = useState('');
 
-  // Anagrafica (optional pre-fill for collaboratore and responsabile)
+  // Derived tipo_contratto from community
+  const tipoContratto = selectedCommunityName ? getContractTemplateTipo(selectedCommunityName) : 'OCCASIONALE';
+
+  // Città
+  const [citta, setCitta] = useState('');
+  const [cittaOptions, setCittaOptions] = useState<LookupOption[]>([]);
+
+  // Salta firma
+  const [saltaFirma, setSaltaFirma] = useState(false);
+
+  // Anagrafica
   const [nome, setNome]               = useState('');
   const [cognome, setCognome]         = useState('');
   const [username, setUsername]             = useState('');
@@ -62,11 +60,6 @@ export default function CreateUserForm() {
   const [sonoFiglio, setSonoFiglio] = useState(false);
   const [massimale, setMassimale] = useState('');
 
-  // Tipo rapporto: always OCCASIONALE
-
-  // Template status (which tipos have templates uploaded)
-  const [templateStatus, setTemplateStatus]   = useState<TemplateStatus[]>([]);
-
   // Invite mode
   const [mode, setMode] = useState<'quick' | 'full'>('quick');
 
@@ -80,16 +73,26 @@ export default function CreateUserForm() {
       .then((r) => r.json())
       .then((data) => setCommunities(data.communities ?? []))
       .catch(() => {});
-    fetch('/api/admin/contract-templates')
-      .then((r) => r.json())
-      .then((data) => setTemplateStatus(data.templates ?? []))
-      .catch(() => {});
   }, []);
 
-  const toggleCommunity = (id: string) =>
-    setSelectedCommunities((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
+  // Fetch città when community changes
+  useEffect(() => {
+    if (!selectedCommunity) { setCittaOptions([]); setCitta(''); return; }
+    const comm = communities.find((c) => c.id === selectedCommunity);
+    const slug = comm?.name?.toLowerCase().replace(/\s+/g, '') ?? '';
+    fetch(`/api/lookup-options?type=citta&community=${slug}`)
+      .then((r) => r.json())
+      .then((d) => setCittaOptions(d.options ?? []))
+      .catch(() => {});
+    setCitta('');
+  }, [selectedCommunity, communities]);
+
+  // Auto-compute username from nome+cognome
+  useEffect(() => {
+    if (!usernameManuallySet) {
+      setUsername(generateUsername(nome, cognome));
+    }
+  }, [nome, cognome, usernameManuallySet]);
 
   const copyToClipboard = async (text: string, field: 'email' | 'password') => {
     await navigator.clipboard.writeText(text);
@@ -97,17 +100,11 @@ export default function CreateUserForm() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const hasTemplate = (tipo: ContractTemplateType) =>
-    templateStatus.some((t) => t?.tipo === tipo);
-
-  const needsContract = ROLES_WITH_CONTRACT.includes(role);
-
-  // Auto-compute username from nome+cognome (unless manually edited)
-  useEffect(() => {
-    if (!usernameManuallySet && needsContract) {
-      setUsername(generateUsername(nome, cognome));
-    }
-  }, [nome, cognome, usernameManuallySet, needsContract]);
+  const handleCommunityChange = (id: string) => {
+    setSelectedCommunity(id);
+    const comm = communities.find((c) => c.id === id);
+    setSelectedCommunityName(comm?.name ?? '');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,32 +113,28 @@ export default function CreateUserForm() {
 
     const body: Record<string, unknown> = {
       email,
-      role,
-      community_ids: role === 'responsabile_compensi' ? selectedCommunities : [],
+      community_id: selectedCommunity,
+      tipo_contratto: tipoContratto,
+      citta,
+      salta_firma: saltaFirma,
+      nome:                nome.trim() || undefined,
+      cognome:             cognome.trim() || undefined,
+      username:            username.trim() || undefined,
+      codice_fiscale:      codiceFiscale.trim().toUpperCase() || null,
+      data_nascita:        dataNascita || null,
+      luogo_nascita:       luogoNascita.trim() || null,
+      provincia_nascita:   provinciaNascita.trim().toUpperCase() || null,
+      comune:              comuneRes.trim() || null,
+      provincia_residenza: provinciaRes.trim().toUpperCase() || null,
+      indirizzo:           indirizzo.trim() || null,
+      civico_residenza:    civico.trim() || null,
+      telefono:            telefono.trim() || null,
+      intestatario_pagamento: intestatarioPagamento.trim() || null,
+      data_ingresso:       dataIngresso || null,
+      data_fine_contratto: dataFineContratto || null,
+      sono_un_figlio_a_carico: sonoFiglio,
+      importo_lordo_massimale: massimale !== '' ? parseFloat(massimale) : null,
     };
-
-    if (needsContract) {
-      Object.assign(body, {
-        tipo_contratto:      'OCCASIONALE',
-        nome:                nome.trim() || undefined,
-        cognome:             cognome.trim() || undefined,
-        username:            username.trim() || undefined,
-        codice_fiscale:      codiceFiscale.trim().toUpperCase() || null,
-        data_nascita:        dataNascita || null,
-        luogo_nascita:       luogoNascita.trim() || null,
-        provincia_nascita:   provinciaNascita.trim().toUpperCase() || null,
-        comune:              comuneRes.trim() || null,
-        provincia_residenza: provinciaRes.trim().toUpperCase() || null,
-        indirizzo:           indirizzo.trim() || null,
-        civico_residenza:    civico.trim() || null,
-        telefono:            telefono.trim() || null,
-        intestatario_pagamento: intestatarioPagamento.trim() || null,
-        data_ingresso:       dataIngresso || null,
-        data_fine_contratto: dataFineContratto || null,
-        sono_un_figlio_a_carico: sonoFiglio,
-        importo_lordo_massimale: massimale !== '' ? parseFloat(massimale) : null,
-      });
-    }
 
     const res = await fetch('/api/admin/create-user', {
       method: 'POST',
@@ -157,8 +150,8 @@ export default function CreateUserForm() {
 
     // Reset
     setEmail('');
-    setRole('collaboratore');
-    setSelectedCommunities([]);
+    setSelectedCommunity(''); setSelectedCommunityName('');
+    setCitta(''); setSaltaFirma(false);
     setNome(''); setCognome(''); setUsername(''); setUsernameManuallySet(false);
     setCodiceFiscale(''); setDataNascita('');
     setLuogoNascita(''); setProvinciaNascita(''); setComuneRes(''); setPrvinciaRes('');
@@ -169,7 +162,6 @@ export default function CreateUserForm() {
   if (credentials) {
     return (
       <div className="space-y-4">
-        {/* Invite sent confirmation */}
         <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 px-4 py-3 flex items-center gap-2">
           <svg className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -179,7 +171,6 @@ export default function CreateUserForm() {
           </p>
         </div>
 
-        {/* Credentials backup */}
         <div className="rounded-xl bg-muted/60 border border-border p-4 space-y-3">
           <p className="text-xs text-muted-foreground">
             Credenziali di accesso — da condividere manualmente in caso di mancato recapito dell&apos;email.
@@ -234,7 +225,7 @@ export default function CreateUserForm() {
         </Button>
       </ButtonGroup>
 
-      {/* Auth */}
+      {/* Auth + Community */}
       <div className="rounded-xl border border-border p-4">
         <p className={sectionTitle}>Accesso</p>
         <div className="space-y-3">
@@ -245,55 +236,65 @@ export default function CreateUserForm() {
               required disabled={loading} autoComplete="off" />
           </div>
           <div>
-            <label className={labelCls}>Ruolo</label>
-            <Select value={role} onValueChange={(v) => { setRole(v as Role); setSelectedCommunities([]); }} disabled={loading}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <label className={labelCls}>Community <span className="text-destructive">*</span></label>
+            <Select value={selectedCommunity} onValueChange={handleCommunityChange} disabled={loading}>
+              <SelectTrigger><SelectValue placeholder="— Seleziona community —" /></SelectTrigger>
               <SelectContent>
-                {ROLE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                {communities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
 
-      {/* Responsabile → community assignment */}
-      {role === 'responsabile_compensi' && communities.length > 0 && (
-        <div className="rounded-xl border border-border p-4">
-          <p className={sectionTitle}>Comunità gestite</p>
-          <div className="space-y-2">
-            {communities.map((c) => (
-              <label key={c.id}
-                className="flex items-center gap-3 rounded-lg bg-muted border border-border px-3 py-2.5 cursor-pointer hover:border-border transition">
-                <Checkbox
-                  checked={selectedCommunities.includes(c.id)}
-                  onCheckedChange={() => toggleCommunity(c.id)}
-                  disabled={loading}
-                />
-                <span className="text-sm text-foreground">{c.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tipo rapporto — sempre OCCASIONALE */}
-      {needsContract && (
+      {/* Tipo rapporto — derived from community */}
+      {selectedCommunity && (
         <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Tipo rapporto</p>
           <div className="flex items-center justify-between rounded-xl bg-muted border border-border px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS['OCCASIONALE']}</p>
-              {!hasTemplate('OCCASIONALE') && (
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-0.5">Nessun template caricato — il contratto non sarà generato automaticamente.</p>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground ml-4">Tipo fisso</span>
+            <p className="text-sm font-medium text-foreground">{CONTRACT_TEMPLATE_LABELS[tipoContratto]}</p>
+            <span className="text-xs text-muted-foreground ml-4">Determinato dalla community</span>
           </div>
         </div>
       )}
 
-      {/* Data fine contratto — in both modes */}
-      {needsContract && (
+      {/* Salta firma contratto */}
+      {selectedCommunity && (
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Salta firma contratto</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Il collaboratore completerà l&apos;onboarding senza firmare il contratto. Potrai caricare il documento in seguito dalla sezione Documenti.
+              </p>
+            </div>
+            <Switch checked={saltaFirma} onCheckedChange={setSaltaFirma} disabled={loading} />
+          </div>
+        </div>
+      )}
+
+      {/* Città */}
+      {selectedCommunity && (
+        <div className="rounded-xl border border-border p-4">
+          <p className={sectionTitle}>Assegnazione</p>
+          <div>
+            <label className={labelCls}>Città <span className="text-destructive">*</span></label>
+            <Select value={citta || undefined} onValueChange={setCitta} disabled={loading || cittaOptions.length === 0}>
+              <SelectTrigger>
+                <SelectValue placeholder={cittaOptions.length === 0 ? 'Seleziona prima la community' : '— Seleziona città —'} />
+              </SelectTrigger>
+              <SelectContent>
+                {cittaOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {/* Data fine contratto */}
+      {selectedCommunity && (
         <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Durata contratto</p>
           <div>
@@ -311,7 +312,7 @@ export default function CreateUserForm() {
       )}
 
       {/* Invito rapido: nome + cognome + data_ingresso required */}
-      {needsContract && mode === 'quick' && (
+      {selectedCommunity && mode === 'quick' && (
         <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Dati personali</p>
           <div className="space-y-3">
@@ -357,8 +358,8 @@ export default function CreateUserForm() {
         </div>
       )}
 
-      {/* Invito completo: anagrafica richiesta (pre-fill per l'onboarding) */}
-      {needsContract && mode === 'full' && (
+      {/* Invito completo: anagrafica richiesta */}
+      {selectedCommunity && mode === 'full' && (
         <div className="rounded-xl border border-border p-4">
           <p className={sectionTitle}>Dati personali</p>
           <div className="space-y-3">
@@ -524,13 +525,13 @@ export default function CreateUserForm() {
       <Button
         type="submit"
         disabled={
-          loading || !email ||
-          (needsContract && mode === 'quick' && (!nome.trim() || !cognome.trim() || !username.trim() || !dataIngresso || !dataFineContratto)) ||
-          (needsContract && mode === 'full' && (
+          loading || !email || !selectedCommunity || !citta || !dataFineContratto ||
+          (mode === 'quick' && (!nome.trim() || !cognome.trim() || !username.trim() || !dataIngresso)) ||
+          (mode === 'full' && (
             !nome.trim() || !cognome.trim() || !username.trim() || !codiceFiscale.trim() || !dataNascita ||
             !luogoNascita.trim() || !provinciaNascita.trim() || !indirizzo.trim() ||
             !civico.trim() || !comuneRes.trim() || !provinciaRes.trim() ||
-            !telefono.trim() || !intestatarioPagamento.trim() || !dataIngresso || !dataFineContratto
+            !telefono.trim() || !intestatarioPagamento.trim() || !dataIngresso
           ))
         }
         className="bg-brand hover:bg-brand/90 text-white"

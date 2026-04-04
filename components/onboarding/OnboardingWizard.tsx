@@ -68,16 +68,12 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
   const [tshirt, setTshirt]                   = useState(prefill?.tshirt_size ?? '');
   const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
 
-  // Activity — città + materie
-  const [citta, setCitta]                   = useState('');
+  // Activity — materie
   const [materieInsegnate, setMaterieInsegnate] = useState<string[]>([]);
-  const [cittaOptions, setCittaOptions]     = useState<LookupOption[]>([]);
   const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
 
   useEffect(() => {
     const comm = community || 'testbusters';
-    fetch(`/api/lookup-options?type=citta&community=${comm}`)
-      .then((r) => r.json()).then((d) => setCittaOptions(d.options ?? [])).catch(() => {});
     fetch(`/api/lookup-options?type=materia&community=${comm}`)
       .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
   }, [community]);
@@ -98,7 +94,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
     dataNascita && luogoNascita.trim() && provinciaNascita.trim() &&
     comune.trim() && provinciaRes.trim() && indirizzo.trim() && civico.trim() &&
     telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt &&
-    citta && materieInsegnate.length > 0;
+    materieInsegnate.length > 0;
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
@@ -122,7 +118,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         intestatario_pagamento: intestatarioPagamento.trim(),
         tshirt_size:             tshirt,
         sono_un_figlio_a_carico: sonoFiglio,
-        citta,
         materie_insegnate:       materieInsegnate,
       }),
     });
@@ -449,18 +444,6 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         <div>
           <p className={sectionTitle}>Attività</p>
           <div className="space-y-3">
-            <div>
-              <label className={labelCls}>Città <span className="text-destructive">*</span></label>
-              <Select value={citta || undefined} onValueChange={setCitta}>
-                <SelectTrigger><SelectValue placeholder="— Seleziona città —" /></SelectTrigger>
-                <SelectContent>
-                  {cittaOptions.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div>
               <label className={labelCls}>Materie insegnate <span className="text-destructive">*</span></label>
               <div className="flex flex-wrap gap-2 mt-1">
