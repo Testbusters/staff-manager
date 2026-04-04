@@ -3,9 +3,10 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getCorsoStato } from '@/lib/corsi-utils';
-import { getCollaboratoriForCity } from '@/lib/notification-helpers';
+import { getCollaboratoriForCity, getNotificationSettings } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { emailNuovoCorsoInCitta } from '@/lib/email-templates';
+import { sendTelegram, telegramNuovoCorsoInCitta } from '@/lib/telegram';
 
 const CreateCorsoSchema = z.object({
   nome: z.string().min(1),
@@ -117,18 +118,29 @@ export async function POST(req: NextRequest) {
     const dataInizio = new Date(data.data_inizio).toLocaleDateString('it-IT');
     const dataFine = new Date(data.data_fine).toLocaleDateString('it-IT');
 
-    getCollaboratoriForCity(citta, [communityId], svc)
-      .then((collaboratori) => {
+    Promise.all([
+      getCollaboratoriForCity(citta, [communityId], svc),
+      getNotificationSettings(svc),
+    ])
+      .then(([collaboratori, settings]) => {
+        const setting = settings.get('nuovo_corso_citta:collaboratore');
         for (const c of collaboratori) {
-          if (!c.email) continue;
-          const { subject, html } = emailNuovoCorsoInCitta({
-            nome: c.nome,
-            corso: corsoNome,
-            citta,
-            dataInizio,
-            dataFine,
-          });
-          sendEmail(c.email, subject, html).catch(() => {});
+          if (setting?.email_enabled && c.email) {
+            const { subject, html } = emailNuovoCorsoInCitta({
+              nome: c.nome,
+              corso: corsoNome,
+              citta,
+              dataInizio,
+              dataFine,
+            });
+            sendEmail(c.email, subject, html).catch(() => {});
+          }
+          if (setting?.telegram_enabled && c.telegram_chat_id) {
+            sendTelegram(
+              c.telegram_chat_id,
+              telegramNuovoCorsoInCitta({ nome: c.nome, corso: corsoNome, citta, dataInizio, dataFine }),
+            ).catch(() => {});
+          }
         }
       })
       .catch(() => {});

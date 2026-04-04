@@ -844,6 +844,51 @@ Admin receives the request in /coda and can accept (bulk-liquidate exactly those
 - Amount splitting (records are included in full or not at all)
 - Liquidation of records not individually selected
 
+---
+
+## Block: telegram-notifications — Telegram opt-in notification channel
+
+### Summary
+Add opt-in Telegram bot notification channel for collaboratori. Dual-channel (email + Telegram) for 3 corsi events: assegnazione docente/CoCoD'à/Q&A, nuovo corso in città, reminder 24h pre-lezione. Collaboratori connect via BotFather deep link; admin can reset the connection.
+
+### In scope
+- Migration 066: `collaborators.telegram_chat_id BIGINT UNIQUE NULL`, `telegram_tokens` table, `notification_settings.telegram_enabled BOOLEAN DEFAULT false`, seed 3 event rows
+- `lib/telegram.ts`: `sendTelegram(chatId, text)` fire-and-forget, 3 message templates
+- `lib/notification-helpers.ts`: add `telegram_chat_id` to `PersonInfo`; extend all `.select()` calls
+- `proxy.ts`: whitelist exact `path === '/api/telegram/webhook'` only
+- 4 new API routes: webhook (unauthenticated), connect (POST), disconnect (DELETE), admin reset (PATCH)
+- Extend `app/api/assegnazioni/route.ts`, `app/api/corsi/route.ts`, `app/api/jobs/lesson-reminders/route.ts` with Telegram send
+- `components/profilo/TelegramConnect.tsx`: connect/disconnect UI
+- `/profilo` page: add "Impostazioni" tab with TelegramConnect
+- `/collaboratori/[id]` admin page: Telegram section with "Reset connessione"
+
+### Out of scope
+- Group/channel notifications (bot sends only DMs)
+- Telegram for non-collaboratore roles
+- Push notifications or webhooks for non-corsi events
+- Telegram message history or logging
+
+### New tables
+`telegram_tokens` — migration 066
+
+### Files
+- NEW: `supabase/migrations/066_telegram_notifications.sql`
+- MOD: `lib/notification-helpers.ts` — PersonInfo + select extensions
+- NEW: `lib/telegram.ts` — sendTelegram + 3 templates
+- MOD: `proxy.ts` — whitelist webhook path
+- NEW: `app/api/telegram/webhook/route.ts`
+- NEW: `app/api/telegram/connect/route.ts`
+- NEW: `app/api/telegram/disconnect/route.ts`
+- NEW: `app/api/admin/collaboratori/[id]/telegram/route.ts`
+- MOD: `app/api/assegnazioni/route.ts` — add Telegram send
+- MOD: `app/api/corsi/route.ts` — add Telegram send
+- MOD: `app/api/jobs/lesson-reminders/route.ts` — add Telegram send
+- NEW: `components/profilo/TelegramConnect.tsx`
+- MOD: `app/(app)/profilo/page.tsx` — add Impostazioni tab
+- MOD: `app/(app)/collaboratori/[id]/page.tsx` — fetch telegram_connected; pass to CollaboratoreDetail
+- MOD: `components/responsabile/CollaboratoreDetail.tsx` — Telegram section for admin
+- NEW: `__tests__/api/telegram.test.ts`
+
 ### New table
 `liquidazione_requests` — migration 061
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/email';
 import { emailReminderLezione } from '@/lib/email-templates';
+import { sendTelegram, telegramReminderLezione } from '@/lib/telegram';
+import { getNotificationSettings } from '@/lib/notification-helpers';
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -38,12 +40,16 @@ export async function GET(req: NextRequest) {
   const lezioneMap = new Map(lezioni.map((l) => [l.id, l]));
   const corsoMap = new Map((corsi ?? []).map((c) => [c.id, c]));
 
-  // Batch: fetch all collaborators in one query
+  // Fetch notification settings + collaborators in parallel
   const uniqueCollabIds = [...new Set((assegnazioni ?? []).map((a) => a.collaborator_id))];
-  const { data: collabs } = await svc
-    .from('collaborators')
-    .select('id, user_id, nome, cognome')
-    .in('id', uniqueCollabIds);
+  const [{ data: collabs }, settings] = await Promise.all([
+    svc
+      .from('collaborators')
+      .select('id, user_id, nome, cognome, telegram_chat_id')
+      .in('id', uniqueCollabIds),
+    getNotificationSettings(svc),
+  ]);
+  const reminderSetting = settings.get('reminder_lezione_24h:collaboratore');
 
   const collabInfoMap = new Map((collabs ?? []).map((c) => [c.id, c]));
 
@@ -81,16 +87,32 @@ export async function GET(req: NextRequest) {
     const orario = `${lez.orario_inizio} – ${lez.orario_fine}`;
     const ruoloLabel = RUOLO_LABEL[a.ruolo] ?? a.ruolo;
 
-    const { subject, html } = emailReminderLezione({
-      nome: collab.nome,
-      corso: corso.nome,
-      lezione_data: lez.data,
-      orario,
-      materia: lez.materia,
-      ruolo: ruoloLabel,
-    });
+    if (reminderSetting?.email_enabled && email) {
+      const { subject, html } = emailReminderLezione({
+        nome: collab.nome,
+        corso: corso.nome,
+        lezione_data: lez.data,
+        orario,
+        materia: lez.materia,
+        ruolo: ruoloLabel,
+      });
+      sendEmail(email, subject, html).catch(() => {});
+    }
 
-    sendEmail(email, subject, html).catch(() => {});
+    if (reminderSetting?.telegram_enabled && collab.telegram_chat_id != null) {
+      sendTelegram(
+        BigInt(collab.telegram_chat_id),
+        telegramReminderLezione({
+          nome: collab.nome,
+          corso: corso.nome,
+          lezione_data: lez.data,
+          orario,
+          materia: lez.materia,
+          ruolo: ruoloLabel,
+        }),
+      ).catch(() => {});
+    }
+
     sent++;
   }
 
