@@ -76,6 +76,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | T4 | State machine action is not a discriminated union | LOW |
 | T5 | `tipo` column in documents is `text + CHECK` instead of a PostgreSQL ENUM | LOW |
 | DB8 | Missing filter indexes on `compensations.data_competenza`, `tickets.last_message_at`, `expense_reimbursements.data_spesa` | LOW |
+| SEC-17 | `app/api/telegram/webhook/route.ts:60-82` — TOCTOU: non-atomic token validation; two concurrent requests with the same token can both pass the `used_at IS NULL` guard — fix: atomic `UPDATE telegram_tokens SET used_at=NOW() WHERE id=$id AND used_at IS NULL RETURNING collaborator_id` | MEDIUM |
+| DB-NEW-9 | `collaborators.telegram_chat_id` has redundant double UNIQUE: column-level full btree + partial index (WHERE NOT NULL). The full constraint already handles NULLs in Postgres. DROP the full constraint, keep partial. | MEDIUM |
 | DB-NEW-1 | `compensations.importo_lordo` nullable — NaN propagation in financial calculations | MEDIUM |
 | DB-NEW-2 | `compensations.importo_netto` nullable — NaN propagation in financial calculations | MEDIUM |
 | DB-NEW-3 | `compensations.ritenuta_acconto` nullable — incorrect net calculation | MEDIUM |
@@ -97,6 +99,10 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | VI-6 | `/login` uses `pb-52` container padding creating excessive empty space between form card and test user grid — reduce to `pb-32` | LOW |
 | VI-7 | `/comunicazioni` with ≤2 items: page feels sparse — consider more compact card layout when item count is low | LOW |
 | UX-2 | Form validation pattern inconsistency: `ExpenseForm` uses react-hook-form+Zod (inline field errors); all other forms (30+) use manual `useState`+`toast.error` (generic toast). Unify to react-hook-form+Zod for new forms; ensure toast-only forms highlight specific failed fields | MEDIUM |
+| UX-10 | `/profilo` profile form: sticky save button or collapsible sections (15+ fields, 3-4 viewport scroll) | MEDIUM |
+| UX-11 | `/profilo` required field markers inconsistent (only Citta/Materie/Massimale marked) | LOW |
+| UX-12 | `/profilo` Sicurezza card visually disconnected — wrap in same section grouping | LOW |
+| UX-13 | `/profilo?tab=impostazioni` TelegramConnect: text-only loading indicator, no spinner | LOW |
 | UX-3 | HTML `required` on Input in `TicketForm`, `CorsoForm`, `CreateUserForm`, `ProfileForm` triggers English browser validation tooltip — add `noValidate` to `<form>` elements to prevent browser-native validation | LOW |
 | UX-4 | CoCoD'à button on `/corsi/assegnazione` is completely hidden when no collaborators exist in responsabile's city (no `canExpand`) — show disabled state with tooltip "Nessun collaboratore disponibile nella tua città" | LOW |
 | RESP-3 | `/corsi/eventi-citta` (resp_citt) — events table overflows 507px, Luogo/Tipo/action buttons invisible at 375px. Fix: card layout at mobile or responsive column hiding. | MEDIUM |
@@ -113,6 +119,10 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | PERF-8 | Bundle analyzer not configured (`@next/bundle-analyzer` absent). Cannot inspect bundle composition. Add as optional dev dependency with `ANALYZE=true npm run build` pattern. | LOW |
 | N5 | Italian PostgreSQL enum values — translate to English | LOW |
 | C1 | `STATO_BADGE` corso stato color map duplicated in 5 corsi files — extract to `lib/corsi-utils.ts` as `CORSO_STATO_COLORS` | LOW |
+| UX-10 | `/profilo` profile form: 15+ fields in single scroll, no sticky save button — "Salva modifiche" unreachable without scrolling 3-4 viewport heights. Fix: sticky save bar or collapsible sections | MEDIUM |
+| UX-11 | `/profilo` profile form: no required field markers on Nome, Cognome, Codice fiscale — only Citta/Materie/Massimale marked with `*`. Fix: mark all required fields consistently | LOW |
+| UX-12 | `/profilo` Sicurezza card visually disconnected from profile form (different max-w container, no section grouping). Fix: wrap within the same visual flow or add a labelled section divider | LOW |
+| UX-13 | `/profilo?tab=impostazioni` TelegramConnect loading state is text-only ("In corso...") with no spinner icon. Fix: add Loader2 spin icon alongside loading text | LOW |
 | C2 | Corsi page date display: cards use raw ISO format (`2025-01-01`), table rows use `DD/MM/YYYY` — apply consistent `formatDate()` in `CorsiPageCollab` | LOW |
 | C3 | `AssegnazioneRespCittPage` section 1 uses native `<table>` instead of shadcn `<Table>` — migrate for component consistency | LOW |
 | VI-8 | `/rimborsi/[id]` IN_ATTESA state feels sparse (V5) — add timeline section even when empty with a single "Richiesta creata" event to fill vertical space and give context | MEDIUM |

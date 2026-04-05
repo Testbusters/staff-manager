@@ -74,6 +74,7 @@ interface CollaboratoreDetailProps {
   collabRole?: Role | null;
   cittaOptions?: LookupOption[];
   materiaOptions?: LookupOption[];
+  telegramConnected?: boolean;
 }
 
 const MEMBER_STATUS_LABELS: Record<string, string> = {
@@ -102,10 +103,13 @@ export default function CollaboratoreDetail({
   collabRole,
   cittaOptions: cittaOptionsProp = [],
   materiaOptions: materiaOptionsProp = [],
+  telegramConnected = false,
 }: CollaboratoreDetailProps) {
   const router = useRouter();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [tgConnected, setTgConnected] = useState(telegramConnected);
+  const [tgResetting, setTgResetting] = useState(false);
 
   const isResponsabileProfile = collabRole === 'responsabile_compensi';
 
@@ -134,6 +138,16 @@ export default function CollaboratoreDetail({
   // Lookup options provided by the parent page (server-fetched)
   const cittaOptions   = cittaOptionsProp;
   const materiaOptions = materiaOptionsProp;
+
+  async function resetTelegram() {
+    setTgResetting(true);
+    try {
+      const res = await fetch(`/api/admin/collaboratori/${collab.id}/telegram`, { method: 'PATCH' });
+      if (res.ok) setTgConnected(false);
+    } finally {
+      setTgResetting(false);
+    }
+  }
 
   const openEditModal = () => {
     setFNome(collab.nome ?? '');
@@ -343,6 +357,33 @@ export default function CollaboratoreDetail({
           )}
         </dl>
       </div>
+
+      {/* ── Telegram (admin only) ────────────────────────────────────────── */}
+      {role === 'amministrazione' && (
+        <div className="bg-card border border-border rounded-xl p-5">
+          <h2 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-4">
+            Telegram
+          </h2>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${tgConnected ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+              <span className="text-sm text-foreground">
+                {tgConnected ? 'Account Telegram collegato' : 'Nessun account Telegram collegato'}
+              </span>
+            </div>
+            {tgConnected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetTelegram}
+                disabled={tgResetting}
+              >
+                {tgResetting ? 'Reset…' : 'Reset connessione'}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Documenti ────────────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">

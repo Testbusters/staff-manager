@@ -43,7 +43,8 @@
 | `materie_insegnate` | ✅ required (≥1) | ✅ (≥1) | ✅ (admin only) | ❌ read-only |
 | `email` | — | ✅ (via auth API) | — | ❌ |
 | `foto_profilo_url` | — | ✅ (avatar upload) | — | ✅ (own avatar via dashboard) |
-| `community_ids` | — | ✅ (PATCH /api/profile/communities, ≥1 required) | ❌ | ❌ |
+| `community_ids` | — | ❌ read-only (admin assigns only via /collaboratori/[id]) | ✅ (admin only) | ❌ |
+| `telegram_chat_id` | — | ❌ (set/cleared via /api/telegram/connect + /api/telegram/webhook) | ✅ can reset via /api/admin/collaboratori/[id]/telegram | ❌ |
 | `data_ingresso` | — | ❌ | ✅ (admin only) | ❌ |
 | `tipo_contratto` | — | ❌ | ✅ (admin only) | ❌ |
 

@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/email';
 import { emailAssegnazioneCorsi } from '@/lib/email-templates';
-import { getCollaboratorInfo } from '@/lib/notification-helpers';
+import { sendTelegram, telegramAssegnazioneCorsi } from '@/lib/telegram';
+import { getCollaboratorInfo, getNotificationSettings } from '@/lib/notification-helpers';
 
 const schema = z.object({
   lezione_id: z.string().uuid(),
@@ -89,21 +90,33 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
-  // E13: send assignment email fire-and-forget
+  // E13 + Telegram: send assignment notifications fire-and-forget
   try {
-    const info = await getCollaboratorInfo(collaborator_id, svc);
-    if (info?.email) {
+    const [info, settings] = await Promise.all([
+      getCollaboratorInfo(collaborator_id, svc),
+      getNotificationSettings(svc),
+    ]);
+    const setting = settings.get('assegnazione_corso:collaboratore');
+    if (info) {
       const { data: lez } = await svc.from('lezioni').select('corso_id').eq('id', lezione_id).single();
       if (lez) {
         const { data: corso } = await svc.from('corsi').select('nome').eq('id', lez.corso_id).single();
         if (corso) {
           const ruoloLabel = ruolo === 'docente' ? 'Docente' : "CoCoD'à";
-          const { subject, html } = emailAssegnazioneCorsi({
-            nome: info.nome,
-            corso: corso.nome,
-            ruolo: ruoloLabel,
-          });
-          sendEmail(info.email, subject, html).catch(() => {});
+          if (setting?.email_enabled && info.email) {
+            const { subject, html } = emailAssegnazioneCorsi({
+              nome: info.nome,
+              corso: corso.nome,
+              ruolo: ruoloLabel,
+            });
+            sendEmail(info.email, subject, html).catch(() => {});
+          }
+          if (setting?.telegram_enabled && info.telegram_chat_id) {
+            sendTelegram(
+              info.telegram_chat_id,
+              telegramAssegnazioneCorsi({ nome: info.nome, corso: corso.nome, ruolo: ruoloLabel }),
+            ).catch(() => {});
+          }
         }
       }
     }

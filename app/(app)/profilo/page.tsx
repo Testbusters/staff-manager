@@ -5,7 +5,7 @@ import ProfileForm from '@/components/ProfileForm';
 import DocumentList from '@/components/documents/DocumentList';
 import DocumentUploadForm from '@/components/documents/DocumentUploadForm';
 import PasswordChangeForm from '@/components/profilo/PasswordChangeForm';
-import { Button } from '@/components/ui/button';
+import TelegramConnect from '@/components/profilo/TelegramConnect';
 
 export default async function ProfiloPage({
   searchParams,
@@ -21,7 +21,6 @@ export default async function ProfiloPage({
     { data: profile },
     { data: collaborator },
     { data: guidaFigliRow },
-    { data: allCommunitiesData },
   ] = await Promise.all([
     supabase
       .from('user_profiles')
@@ -36,7 +35,7 @@ export default async function ProfiloPage({
         comune, provincia_residenza, data_ingresso,
         telefono, indirizzo, civico_residenza, iban, intestatario_pagamento, tshirt_size,
         foto_profilo_url, sono_un_figlio_a_carico, importo_lordo_massimale,
-        citta, materie_insegnate,
+        citta, materie_insegnate, telegram_chat_id,
         collaborator_communities ( communities ( id, name ) )
       `)
       .eq('user_id', user.id)
@@ -47,10 +46,6 @@ export default async function ProfiloPage({
       .contains('tag', ['detrazioni-figli'])
       .limit(1)
       .maybeSingle(),
-    supabase
-      .from('communities')
-      .select('id, name')
-      .order('name'),
   ]);
 
   // PostgREST returns a single object (not array) when UNIQUE constraint exists on the FK column.
@@ -65,8 +60,6 @@ export default async function ProfiloPage({
     },
   );
 
-  const allCommunities = (allCommunitiesData ?? []) as { id: string; name: string }[];
-
   // Derive community slug for lookup_options API
   const communitySlug = communities[0]?.name?.toLowerCase().replace(/\s+/g, '') ?? 'testbusters';
 
@@ -76,7 +69,7 @@ export default async function ProfiloPage({
 
   const { tab } = await searchParams;
   const activeTab = isCollaboratore
-    ? (tab === 'documenti' ? 'documenti' : 'profilo')
+    ? (tab === 'documenti' ? 'documenti' : tab === 'impostazioni' ? 'impostazioni' : 'profilo')
     : 'profilo';
 
   const documents = activeTab === 'documenti'
@@ -104,7 +97,6 @@ export default async function ProfiloPage({
           email={user.email ?? ''}
           community={communitySlug}
           communities={communities}
-          allCommunities={allCommunities}
           guidaFigli={guidaFigliRow ?? null}
         />
       </div>
@@ -173,6 +165,7 @@ export default async function ProfiloPage({
       <div className="flex gap-2 mb-6">
         <Link href="?tab=profilo" className={tabCls('profilo')}>Profilo</Link>
         <Link href="?tab=documenti" className={tabCls('documenti')}>Documenti</Link>
+        <Link href="?tab=impostazioni" className={tabCls('impostazioni')}>Impostazioni</Link>
       </div>
 
       {activeTab === 'profilo' && (
@@ -183,7 +176,6 @@ export default async function ProfiloPage({
             email={user.email ?? ''}
             community={communitySlug}
             communities={communities}
-            allCommunities={allCommunities}
             guidaFigli={guidaFigliRow ?? null}
           />
           <div className="bg-card border border-border rounded-xl p-6">
@@ -197,6 +189,17 @@ export default async function ProfiloPage({
         <div className="w-full space-y-6">
           <DocumentUploadForm collaborators={[]} isAdmin={false} />
           <DocumentList documents={documents} isAdmin={false} />
+        </div>
+      )}
+
+      {activeTab === 'impostazioni' && (
+        <div className="max-w-2xl">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-base font-semibold text-foreground mb-4">Telegram</h2>
+            <TelegramConnect
+              telegram_connected={(collaborator as { telegram_chat_id?: number | null } | null)?.telegram_chat_id != null}
+            />
+          </div>
         </div>
       )}
     </div>

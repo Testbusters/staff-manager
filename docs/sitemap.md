@@ -63,7 +63,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 
 | Route | Page file | Roles | Layout | Componenti chiave | loading.tsx | Access notes | Audit |
 |---|---|---|---|---|---|---|---|
-| `/profilo` | `app/(app)/profilo/page.tsx` | all | `tabs` | Tabs, Form, Input, Avatar, Table, Badge | ✅ | Own profile view + documents tab. Admin/Responsabile see own profile only | `UI` `R` `UX` |
+| `/profilo` | `app/(app)/profilo/page.tsx` | all | `tabs` | Tabs, Form, Input, Avatar, Table, Badge, TelegramConnect | ✅ | Own profile view + documents tab + Impostazioni tab (collab only: Telegram connection). Admin/Responsabile see own profile only. Community field read-only for collab. | `UI` `R` `UX` |
 | `/notifiche` | `app/(app)/notifiche/page.tsx` | all | `full-list` | list rows, Badge, EmptyState | ✅ | Notification center | `UI` `R` `UX` |
 
 ---
@@ -187,9 +187,9 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Responsive notes**: Stats strip (admin) is a multi-column grid — needs stack at mobile. Feed tabs (collab) scroll vertically; card layout should adapt to single column.
 
 ### `/profilo`
-- **Tabs / states**: 3 tabs — Informazioni personali · Documenti · Sicurezza (password change form).
-- **Key interactions**: All roles: edit own contact/fiscal fields (constrained by role). Collab: sign documents from Documenti tab. All roles: change password from Sicurezza tab.
-- **Empty states**: Documenti tab uses EmptyState when no documents assigned.
+- **Tabs / states**: Collaboratori: 3 tabs — Profilo · Documenti · Impostazioni. Admin/Responsabile: no tabs (profile form only). Impostazioni tab contains TelegramConnect section.
+- **Key interactions**: All roles: edit own contact/fiscal fields (constrained by role). Community field is read-only for collaboratori (admin-only via `/collaboratori/[id]`). Collab: sign documents from Documenti tab, change password from Profilo tab, connect/disconnect Telegram from Impostazioni tab. Admin also has a Telegram reset button on `/collaboratori/[id]`.
+- **Empty states**: Documenti tab uses EmptyState when no documents assigned. TelegramConnect shows disconnected state with connect CTA when no chat_id set.
 - **Responsive notes**: Form fields in two-column grid on desktop → single column on mobile. Avatar upload button should remain accessible.
 
 ### `/contenuti`

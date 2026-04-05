@@ -175,7 +175,7 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - Expected output: summary line only (e.g. `✓ 106/106`). Do NOT paste full output — reduces token consumption.
 - If something fails: paste only the error lines, fix, and re-run. Do not proceed with open errors.
 - **Debug code check** (before committing): run `grep -rn "console\.log\|debugger\|TODO\|FIXME\|@ts-ignore\|eslint-disable" <changed-files>`. Remove or justify every match before proceeding. A debug `console.log` committed to staging is a process error.
-- After green build + tests: **run `/commit`** (Conventional Commits skill) to stage and commit on the current `worktree-[block-name]` branch. The skill reads staged changes, determines type+scope, and executes the commit. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
+- After green build + tests: **run `/commit`** (Conventional Commits skill) to stage and commit on the current `worktree-[block-name]` branch. The skill reads staged changes, determines type+scope, and executes the commit. Then **push the worktree branch to remote**: `git -C ~/Projects/staff-manager push -u origin worktree-[block-name]`. This ensures the remote branch exists so Phase 8 cleanup (`--delete`) works without errors. Do NOT push to `staging` or `main` at this point — promotion happens in Phase 8.
 
 **Phase 3b — API integration tests** *(only if the block creates or modifies API routes)*
 
@@ -382,7 +382,7 @@ Only after explicit confirmation:
    - *** STOP — before cleanup: ask "Confermo eliminazione worktree `worktree-[block-name]` locale e remoto?" Wait for explicit yes before proceeding. ***
    - **Exit worktree first (mandatory)**: call `ExitWorktree` to switch the active context back to the main repo (`~/Projects/staff-manager`) BEFORE running any removal command. If Claude's shell CWD is still inside the worktree directory when `git worktree remove` runs, the directory is deleted and all subsequent Bash commands fail with "Working directory no longer exists".
    - Remove local worktree: `git -C ~/Projects/staff-manager worktree remove .claude/worktrees/[block-name]`
-   - Delete remote branch: `git -C ~/Projects/staff-manager push origin --delete worktree-[block-name]`
+   - Delete remote branch (if it was pushed in Phase 3): `git -C ~/Projects/staff-manager push origin --delete worktree-[block-name] 2>/dev/null || echo 'Remote branch not found — skipping delete (branch was never pushed).'`
 
 **Phase 8.5 — Context file review + compact**
 After git push, before closing the session:
