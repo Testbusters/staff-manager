@@ -73,26 +73,6 @@
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "matcher": "mcp__claude_ai_Supabase__execute_sql",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/MarcoG/Projects/staff-manager/.claude/hooks/block-execute-sql.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /Users/MarcoG/Projects/staff-manager/.claude/hooks/block-git-push.sh"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
