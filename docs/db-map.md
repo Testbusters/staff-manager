@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `065_feedback_role_check_fix.sql` (2026-04-03).
+> Last synced: migration `066_telegram_notifications.sql` (2026-04-05).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -14,7 +14,7 @@
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione` |
-| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific |
+| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL), `telegram_chat_id` (BIGINT UNIQUE NULL) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific. `telegram_chat_id` set by webhook after deep-link flow; cleared by disconnect/admin reset. |
 | `communities` | Community entities | `id`, `name` (UNIQUE), `is_active`, `banner_content`, `banner_active`, `banner_link_url`, `banner_link_label`, `banner_link_new_tab`, `banner_updated_at` | Banner fields added in migrations 052+053. `banner_updated_at` used as dismiss-key version for localStorage. |
 | `collaborator_communities` | Collaborator → Community membership (1:1 per migration 044) | `collaborator_id` (UNIQUE), `community_id` | UNIQUE on `collaborator_id` — each collaborator belongs to exactly 1 community |
 | `user_community_access` | Responsabile → Community access | `user_id`, `community_id` | UNIQUE `(user_id, community_id)`. Used for RBAC joins in RLS policies |
@@ -67,7 +67,8 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `notifications` | In-app notifications | `user_id`, `tipo`, `entity_type`, `entity_id`, `read` | `entity_type` values: `compensation`, `reimbursement`, `document`, `ticket`, `communication`, `event`, `opportunity`, `discount` |
-| `notification_settings` | Toggle per event × role | `event_key`, `recipient_role` (UNIQUE pair), `inapp_enabled`, `email_enabled` | 19 rows total. Lookup: `event_key:recipient_role` |
+| `notification_settings` | Toggle per event × role | `event_key`, `recipient_role` (UNIQUE pair), `inapp_enabled`, `email_enabled`, `telegram_enabled` | 19 rows total. Lookup: `event_key:recipient_role`. `telegram_enabled` seeded true for: `assegnazione_corso:collaboratore`, `nuovo_corso_citta:collaboratore`, `reminder_lezione_24h:collaboratore` |
+| `telegram_tokens` | Pending Telegram connection tokens | `id`, `collaborator_id` (FK→collaborators, UNIQUE), `token` (TEXT UNIQUE), `expires_at`, `used_at` | RLS enabled, zero policies — service-role only. One pending token per collaborator (UNIQUE on collaborator_id). Token entropy: 256-bit (32 random bytes hex). Expires 15 min after creation. |
 | `email_templates` | Editable email templates | `key` (UNIQUE), `event_group`, `subject`, `body_before`, `highlight_rows` (jsonb), `body_after`, `available_markers[]` | 12 rows. `getRenderedEmail()` in `lib/email-template-service.ts` |
 | `email_layout_config` | Singleton layout config | `brand_color`, `logo_url`, `header_title`, `footer_address` | Single row, cached 5min |
 | `email_events` | Resend delivery log (webhook) | `resend_email_id`, `recipient`, `subject`, `event_type` | Written by `/api/webhooks/resend` (HMAC-SHA256) |
@@ -233,6 +234,7 @@ tickets
 | `ticket_messages` | read if ticket accessible, insert for all authenticated | |
 | `notifications` | own only (ALL) | Simple ownership |
 | `notification_settings` | all authenticated (SELECT), admin (UPDATE) | |
+| `telegram_tokens` | RLS ENABLED, zero policies — service-role only | All token operations use `SUPABASE_SERVICE_ROLE_KEY` |
 | `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL write) | Content tables — community filtering is in-memory in API, NOT in RLS. `events`: resp.citt can INSERT/UPDATE/DELETE city-scoped events |
 | `corsi` | all authenticated (SELECT), admin (ALL) | |
 | `lezioni` | all authenticated (SELECT), admin (ALL) | |
@@ -284,10 +286,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-03-27.
+> Last refreshed: 2026-04-05.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -343,6 +346,7 @@ tickets
 | `approved_year` | integer | NO | `EXTRACT(year FROM CURRENT_DATE)` | — |
 | `citta` | text | NO | — | — |
 | `materie_insegnate` | text[] | NO | `'{}'[]` | — |
+| `telegram_chat_id` | bigint | YES | — | — |
 
 ### `communities`
 
@@ -645,6 +649,7 @@ tickets
 | `label` | text | NO | — | — |
 | `inapp_enabled` | boolean | NO | `true` | — |
 | `email_enabled` | boolean | NO | `false` | — |
+| `telegram_enabled` | boolean | NO | `false` | — |
 
 ### `email_templates`
 
@@ -852,3 +857,14 @@ tickets
 | `community` | text | NO | — | — |
 | `nome` | text | NO | — | — |
 | `sort_order` | integer | NO | `0` | — |
+
+### `telegram_tokens`
+
+| Column | Type | Null | Default | FK |
+|---|---|---|---|---|
+| `id` | uuid | NO | `gen_random_uuid()` | — |
+| `collaborator_id` | uuid | NO | — | → collaborators.id |
+| `token` | text | NO | — | — |
+| `expires_at` | timestamp with time zone | NO | — | — |
+| `used_at` | timestamp with time zone | YES | — | — |
+| `created_at` | timestamp with time zone | NO | `now()` | — |

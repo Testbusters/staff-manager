@@ -9,6 +9,7 @@ type Svc = SupabaseClient<any, any, any>;
 export interface NotificationSetting {
   inapp_enabled: boolean;
   email_enabled: boolean;
+  telegram_enabled: boolean;
 }
 
 export type SettingsMap = Map<string, NotificationSetting>;
@@ -18,19 +19,21 @@ export interface PersonInfo {
   email: string;
   nome: string;
   cognome: string;
+  telegram_chat_id: bigint | null;
 }
 
 // Returns a Map keyed by "event_key:recipient_role"
 export async function getNotificationSettings(svc: Svc): Promise<SettingsMap> {
   const { data } = await svc
     .from('notification_settings')
-    .select('event_key, recipient_role, inapp_enabled, email_enabled');
+    .select('event_key, recipient_role, inapp_enabled, email_enabled, telegram_enabled');
 
   const map = new Map<string, NotificationSetting>();
   for (const row of data ?? []) {
     map.set(`${row.event_key}:${row.recipient_role}`, {
       inapp_enabled: row.inapp_enabled,
       email_enabled: row.email_enabled,
+      telegram_enabled: row.telegram_enabled ?? false,
     });
   }
   return map;
@@ -43,7 +46,7 @@ export async function getCollaboratorInfo(
 ): Promise<PersonInfo | null> {
   const { data: collab } = await svc
     .from('collaborators')
-    .select('user_id, nome, cognome')
+    .select('user_id, nome, cognome, telegram_chat_id')
     .eq('id', collaboratorId)
     .single();
 
@@ -55,6 +58,7 @@ export async function getCollaboratorInfo(
     email: authUser?.user?.email ?? '',
     nome: collab.nome ?? '',
     cognome: collab.cognome ?? '',
+    telegram_chat_id: collab.telegram_chat_id != null ? BigInt(collab.telegram_chat_id) : null,
   };
 }
 
@@ -83,7 +87,7 @@ export async function getResponsabiliForCommunity(
   if (activeIds.length === 0) return [];
 
   const [{ data: collabs }, { data: authData }] = await Promise.all([
-    svc.from('collaborators').select('user_id, nome, cognome').in('user_id', activeIds),
+    svc.from('collaborators').select('user_id, nome, cognome, telegram_chat_id').in('user_id', activeIds),
     svc.auth.admin.listUsers(),
   ]);
 
@@ -97,6 +101,8 @@ export async function getResponsabiliForCommunity(
     email: emailMap[uid] ?? '',
     nome: collabMap[uid]?.nome ?? '',
     cognome: collabMap[uid]?.cognome ?? '',
+    telegram_chat_id: collabMap[uid]?.telegram_chat_id != null
+      ? BigInt(collabMap[uid].telegram_chat_id) : null,
   }));
 }
 
@@ -134,7 +140,7 @@ export async function getResponsabiliForCollaborator(
   if (activeIds.length === 0) return [];
 
   const [{ data: collabs }, { data: authData }] = await Promise.all([
-    svc.from('collaborators').select('user_id, nome, cognome').in('user_id', activeIds),
+    svc.from('collaborators').select('user_id, nome, cognome, telegram_chat_id').in('user_id', activeIds),
     svc.auth.admin.listUsers(),
   ]);
 
@@ -148,6 +154,8 @@ export async function getResponsabiliForCollaborator(
     email: emailMap[uid] ?? '',
     nome: collabMap[uid]?.nome ?? '',
     cognome: collabMap[uid]?.cognome ?? '',
+    telegram_chat_id: collabMap[uid]?.telegram_chat_id != null
+      ? BigInt(collabMap[uid].telegram_chat_id) : null,
   }));
 }
 
@@ -170,7 +178,7 @@ export async function getCollaboratoriForCommunities(
 
   const { data: collabs } = await svc
     .from('collaborators')
-    .select('user_id, nome, cognome')
+    .select('user_id, nome, cognome, telegram_chat_id')
     .in('id', collabIds);
 
   if (!collabs || collabs.length === 0) return [];
@@ -190,7 +198,7 @@ export async function getCollaboratoriForCommunities(
   const { data: authData } = await svc.auth.admin.listUsers();
 
   const collabMap = Object.fromEntries(
-    (collabs as { user_id: string; nome: string; cognome: string }[]).map((c) => [c.user_id, c]),
+    (collabs as { user_id: string; nome: string; cognome: string; telegram_chat_id: number | null }[]).map((c) => [c.user_id, c]),
   );
   const emailMap = Object.fromEntries(
     (authData?.users ?? []).map((u) => [u.id, u.email ?? '']),
@@ -201,6 +209,8 @@ export async function getCollaboratoriForCommunities(
     email: emailMap[uid] ?? '',
     nome: collabMap[uid]?.nome ?? '',
     cognome: collabMap[uid]?.cognome ?? '',
+    telegram_chat_id: collabMap[uid]?.telegram_chat_id != null
+      ? BigInt(collabMap[uid].telegram_chat_id) : null,
   }));
 }
 
@@ -238,7 +248,7 @@ export async function getAllActiveCollaboratori(svc: Svc): Promise<PersonInfo[]>
   if (activeIds.length === 0) return [];
 
   const [{ data: collabs }, { data: authData }] = await Promise.all([
-    svc.from('collaborators').select('user_id, nome, cognome').in('user_id', activeIds),
+    svc.from('collaborators').select('user_id, nome, cognome, telegram_chat_id').in('user_id', activeIds),
     svc.auth.admin.listUsers(),
   ]);
 
@@ -252,6 +262,8 @@ export async function getAllActiveCollaboratori(svc: Svc): Promise<PersonInfo[]>
     email: emailMap[uid] ?? '',
     nome: collabMap[uid]?.nome ?? '',
     cognome: collabMap[uid]?.cognome ?? '',
+    telegram_chat_id: collabMap[uid]?.telegram_chat_id != null
+      ? BigInt(collabMap[uid].telegram_chat_id) : null,
   }));
 }
 

@@ -33,7 +33,7 @@ export default async function CollaboratoreDetailPage({
   // ── Fetch collaborator ───────────────────────────────────────────────────
   const { data: collab, error: collabErr } = await svc
     .from('collaborators')
-    .select('id, user_id, nome, cognome, codice_fiscale, telefono, email, tipo_contratto, data_ingresso, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, data_nascita, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, intestatario_pagamento, username, citta, materie_insegnate')
+    .select('id, user_id, nome, cognome, codice_fiscale, telefono, email, tipo_contratto, data_ingresso, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, data_nascita, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, intestatario_pagamento, username, citta, materie_insegnate, telegram_chat_id')
     .eq('id', id)
     .maybeSingle();
 
@@ -87,9 +87,12 @@ export default async function CollaboratoreDetailPage({
     created_at: string;
   }[];
 
+  const telegramConnected = (collab as { telegram_chat_id?: number | null }).telegram_chat_id != null;
+
   return (
     <CollaboratoreDetail
       userId={collab.user_id ?? null}
+      telegramConnected={telegramConnected}
       collab={{
         id: collab.id,
         nome: collab.nome,
