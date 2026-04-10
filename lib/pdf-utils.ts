@@ -27,17 +27,22 @@ export async function findMarkerPositions(
   if (markers.length === 0) return [];
 
   // Dynamic import — pdfjs-dist is ESM, run worker inline for Node.js server use.
+  // Pre-import the worker module and register it on globalThis BEFORE importing pdf.mjs.
+  // pdfjs-dist's fake worker (used in Node.js) calls `import(this.workerSrc)` with a
+  // variable path ("./pdf.worker.mjs"). Next.js standalone output traces only static
+  // imports — the worker file is missing from Vercel's deployment bundle.
+  // Setting globalThis.pdfjsWorker makes pdfjs-dist use it directly (via
+  // PDFWorker.#mainThreadWorkerMessageHandler), bypassing the broken dynamic import.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!(globalThis as any).pdfjsWorker) {
+    // @ts-ignore — no type declarations for this path
+    const workerModule = await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).pdfjsWorker = workerModule;
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   // @ts-ignore — no type declarations for this path
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs') as any;
-  // Always override workerSrc with an absolute file:// path.
-  // pdfjs-dist ships with a default relative workerSrc ("./pdf.worker.mjs") which
-  // makes the if (!workerSrc) guard evaluate to false — the block never ran before.
-  // In Vercel serverless, a relative path is not accessible from the function execution
-  // context; the absolute path resolves correctly via process.cwd() (= /var/task).
-  const { resolve } = await import('path');
-  const workerPath = resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
 
   const pdf = await pdfjsLib.getDocument({
     data: new Uint8Array(pdfBuffer),
