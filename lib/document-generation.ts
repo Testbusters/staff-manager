@@ -102,20 +102,22 @@ export async function generateDocumentFromTemplate(
 
     if (!tplRow) return null;
 
-    // file_url may be a full public URL or a relative storage path.
-    // Use fetch() for full URLs (public bucket) — storage.download() requires a relative path.
-    let templateBuffer: Buffer;
-    if (tplRow.file_url.startsWith('http')) {
-      const res = await fetch(tplRow.file_url);
-      if (!res.ok) return null;
-      templateBuffer = Buffer.from(await res.arrayBuffer());
-    } else {
-      const { data: blob, error: downloadErr } = await svc.storage
-        .from('contracts')
-        .download(tplRow.file_url);
-      if (downloadErr || !blob) return null;
-      templateBuffer = Buffer.from(await blob.arrayBuffer());
+    // file_url may be a full Supabase storage URL or a relative path within the bucket.
+    // The 'contracts' bucket is private — must use the service role client (svc.storage),
+    // never fetch() on a public URL (returns 400 for private buckets).
+    // Extract the relative path from full URLs: strip everything up to '/contracts/'.
+    let storagePath = tplRow.file_url as string;
+    const bucketMarker = '/contracts/';
+    const markerIdx = storagePath.indexOf(bucketMarker);
+    if (markerIdx !== -1) {
+      storagePath = storagePath.slice(markerIdx + bucketMarker.length);
     }
+
+    const { data: blob, error: downloadErr } = await svc.storage
+      .from('contracts')
+      .download(storagePath);
+    if (downloadErr || !blob) return null;
+    const templateBuffer = Buffer.from(await blob.arrayBuffer());
     const filled = await fillPdfMarkers(templateBuffer, vars, signatureBuffer);
     return filled;
   } catch (err) {
