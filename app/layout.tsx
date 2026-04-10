@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: "it_IT",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Staff Manager",
     description: DESCRIPTION,
   },

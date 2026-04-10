@@ -35,6 +35,8 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   // Content Security Policy
   { key: "Content-Security-Policy", value: ContentSecurityPolicy },
+  // Tell crawlers not to index any page (belt-and-suspenders with robots.txt + <meta robots>)
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
 ];
 
 const nextConfig: NextConfig = {
