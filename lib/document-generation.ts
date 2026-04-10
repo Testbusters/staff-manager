@@ -102,13 +102,20 @@ export async function generateDocumentFromTemplate(
 
     if (!tplRow) return null;
 
-    const { data: blob, error: downloadErr } = await svc.storage
-      .from('contracts')
-      .download(tplRow.file_url);
-
-    if (downloadErr || !blob) return null;
-
-    const templateBuffer = Buffer.from(await blob.arrayBuffer());
+    // file_url may be a full public URL or a relative storage path.
+    // Use fetch() for full URLs (public bucket) — storage.download() requires a relative path.
+    let templateBuffer: Buffer;
+    if (tplRow.file_url.startsWith('http')) {
+      const res = await fetch(tplRow.file_url);
+      if (!res.ok) return null;
+      templateBuffer = Buffer.from(await res.arrayBuffer());
+    } else {
+      const { data: blob, error: downloadErr } = await svc.storage
+        .from('contracts')
+        .download(tplRow.file_url);
+      if (downloadErr || !blob) return null;
+      templateBuffer = Buffer.from(await blob.arrayBuffer());
+    }
     const filled = await fillPdfMarkers(templateBuffer, vars, signatureBuffer);
     return filled;
   } catch (err) {

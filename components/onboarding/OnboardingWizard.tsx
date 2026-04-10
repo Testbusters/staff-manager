@@ -161,7 +161,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
   };
 
   const handleFinish = () => {
-    router.push('/');
+    router.push('/profilo?tab=documenti');
     router.refresh();
   };
 
