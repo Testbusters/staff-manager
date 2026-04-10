@@ -126,8 +126,10 @@ export async function POST(request: Request) {
   // Generate contract PDF (best-effort — failure does not block onboarding completion)
   let documentId: string | null = null;
   let downloadUrl: string | null = null;
+  // Temporary debug trace — remove after contract generation is confirmed working
+  const _dbg: string[] = [];
 
-  console.log('[onboarding/complete] contract gate check:', { tipoContratto, skip: profile.skip_contract_on_onboarding });
+  _dbg.push(`gate: tipo=${tipoContratto}, skip=${profile.skip_contract_on_onboarding}`);
   if (tipoContratto && !profile.skip_contract_on_onboarding) {
     try {
       // Determine community-aware template tipo
@@ -138,7 +140,7 @@ export async function POST(request: Request) {
         .maybeSingle();
       const onboardingCommunity = (ccOnboarding?.communities as unknown as { name: string } | null)?.name ?? '';
       const tipo: ContractTemplateType = getContractTemplateTipo(onboardingCommunity);
-      console.log('[onboarding/complete] resolved template tipo:', tipo, 'community:', onboardingCommunity);
+      _dbg.push(`tipo=${tipo}, community=${onboardingCommunity || '(empty)'}`);
       const collabForVars = {
         nome: d.nome,
         cognome: d.cognome,
@@ -151,9 +153,9 @@ export async function POST(request: Request) {
         data_fine_contratto: existingCollab ? (existingCollab as { data_fine_contratto?: string | null }).data_fine_contratto ?? null : null,
       };
       const vars = buildContractVars(collabForVars);
-      console.log('[onboarding/complete] calling generateDocumentFromTemplate...');
+      _dbg.push('calling generateDocumentFromTemplate...');
       const pdfBuffer = await generateDocumentFromTemplate(admin, tipo, vars);
-      console.log('[onboarding/complete] pdfBuffer result:', pdfBuffer ? `${pdfBuffer.length} bytes` : 'null');
+      _dbg.push(`pdfBuffer: ${pdfBuffer ? `${pdfBuffer.length} bytes` : 'null'}`);
 
       if (pdfBuffer) {
         const docId = crypto.randomUUID();
@@ -201,6 +203,7 @@ export async function POST(request: Request) {
       }
     } catch (err) {
       // Best-effort — contract generation failure never blocks onboarding
+      _dbg.push(`CATCH: ${err instanceof Error ? err.message : String(err)}`);
       console.error('[onboarding/complete] contract generation failed:', err);
     }
   }
@@ -215,5 +218,5 @@ export async function POST(request: Request) {
     .update(onboardingUpdate)
     .eq('user_id', user.id);
 
-  return NextResponse.json({ success: true, document_id: documentId, download_url: downloadUrl });
+  return NextResponse.json({ success: true, document_id: documentId, download_url: downloadUrl, _debug: _dbg });
 }
