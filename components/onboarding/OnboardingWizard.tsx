@@ -438,7 +438,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
           <div className="flex items-center justify-between mb-3 mt-1">
             <p className={sectionTitle} style={{ margin: 0 }}>Dati fiscali</p>
             <a
-              href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/modello-730/la-dichiarazione-730/guida-alla-compilazione-del-730/parte-i-dati-del-dichiarante/2.-reddito-complessivo-e-detrazioni-per-carichi-di-famiglia"
+              href="https://www.agenziaentrate.gov.it/portale/schede/pagamenti/versamento-modello-f24-ritenute-su-reddito-di-lavoro-autonomo-f24_rit_red_lav_aut/aliquote-f24_rit_red_lav_aut"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-link hover:text-link/80"
@@ -472,7 +472,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
                   Massimale lordo annuo <span className="text-destructive">*</span>
                 </label>
                 <a
-                  href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/modello-730/la-dichiarazione-730/guida-alla-compilazione-del-730"
+                  href="https://www.inps.it/it/it/dettaglio-approfondimento.schede-informative.49893.i-contributi-dei-lavoratori-autonomi-occasionali.html"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-link hover:text-link/80"
