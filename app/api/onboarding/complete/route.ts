@@ -94,7 +94,8 @@ export async function POST(request: Request) {
     tshirt_size:               d.tshirt_size,
     sono_un_figlio_a_carico:   d.sono_un_figlio_a_carico,
     importo_lordo_massimale:   d.importo_lordo_massimale ?? null,
-    citta:                     d.citta ?? null,
+    // citta is set at invite time (admin form) or as '' placeholder (GSheet import)
+    // and must not be overwritten here — the wizard does not collect it.
     materie_insegnate:         d.materie_insegnate,
   };
 
