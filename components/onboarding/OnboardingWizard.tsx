@@ -30,6 +30,7 @@ type PrefillData = {
   intestatario_pagamento: string | null;
   tshirt_size: string | null;
   sono_un_figlio_a_carico: boolean;
+  importo_lordo_massimale: number | null;
 } | null;
 
 type LookupOption = { id: string; nome: string };
@@ -67,6 +68,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
   const [intestatarioPagamento, setIntestatarioPagamento] = useState(prefill?.intestatario_pagamento ?? '');
   const [tshirt, setTshirt]                   = useState(prefill?.tshirt_size ?? '');
   const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
+  const [massimale, setMassimale]             = useState<number>(prefill?.importo_lordo_massimale ?? 5000);
 
   // Activity — materie
   const [materieInsegnate, setMaterieInsegnate] = useState<string[]>([]);
@@ -94,7 +96,8 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
     dataNascita && luogoNascita.trim() && provinciaNascita.trim() &&
     comune.trim() && provinciaRes.trim() && indirizzo.trim() && civico.trim() &&
     telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt &&
-    materieInsegnate.length > 0;
+    materieInsegnate.length > 0 &&
+    massimale > 0 && massimale <= 5000;
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
@@ -118,6 +121,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         intestatario_pagamento: intestatarioPagamento.trim(),
         tshirt_size:             tshirt,
         sono_un_figlio_a_carico: sonoFiglio,
+        importo_lordo_massimale: massimale,
         materie_insegnate:       materieInsegnate,
       }),
     });
@@ -417,25 +421,85 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
                 onChange={(e) => setIban(e.target.value)}
                 required maxLength={34} className="font-mono" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Taglia t-shirt <span className="text-destructive">*</span></label>
-                <Select value={tshirt || undefined} onValueChange={setTshirt}>
-                  <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
-                  <SelectContent>
-                    {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end pb-0.5">
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <Checkbox
-                    checked={sonoFiglio}
-                    onCheckedChange={(v) => setSonoFiglio(!!v)}
-                  />
-                  <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
+            <div>
+              <label className={labelCls}>Taglia t-shirt <span className="text-destructive">*</span></label>
+              <Select value={tshirt || undefined} onValueChange={setTshirt}>
+                <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+                <SelectContent>
+                  {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Dati fiscali */}
+        <div>
+          <div className="flex items-center justify-between mb-3 mt-1">
+            <p className={sectionTitle} style={{ margin: 0 }}>Dati fiscali</p>
+            <a
+              href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/modello-730/la-dichiarazione-730/guida-alla-compilazione-del-730/parte-i-dati-del-dichiarante/2.-reddito-complessivo-e-detrazioni-per-carichi-di-famiglia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-link hover:text-link/80"
+            >
+              Come funziona la prestazione occasionale?
+            </a>
+          </div>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border bg-muted/40 p-3.5">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={sonoFiglio}
+                  onCheckedChange={(v) => setSonoFiglio(!!v)}
+                  className="mt-0.5 shrink-0"
+                />
+                <div>
+                  <span className="text-sm font-medium text-foreground">Sono fiscalmente a carico</span>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Seleziona questa opzione se sei fiscalmente a carico di un genitore o di un familiare — ovvero se il tuo reddito annuo complessivo non supera le soglie fiscali previste:{' '}
+                    <strong className="text-foreground">€4.000</strong> (under 24 anni) oppure{' '}
+                    <strong className="text-foreground">€2.840,51</strong> (24 anni e oltre).
+                    Ci permetterà di applicare la ritenuta d&apos;acconto nella misura corretta.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className={labelCls} style={{ margin: 0 }}>
+                  Massimale lordo annuo <span className="text-destructive">*</span>
                 </label>
+                <a
+                  href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/dichiarazioni/modello-730/la-dichiarazione-730/guida-alla-compilazione-del-730"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-link hover:text-link/80"
+                >
+                  Come scegliere il valore?
+                </a>
               </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={5000}
+                  step={1}
+                  value={massimale}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    setMassimale(isNaN(v) ? 0 : v);
+                  }}
+                  className="pl-7 font-mono"
+                  required
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Il massimale contrattuale che intendi raggiungere. La prestazione occasionale non può superare{' '}
+                <strong className="text-foreground">€5.000 lordi/anno</strong> dallo stesso committente (max €5.000).
+              </p>
             </div>
           </div>
         </div>
