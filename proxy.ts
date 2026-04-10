@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
   const isHealthCheck = path === '/api/health';
   // Exact match only — /api/telegram/connect and /api/telegram/disconnect require auth
   const isTelegramWebhook = path === '/api/telegram/webhook';
-  const isPublicApiRoute = path.startsWith('/api/webhooks/') || path.startsWith('/api/jobs/') || path.startsWith('/api/debug/') || isTelegramWebhook;
+  const isPublicApiRoute = path.startsWith('/api/webhooks/') || path.startsWith('/api/jobs/') || isTelegramWebhook;
 
   if (!user) {
     if (!isLoginPage && !isAuthRoute && !isHealthCheck && !isPublicApiRoute) {
