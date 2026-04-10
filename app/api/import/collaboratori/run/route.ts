@@ -137,6 +137,7 @@ export async function POST(request: Request) {
           tipo_contratto:      'OCCASIONALE',
           data_ingresso,
           data_fine_contratto,
+          citta:               '', // placeholder — filled by onboarding wizard
         }).select('id').single();
         if (collabErr || !collabData) {
           await svc.auth.admin.deleteUser(userId).catch(() => {});
