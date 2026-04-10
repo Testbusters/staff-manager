@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
+import { CreditCard, AlertCircle, Info, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -212,27 +212,28 @@ export default function LiquidazioneRequestBanner({
     );
   }
 
-  // State 4: Eligible — show CTA
+  // State 4: Eligible — CTA temporarily disabled until June 2026
   return (
     <>
-      <div className="mb-6 rounded-xl border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/10 px-4 py-3 flex items-center justify-between gap-4">
+      <div className="mb-6 rounded-xl border border-border bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+          <Clock className="h-5 w-5 shrink-0 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium text-green-900 dark:text-green-200">
-              Liquidazione disponibile
+            <p className="text-sm font-medium text-foreground">
+              Liquidazione in arrivo
             </p>
-            <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">
-              Totale netto approvato: <strong>€{totalApprovedNetto.toFixed(2)}</strong>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Totale netto approvato: <strong>€{totalApprovedNetto.toFixed(2)}</strong> — La liquidazione sarà disponibile a partire da Giugno 2026.
             </p>
           </div>
         </div>
         <Button
           size="sm"
-          className="bg-brand hover:bg-brand/90 text-white shrink-0 text-xs h-8"
-          onClick={openDialog}
+          variant="outline"
+          className="shrink-0 text-xs h-8"
+          disabled
         >
-          Richiedi liquidazione
+          In arrivo
         </Button>
       </div>
 
