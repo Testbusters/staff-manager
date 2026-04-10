@@ -31,6 +31,7 @@ type PrefillData = {
   tshirt_size: string | null;
   sono_un_figlio_a_carico: boolean;
   importo_lordo_massimale: number | null;
+  citta: string | null;
 } | null;
 
 type LookupOption = { id: string; nome: string };
@@ -70,12 +71,16 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
   const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
   const [massimale, setMassimale]             = useState<number>(prefill?.importo_lordo_massimale ?? 5000);
 
-  // Activity — materie
+  // Activity — città e materie
+  const [citta, setCitta]                     = useState(prefill?.citta ?? '');
+  const [cittaOptions, setCittaOptions]       = useState<LookupOption[]>([]);
   const [materieInsegnate, setMaterieInsegnate] = useState<string[]>([]);
   const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
 
   useEffect(() => {
     const comm = community || 'testbusters';
+    fetch(`/api/lookup-options?type=citta&community=${comm}`)
+      .then((r) => r.json()).then((d) => setCittaOptions(d.options ?? [])).catch(() => {});
     fetch(`/api/lookup-options?type=materia&community=${comm}`)
       .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
   }, [community]);
@@ -96,6 +101,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
     dataNascita && luogoNascita.trim() && provinciaNascita.trim() &&
     comune.trim() && provinciaRes.trim() && indirizzo.trim() && civico.trim() &&
     telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt &&
+    citta.trim() &&
     materieInsegnate.length > 0 &&
     massimale > 0 && massimale <= 5000;
 
@@ -122,6 +128,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         tshirt_size:             tshirt,
         sono_un_figlio_a_carico: sonoFiglio,
         importo_lordo_massimale: massimale,
+        citta:                   citta.trim(),
         materie_insegnate:       materieInsegnate,
       }),
     });
@@ -508,6 +515,20 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         <div>
           <p className={sectionTitle}>Attività</p>
           <div className="space-y-3">
+            <div>
+              <label className={labelCls}>Città di attività <span className="text-destructive">*</span></label>
+              <Select value={citta || undefined} onValueChange={setCitta}>
+                <SelectTrigger>
+                  <SelectValue placeholder={cittaOptions.length === 0 ? 'Caricamento...' : '— Seleziona città —'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {cittaOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">La città in cui svolgi la tua attività con noi.</p>
+            </div>
             <div>
               <label className={labelCls}>Materie insegnate <span className="text-destructive">*</span></label>
               <div className="flex flex-wrap gap-2 mt-1">
