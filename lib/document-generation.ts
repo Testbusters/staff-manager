@@ -94,12 +94,13 @@ export async function generateDocumentFromTemplate(
   signatureBuffer?: Buffer,
 ): Promise<Buffer | null> {
   try {
-    const { data: tplRow } = await svc
+    const { data: tplRow, error: tplErr } = await svc
       .from('contract_templates')
       .select('file_url')
       .eq('tipo', tipo)
       .maybeSingle();
 
+    console.log('[generateDocumentFromTemplate] template query:', { tipo, found: !!tplRow, error: tplErr?.message ?? null });
     if (!tplRow) return null;
 
     // file_url may be a full Supabase storage URL or a relative path within the bucket.
@@ -113,12 +114,18 @@ export async function generateDocumentFromTemplate(
       storagePath = storagePath.slice(markerIdx + bucketMarker.length);
     }
 
+    console.log('[generateDocumentFromTemplate] downloading from contracts bucket:', storagePath);
     const { data: blob, error: downloadErr } = await svc.storage
       .from('contracts')
       .download(storagePath);
-    if (downloadErr || !blob) return null;
+    if (downloadErr || !blob) {
+      console.error('[generateDocumentFromTemplate] download failed:', downloadErr?.message ?? 'blob is null');
+      return null;
+    }
+    console.log('[generateDocumentFromTemplate] download OK, size:', blob.size, '— calling fillPdfMarkers...');
     const templateBuffer = Buffer.from(await blob.arrayBuffer());
     const filled = await fillPdfMarkers(templateBuffer, vars, signatureBuffer);
+    console.log('[generateDocumentFromTemplate] fillPdfMarkers OK, result size:', filled.length);
     return filled;
   } catch (err) {
     console.error('[generateDocumentFromTemplate]', err);
