@@ -101,18 +101,24 @@ export async function POST(request: Request) {
     stato_firma = ['DA_FIRMARE', 'NON_RICHIESTO'].includes(raw) ? raw : 'NON_RICHIESTO';
   }
 
-  // Max 1 CONTRATTO attivo per collaboratore
+  // Max 1 CONTRATTO attivo per collaboratore — auto-replace if one exists
   if (isContratto) {
-    const { count } = await serviceClient
+    const { data: existing } = await serviceClient
       .from('documents')
-      .select('id', { count: 'exact', head: true })
+      .select('id, file_original_url, file_firmato_url')
       .eq('collaborator_id', collaborator_id)
       .like('tipo', 'CONTRATTO_%');
-    if ((count ?? 0) > 0) {
-      return NextResponse.json(
-        { error: 'Esiste già un contratto per questo collaboratore. Eliminarlo prima di caricarne uno nuovo.' },
-        { status: 409 },
-      );
+
+    if (existing && existing.length > 0) {
+      // Delete old storage files + DB records
+      const pathsToDelete = existing
+        .flatMap((d) => [d.file_original_url, d.file_firmato_url])
+        .filter(Boolean) as string[];
+      if (pathsToDelete.length > 0) {
+        await serviceClient.storage.from('documents').remove(pathsToDelete);
+      }
+      const idsToDelete = existing.map((d) => d.id);
+      await serviceClient.from('documents').delete().in('id', idsToDelete);
     }
   }
 
