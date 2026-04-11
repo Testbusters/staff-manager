@@ -70,7 +70,8 @@ export async function POST(
   });
 
   if (updateErr) {
-    return NextResponse.json({ error: 'Errore aggiornamento credenziali' }, { status: 500 });
+    console.error('[resend-invite] updateUserById failed:', updateErr.message, updateErr);
+    return NextResponse.json({ error: 'Errore aggiornamento credenziali', detail: updateErr.message }, { status: 500 });
   }
 
   // Ensure must_change_password stays true in user_profiles (defense-in-depth)
