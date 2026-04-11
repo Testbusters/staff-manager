@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `066_telegram_notifications.sql` (2026-04-05).
+> Last synced: migration `067_invite_email_sent.sql` (2026-04-11).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -13,7 +13,7 @@
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione` |
+| `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding`, `invite_email_sent` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione`. `invite_email_sent` (BOOLEAN NOT NULL DEFAULT false): tracks whether the invitation email was delivered successfully. |
 | `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL), `telegram_chat_id` (BIGINT UNIQUE NULL) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific. `telegram_chat_id` set by webhook after deep-link flow; cleared by disconnect/admin reset. |
 | `communities` | Community entities | `id`, `name` (UNIQUE), `is_active`, `banner_content`, `banner_active`, `banner_link_url`, `banner_link_label`, `banner_link_new_tab`, `banner_updated_at` | Banner fields added in migrations 052+053. `banner_updated_at` used as dismiss-key version for localStorage. |
 | `collaborator_communities` | Collaborator → Community membership (1:1 per migration 044) | `collaborator_id` (UNIQUE), `community_id` | UNIQUE on `collaborator_id` — each collaborator belongs to exactly 1 community |
@@ -287,10 +287,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-05.
+> Last refreshed: 2026-04-11.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -309,6 +310,7 @@ tickets
 | `theme_preference` | text | YES | `'dark'` | — |
 | `skip_contract_on_onboarding` | boolean | NO | `false` | — |
 | `citta_responsabile` | text | YES | — | — |
+| `invite_email_sent` | boolean | NO | `false` | — |
 
 ### `collaborators`
 

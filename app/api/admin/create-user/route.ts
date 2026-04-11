@@ -87,6 +87,7 @@ export async function POST(request: Request) {
     email,
     password,
     email_confirm: true,
+    app_metadata: { must_change_password: true },
   });
 
   if (createError || !newAuthUser.user) {
@@ -173,10 +174,20 @@ export async function POST(request: Request) {
     community_id,
   });
 
-  // 5. Send invitation email (fire-and-forget — never blocks the response)
-  getRenderedEmail('E8', { email, password, ruolo: role }).then(({ subject, html }) => {
-    sendEmail(email, subject, html).catch(() => {});
-  }).catch(() => {});
+  // 5. Send invitation email (await — track delivery status)
+  let emailSent = false;
+  try {
+    const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: role });
+    const result = await sendEmail(email, subject, html);
+    emailSent = result.success;
+  } catch {
+    // Template rendering failed — email not sent
+  }
 
-  return NextResponse.json({ email, password });
+  // 6. Update invite_email_sent flag
+  if (emailSent) {
+    await admin.from('user_profiles').update({ invite_email_sent: true }).eq('user_id', userId);
+  }
+
+  return NextResponse.json({ email, password, email_sent: emailSent });
 }

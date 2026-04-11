@@ -29,7 +29,10 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { error: updateError } = await admin.auth.admin.updateUserById(user.id, { password });
+  const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
+    password,
+    app_metadata: { must_change_password: false },
+  });
   if (updateError) {
     return NextResponse.json({ error: 'Errore durante l\'aggiornamento della password' }, { status: 500 });
   }

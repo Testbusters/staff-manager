@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Pencil } from 'lucide-react';
+import { FileText, Pencil, RotateCw } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
 import CollaboratorAvatar from '@/components/admin/CollaboratorAvatar';
@@ -75,6 +75,9 @@ interface CollaboratoreDetailProps {
   cittaOptions?: LookupOption[];
   materiaOptions?: LookupOption[];
   telegramConnected?: boolean;
+  inviteEmailSent?: boolean;
+  onboardingCompleted?: boolean;
+  mustChangePassword?: boolean;
 }
 
 const MEMBER_STATUS_LABELS: Record<string, string> = {
@@ -104,12 +107,18 @@ export default function CollaboratoreDetail({
   cittaOptions: cittaOptionsProp = [],
   materiaOptions: materiaOptionsProp = [],
   telegramConnected = false,
+  inviteEmailSent = false,
+  onboardingCompleted = false,
+  mustChangePassword = false,
 }: CollaboratoreDetailProps) {
   const router = useRouter();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [tgConnected, setTgConnected] = useState(telegramConnected);
   const [tgResetting, setTgResetting] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [credDialogOpen, setCredDialogOpen] = useState(false);
+  const [resendCreds, setResendCreds] = useState<{ email: string; password: string } | null>(null);
 
   const isResponsabileProfile = collabRole === 'responsabile_compensi';
 
@@ -146,6 +155,28 @@ export default function CollaboratoreDetail({
       if (res.ok) setTgConnected(false);
     } finally {
       setTgResetting(false);
+    }
+  }
+
+  async function handleResendInvite() {
+    setResending(true);
+    try {
+      const res = await fetch(`/api/admin/collaboratori/${collab.id}/resend-invite`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error ?? 'Errore durante il re-invio.');
+        return;
+      }
+      setResendCreds({ email: data.email, password: data.password });
+      setCredDialogOpen(true);
+      if (data.email_sent) {
+        toast.success('Invito re-inviato con successo.');
+      } else {
+        toast.warning('Credenziali rigenerate ma email NON inviata. Comunicale manualmente.');
+      }
+      router.refresh();
+    } finally {
+      setResending(false);
     }
   }
 
@@ -290,6 +321,17 @@ export default function CollaboratoreDetail({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {role === 'amministrazione' && mustChangePassword && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { void handleResendInvite(); }}
+                    disabled={resending}
+                  >
+                    <RotateCw className={`h-3.5 w-3.5 mr-1.5 ${resending ? 'animate-spin' : ''}`} />
+                    {resending ? 'Invio…' : 'Re-invia invito'}
+                  </Button>
+                )}
                 {role === 'amministrazione' && (
                   <ResetPasswordDialog collaboratorId={collab.id} />
                 )}
@@ -306,6 +348,36 @@ export default function CollaboratoreDetail({
           </div>
         </div>
       </div>
+
+      {/* ── Tracking badges ─────────────────────────────────────────────── */}
+      {role === 'amministrazione' && (
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Mail invito:</span>
+            {inviteEmailSent ? (
+              <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                Inviata
+              </span>
+            ) : (
+              <span className="text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full">
+                Non inviata
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Attivazione profilo:</span>
+            {onboardingCompleted ? (
+              <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                Completato
+              </span>
+            ) : (
+              <span className="text-[10px] font-medium bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
+                In attesa
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Profile data ─────────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-xl p-5">
@@ -442,6 +514,32 @@ export default function CollaboratoreDetail({
           </Table>
         )}
       </div>
+
+      {/* ── Resend credentials dialog ──────────────────────────────────── */}
+      <Dialog open={credDialogOpen} onOpenChange={(v) => { if (!v) { setCredDialogOpen(false); setResendCreds(null); } }}>
+        <DialogContent className="max-w-sm bg-card border-border">
+          <DialogHeader className="pr-10">
+            <DialogTitle className="text-base font-semibold text-foreground">
+              Credenziali rigenerate
+            </DialogTitle>
+          </DialogHeader>
+          {resendCreds && (
+            <div className="space-y-3 pt-1">
+              <p className="text-xs text-muted-foreground">
+                Salva queste credenziali - la password non sarà più visibile dopo la chiusura.
+              </p>
+              <div>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Email</label>
+                <code className="block text-sm text-foreground bg-muted px-3 py-2 rounded-md select-all">{resendCreds.email}</code>
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Password</label>
+                <code className="block text-sm text-foreground bg-muted px-3 py-2 rounded-md font-mono select-all">{resendCreds.password}</code>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Edit profile modal ────────────────────────────────────────────── */}
       <Dialog open={editModalOpen} onOpenChange={(v) => { if (!v) setEditModalOpen(false); }}>
