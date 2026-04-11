@@ -26,7 +26,68 @@ export async function findMarkerPositions(
 ): Promise<PdfMarkerPosition[]> {
   if (markers.length === 0) return [];
 
-  // Dynamic import — pdfjs-dist is ESM, run worker inline for Node.js server use.
+  // Polyfill DOMMatrix for Node.js serverless (Vercel) — pdfjs-dist v5 references it
+  // at module load time. Node.js does not provide DOMMatrix natively.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+    // Minimal 2D affine transform matrix — covers pdfjs-dist text extraction needs.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).DOMMatrix = class DOMMatrix {
+      m11: number; m12: number; m13 = 0; m14 = 0;
+      m21: number; m22: number; m23 = 0; m24 = 0;
+      m31 = 0; m32 = 0; m33 = 1; m34 = 0;
+      m41: number; m42: number; m43 = 0; m44 = 1;
+      is2D = true; isIdentity: boolean;
+      get a() { return this.m11; } set a(v: number) { this.m11 = v; }
+      get b() { return this.m12; } set b(v: number) { this.m12 = v; }
+      get c() { return this.m21; } set c(v: number) { this.m21 = v; }
+      get d() { return this.m22; } set d(v: number) { this.m22 = v; }
+      get e() { return this.m41; } set e(v: number) { this.m41 = v; }
+      get f() { return this.m42; } set f(v: number) { this.m42 = v; }
+      constructor(init?: string | number[]) {
+        if (Array.isArray(init) && init.length === 6) {
+          [this.m11, this.m12, this.m21, this.m22, this.m41, this.m42] = init;
+        } else if (Array.isArray(init) && init.length === 16) {
+          [this.m11, this.m12, , , this.m21, this.m22, , , , , , , this.m41, this.m42] = init;
+        } else {
+          this.m11 = 1; this.m12 = 0; this.m21 = 0; this.m22 = 1; this.m41 = 0; this.m42 = 0;
+        }
+        this.isIdentity = this.m11 === 1 && this.m12 === 0 && this.m21 === 0 && this.m22 === 1 && this.m41 === 0 && this.m42 === 0;
+      }
+      multiply(other: any) {
+        const r = new DOMMatrix();
+        r.m11 = this.m11 * other.m11 + this.m12 * other.m21;
+        r.m12 = this.m11 * other.m12 + this.m12 * other.m22;
+        r.m21 = this.m21 * other.m11 + this.m22 * other.m21;
+        r.m22 = this.m21 * other.m12 + this.m22 * other.m22;
+        r.m41 = this.m41 * other.m11 + this.m42 * other.m21 + other.m41;
+        r.m42 = this.m41 * other.m12 + this.m42 * other.m22 + other.m42;
+        return r;
+      }
+      inverse() {
+        const det = this.m11 * this.m22 - this.m12 * this.m21;
+        if (det === 0) return new DOMMatrix();
+        const r = new DOMMatrix();
+        r.m11 = this.m22 / det; r.m12 = -this.m12 / det;
+        r.m21 = -this.m21 / det; r.m22 = this.m11 / det;
+        r.m41 = (this.m21 * this.m42 - this.m22 * this.m41) / det;
+        r.m42 = (this.m12 * this.m41 - this.m11 * this.m42) / det;
+        return r;
+      }
+      transformPoint(p: { x: number; y: number }) {
+        return { x: this.m11 * p.x + this.m21 * p.y + this.m41, y: this.m12 * p.x + this.m22 * p.y + this.m42 };
+      }
+      translate(tx: number, ty: number) { return this.multiply(new DOMMatrix([1, 0, 0, 1, tx, ty])); }
+      scale(sx: number, sy?: number) { return this.multiply(new DOMMatrix([sx, 0, 0, sy ?? sx, 0, 0])); }
+      toFloat32Array() { return new Float32Array([this.m11,this.m12,this.m13,this.m14,this.m21,this.m22,this.m23,this.m24,this.m31,this.m32,this.m33,this.m34,this.m41,this.m42,this.m43,this.m44]); }
+      toFloat64Array() { return new Float64Array([this.m11,this.m12,this.m13,this.m14,this.m21,this.m22,this.m23,this.m24,this.m31,this.m32,this.m33,this.m34,this.m41,this.m42,this.m43,this.m44]); }
+      toString() { return `matrix(${this.m11}, ${this.m12}, ${this.m21}, ${this.m22}, ${this.m41}, ${this.m42})`; }
+      static fromMatrix(other: any) { return new DOMMatrix([other.a ?? other.m11 ?? 1, other.b ?? other.m12 ?? 0, other.c ?? other.m21 ?? 0, other.d ?? other.m22 ?? 1, other.e ?? other.m41 ?? 0, other.f ?? other.m42 ?? 0]); }
+      static fromFloat32Array(a: Float32Array) { return new DOMMatrix(Array.from(a)); }
+      static fromFloat64Array(a: Float64Array) { return new DOMMatrix(Array.from(a)); }
+    };
+  }
+
   // Pre-import the worker module and register it on globalThis BEFORE importing pdf.mjs.
   // pdfjs-dist's fake worker (used in Node.js) calls `import(this.workerSrc)` with a
   // variable path ("./pdf.worker.mjs"). Next.js standalone output traces only static

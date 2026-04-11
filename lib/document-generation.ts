@@ -100,7 +100,6 @@ export async function generateDocumentFromTemplate(
       .eq('tipo', tipo)
       .maybeSingle();
 
-    console.log('[generateDocumentFromTemplate] template query:', { tipo, found: !!tplRow, error: tplErr?.message ?? null });
     if (!tplRow) return null;
 
     // file_url may be a full Supabase storage URL or a relative path within the bucket.
@@ -114,19 +113,12 @@ export async function generateDocumentFromTemplate(
       storagePath = storagePath.slice(markerIdx + bucketMarker.length);
     }
 
-    console.log('[generateDocumentFromTemplate] downloading from contracts bucket:', storagePath);
     const { data: blob, error: downloadErr } = await svc.storage
       .from('contracts')
       .download(storagePath);
-    if (downloadErr || !blob) {
-      console.error('[generateDocumentFromTemplate] download failed:', downloadErr?.message ?? 'blob is null');
-      return null;
-    }
-    console.log('[generateDocumentFromTemplate] download OK, size:', blob.size, '— calling fillPdfMarkers...');
+    if (downloadErr || !blob) return null;
     const templateBuffer = Buffer.from(await blob.arrayBuffer());
-    const filled = await fillPdfMarkers(templateBuffer, vars, signatureBuffer);
-    console.log('[generateDocumentFromTemplate] fillPdfMarkers OK, result size:', filled.length);
-    return filled;
+    return await fillPdfMarkers(templateBuffer, vars, signatureBuffer);
   } catch (err) {
     console.error('[generateDocumentFromTemplate]', err);
     return null;

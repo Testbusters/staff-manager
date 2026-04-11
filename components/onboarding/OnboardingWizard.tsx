@@ -152,12 +152,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
 
   const handleDownload = () => {
     if (!downloadUrl) return;
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `contratto_${tipoContratto?.toLowerCase() ?? 'contratto'}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.open(downloadUrl, '_blank');
   };
 
   const handleFinish = () => {

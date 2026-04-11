@@ -127,7 +127,6 @@ export async function POST(request: Request) {
   let documentId: string | null = null;
   let downloadUrl: string | null = null;
 
-  console.log('[onboarding/complete] contract gate check:', { tipoContratto, skip: profile.skip_contract_on_onboarding });
   if (tipoContratto && !profile.skip_contract_on_onboarding) {
     try {
       // Determine community-aware template tipo
@@ -138,7 +137,6 @@ export async function POST(request: Request) {
         .maybeSingle();
       const onboardingCommunity = (ccOnboarding?.communities as unknown as { name: string } | null)?.name ?? '';
       const tipo: ContractTemplateType = getContractTemplateTipo(onboardingCommunity);
-      console.log('[onboarding/complete] resolved template tipo:', tipo, 'community:', onboardingCommunity);
       const collabForVars = {
         nome: d.nome,
         cognome: d.cognome,
@@ -151,9 +149,7 @@ export async function POST(request: Request) {
         data_fine_contratto: existingCollab ? (existingCollab as { data_fine_contratto?: string | null }).data_fine_contratto ?? null : null,
       };
       const vars = buildContractVars(collabForVars);
-      console.log('[onboarding/complete] calling generateDocumentFromTemplate...');
       const pdfBuffer = await generateDocumentFromTemplate(admin, tipo, vars);
-      console.log('[onboarding/complete] pdfBuffer result:', pdfBuffer ? `${pdfBuffer.length} bytes` : 'null');
 
       if (pdfBuffer) {
         const docId = crypto.randomUUID();
