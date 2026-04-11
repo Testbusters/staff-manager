@@ -22,6 +22,18 @@ interface Props {
 
 type Mode = 'idle' | 'guided' | 'download';
 
+const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4.5 MB (Vercel serverless limit)
+
+async function safeJson(res: Response): Promise<{ error?: string; [k: string]: unknown }> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (res.status === 413) return { error: 'Il file è troppo grande. Dimensione massima: 4.5 MB.' };
+    return { error: res.statusText || `Errore server (${res.status})` };
+  }
+}
+
 export default function DocumentSignFlow({ document: doc, originalUrl, precompiledUrl, firmatoUrl, canSign = true }: Props) {
   const router = useRouter();
   const isDaFirmare = doc.stato_firma === 'DA_FIRMARE';
@@ -54,9 +66,9 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
     setRecompileError(null);
     try {
       const res = await fetch(`/api/documents/${doc.id}/recompile`, { method: 'POST' });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error ?? 'Errore nella ricompilazione');
-      setViewerUrl(data.signedUrl);
+      setViewerUrl(data.signedUrl as string);
     } catch (err) {
       setRecompileError(err instanceof Error ? err.message : 'Errore imprevisto');
     } finally {
@@ -72,7 +84,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
       const formData = new FormData();
       formData.append('signatureImage', signatureBlob, 'signature.png');
       const res = await fetch(`/api/documents/${doc.id}/sign-guided`, { method: 'POST', body: formData });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error ?? 'Errore durante la firma');
       toast.success('Documento firmato inviato correttamente.');
       router.refresh();
@@ -85,6 +97,10 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
 
   async function handleUploadSign() {
     if (!uploadFile || !confirmed) return;
+    if (uploadFile.size > MAX_FILE_SIZE) {
+      setUploadError('Il file è troppo grande. Dimensione massima: 4.5 MB.');
+      return;
+    }
     setUploading(true);
     setUploadError(null);
     try {
@@ -92,7 +108,7 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
       formData.append('file', uploadFile);
       formData.append('confirmed', 'true');
       const res = await fetch(`/api/documents/${doc.id}/sign`, { method: 'POST', body: formData });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error ?? 'Errore durante il salvataggio');
       toast.success('Documento firmato inviato correttamente.');
       router.refresh();
@@ -297,7 +313,16 @@ export default function DocumentSignFlow({ document: doc, originalUrl, precompil
                   <input
                     type="file"
                     accept=".pdf"
-                    onChange={(e) => { setUploadFile(e.target.files?.[0] ?? null); setConfirmed(false); }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setUploadFile(f);
+                      setConfirmed(false);
+                      if (f && f.size > MAX_FILE_SIZE) {
+                        setUploadError('Il file è troppo grande. Dimensione massima: 4.5 MB.');
+                      } else {
+                        setUploadError(null);
+                      }
+                    }}
                     className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
                   />
                   {uploadFile && <p className="mt-1 text-xs text-muted-foreground">{uploadFile.name}</p>}
