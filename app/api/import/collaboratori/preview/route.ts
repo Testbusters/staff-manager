@@ -29,6 +29,20 @@ const USERNAME_RE = /^[a-z0-9_]{3,50}$/;
 const MAX_ROWS    = 1000;
 const VALID_COMMUNITIES = new Set(['testbusters', 'peer4med']);
 
+/** Accept DD/MM/YYYY (Italian) or YYYY-MM-DD (ISO). Returns ISO string or null. */
+function normalizeDate(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  // DD/MM/YYYY
+  const itMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (itMatch) {
+    const iso = `${itMatch[3]}-${itMatch[2].padStart(2, '0')}-${itMatch[1].padStart(2, '0')}`;
+    return isNaN(Date.parse(iso)) ? null : iso;
+  }
+  // YYYY-MM-DD
+  return isNaN(Date.parse(trimmed)) ? null : trimmed;
+}
+
 export async function POST(request: Request) {
   void request;
   const cookieStore = await cookies();
@@ -135,14 +149,16 @@ export async function POST(request: Request) {
       errors.push(`community non valida (valori accettati: testbusters, peer4med)`);
     }
 
+    const normalizedIngresso = normalizeDate(data_ingresso);
     if (!data_ingresso) {
       errors.push('data_ingresso mancante');
-    } else if (isNaN(Date.parse(data_ingresso))) {
-      errors.push('data_ingresso non valida (formato atteso: YYYY-MM-DD)');
+    } else if (!normalizedIngresso) {
+      errors.push('data_ingresso non valida (formato atteso: YYYY-MM-DD o DD/MM/YYYY)');
     }
 
-    if (data_fine_contratto && isNaN(Date.parse(data_fine_contratto))) {
-      errors.push('data_fine_contratto non valida (formato atteso: YYYY-MM-DD)');
+    const normalizedFine = data_fine_contratto ? normalizeDate(data_fine_contratto) : null;
+    if (data_fine_contratto && !normalizedFine) {
+      errors.push('data_fine_contratto non valida (formato atteso: YYYY-MM-DD o DD/MM/YYYY)');
     }
 
     if (errors.length === 0) {
@@ -150,7 +166,7 @@ export async function POST(request: Request) {
       batchUsernames.set(username, r.rowIndex);
     }
 
-    return { rowIndex: r.rowIndex, nome, cognome, email, username, community, data_ingresso, data_fine_contratto, stato, errors };
+    return { rowIndex: r.rowIndex, nome, cognome, email, username, community, data_ingresso: normalizedIngresso ?? data_ingresso, data_fine_contratto: normalizedFine ?? data_fine_contratto, stato, errors };
   });
 
   const validCount    = rows.filter(r => r.errors.length === 0).length;

@@ -15,6 +15,18 @@ const BATCH_DELAY = 300; // ms between batches
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
+/** Accept DD/MM/YYYY (Italian) or YYYY-MM-DD (ISO). Returns ISO string or null. */
+function normalizeDate(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const itMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (itMatch) {
+    const iso = `${itMatch[3]}-${itMatch[2].padStart(2, '0')}-${itMatch[1].padStart(2, '0')}`;
+    return isNaN(Date.parse(iso)) ? null : iso;
+  }
+  return isNaN(Date.parse(trimmed)) ? null : trimmed;
+}
+
 export interface RunResult {
   imported: number;
   skipped:  number;
@@ -73,12 +85,12 @@ export async function POST(request: Request) {
     const email         = r.email.trim().toLowerCase();
     const username      = r.username.trim().toLowerCase();
     const community     = r.community.trim().toLowerCase();
-    const data_ingresso = r.data_ingresso.trim();
+    const data_ingresso = normalizeDate(r.data_ingresso) ?? '';
     return (
       nome && cognome &&
       EMAIL_RE.test(email) && USERNAME_RE.test(username) &&
       communityMap.has(community) &&
-      !isNaN(Date.parse(data_ingresso))
+      !!data_ingresso
     );
   });
 
@@ -100,8 +112,8 @@ export async function POST(request: Request) {
       const nome                = r.nome.trim();
       const cognome             = r.cognome.trim();
       const community           = r.community.trim().toLowerCase();
-      const data_ingresso       = r.data_ingresso.trim();
-      const data_fine_contratto = r.data_fine_contratto.trim() || null;
+      const data_ingresso       = normalizeDate(r.data_ingresso) ?? r.data_ingresso.trim();
+      const data_fine_contratto = r.data_fine_contratto.trim() ? (normalizeDate(r.data_fine_contratto) ?? r.data_fine_contratto.trim()) : null;
       const communityId   = communityMap.get(community)!;
       const password      = generatePassword();
 
