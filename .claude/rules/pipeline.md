@@ -166,8 +166,8 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 - Expected output: list of created/modified files with paths.
 
 - **End-of-Phase 2 quality gate** (in this exact order, before Phase 3):
-  1. **`/simplify`** — run on all changed files. Skip only for pure text/label changes with no logic. Fixes reuse, duplication, efficiency in-place.
-  2. **`/skill-dev`** — full skill invocation on the block's changed files. Audits TypeScript safety, React antipatterns, coupling, dead code, `use client` sprawl. Critical findings: fix before Phase 3. Major/Medium: append to `docs/refactoring-backlog.md`. Skippable only for migration-only blocks with no TypeScript changes.
+  1. **`/simplify`** — run on all changed files (`git diff --name-only` scoped). Skip only for pure text/label changes with no logic. Fixes reuse, duplication, efficiency in-place. `/simplify` is a built-in skill with no `target:` parameter — scope is implicit (changed files in context).
+  2. **`/skill-dev target:section:<section>`** — block-scoped audit. Audits TypeScript safety, React antipatterns, coupling, dead code, `use client` sprawl. Critical findings: fix before Phase 3. Major/Medium: append to `docs/refactoring-backlog.md`. Skippable only for migration-only blocks with no TypeScript changes. **Never invoke without `target:` — omitting it triggers a full-codebase scan.**
 
 **Phase 3 — Build + unit tests**
 - Run `npx tsc --noEmit` and `npm run build`. Must complete without errors.
@@ -329,10 +329,11 @@ Test credentials — always use canonical accounts from `memory/test_credentials
 - Run `/api-design target:section:<section>` if the block adds new API routes OR substantially modifies existing ones (response shape, verb, status codes, auth logic).
 - `/security-audit` and `/api-design` are both static — run them concurrently.
 - Run `/skill-db target:section:<section>` **only** if the block applies migrations (index coverage, RLS completeness, cascade behavior, data type choices).
+- **Dual-scope note**: Track B skills scope their primary checks (route audit, schema audit, API design) to the `target:section:`. However, certain cross-cutting sub-steps run full-project by design: `npm audit`, Supabase advisors, HTTP headers, proxy.ts review, undocumented route glob, and live DB schema queries. These are bounded (single grep/query) and structurally cannot be section-scoped.
 
 **Track C — Performance audit** *(static, no dev server needed — run after Track A server shutdown if applicable)*
 - **Trigger**: block adds ≥1 new page component, Server Component, or `lib/` utility imported by ≥5 consumers.
-- Run `/perf-audit target:section:<section>` — covers `'use client'` sprawl, provider placement, sequential await waterfalls, missing `use cache`/`React.cache`, bundle health (`serverExternalPackages`, `optimizePackageImports`).
+- Run `/perf-audit target:section:<section>` — covers `'use client'` sprawl, provider placement, sequential await waterfalls, missing `use cache`/`React.cache`, bundle health (`serverExternalPackages`, `optimizePackageImports`). Note: `next.config.ts`, `layout.tsx` files, and Step 4 API query scan are always full-project (config and layout are inherently global).
 - Skip for migration-only blocks, doc-only blocks, and pure API route additions with no new components.
 - Bundle analyzer checks require a prior `npm run build` — if Phase 3 build was run, they are included automatically; otherwise the skill skips them.
 
