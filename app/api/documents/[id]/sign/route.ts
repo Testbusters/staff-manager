@@ -46,6 +46,11 @@ export async function POST(
     return NextResponse.json({ error: 'Conferma firma mancante' }, { status: 400 });
   }
 
+  const MAX_SIZE = 4.5 * 1024 * 1024; // 4.5 MB
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 4.5 MB.' }, { status: 413 });
+  }
+
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -53,7 +58,9 @@ export async function POST(
 
   // Upload signed file to storage (service role bypasses storage policies)
   const fileBuffer = Buffer.from(await file.arrayBuffer());
-  const storagePath = `${user.id}/${id}/firmato_${file.name}`;
+  // Sanitize filename for storage key: strip non-ASCII chars to avoid Supabase "Invalid key"
+  const safeName = file.name.replace(/[^\x20-\x7E]/g, '_').replace(/_+/g, '_');
+  const storagePath = `${user.id}/${id}/firmato_${safeName}`;
 
   const { error: uploadErr } = await serviceClient.storage
     .from('documents')
