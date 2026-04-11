@@ -392,6 +392,7 @@ All routes below require `amministrazione` role.
 | `/api/admin/collaboratori` | GET, POST | List + invite collaborator |
 | `/api/admin/collaboratori/[id]` | GET, PATCH, DELETE | Profile management |
 | `/api/admin/collaboratori/[id]/profile` | PATCH | Profile field editing |
+| `/api/admin/collaboratori/[id]/resend-invite` | POST | A | Re-send invite email + new password |
 | `/api/admin/banner/[communityId]` | GET, PATCH | Community banner |
 | `/api/admin/communities` | GET, PATCH | Community settings |
 | `/api/admin/notification-settings` | GET, PATCH | Notification matrix |
