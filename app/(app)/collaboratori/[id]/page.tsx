@@ -53,14 +53,17 @@ export default async function CollaboratoreDetailPage({
       .in('id', communityIds);
     communityNames = (commData ?? []).map((c: { name: string }) => c.name);
   }
-  // ── Fetch member_status + role from user_profiles ───────────────────────
+  // ── Fetch member_status + role + tracking fields from user_profiles ─────
   const { data: upData } = await svc
     .from('user_profiles')
-    .select('member_status, role')
+    .select('member_status, role, invite_email_sent, onboarding_completed, must_change_password')
     .eq('user_id', collab.user_id)
     .maybeSingle();
   const memberStatus = upData?.member_status ?? null;
   const collabRole = (upData?.role ?? null) as Role | null;
+  const inviteEmailSent = upData?.invite_email_sent ?? false;
+  const onboardingCompleted = upData?.onboarding_completed ?? false;
+  const mustChangePassword = upData?.must_change_password ?? false;
 
   // ── Fetch lookup options (for admin edit modal) ─────────────────────────
   const community = communityNames[0]?.toLowerCase().replace(/\s+/g, '') || 'testbusters';
@@ -126,6 +129,9 @@ export default async function CollaboratoreDetailPage({
       collabRole={collabRole}
       cittaOptions={cittaOptions}
       materiaOptions={materiaOptions}
+      inviteEmailSent={inviteEmailSent}
+      onboardingCompleted={onboardingCompleted}
+      mustChangePassword={mustChangePassword}
     />
   );
 }

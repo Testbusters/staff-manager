@@ -109,6 +109,7 @@ export async function POST(request: Request) {
         // 1. Create auth user
         const { data: authData, error: authErr } = await svc.auth.admin.createUser({
           email, password, email_confirm: true,
+          app_metadata: { must_change_password: true },
         });
         if (authErr || !authData.user) throw new Error(authErr?.message ?? 'createUser failed');
         const userId = authData.user.id;
@@ -155,10 +156,13 @@ export async function POST(request: Request) {
           console.error(`collaborator_communities insert failed for row ${r.rowIndex}:`, communityErr.message);
         }
 
-        // 5. Send invitation email
+        // 5. Send invitation email (fire-and-forget pattern preserved for bulk)
         try {
           const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: 'Collaboratore' });
-          await sendEmail(email, subject, html);
+          const result = await sendEmail(email, subject, html);
+          if (result.success) {
+            await svc.from('user_profiles').update({ invite_email_sent: true }).eq('user_id', userId);
+          }
         } catch (emailErr) {
           console.error(`[import/run] email send failed for ${email}:`, emailErr);
         }

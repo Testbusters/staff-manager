@@ -904,3 +904,32 @@ Add opt-in Telegram bot notification channel for collaboratori. Dual-channel (em
 - NEW: `components/admin/CodaLiquidazioni.tsx` — admin table with Accetta/Rifiuta actions
 - MOD: `app/(app)/coda/page.tsx` — add Liquidazioni tab
 - NEW: `__tests__/api/liquidazione-requests.test.ts` — 11 tests
+
+---
+
+## Block invite-tracking — Invite Email Tracking + Resend
+
+### Overview
+Track invite email delivery status, provide admin visibility into email/onboarding state, and allow re-sending invites with new credentials. Secondary fix: propagate `must_change_password` to `auth.users.raw_app_meta_data` at creation (defense-in-depth).
+
+### Scope
+- `user_profiles.invite_email_sent` boolean column (migration 067)
+- `sendEmail` return type change: `Promise<void>` → `Promise<{ success: boolean }>` (backward-compatible)
+- Single invite (`create-user`): sync await email, set `invite_email_sent`, return `email_sent` in response
+- Bulk import: async update `invite_email_sent` on success (fire-and-forget preserved)
+- Password change: clear `must_change_password` from auth metadata
+- New endpoint: POST `/api/admin/collaboratori/[id]/resend-invite` (admin only)
+- Collaboratori list: 2 new badge columns (Mail invito, Attivazione profilo)
+- Collaborator detail: same 2 badges + "Re-invia invito" button (gated on `must_change_password`)
+- Data repair migration: backfill `raw_app_meta_data.must_change_password` for existing users
+
+### Files
+- NEW: `supabase/migrations/067_invite_email_sent.sql`
+- MOD: `lib/email.ts` — return type `{ success: boolean }`
+- MOD: `app/api/admin/create-user/route.ts` — sync email, invite_email_sent, app_metadata
+- MOD: `app/api/import/collaboratori/run/route.ts` — app_metadata, async invite_email_sent
+- MOD: `app/api/auth/change-password/route.ts` — clear auth metadata
+- NEW: `app/api/admin/collaboratori/[id]/resend-invite/route.ts`
+- MOD: `app/(app)/collaboratori/page.tsx` — status badges
+- MOD: `app/(app)/collaboratori/[id]/page.tsx` — fetch new fields, pass to detail
+- MOD: `components/responsabile/CollaboratoreDetail.tsx` — badges + resend button

@@ -38,13 +38,20 @@ export default async function CollaboratoriPage({
   const q = queryParam?.trim().toLowerCase() ?? '';
   const page = Math.max(1, parseInt(pageParam ?? '1', 10));
 
-  // ── Step 1: fetch user_ids with role = 'collaboratore' ────────────────────
+  // ── Step 1: fetch user_ids with role = 'collaboratore' + tracking fields ──
   const { data: collabProfiles } = await svc
     .from('user_profiles')
-    .select('user_id')
+    .select('user_id, invite_email_sent, onboarding_completed')
     .eq('role', 'collaboratore');
 
-  const collabUserIds = (collabProfiles ?? []).map((p: { user_id: string }) => p.user_id);
+  const collabUserIds: string[] = [];
+  const inviteEmailSentMap = new Map<string, boolean>();
+  const onboardingCompletedMap = new Map<string, boolean>();
+  for (const p of (collabProfiles ?? []) as { user_id: string; invite_email_sent: boolean; onboarding_completed: boolean }[]) {
+    collabUserIds.push(p.user_id);
+    inviteEmailSentMap.set(p.user_id, p.invite_email_sent);
+    onboardingCompletedMap.set(p.user_id, p.onboarding_completed);
+  }
 
   if (collabUserIds.length === 0) {
     return (
@@ -217,6 +224,32 @@ export default async function CollaboratoriPage({
                         {name}
                       </span>
                     ))
+                  )}
+                </div>
+
+                {/* Mail invito */}
+                <div className="hidden lg:block w-24 shrink-0">
+                  {inviteEmailSentMap.get(c.user_id!) ? (
+                    <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                      Inviata
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full">
+                      Non inviata
+                    </span>
+                  )}
+                </div>
+
+                {/* Attivazione profilo */}
+                <div className="hidden lg:block w-28 shrink-0">
+                  {onboardingCompletedMap.get(c.user_id!) ? (
+                    <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                      Completato
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
+                      In attesa
+                    </span>
                   )}
                 </div>
 

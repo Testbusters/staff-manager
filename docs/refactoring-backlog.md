@@ -33,7 +33,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | DB14 | `corsi.community_id` FK unindexed — per-community corsi queries do sequential scan | MEDIUM |
 | DB15 | `documents.community_id` FK unindexed — responsabile document scoping join unindexed | LOW |
 | DB16 | `tickets.creator_user_id ON DELETE NO ACTION` — orphaned tickets if auth user deleted | LOW |
-| DB7 | `user_profiles.theme_preference` is `varchar(5)` — should be `text` | MEDIUM |
+| DB7 | ~~`user_profiles.theme_preference` is `varchar(5)`~~ — **RESOLVED** (column is already `text` in live schema, verified skill-db 2026-04-11) | ~~MEDIUM~~ |
 | DB11 | N+1 DB calls in `bulk-approve` routes: sequential UPDATE per collaborator | MEDIUM |
 | DB12 | N+1 notification inserts in `liquidazione-requests` route | MEDIUM |
 | SEC10 | DB error messages forwarded verbatim to client in 20+ routes | MEDIUM |
@@ -116,6 +116,9 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | PERF-5 | `app/api/export/history` and `app/api/import/history`: N+1 `createSignedUrl` calls (one per row, up to 50). Fix: use `Promise.all()` to parallelize URL generation. | MEDIUM |
 | PERF-6 | Raw `<img>` without `width`/`height` at `page.tsx:287`, `page.tsx:1367`, `sconti/[id]:80`, `ResponsabileAvatarHero:46` — CLS risk. Fix: add explicit dimensions or use Next.js `<Image>`. | MEDIUM |
 | PERF-7 | `select('*')` on list endpoints in `tickets/route.ts`, `expenses/route.ts`, and 18+ others — over-fetches large text columns. Fix: enumerate only needed columns per endpoint. | MEDIUM |
+| API-1 | `POST /api/admin/create-user` and `POST /api/admin/collaboratori/[id]/resend-invite` return 200 instead of 201 on successful resource creation | MEDIUM |
+| API-2 | `app/api/auth/change-password/route.ts:40` — `flagErr` destructured but never checked; silent failure if `user_profiles.must_change_password` update fails after password rotation succeeds | MEDIUM |
+| API-3 | `POST /api/import/collaboratori/run` uses `skipContract: true` as default — missing values silently coerce to true; callers that omit the field always get contract-skip behaviour without explicit opt-in | LOW |
 | PERF-8 | Bundle analyzer not configured (`@next/bundle-analyzer` absent). Cannot inspect bundle composition. Add as optional dev dependency with `ANALYZE=true npm run build` pattern. | LOW |
 | N5 | Italian PostgreSQL enum values — translate to English | LOW |
 | C1 | `STATO_BADGE` corso stato color map duplicated in 5 corsi files — extract to `lib/corsi-utils.ts` as `CORSO_STATO_COLORS` | LOW |
@@ -143,9 +146,18 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | API3 | `documents/[id]/sign` state check (DA_FIRMARE), `tickets/[id]/messages` closed-ticket check, `approve-bulk` IN_ATTESA check, `onboarding/complete` already-completed check all return 400 for state conflicts — should be 409 | MEDIUM |
 | API4 | `GET /api/expenses` collection uses key `expenses`, but POST returns `{ reimbursement }` — entity key inconsistent within same route | LOW |
 | API5 | Duplicate bulk-action routes with inverted naming: `compensations/approve-bulk` and `compensations/bulk-approve` (similarly for expenses) both exist with different caller/purpose; naming convention is inconsistent | LOW |
+| DEV-12 | Invite tracking badges in `CollaboratoreDetail.tsx` and `collaboratori/page.tsx` use inline hardcoded color classes (`bg-emerald-500/15 text-emerald-400`) + `text-[10px]` below VI-2 minimum - should use shadcn `<Badge>` with semantic status colors | MEDIUM |
+| T6 | `UserProfile` interface in `lib/types.ts` missing `invite_email_sent` and `must_change_password` fields from migration 067 - 3 files use inline type assertions instead | MEDIUM |
+| DEV-13 | `CollaboratoreDetail.tsx` - `inviteEmailSent`/`onboardingCompleted`/`mustChangePassword` props form a data clump; extract to `InviteTrackingState` type and pass as single prop | MEDIUM |
+| DEV-14 | `collaboratori/page.tsx` builds two parallel `Map<string, boolean>` for invite/onboarding tracking - consolidate into one `Map<string, { inviteEmailSent: boolean; onboardingCompleted: boolean }>` | LOW |
+| S9 | `MonitoraggioSection.tsx` is 1031 lines with 5+ responsibilities (monitoring dashboard, error logs, email delivery, performance metrics, system health) - split into child components | MEDIUM |
+| SEC-NEW-5 | `POST /api/auth/change-password` has no Zod schema on body - manual typeof + length check only; no max-length bound (long passwords stress bcrypt); add `z.object({ password: z.string().min(8).max(128) })` | HIGH |
+| SEC-NEW-6 | `next` 16.0.0-16.2.2 has 5 high CVEs (HTTP request smuggling, null-origin CSRF, DoS) - fix at 16.2.3 non-breaking | HIGH |
+| SEC-NEW-7 | `axios` <=1.14.0 has critical SSRF + header injection CVEs (transitive dep) - fix via `npm audit fix` | HIGH |
+| SEC-NEW-8 | `POST /api/admin/collaboratori/[id]/resend-invite` has no rate limiting - allows unbounded password regeneration + email triggers by admin | MEDIUM |
 | API6 | 8 content/ticket write routes lack Zod validation — `tickets` (POST), `tickets/[id]/status` (PATCH), `tickets/[id]/messages` (POST), `opportunities` (POST), `communications` (POST), `resources` (POST/PUT), `events` (POST/PATCH), `discounts` (POST/PATCH) — supersedes S4/SEC15 detail | MEDIUM |
 | API7 | `admin/members` pagination uses `limit` param name; email-delivery uses `page` + hardcoded `PAGE_SIZE` — no unified pagination contract across paginated endpoints | LOW |
-| API8 | `POST /api/admin/create-user` returns default 200 — should be 201 (creates auth user + profile + collaborator records) | LOW |
+| API8 | `POST /api/admin/create-user` and `POST /api/admin/collaboratori/[id]/resend-invite` return default 200 - should be 201 (creates auth user + profile + collaborator records) | LOW |
 | API9 | 8 routes wrap Zod issues in the `error` key (`{ error: [ZodIssue] }`) instead of the project standard `{ error: 'msg', issues: [...] }` — inconsistent error shape for validation failures | MEDIUM |
 | API10 | ~~`POST /api/tickets/[id]/messages` returns `{ message: msg }`~~ — **RESOLVED** fixed 2026-03-30: `{ data: msg }` | ~~LOW~~ |
 | API11 | ~~5 content routes return `NextResponse.json({}, { status: 204 })`~~ — **RESOLVED** fixed 2026-03-30: `new NextResponse(null, { status: 204 })` on all 5 | ~~LOW~~ |
@@ -156,6 +168,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | PERF-5 | `GET /api/export/history` and `GET /api/import/history`: N+1 signed URL generation — one `createSignedUrl` call per run record inside `Promise.all` (up to 50 calls) — consider batch-signed-URL API or a single pre-signed path on upload | MEDIUM |
 | PERF-6 | 5 raw `<img>` tags without `width`/`height` attributes — CLS risk on avatar images in dashboard hero, `/sconti/[id]` logo, and `SignaturePad` preview | MEDIUM |
 | PERF-7 | `select('*')` on 20+ API routes — over-fetches all columns including large `body`/`content` text fields on `tickets`, `expense_reimbursements`, `compensations` list endpoints | MEDIUM |
+| API12 | `POST /api/auth/change-password` silently discards `flagErr` from `user_profiles.must_change_password` update - if DB write fails, proxy keeps redirecting to `/change-password` even though auth password was changed | MEDIUM |
+| API13 | `POST /api/import/collaboratori/run` `skipContract` defaults to `true` when omitted - any caller that omits the field silently skips contract signing for all imports | LOW |
 | PERF-8 | Bundle analyzer not configured — neither `@next/bundle-analyzer` nor `next experimental-analyze` documented in `package.json` scripts; developers cannot inspect bundle composition without manual setup | LOW |
 | PERF-11 | ~~`components/corsi/CorsiPageCollab.tsx:9` — `CorsiCalendario` statically imported, no `next/dynamic` wrapper~~ — **RESOLVED** 2026-03-30: converted to `dynamic(() => import('./CorsiCalendario'), { ssr: false })` | ~~MEDIUM~~ |
 | UI1 | G4: 6 bare `<p>` empty states in import sections and constrained UI contexts (NotificationBell, TicketDetailModal) — replace with `<EmptyState>` | LOW |

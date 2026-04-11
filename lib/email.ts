@@ -6,7 +6,7 @@ export async function sendEmail(
   to: string,
   subject: string,
   html: string,
-): Promise<void> {
+): Promise<{ success: boolean }> {
   try {
     await resend.emails.send({
       from: 'Staff Manager <noreply@testbusters.it>',
@@ -14,7 +14,9 @@ export async function sendEmail(
       subject,
       html,
     });
+    return { success: true };
   } catch (err) {
     console.error('[email] send failed to', to, err);
+    return { success: false };
   }
 }
