@@ -145,7 +145,7 @@
 
 ## 7. Corsi
 
-> Fully defined across corsi-1 (foundation), corsi-2 (collab candidature), corsi-3 (resp.citt landing, review, valutazioni).
+> Fully defined across corsi-1 (foundation), corsi-2 (collab candidature), corsi-3 (resp.citt landing, review, valutazioni), corsi-resp-citt-v2 (API hardening, per-ruolo assignment, per-materia valutazioni).
 
 | Action | `collaboratore` | `responsabile_cittadino` | `responsabile_compensi` | `amministrazione` | Notes |
 |---|---|---|---|---|---|
@@ -163,8 +163,11 @@
 | Withdraw candidatura (città) | ❌ | ✅ | ❌ | ❌ | Resp.citt: own in_attesa only |
 | Review candidatura (lezione) | ❌ | ✅ | ❌ | ✅ | Resp.citt: corsi where citta = citta_responsabile; stato → accettata or ritirata |
 | Assign CoCoD'à (assegnazione ruolo=cocoda) | ❌ | ✅ | ❌ | ✅ | Resp.citt: INSERT cocoda for lezioni of corsi in their citta (RLS policy assegnazioni_cocoda_insert). Admin: full CRUD. |
-| Manage assegnazioni (docente/qa/full) | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD |
-| Set valutazione | ❌ | ✅ | ❌ | ❌ | Resp.citt: assegnazioni for their city's corsi; score 1–10 |
+| Assign Docente (assegnazione ruolo=docente) | ❌ | ✅ | ❌ | ✅ | Resp.citt: INSERT docente for lezioni of corsi in their citta (RLS policy assegnazioni_docente_insert). Admin: full CRUD. |
+| Assign Q&A (assegnazione ruolo=qa) | ❌ | ✅ | ❌ | ✅ | Resp.citt: INSERT qa for lezioni of corsi in their citta (RLS policy assegnazioni_qa_insert). Admin: full CRUD. |
+| Delete assegnazione | ❌ | ✅ | ❌ | ✅ | Resp.citt: DELETE any ruolo for lezioni of corsi in their citta (RLS policy assegnazioni_resp_citt_delete - all roles). Admin: full CRUD. |
+| Manage assegnazioni (full CRUD) | ❌ | ❌ | ❌ | ✅ | Admin: full CRUD |
+| Set valutazione | ❌ | ✅ | ❌ | ❌ | Resp.citt: per ruolo×materia; docente locked until ≥80% materia coverage; cocoda always unlocked; score 1–10. E18+Telegram notification. |
 | View blacklist | ❌ | ✅ | ❌ | ✅ | Read-only for resp.citt |
 | Manage blacklist | ❌ | ❌ | ❌ | ✅ | Admin: add/remove |
 | View allegati globali | ✅ | ✅ | ✅ | ✅ | All authenticated |
