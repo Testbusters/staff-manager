@@ -58,6 +58,26 @@ export function telegramNuovoCorsoInCitta(params: {
   );
 }
 
+export function telegramValutazioneCorso(params: {
+  nome: string;
+  corso: string;
+  ruolo: string;
+  materia?: string;
+  valutazione: number;
+}): string {
+  const materiaLine = params.materia
+    ? `\n📖 Materia: <b>${params.materia}</b>`
+    : '';
+  return (
+    `⭐ <b>Valutazione corso</b>\n\n` +
+    `Ciao ${params.nome}, hai ricevuto una valutazione:\n\n` +
+    `📚 Corso: <b>${params.corso}</b>\n` +
+    `👤 Ruolo: <b>${params.ruolo}</b>` +
+    materiaLine +
+    `\n📊 Valutazione: <b>${params.valutazione}/10</b>`
+  );
+}
+
 export function telegramReminderLezione(params: {
   nome: string;
   corso: string;

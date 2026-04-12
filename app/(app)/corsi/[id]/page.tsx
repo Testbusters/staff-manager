@@ -248,26 +248,34 @@ export default async function CorsoDetailPage({
     // Fetch collaborator names + metadata + blacklist + direct docente assegnazioni
     const collabIds = [...new Set((candidature ?? []).map((c: { collaborator_id: string | null }) => c.collaborator_id).filter(Boolean) as string[])];
 
-    const [blacklistResult, collabDetailsResult, qaCountResult, docenteAssegnazioniResult] = await Promise.all([
+    const [blacklistResult, collabDetailsResult, qaCountResult, docenteAssegnazioniResult, cocodaAssegnazioniResult, qaAssegnazioniResult] = await Promise.all([
       svc.from('blacklist').select('collaborator_id'),
       collabIds.length > 0
-        ? svc.from('collaborators').select('id, nome, cognome, materie_insegnate, citta').in('id', collabIds)
-        : Promise.resolve({ data: [] as { id: string; nome: string | null; cognome: string | null; materie_insegnate: string[] | null; citta: string | null }[] }),
+        ? svc.from('collaborators').select('id, nome, cognome, username, materie_insegnate, citta').in('id', collabIds)
+        : Promise.resolve({ data: [] as { id: string; nome: string | null; cognome: string | null; username: string | null; materie_insegnate: string[] | null; citta: string | null }[] }),
       collabIds.length > 0
         ? svc.from('assegnazioni').select('collaborator_id').eq('ruolo', 'qa').not('valutazione', 'is', null).in('collaborator_id', collabIds)
         : Promise.resolve({ data: [] as { collaborator_id: string }[] }),
       lezioniIds.length > 0
         ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'docente')
         : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
+      lezioniIds.length > 0
+        ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'cocoda')
+        : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
+      lezioniIds.length > 0
+        ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'qa')
+        : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
     ]);
 
     const blacklistedIds = new Set((blacklistResult.data ?? []).map((b: { collaborator_id: string }) => b.collaborator_id));
     const docenteAssegnazioni = docenteAssegnazioniResult.data ?? [];
+    const cocodaAssegnazioni = cocodaAssegnazioniResult.data ?? [];
+    const qaAssegnazioni = qaAssegnazioniResult.data ?? [];
 
-    const collabMap: Record<string, { nome: string; cognome: string }> = {};
+    const collabMap: Record<string, { nome: string; cognome: string; username?: string | null }> = {};
     const collabMetadata: Record<string, { materie: string[]; citta: string; qaSvolti: number }> = {};
     for (const c of collabDetailsResult.data ?? []) {
-      collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '' };
+      collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '', username: c.username ?? null };
       collabMetadata[c.id] = {
         materie: c.materie_insegnate ?? [],
         citta: c.citta ?? '',
@@ -296,6 +304,7 @@ export default async function CorsoDetailPage({
         </div>
 
         <LezioniTabRespCitt
+          corsoId={id}
           lezioni={lezioni ?? []}
           candidature={candidature ?? []}
           collabMap={collabMap}
@@ -305,6 +314,8 @@ export default async function CorsoDetailPage({
           collabMetadata={collabMetadata}
           collabsPerCitta={collabsPerCitta ?? []}
           docenteAssegnazioni={docenteAssegnazioni}
+          cocodaAssegnazioni={cocodaAssegnazioni}
+          qaAssegnazioni={qaAssegnazioni}
         />
       </div>
     );
