@@ -10,7 +10,7 @@ import { getCollaboratorInfo, getNotificationSettings } from '@/lib/notification
 const schema = z.object({
   lezione_id: z.string().uuid(),
   collaborator_id: z.string().uuid(),
-  ruolo: z.enum(['cocoda', 'docente']),
+  ruolo: z.enum(['cocoda', 'docente', 'qa']),
 });
 
 export async function POST(req: NextRequest) {
@@ -48,23 +48,45 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Defense-in-depth: verify lezione's corso belongs to the resp.citt's city
-  if (profile.citta_responsabile) {
-    const { data: lezione } = await svc
-      .from('lezioni')
-      .select('corso_id')
-      .eq('id', lezione_id)
+  // Fetch lezione -> corso once for city check + max validation
+  const { data: lezione } = await svc
+    .from('lezioni')
+    .select('corso_id')
+    .eq('id', lezione_id)
+    .single();
+
+  if (lezione) {
+    const { data: corso } = await svc
+      .from('corsi')
+      .select('citta, max_docenti_per_lezione, max_qa_per_lezione')
+      .eq('id', lezione.corso_id)
       .single();
 
-    if (lezione) {
-      const { data: corso } = await svc
-        .from('corsi')
-        .select('citta')
-        .eq('id', lezione.corso_id)
-        .single();
-
+    // Defense-in-depth: verify lezione's corso belongs to the resp.citt's city
+    if (profile.citta_responsabile) {
       if (!corso || corso.citta !== profile.citta_responsabile) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    // Max validation for docente and qa per lezione
+    if (corso && (ruolo === 'docente' || ruolo === 'qa')) {
+      const maxVal = ruolo === 'docente'
+        ? (corso.max_docenti_per_lezione ?? 0)
+        : (corso.max_qa_per_lezione ?? 0);
+
+      const { count } = await svc
+        .from('assegnazioni')
+        .select('id', { count: 'exact', head: true })
+        .eq('lezione_id', lezione_id)
+        .eq('ruolo', ruolo);
+
+      if ((count ?? 0) >= maxVal) {
+        const label = ruolo === 'docente' ? 'docenti' : 'Q&A';
+        return NextResponse.json(
+          { error: `Massimo ${maxVal} ${label} per lezione raggiunto` },
+          { status: 422 },
+        );
       }
     }
   }
@@ -102,7 +124,7 @@ export async function POST(req: NextRequest) {
       if (lez) {
         const { data: corso } = await svc.from('corsi').select('nome').eq('id', lez.corso_id).single();
         if (corso) {
-          const ruoloLabel = ruolo === 'docente' ? 'Docente' : "CoCoD'à";
+          const ruoloLabel = ruolo === 'docente' ? 'Docente' : ruolo === 'qa' ? 'Q&A' : "CoCoD'à";
           if (setting?.email_enabled && info.email) {
             const { subject, html } = emailAssegnazioneCorsi({
               nome: info.nome,

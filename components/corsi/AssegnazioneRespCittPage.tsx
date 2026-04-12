@@ -59,6 +59,7 @@ interface CollabOption {
   id: string;
   nome: string;
   cognome: string;
+  username?: string | null;
 }
 
 interface CocodaAssegnazione {
@@ -198,7 +199,7 @@ function CocodaPanel({
                     <SelectContent>
                       {collabsPerCocoda.map((c) => (
                         <SelectItem key={c.id} value={c.id} className="text-xs">
-                          {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠ Blacklist' : ''}
+                          {c.cognome} {c.nome}{c.username ? ` (${c.username})` : ''}{blacklistedIds.has(c.id) ? ' ⚠ Blacklist' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -658,7 +659,7 @@ export default function AssegnazioneRespCittPage({
                                 <option value="">Seleziona CoCoD&apos;à {i + 1 + corsoCocodaCollabs.length}...</option>
                                 {collabsPerCocoda.filter((c) => !taken.has(c.id)).map((c) => (
                                   <option key={c.id} value={c.id}>
-                                    {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
+                                    {c.cognome} {c.nome}{c.username ? ` (${c.username})` : ''}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
                                   </option>
                                 ))}
                               </select>
@@ -731,7 +732,7 @@ export default function AssegnazioneRespCittPage({
                                 <option value="">Q&A slot {i + 1 + corsoQACollabs.length}...</option>
                                 {collabsPerCocoda.filter((c) => !taken.has(c.id)).map((c) => (
                                   <option key={c.id} value={c.id}>
-                                    {c.cognome} {c.nome}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
+                                    {c.cognome} {c.nome}{c.username ? ` (${c.username})` : ''}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
                                   </option>
                                 ))}
                               </select>

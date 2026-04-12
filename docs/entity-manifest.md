@@ -154,6 +154,6 @@
 **Stato**: computed from `data_inizio`/`data_fine` via `getCorsoStato()` — no physical column.
 **Corso state values**: `programmato` | `attivo` | `concluso` (from `lib/types.ts` → `CorsoStato`; lowercase; computed — no DB column)
 **Candidatura state values**: `in_attesa` | `accettata` | `ritirata` (from `lib/types.ts` → `CandidaturaStato`; lowercase)
-**Notification triggers**: none in corsi-1 (corsi-4)
-**Key surfaces**: `/corsi` (admin list), `/corsi/nuovo` (create), `/corsi/[id]` (detail tabs), `/impostazioni?tab=blacklist`, `/impostazioni?tab=allegati_corsi`
+**Notification triggers**: E13 (assegnazione), E14 (lesson reminder), E17 (new corso in city), E18 (valutazione corso) + Telegram for all 4
+**Key surfaces**: `/corsi` (admin list), `/corsi/nuovo` (create), `/corsi/[id]` (detail tabs), `/corsi/assegnazione` (resp.citt), `/corsi/valutazioni` (resp.citt), `/impostazioni?tab=blacklist`, `/impostazioni?tab=allegati_corsi`
 **Notes**: `lezioni.ore` is a GENERATED ALWAYS AS column (computed from orario_inizio/orario_fine). `candidature` requires exactly one of `lezione_id` or `corso_id`. `blacklist` enforces UNIQUE on `collaborator_id`. `allegati_globali` enforces UNIQUE on `(tipo, community_id)` — use UPSERT for updates.

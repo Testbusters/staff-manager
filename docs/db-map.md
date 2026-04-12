@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `067_invite_email_sent.sql` (2026-04-11).
+> Last synced: migration `068_corsi_resp_citt_v2.sql` (2026-04-12).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -67,7 +67,7 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `notifications` | In-app notifications | `user_id`, `tipo`, `entity_type`, `entity_id`, `read` | `entity_type` values: `compensation`, `reimbursement`, `document`, `ticket`, `communication`, `event`, `opportunity`, `discount` |
-| `notification_settings` | Toggle per event × role | `event_key`, `recipient_role` (UNIQUE pair), `inapp_enabled`, `email_enabled`, `telegram_enabled` | 19 rows total. Lookup: `event_key:recipient_role`. `telegram_enabled` seeded true for: `assegnazione_corso:collaboratore`, `nuovo_corso_citta:collaboratore`, `reminder_lezione_24h:collaboratore` |
+| `notification_settings` | Toggle per event × role | `event_key`, `recipient_role` (UNIQUE pair), `inapp_enabled`, `email_enabled`, `telegram_enabled` | 20 rows total. Lookup: `event_key:recipient_role`. `telegram_enabled` seeded true for: `assegnazione_corso:collaboratore`, `nuovo_corso_citta:collaboratore`, `reminder_lezione_24h:collaboratore`, `valutazione_corso:collaboratore` |
 | `telegram_tokens` | Pending Telegram connection tokens | `id`, `collaborator_id` (FK→collaborators, UNIQUE), `token` (TEXT UNIQUE), `expires_at`, `used_at` | RLS enabled, zero policies — service-role only. One pending token per collaborator (UNIQUE on collaborator_id). Token entropy: 256-bit (32 random bytes hex). Expires 15 min after creation. |
 | `email_templates` | Editable email templates | `key` (UNIQUE), `event_group`, `subject`, `body_before`, `highlight_rows` (jsonb), `body_after`, `available_markers[]` | 12 rows. `getRenderedEmail()` in `lib/email-template-service.ts` |
 | `email_layout_config` | Singleton layout config | `brand_color`, `logo_url`, `header_title`, `footer_address` | Single row, cached 5min |
@@ -238,7 +238,7 @@ tickets
 | `communications/events/opportunities/resources/discounts` | active users (SELECT), admin (ALL write) | Content tables — community filtering is in-memory in API, NOT in RLS. `events`: resp.citt can INSERT/UPDATE/DELETE city-scoped events |
 | `corsi` | all authenticated (SELECT), admin (ALL) | |
 | `lezioni` | all authenticated (SELECT), admin (ALL) | |
-| `assegnazioni` | all authenticated (SELECT), admin (ALL), resp.citt INSERT ruolo=cocoda for citta_responsabile corsi (migration 058), resp.citt UPDATE valutazione for citta_responsabile corsi | `assegnazioni_cocoda_insert`: lezione_id IN (lezioni of corsi where citta = citta_responsabile) |
+| `assegnazioni` | all authenticated (SELECT), admin (ALL), resp.citt INSERT ruolo=cocoda/docente/qa for citta_responsabile corsi (migrations 058+068), resp.citt DELETE any ruolo for citta_responsabile corsi (migration 068), resp.citt UPDATE valutazione for citta_responsabile corsi | `assegnazioni_cocoda_insert`, `assegnazioni_docente_insert` (068), `assegnazioni_qa_insert` (068), `assegnazioni_resp_citt_delete` (068, all ruoli) |
 | `candidature` | collab (INSERT docente/qa, UPDATE own → ritirata), resp.citt (INSERT citta_corso, UPDATE own → ritirata, UPDATE docente/qa stato for citta corsi), admin (ALL) | Migrations 056 + 057 |
 | `blacklist` | admin (ALL), resp.citt (SELECT) | |
 | `allegati_globali` | all authenticated (SELECT), admin (ALL) | |
@@ -288,10 +288,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-11.
+> Last refreshed: 2026-04-12.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
