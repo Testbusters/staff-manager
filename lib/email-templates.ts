@@ -570,3 +570,30 @@ export function emailNuovoCorsoInCitta(p: {
     html: layout(body),
   };
 }
+
+// ── E18 — Valutazione corso ricevuta ─────────────────────────────
+export function emailValutazioneCorso(p: {
+  nome: string;
+  corso: string;
+  ruolo: string;
+  materia?: string;
+  valutazione: number;
+  link?: string;
+}): { subject: string; html: string } {
+  const highlights = [
+    { label: 'Corso', value: p.corso },
+    { label: 'Ruolo', value: p.ruolo },
+    ...(p.materia ? [{ label: 'Materia', value: p.materia }] : []),
+    { label: 'Valutazione', value: `${p.valutazione}/10` },
+  ];
+  const body = `
+    ${greeting(p.nome)}
+    ${bodyText('Hai ricevuto una valutazione per il tuo corso.')}
+    ${highlight(highlights)}
+    ${ctaButton('Vai ai corsi', p.link ?? `${APP_URL}/corsi`)}
+  `;
+  return {
+    subject: `Valutazione corso — ${p.corso}`,
+    html: layout(body),
+  };
+}

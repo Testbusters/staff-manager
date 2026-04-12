@@ -48,7 +48,7 @@ export default async function CorsiAssegnazionePage() {
       ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, materia').in('corso_id', mieiCorsiIds).order('data').order('orario_inizio')
       : Promise.resolve({ data: [] }),
     cittaResp
-      ? svc.from('collaborators').select('id, nome, cognome').eq('citta', cittaResp).order('cognome')
+      ? svc.from('collaborators').select('id, nome, cognome, username').eq('citta', cittaResp).order('cognome')
       : Promise.resolve({ data: [] }),
   ]);
 

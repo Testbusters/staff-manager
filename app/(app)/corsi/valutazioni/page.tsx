@@ -7,6 +7,19 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Star } from 'lucide-react';
 import ValutazioniRespCittPage from '@/components/corsi/ValutazioniRespCittPage';
 
+interface ValutazioneEntry {
+  collaborator_id: string;
+  nome: string;
+  cognome: string;
+  ruolo: 'docente' | 'cocoda';
+  materia: string | null;
+  assegnazioniIds: string[];
+  totalLezioni: number;
+  assignedLezioni: number;
+  thresholdMet: boolean;
+  valutazione: number | null;
+}
+
 export default async function CorsiValutazioniPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -62,21 +75,25 @@ export default async function CorsiValutazioniPage() {
     );
   }
 
-  // Fetch lezioni for all corsi
+  // Fetch lezioni with materia
   const corsiIds = corsi.map((c: { id: string }) => c.id);
   const { data: lezioni } = await svc
     .from('lezioni')
-    .select('id, corso_id')
+    .select('id, corso_id, materia')
     .in('corso_id', corsiIds);
 
   const lezioniIds = (lezioni ?? []).map((l: { id: string }) => l.id);
 
-  // Fetch assegnazioni for these lezioni
+  // Fetch assegnazioni for docente and cocoda only (not qa - no valutazione for qa)
   const { data: assegnazioni } = lezioniIds.length > 0
-    ? await svc.from('assegnazioni').select('id, lezione_id, collaborator_id, ruolo, valutazione').in('lezione_id', lezioniIds)
+    ? await svc
+        .from('assegnazioni')
+        .select('id, lezione_id, collaborator_id, ruolo, valutazione')
+        .in('lezione_id', lezioniIds)
+        .in('ruolo', ['docente', 'cocoda'])
     : { data: [] };
 
-  // Fetch collaborator names directly from collaborators table
+  // Fetch collaborator names
   const collabIds = [...new Set((assegnazioni ?? []).map((a: { collaborator_id: string }) => a.collaborator_id))];
   const collabRows = collabIds.length > 0
     ? (await svc.from('collaborators').select('id, nome, cognome').in('id', collabIds)).data ?? []
@@ -84,48 +101,103 @@ export default async function CorsiValutazioniPage() {
 
   const collabMap: Record<string, { nome: string; cognome: string }> = {};
   for (const c of collabRows) {
-    collabMap[c.id] = { nome: c.nome ?? '—', cognome: c.cognome ?? '' };
+    collabMap[c.id] = { nome: c.nome ?? '-', cognome: c.cognome ?? '' };
   }
 
-  // Build per-corso, per-collab groups
+  // Build lezione -> materia lookup
+  const lezioneMateria: Record<string, string> = {};
+  const lezioneCorso: Record<string, string> = {};
+  for (const l of lezioni ?? []) {
+    lezioneMateria[l.id] = l.materia;
+    lezioneCorso[l.id] = l.corso_id;
+  }
+
+  // Build per-corso structured data
   const corsiValutazioni = corsi.map((corso: { id: string; nome: string; codice_identificativo: string }) => {
-    const corsoLezioniIds = (lezioni ?? [])
-      .filter((l: { corso_id: string }) => l.corso_id === corso.id)
-      .map((l: { id: string }) => l.id);
+    const corsoLezioni = (lezioni ?? []).filter((l: { corso_id: string }) => l.corso_id === corso.id);
+    const corsoLezioniIds = new Set(corsoLezioni.map((l: { id: string }) => l.id));
 
     const corsoAssegnazioni = (assegnazioni ?? []).filter(
-      (a: { lezione_id: string }) => corsoLezioniIds.includes(a.lezione_id),
+      (a: { lezione_id: string }) => corsoLezioniIds.has(a.lezione_id),
     );
 
-    // Group by collaborator_id
-    const byCollab = new Map<string, { assegnazioniIds: string[]; valutazione: number | null }>();
+    // Count lezioni per materia for threshold calculation
+    const lezioniPerMateria: Record<string, number> = {};
+    for (const l of corsoLezioni) {
+      lezioniPerMateria[l.materia] = (lezioniPerMateria[l.materia] ?? 0) + 1;
+    }
+    const totalCorsoLezioni = corsoLezioni.length;
+
+    // Group: (collaborator_id, ruolo, materia) -> entries
+    const groupKey = (collabId: string, ruolo: string, materia: string | null) =>
+      `${collabId}|${ruolo}|${materia ?? '__all__'}`;
+
+    const groups = new Map<string, {
+      collaborator_id: string;
+      ruolo: 'docente' | 'cocoda';
+      materia: string | null;
+      assegnazioniIds: string[];
+      assignedLezioniIds: Set<string>;
+      valutazione: number | null;
+    }>();
+
     for (const a of corsoAssegnazioni) {
-      const existing = byCollab.get(a.collaborator_id);
+      const materia = a.ruolo === 'docente' ? lezioneMateria[a.lezione_id] : null;
+      const key = groupKey(a.collaborator_id, a.ruolo, materia);
+      const existing = groups.get(key);
       if (existing) {
         existing.assegnazioniIds.push(a.id);
+        existing.assignedLezioniIds.add(a.lezione_id);
         if (existing.valutazione === null && a.valutazione !== null) {
           existing.valutazione = a.valutazione;
         }
       } else {
-        byCollab.set(a.collaborator_id, {
+        groups.set(key, {
+          collaborator_id: a.collaborator_id,
+          ruolo: a.ruolo as 'docente' | 'cocoda',
+          materia,
           assegnazioniIds: [a.id],
+          assignedLezioniIds: new Set([a.lezione_id]),
           valutazione: a.valutazione ?? null,
         });
       }
     }
 
-    const collabs = Array.from(byCollab.entries()).map(([collaborator_id, data]) => ({
-      collaborator_id,
-      nome: collabMap[collaborator_id]?.nome ?? '—',
-      cognome: collabMap[collaborator_id]?.cognome ?? '',
-      ...data,
-    }));
+    const entries: ValutazioneEntry[] = Array.from(groups.values()).map((g) => {
+      const totalLezioni = g.ruolo === 'docente' && g.materia
+        ? (lezioniPerMateria[g.materia] ?? 0)
+        : totalCorsoLezioni;
+      const assignedLezioni = g.assignedLezioniIds.size;
+      const thresholdMet = g.ruolo === 'cocoda'
+        ? true
+        : totalLezioni > 0 && (assignedLezioni / totalLezioni) >= 0.8;
+
+      return {
+        collaborator_id: g.collaborator_id,
+        nome: collabMap[g.collaborator_id]?.nome ?? '-',
+        cognome: collabMap[g.collaborator_id]?.cognome ?? '',
+        ruolo: g.ruolo,
+        materia: g.materia,
+        assegnazioniIds: g.assegnazioniIds,
+        totalLezioni,
+        assignedLezioni,
+        thresholdMet,
+        valutazione: g.valutazione,
+      };
+    });
+
+    // Sort: cocoda first, then docente grouped by materia
+    entries.sort((a, b) => {
+      if (a.ruolo !== b.ruolo) return a.ruolo === 'cocoda' ? -1 : 1;
+      if (a.materia !== b.materia) return (a.materia ?? '').localeCompare(b.materia ?? '');
+      return `${a.cognome} ${a.nome}`.localeCompare(`${b.cognome} ${b.nome}`);
+    });
 
     return {
       corso: { id: corso.id, nome: corso.nome, codice: corso.codice_identificativo },
-      collabs,
+      entries,
     };
-  }).filter((cv: { collabs: unknown[] }) => cv.collabs.length > 0);
+  }).filter((cv: { entries: unknown[] }) => cv.entries.length > 0);
 
   return (
     <div className="p-6">
@@ -135,7 +207,7 @@ export default async function CorsiValutazioniPage() {
         <EmptyState
           icon={Star}
           title="Nessuna assegnazione"
-          description="Non ci sono ancora collaboratori assegnati ai corsi della tua città."
+          description="Non ci sono ancora collaboratori assegnati ai corsi della tua citta."
         />
       ) : (
         <ValutazioniRespCittPage corsiValutazioni={corsiValutazioni} />

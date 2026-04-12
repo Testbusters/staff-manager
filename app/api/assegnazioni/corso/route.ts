@@ -9,7 +9,7 @@ import { getCollaboratorInfo } from '@/lib/notification-helpers';
 const schema = z.object({
   corso_id: z.string().uuid(),
   collaborator_ids: z.array(z.string().uuid()).min(1),
-  ruolo: z.enum(['cocoda', 'qa']),
+  ruolo: z.enum(['cocoda', 'docente', 'qa']),
 });
 
 const MAX_COCODA = 2;
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   // Fetch corso — verify city ownership
   const { data: corso } = await svc
     .from('corsi')
-    .select('id, nome, citta, max_qa_per_lezione')
+    .select('id, nome, citta, max_docenti_per_lezione, max_qa_per_lezione')
     .eq('id', corso_id)
     .single();
 
@@ -65,6 +65,15 @@ export async function POST(req: NextRequest) {
   // Validate max per ruolo
   if (ruolo === 'cocoda' && collaborator_ids.length > MAX_COCODA) {
     return NextResponse.json({ error: `Massimo ${MAX_COCODA} CoCoD'à per corso` }, { status: 422 });
+  }
+  if (ruolo === 'docente') {
+    const maxDocenti = corso.max_docenti_per_lezione ?? 0;
+    if (maxDocenti === 0) {
+      return NextResponse.json({ error: 'Docenti non abilitati per questo corso' }, { status: 422 });
+    }
+    if (collaborator_ids.length > maxDocenti) {
+      return NextResponse.json({ error: `Massimo ${maxDocenti} docenti per lezione` }, { status: 422 });
+    }
   }
   if (ruolo === 'qa') {
     const maxQA = corso.max_qa_per_lezione ?? 0;
@@ -109,7 +118,7 @@ export async function POST(req: NextRequest) {
   }
 
   // E13: fire-and-forget assignment emails
-  const ruoloLabel = ruolo === 'qa' ? 'Q&A' : "CoCoD'à";
+  const ruoloLabel = ruolo === 'docente' ? 'Docente' : ruolo === 'qa' ? 'Q&A' : "CoCoD'à";
   for (const collaborator_id of collaborator_ids) {
     getCollaboratorInfo(collaborator_id, svc).then((info) => {
       if (info?.email) {
