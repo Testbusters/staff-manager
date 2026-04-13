@@ -118,7 +118,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/collaboratori` | `app/(app)/collaboratori/page.tsx` | admin | `full-list` | Table, Badge, Pagination, EmptyState | ✅ | Full collaborator list with filters + pagination | `UI` `UX` |
 | `/collaboratori/[id]` | `app/(app)/collaboratori/[id]/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, Avatar | ✅ | Profile detail + edit + document history | `UI` `UX` |
 | `/export` | `app/(app)/export/page.tsx` | admin | `tabs` | Tabs, Form, Table (preview + history) | ✅ | CSV/XLSX export of compensations and reimbursements | `UI` `UX` |
-| `/import` | `app/(app)/import/page.tsx` | admin | `import-panel` | Tabs, Table (preview), Dialog, EmptyState | ✅ | Bulk import UI for collaboratori, contratti, CU | `UI` `UX` |
+| `/import` | `app/(app)/import/page.tsx` | admin | `import-panel` | Tabs, Table (preview), Dialog, EmptyState, ImportCorsiSection | ✅ | Bulk import UI for collaboratori, contratti, CU, corsi (4 tabs). Corsi tab: GSheet import via POST /api/admin/import-corsi/run with notify toggle. | `UI` `UX` |
 | `/impostazioni` | `app/(app)/impostazioni/page.tsx` | admin | `tabs` | Tabs, Form, Table, Dialog, BannerManager, Switch, BlacklistManager, AllegatiCorsiManager | ✅ | Community config, notification settings, contract templates, email template management, community banners, blacklist management, allegati corsi | `UI` `UX` |
 | `/corsi` | `app/(app)/corsi/page.tsx` | admin + resp.cittadino + collab | `full-list` | Table, Badge, EmptyState, CorsiFilterBar, CorsiPageCollab, CorsiCalendario | ✅ | Admin: full list with filters. Resp.cittadino: redirect → /corsi/assegnazione. Collab: 3-section view (I miei corsi / Docenza / Q&A) + monthly calendar; city filter for in_aula docenza. | `UI` `R` `UX` |
 | `/corsi/assegnazione` | `app/(app)/corsi/assegnazione/page.tsx` | resp.cittadino | `full-list` | AssegnazioneRespCittPage, Select, Badge, Button, AlertDialog | ✅ | Two sections: corsi senza città (candidatura citta_corso) + I miei corsi (accordion per corso: "CoCoD'à del corso" 2-slot assign all lezioni, "Q&A del corso" N-slot for online corsi, Rimuovi on existing; Export CSV; ⚠ blacklist in dropdown). | `UI` `R` `UX` |
@@ -223,9 +223,9 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Responsive notes**: Notification settings matrix (event × role) is a wide table — horizontal scroll allowed here. Template editor (Tiptap/textarea) needs adequate height.
 
 ### `/import`
-- **Tabs / states**: 3 outer tabs — Collaboratori · Contratti · CU. Each tab has an inner toggle — Importa · Storico. Importa state: GSheet URL input → preview table → confirm Dialog → run result panel. Storico state: list of past import runs with XLSX download.
-- **Key interactions**: Admin — paste sheet URL, preview rows, confirm and run import, download run history XLSX.
-- **Empty states**: Storico inner tab uses EmptyState when no import runs exist. Preview table shows validation errors inline before confirm.
+- **Tabs / states**: 4 outer tabs — Collaboratori · Contratti · CU · Corsi. Collaboratori/Contratti/CU: inner toggle Importa · Storico. Importa state: GSheet URL input → preview table → confirm Dialog → run result panel. Storico state: list of past import runs with XLSX download. Corsi tab: single-shot execution (no preview) — button "Esegui import" + toggle "Notifica collaboratori" (default OFF, gates E17) → results table (tab name | status PROCESSED/ERROR/SKIPPED | error message).
+- **Key interactions**: Admin — paste sheet URL, preview rows, confirm and run import, download run history XLSX. Corsi: click "Esegui import" → server reads all `TO_PROCESS` tabs → results list shown inline; re-running is idempotent (already-PROCESSED tabs skipped).
+- **Empty states**: Storico inner tab uses EmptyState when no import runs exist. Preview table shows validation errors inline before confirm. Corsi tab: before first run shows only the button; after run shows summary `{processed, errorCount, skipped}` + per-tab rows.
 - **Responsive notes**: Preview table can have many columns — horizontal scroll acceptable within the import panel. Run result panel (success/error counts) should stack vertically on mobile.
 
 ### `/export`

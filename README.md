@@ -18,7 +18,7 @@ Internal admin portal for managing collaborators across the Testbusters and Peer
 | Rich text | Tiptap 3 |
 | Charts | Recharts |
 | Export | SheetJS (xlsx) + native CSV |
-| Testing | Vitest (403 unit/API tests) + Playwright (e2e, currently suspended) |
+| Testing | Vitest (unit/API tests) + Playwright (e2e, currently suspended) |
 
 ---
 

@@ -24,7 +24,7 @@
 |---|---|---|---|---|
 | `id` | UUID | auto | — | — |
 | `nome` | TEXT | ✅ | POST /api/corsi | admin |
-| `codice_identificativo` | TEXT | ✅ | POST /api/corsi | admin |
+| `codice_identificativo` | TEXT UNIQUE | ✅ | POST /api/corsi | admin |
 | `community_id` | UUID FK→communities | ✅ | POST /api/corsi | admin |
 | `modalita` | TEXT CHECK (online/in_aula) | ✅ | POST /api/corsi | admin |
 | `citta` | TEXT | nullable | POST/PATCH | admin, resp.cittadino (city assignment — corsi-3) |
@@ -66,11 +66,11 @@ otherwise            →  attivo
 | `orario_inizio` | TIME | ✅ | POST/PATCH | admin |
 | `orario_fine` | TIME | ✅ | POST/PATCH | admin |
 | `ore` | NUMERIC(4,2) | GENERATED | — | — (computed) |
-| `materia` | TEXT | ✅ | POST/PATCH | admin |
+| `materie` | TEXT[] NOT NULL | ✅ | POST/PATCH | admin |
 | `created_at` | TIMESTAMPTZ | auto | — | — |
 
 > `ore` = `ROUND(CAST(EXTRACT(EPOCH FROM (orario_fine - orario_inizio)) / 3600 AS NUMERIC), 2)` — stored generated column. Never set directly.
-> `materia` values come from `lookup_options` type='materia', community-specific.
+> `materie` values come from `lookup_options` type='materia', community-specific. Array with CHECK `array_length(materie, 1) >= 1` (migration 069 — renamed from scalar `materia` to support multi-materia lessons, e.g. `['Matematica', 'Fisica']`). Values normalized to Title Case on import (Q3a override). Zod validation: `z.array(z.string().min(1)).min(1)`.
 
 ---
 
@@ -168,13 +168,35 @@ UNIQUE constraint: `(tipo, community_id)`. Use UPSERT (ON CONFLICT DO UPDATE) wh
 | DELETE | `/api/admin/blacklist/[id]` | admin | — |
 | GET | `/api/admin/allegati-corsi` | admin | — |
 | POST | `/api/admin/allegati-corsi` | admin | multipart/form-data; uploads to `corsi-allegati` bucket |
+| POST | `/api/admin/import-corsi/run` | admin | GSheet import (body `{notify:boolean}`). Service role. Response `{results[], errors[], summary:{processed,errorCount,skipped}}`. Best-effort rollback on lezioni insert failure (DELETE corso CASCADE). Cross-tab duplicate `codice_identificativo` detection pre-emptive. |
+
+### candidature filter — docente_lezione overlap
+
+`POST /api/candidature` with `tipo='docente_lezione'`: fetches `lezione.materie[]` and `collaborator.materie_insegnate[]`, returns 422 if no overlap. `qa_lezione` and `citta_corso` unaffected.
+
+### valutazioni aggregation — per-materia split
+
+`/api/corsi/[id]/valutazioni` uses `.contains('materie', [materia])` (array operator) for filtering. The resp.cittadino valutazioni page (`app/(app)/corsi/valutazioni/page.tsx`) iterates `lezione.materie[]` per docente and contributes to N buckets (one per materia). 80% threshold computed on lezioni-with-that-materia, not on total.
 
 ---
 
 ## Known Constraints
 
 - `lezioni.ore` is a GENERATED ALWAYS AS STORED column — never include it in INSERT payloads.
+- `lezioni.materie` is `TEXT[] NOT NULL` with CHECK `array_length(materie, 1) >= 1` (migration 069). Always provide at least one string. Values Title Case on import.
+- `corsi.codice_identificativo` is UNIQUE (migration 069). Duplicate insert returns Postgres `23505` → import API writes ERROR to origin cell and skips tab.
 - `candidature` CHECK requires exactly one of `lezione_id`/`corso_id` non-null.
+- `candidature` `docente_lezione`: 422 if `collaborator.materie_insegnate` has no overlap with `lezione.materie`.
 - `blacklist.collaborator_id` is UNIQUE — inserting a duplicate returns Postgres error `23505`.
 - `allegati_globali` UNIQUE on `(tipo, community_id)` — always use UPSERT pattern.
 - `getCorsoStato()` uses today's date at midnight (local time) — consistent with ISO date string comparison.
+
+---
+
+## Import Source — Google Sheet
+
+Shared helpers in `lib/google-sheets-shared.ts` (extracted from `lib/google-sheets.ts` — `getToken`, `pemToDer`). Corsi-specific parser in `lib/corsi-import-sheet.ts`.
+
+Env var: `IMPORT_CORSI_SHEET_ID` (staging fallback: `1UC8LXU430ks0CXWnjmzI2SDlWFYYcf8eKbVb6wHFwAk`).
+
+Layout: 1 tab = 1 corso. Col A-E = lezioni, Col G-H = metadati corso. Cell `Sincronizzato con il gestionale` (idempotency marker): `TO_PROCESS` → `PROCESSED` after successful import (single batchUpdate at end). 429 retry with exponential backoff. Materie normalization: case-insensitive lookup, output Title Case (Q3a override). Città `ASSEGNAZIONE` → NULL. Materia M&F → `['Matematica', 'Fisica']` (1 lezione composita).
