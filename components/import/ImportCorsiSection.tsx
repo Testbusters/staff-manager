@@ -127,14 +127,14 @@ function StatusBadge({ status }: { status: TabOutcome['status'] }) {
 
 function RunResultPanel({ result, onReset }: { result: ImportResult; onReset: () => void }) {
   const { results, summary } = result;
-  const total = summary.processed + summary.errors + summary.skipped;
+  const total = summary.processed + summary.errorCount + summary.skipped;
 
   return (
     <div className="space-y-4">
       <StatsStrip
         total={total}
         processed={summary.processed}
-        errors={summary.errors}
+        errors={summary.errorCount}
         skipped={summary.skipped}
       />
 
@@ -205,9 +205,9 @@ export default function ImportCorsiSection() {
       }
       setResult(data as ImportResult);
       const summary = (data as ImportResult).summary;
-      if (summary.errors > 0) {
+      if (summary.errorCount > 0) {
         toast.error(
-          `Import completato con ${summary.errors} errori (${summary.processed} importati, ${summary.skipped} saltati)`,
+          `Import completato con ${summary.errorCount} errori (${summary.processed} importati, ${summary.skipped} saltati)`,
           { id: toastId },
         );
       } else {

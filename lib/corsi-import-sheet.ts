@@ -119,7 +119,7 @@ export interface TabOutcome {
 
 export interface ImportResult {
   results: TabOutcome[];
-  summary: { processed: number; errors: number; skipped: number };
+  summary: { processed: number; errorCount: number; skipped: number };
 }
 
 // ─── Utility parsers ──────────────────────────────────────────────────────────
@@ -644,7 +644,7 @@ export async function runImport(
 
   const summary = {
     processed: results.filter((r) => r.status === 'PROCESSED').length,
-    errors: results.filter((r) => r.status === 'ERROR').length,
+    errorCount: results.filter((r) => r.status === 'ERROR').length,
     skipped: results.filter((r) => r.status === 'SKIPPED').length,
   };
 
