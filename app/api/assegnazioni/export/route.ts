@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   // Two-step fetch: lezioni → assegnazioni → collaborators
   const { data: lezioni } = await svc
     .from('lezioni')
-    .select('id, data, orario_inizio, orario_fine, materia')
+    .select('id, data, orario_inizio, orario_fine, materie')
     .eq('corso_id', corsoId)
     .order('data')
     .order('orario_inizio');
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       lez?.data ?? '',
       lez?.orario_inizio ?? '',
       lez?.orario_fine ?? '',
-      lez?.materia ?? '',
+      (lez?.materie ?? []).join(';'),
       col?.nome ?? '',
       col?.cognome ?? '',
       a.ruolo,

@@ -475,7 +475,7 @@ export interface Lezione {
   orario_inizio: string;
   orario_fine: string;
   ore: number;
-  materia: string;
+  materie: string[];
   created_at: string;
 }
 

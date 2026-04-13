@@ -62,7 +62,7 @@ beforeAll(async () => {
       data: '2027-08-10',
       orario_inizio: '09:00',
       orario_fine: '11:00',
-      materia: 'Logica',
+      materie: ['Logica'],
     })
     .select('id')
     .single();

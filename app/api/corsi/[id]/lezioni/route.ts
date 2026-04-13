@@ -7,7 +7,7 @@ const CreateLezioneSchema = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   orario_inizio: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
   orario_fine: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
-  materia: z.string().min(1),
+  materie: z.array(z.string().min(1)).min(1),
 });
 
 async function getRole(req: NextRequest): Promise<{ userId: string | null; role: string | null }> {

@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MATERIA_COLORS } from '@/lib/corsi-utils';
+import { MateriaBadges } from '@/components/MateriaBadges';
 import { ASSEGNAZIONE_RUOLO_LABELS } from '@/lib/types';
 import type { Lezione, Candidatura, Assegnazione, AssegnazioneRuolo, CandidaturaTipo, CandidaturaStato } from '@/lib/types';
 import { GraduationCap, ChevronDown } from 'lucide-react';
@@ -169,8 +169,6 @@ export default function LezioniTabCollab({
               const postiDocente = getPostiCount(lezione.id, 'docente');
               const postiQA = getPostiCount(lezione.id, 'qa');
 
-              const materiaColor = MATERIA_COLORS[lezione.materia] ?? 'bg-gray-500';
-
               return (
                 <TableRow key={lezione.id}>
                   <TableCell className="whitespace-nowrap text-sm">{formatDate(lezione.data)}</TableCell>
@@ -179,9 +177,7 @@ export default function LezioniTabCollab({
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground text-center">{Number(lezione.ore).toFixed(1)}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white ${materiaColor}`}>
-                      {lezione.materia}
-                    </span>
+                    <MateriaBadges materie={lezione.materie} />
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                     {corsoLinea ?? '—'}

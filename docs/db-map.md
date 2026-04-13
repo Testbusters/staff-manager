@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `068_corsi_resp_citt_v2.sql` (2026-04-12).
+> Last synced: migration `069_lezioni_materie_array_and_corsi_unique.sql` (2026-04-13).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -83,8 +83,8 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `corsi` | Master course record | `nome`, `codice_identificativo`, `community_id`, `modalita`, `citta` (nullable), `data_inizio`, `data_fine`, `max_docenti_per_lezione`, `max_qa_per_lezione`, `created_by` | `stato` (programmato/attivo/concluso) is COMPUTED — not a column. 12 link/metadata fields. |
-| `lezioni` | Individual lessons per corso | `corso_id`, `data`, `orario_inizio`, `orario_fine`, `ore` (GENERATED STORED), `materia` | `ore = ROUND(EXTRACT(EPOCH FROM orario_fine - orario_inizio) / 3600, 2)`. ON DELETE CASCADE from corsi |
+| `corsi` | Master course record | `nome`, `codice_identificativo` (UNIQUE), `community_id`, `modalita`, `citta` (nullable), `data_inizio`, `data_fine`, `max_docenti_per_lezione`, `max_qa_per_lezione`, `created_by` | `stato` (programmato/attivo/concluso) is COMPUTED - not a column. 12 link/metadata fields. `codice_identificativo` UNIQUE added in migration 069 (idempotency key for GSheet import). |
+| `lezioni` | Individual lessons per corso | `corso_id`, `data`, `orario_inizio`, `orario_fine`, `ore` (GENERATED STORED), `materie` (TEXT[] NOT NULL) | `ore = ROUND(EXTRACT(EPOCH FROM orario_fine - orario_inizio) / 3600, 2)`. ON DELETE CASCADE from corsi. `materie` TEXT[] (renamed from scalar `materia` in migration 069) with CHECK `array_length(materie, 1) >= 1`. |
 | `assegnazioni` | Collaborator × lezione × ruolo | `lezione_id`, `collaborator_id`, `ruolo` (docente/cocoda/qa), `valutazione` (nullable, 1.0–10.0), `created_by` | UNIQUE `(lezione_id, collaborator_id, ruolo)`. ON DELETE CASCADE from lezioni |
 | `candidature` | Applications (collab per-lezione or resp.cittadino per-corso) | `tipo` (docente_lezione/qa_lezione/citta_corso), `lezione_id` (nullable), `corso_id` (nullable), `collaborator_id` (nullable), `city_user_id` (nullable), `stato` | CHECK: exactly one of lezione_id or corso_id non-null. ON DELETE CASCADE from lezioni+corsi |
 | `blacklist` | Collaborators barred from teaching | `collaborator_id` (UNIQUE), `note`, `created_by` | UNIQUE on collaborator_id. Error 23505 on duplicate |
@@ -207,7 +207,9 @@ tickets
 | `candidature` | `candidature_corso_id_idx` | btree | FK — added migration 063 |
 | `candidature` | `candidature_lezione_id_idx` | btree | FK — added migration 063 |
 | `candidature` | `candidature_city_user_id_idx` | btree | FK — added migration 063 |
-| `lezioni` | `lezioni_corso_id_idx` | btree | FK CASCADE target — added migration 063 |
+| `lezioni` | `lezioni_corso_id_idx` | btree | FK CASCADE target - added migration 063 |
+| `lezioni` | `lezioni_materie_nonempty` | CHECK | `array_length(materie, 1) >= 1` - added migration 069 |
+| `corsi` | `corsi_codice_identificativo_unique` | UNIQUE | added migration 069 - idempotency key for GSheet import |
 | `compensation_attachments` | `comp_attachments_compensation_id_idx` | btree | FK — added migration 063 |
 | `ticket_messages` | `ticket_messages_ticket_id_idx` | btree | FK — added migration 063 |
 
@@ -289,10 +291,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-12.
+> Last refreshed: 2026-04-13.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -831,8 +834,8 @@ tickets
 | `orario_inizio` | time without time zone | NO | — | — |
 | `orario_fine` | time without time zone | NO | — | — |
 | `ore` | numeric | YES | — | — |
-| `materia` | text | NO | — | — |
 | `created_at` | timestamp with time zone | NO | `now()` | — |
+| `materie` | text[] | NO | — | — |
 
 ### `liquidazione_requests`
 

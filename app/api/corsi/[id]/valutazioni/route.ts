@@ -71,7 +71,7 @@ export async function PATCH(
     .eq('corso_id', corsoId);
 
   if (ruolo === 'docente' && materia) {
-    lezioniQuery = lezioniQuery.eq('materia', materia);
+    lezioniQuery = lezioniQuery.contains('materie', [materia]);
   }
 
   const { data: lezioni } = await lezioniQuery;

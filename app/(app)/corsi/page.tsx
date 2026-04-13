@@ -101,8 +101,8 @@ export default async function CorsiPage({
     const lezioneIds = [...new Set((assegnazioniRaw ?? []).map((a) => a.lezione_id))];
     const [{ data: lezioniRaw }] = await Promise.all([
       lezioneIds.length > 0
-        ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, ore, materia').in('id', lezioneIds)
-        : Promise.resolve({ data: [] as { id: string; corso_id: string; data: string; orario_inizio: string; orario_fine: string; ore: number; materia: string }[] }),
+        ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, ore, materie').in('id', lezioneIds)
+        : Promise.resolve({ data: [] as { id: string; corso_id: string; data: string; orario_inizio: string; orario_fine: string; ore: number; materie: string[] }[] }),
     ]);
 
     // Build Map<corso_id, Set<ruolo>> from lezioni + assegnazioni

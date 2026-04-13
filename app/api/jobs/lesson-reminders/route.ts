@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { data: lezioni } = await svc
     .from('lezioni')
-    .select('id, corso_id, data, orario_inizio, orario_fine, materia')
+    .select('id, corso_id, data, orario_inizio, orario_fine, materie')
     .eq('data', tomorrow);
 
   if (!lezioni || lezioni.length === 0) {
@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
         corso: corso.nome,
         lezione_data: lez.data,
         orario,
-        materia: lez.materia,
+        materia: (lez.materie ?? []).join(', '),
         ruolo: ruoloLabel,
       });
       sendEmail(email, subject, html).catch(() => {});
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
           corso: corso.nome,
           lezione_data: lez.data,
           orario,
-          materia: lez.materia,
+          materia: (lez.materie ?? []).join(', '),
           ruolo: ruoloLabel,
         }),
       ).catch(() => {});
