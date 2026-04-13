@@ -14,7 +14,7 @@ export interface CalEntry {
   corso_codice: string;
   corso_id: string;
   lezione_id: string;
-  materia: string;
+  materie: string[];
 }
 
 const MATERIA_PILL: Record<string, { bg: string; text: string; dot: string }> = {
@@ -265,7 +265,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                       text: 'text-foreground',
                       dot: 'bg-muted-foreground',
                     };
-                    const pill = MATERIA_PILL[e.materia] ?? { bg: 'bg-muted', text: 'text-foreground', dot: 'bg-muted-foreground' };
+                    const pill = MATERIA_PILL[e.materie[0] ?? ''] ?? { bg: 'bg-muted', text: 'text-foreground', dot: 'bg-muted-foreground' };
                     const ruoloLabel = RUOLO_LABEL[e.ruolo] ?? e.ruolo;
                     return (
                       <Link

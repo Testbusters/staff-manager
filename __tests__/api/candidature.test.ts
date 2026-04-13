@@ -58,7 +58,7 @@ beforeAll(async () => {
     data: '2026-09-15',
     orario_inizio: '09:00',
     orario_fine: '11:00',
-    materia: 'Logica',
+    materie: ['Logica'],
   }).select().single();
   lezioneId = lezione?.id ?? '';
 });
@@ -199,7 +199,7 @@ describe('Bug #6 — in_aula corso fixtures for 422 guard', () => {
       data: '2026-09-20',
       orario_inizio: '09:00',
       orario_fine: '11:00',
-      materia: 'Logica',
+      materie: ['Logica'],
     }).select().single();
     inAulaLezioneId = lezione?.id ?? '';
   }, 15000);

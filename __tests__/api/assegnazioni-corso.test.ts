@@ -80,7 +80,7 @@ beforeAll(async () => {
     data: '2027-07-10',
     orario_inizio: '09:00',
     orario_fine: '11:00',
-    materia: 'Matematica',
+    materie: ['Matematica'],
   }).select('id').single();
   testLezioneId1 = l1!.id;
 
@@ -89,7 +89,7 @@ beforeAll(async () => {
     data: '2027-07-17',
     orario_inizio: '09:00',
     orario_fine: '11:00',
-    materia: 'Matematica',
+    materie: ['Matematica'],
   }).select('id').single();
   testLezioneId2 = l2!.id;
 });

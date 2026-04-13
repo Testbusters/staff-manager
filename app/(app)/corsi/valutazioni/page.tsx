@@ -75,11 +75,11 @@ export default async function CorsiValutazioniPage() {
     );
   }
 
-  // Fetch lezioni with materia
+  // Fetch lezioni with materie
   const corsiIds = corsi.map((c: { id: string }) => c.id);
   const { data: lezioni } = await svc
     .from('lezioni')
-    .select('id, corso_id, materia')
+    .select('id, corso_id, materie')
     .in('corso_id', corsiIds);
 
   const lezioniIds = (lezioni ?? []).map((l: { id: string }) => l.id);
@@ -104,11 +104,11 @@ export default async function CorsiValutazioniPage() {
     collabMap[c.id] = { nome: c.nome ?? '-', cognome: c.cognome ?? '' };
   }
 
-  // Build lezione -> materia lookup
-  const lezioneMateria: Record<string, string> = {};
+  // Build lezione -> materie lookup
+  const lezioneMaterie: Record<string, string[]> = {};
   const lezioneCorso: Record<string, string> = {};
   for (const l of lezioni ?? []) {
-    lezioneMateria[l.id] = l.materia;
+    lezioneMaterie[l.id] = l.materie ?? [];
     lezioneCorso[l.id] = l.corso_id;
   }
 
@@ -121,10 +121,12 @@ export default async function CorsiValutazioniPage() {
       (a: { lezione_id: string }) => corsoLezioniIds.has(a.lezione_id),
     );
 
-    // Count lezioni per materia for threshold calculation
+    // Count lezioni per materia: a composite lezione (es. ['M','F']) contribuisce a entrambi i contatori
     const lezioniPerMateria: Record<string, number> = {};
     for (const l of corsoLezioni) {
-      lezioniPerMateria[l.materia] = (lezioniPerMateria[l.materia] ?? 0) + 1;
+      for (const m of (l.materie ?? [])) {
+        lezioniPerMateria[m] = (lezioniPerMateria[m] ?? 0) + 1;
+      }
     }
     const totalCorsoLezioni = corsoLezioni.length;
 
@@ -132,34 +134,55 @@ export default async function CorsiValutazioniPage() {
     const groupKey = (collabId: string, ruolo: string, materia: string | null) =>
       `${collabId}|${ruolo}|${materia ?? '__all__'}`;
 
-    const groups = new Map<string, {
+    type Group = {
       collaborator_id: string;
       ruolo: 'docente' | 'cocoda';
       materia: string | null;
       assegnazioniIds: string[];
       assignedLezioniIds: Set<string>;
       valutazione: number | null;
-    }>();
+    };
 
-    for (const a of corsoAssegnazioni) {
-      const materia = a.ruolo === 'docente' ? lezioneMateria[a.lezione_id] : null;
-      const key = groupKey(a.collaborator_id, a.ruolo, materia);
+    const groups = new Map<string, Group>();
+
+    const upsertGroup = (
+      collabId: string,
+      ruolo: 'docente' | 'cocoda',
+      materia: string | null,
+      assegnazioneId: string,
+      lezioneId: string,
+      valutazione: number | null,
+    ) => {
+      const key = groupKey(collabId, ruolo, materia);
       const existing = groups.get(key);
       if (existing) {
-        existing.assegnazioniIds.push(a.id);
-        existing.assignedLezioniIds.add(a.lezione_id);
-        if (existing.valutazione === null && a.valutazione !== null) {
-          existing.valutazione = a.valutazione;
+        existing.assegnazioniIds.push(assegnazioneId);
+        existing.assignedLezioniIds.add(lezioneId);
+        if (existing.valutazione === null && valutazione !== null) {
+          existing.valutazione = valutazione;
         }
       } else {
         groups.set(key, {
-          collaborator_id: a.collaborator_id,
-          ruolo: a.ruolo as 'docente' | 'cocoda',
+          collaborator_id: collabId,
+          ruolo,
           materia,
-          assegnazioniIds: [a.id],
-          assignedLezioniIds: new Set([a.lezione_id]),
-          valutazione: a.valutazione ?? null,
+          assegnazioniIds: [assegnazioneId],
+          assignedLezioniIds: new Set([lezioneId]),
+          valutazione: valutazione ?? null,
         });
+      }
+    };
+
+    for (const a of corsoAssegnazioni) {
+      if (a.ruolo === 'docente') {
+        // Split per materia: docente su lezione composita ['M','F'] contribuisce a bucket M e F
+        const materie = lezioneMaterie[a.lezione_id] ?? [];
+        for (const materia of materie) {
+          upsertGroup(a.collaborator_id, 'docente', materia, a.id, a.lezione_id, a.valutazione ?? null);
+        }
+      } else {
+        // cocoda: nessuno split per materia
+        upsertGroup(a.collaborator_id, 'cocoda', null, a.id, a.lezione_id, a.valutazione ?? null);
       }
     }
 

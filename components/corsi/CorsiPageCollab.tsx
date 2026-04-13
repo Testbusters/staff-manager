@@ -35,7 +35,7 @@ interface LezioneFlat {
   orario_inizio: string;
   orario_fine: string;
   ore: number;
-  materia: string;
+  materie: string[];
 }
 
 interface Props {
@@ -123,7 +123,7 @@ export default function CorsiPageCollab({
         corso_codice: corsoCodeMap.get(l.corso_id) ?? '—',
         corso_id: l.corso_id,
         lezione_id: l.id,
-        materia: l.materia,
+        materie: l.materie,
       };
     })
     .filter((e): e is CalEntry => e !== null);

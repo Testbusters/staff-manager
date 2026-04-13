@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { GraduationCap, MapPin, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { MateriaBadges } from '@/components/MateriaBadges';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -53,7 +54,7 @@ interface OwnCandidatura {
   stato: string;
 }
 
-type CorsoLezione = Pick<Lezione, 'id' | 'corso_id' | 'data' | 'orario_inizio' | 'orario_fine' | 'materia'>;
+type CorsoLezione = Pick<Lezione, 'id' | 'corso_id' | 'data' | 'orario_inizio' | 'orario_fine' | 'materie'>;
 
 interface CollabOption {
   id: string;
@@ -140,7 +141,7 @@ function CocodaPanel({
               <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
                 {lezione.orario_inizio}–{lezione.orario_fine}
               </span>
-              <Badge variant="outline" className="text-xs shrink-0">{lezione.materia}</Badge>
+              <MateriaBadges materie={lezione.materie} />
               {existing ? (
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">

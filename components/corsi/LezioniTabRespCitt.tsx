@@ -27,6 +27,7 @@ import {
 import { GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { MATERIA_COLORS } from '@/lib/corsi-utils';
+import { MateriaBadges } from '@/components/MateriaBadges';
 import type { Candidatura, CandidaturaStato, Lezione } from '@/lib/types';
 
 interface CollabOption {
@@ -430,7 +431,6 @@ export default function LezioniTabRespCitt({
       <div className="inline-flex flex-col gap-6">
       {lezioni.map((lezione) => {
         const lezioneCandidature = getCandidatureForLezione(lezione.id);
-        const materiaStyle = MATERIA_COLORS[lezione.materia] ?? 'bg-gray-500';
         const qaAccettati = acceptedQACount(lezione.id);
         const docenteAccettati = acceptedDocenteCount(lezione.id);
         const docenteDiretti = docenteAssegnazioniForLezione(lezione.id);
@@ -448,7 +448,7 @@ export default function LezioniTabRespCitt({
               <span className="text-sm text-muted-foreground">
                 {lezione.orario_inizio} - {lezione.orario_fine}
               </span>
-              <Badge className={`text-xs ${materiaStyle}`}>{lezione.materia}</Badge>
+              <MateriaBadges materie={lezione.materie} />
               <span className="text-xs text-muted-foreground">{lezione.ore}h</span>
               {/* Counters */}
               <div className="ml-auto flex items-center gap-2">

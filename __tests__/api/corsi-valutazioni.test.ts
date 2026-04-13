@@ -61,14 +61,14 @@ beforeAll(async () => {
   // Create 2 lezioni with different materie
   const { data: lezA } = await svc
     .from('lezioni')
-    .insert({ corso_id: corsoId, data: '2027-09-05', orario_inizio: '09:00', orario_fine: '12:00', materia: 'Logica' })
+    .insert({ corso_id: corsoId, data: '2027-09-05', orario_inizio: '09:00', orario_fine: '12:00', materie: ['Logica'] })
     .select('id')
     .single();
   lezioneMatA_Id = lezA!.id;
 
   const { data: lezB } = await svc
     .from('lezioni')
-    .insert({ corso_id: corsoId, data: '2027-09-12', orario_inizio: '09:00', orario_fine: '12:00', materia: 'Biologia' })
+    .insert({ corso_id: corsoId, data: '2027-09-12', orario_inizio: '09:00', orario_fine: '12:00', materie: ['Biologia'] })
     .select('id')
     .single();
   lezioneMatB_Id = lezB!.id;

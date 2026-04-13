@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, FileText, Receipt } from 'lucide-react';
+import { Users, FileText, Receipt, GraduationCap } from 'lucide-react';
 import ImportCollaboratoriSection from './ImportCollaboratoriSection';
 import ImportCUSection from './ImportCUSection';
 import ImportContrattiSection from './ImportContrattiSection';
+import ImportCorsiSection from './ImportCorsiSection';
 
-type ImportType = 'collaboratori' | 'contratti' | 'cu';
+type ImportType = 'collaboratori' | 'contratti' | 'cu' | 'corsi';
 
 const TYPES = [
   { id: 'collaboratori' as ImportType, label: 'Collaboratori', icon: Users },
   { id: 'contratti'     as ImportType, label: 'Contratti',     icon: FileText },
   { id: 'cu'            as ImportType, label: 'CU',            icon: Receipt },
+  { id: 'corsi'         as ImportType, label: 'Corsi',         icon: GraduationCap },
 ];
 
 export default function ImportSection() {
@@ -45,6 +47,7 @@ export default function ImportSection() {
       {activeType === 'collaboratori' && <ImportCollaboratoriSection />}
       {activeType === 'cu' && <ImportCUSection />}
       {activeType === 'contratti' && <ImportContrattiSection />}
+      {activeType === 'corsi' && <ImportCorsiSection />}
     </div>
   );
 }

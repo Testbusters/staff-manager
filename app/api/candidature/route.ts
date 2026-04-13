@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
   const { data: collab } = await svc
     .from('collaborators')
-    .select('id')
+    .select('id, materie_insegnate')
     .eq('user_id', user.id)
     .single();
 
@@ -123,6 +123,24 @@ export async function POST(req: NextRequest) {
       if (corsoRow?.modalita === 'in_aula') {
         return NextResponse.json({ error: 'Q&A candidature not available for in_aula courses' }, { status: 422 });
       }
+    }
+  }
+
+  // I3: docente_lezione requires materia overlap between lezione.materie and collaborator.materie_insegnate
+  if (tipo === 'docente_lezione') {
+    const { data: lezioneRow } = await svc
+      .from('lezioni')
+      .select('materie')
+      .eq('id', lezione_id)
+      .single();
+    const lezioneMaterie: string[] = lezioneRow?.materie ?? [];
+    const collabMaterie: string[] = collab.materie_insegnate ?? [];
+    const hasOverlap = lezioneMaterie.some((m) => collabMaterie.includes(m));
+    if (!hasOverlap) {
+      return NextResponse.json(
+        { error: 'No overlapping materie between lesson and collaborator' },
+        { status: 422 },
+      );
     }
   }
 
