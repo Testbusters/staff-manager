@@ -45,7 +45,7 @@ export default async function CorsiAssegnazionePage() {
   const mieiCorsiIds = (mieicitta_corsi ?? []).map((c: { id: string }) => c.id);
   const [{ data: mieiCorsiLezioni }, { data: collabsPerCocoda }] = await Promise.all([
     mieiCorsiIds.length > 0
-      ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, materia').in('corso_id', mieiCorsiIds).order('data').order('orario_inizio')
+      ? svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, materie').in('corso_id', mieiCorsiIds).order('data').order('orario_inizio')
       : Promise.resolve({ data: [] }),
     cittaResp
       ? svc.from('collaborators').select('id, nome, cognome, username').eq('citta', cittaResp).order('cognome')

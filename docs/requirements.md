@@ -933,3 +933,59 @@ Track invite email delivery status, provide admin visibility into email/onboardi
 - MOD: `app/(app)/collaboratori/page.tsx` — status badges
 - MOD: `app/(app)/collaboratori/[id]/page.tsx` — fetch new fields, pass to detail
 - MOD: `components/responsabile/CollaboratoreDetail.tsx` — badges + resend button
+
+---
+
+## Block corsi-gsheet-import — Admin Corsi Import from Google Sheet
+
+### Overview
+Admin imports corsi (and their lezioni) from a Google Sheet where each tab represents one corso (col A-E = lezioni rows, col G-H = corso key/value metadata). Idempotency via "Sincronizzato con il gestionale" cell (`TO_PROCESS` -> `PROCESSED` after success, `ERROR` on failure with note in adjacent cell). Adds breaking schema change to `lezioni` (single `materia` -> array `materie`) to support composite lessons (M&F = Matematica + Fisica) declared at parsing time.
+
+### Scope
+- New tab `Corsi` in `/import` UI (alongside Collaboratori, Contratti, CU). Toggle "Notifica collaboratori (E17)" default OFF.
+- New endpoint `POST /api/admin/import-corsi/run` (admin only). Service role, bypasses `POST /api/corsi` (no E17 broadcast unless toggle on).
+- New helper `lib/corsi-import-sheet.ts`: per-tab parsing, prefetch communities + materie lookups, scan upfront for duplicate `codice_identificativo`, best-effort rollback (DELETE corso CASCADE on lezioni failure), single `batchUpdate` final writeback to GSheet.
+- Shared GSheet auth helper extracted: `lib/google-sheets-shared.ts` (`getToken`, `pemToDer`); refactor `google-sheets.ts`, `contratti-import-sheet.ts`, `cu-import-sheet.ts` to import from it.
+- Migration 069 (BREAKING — production has no corsi yet): `lezioni.materia TEXT` -> `lezioni.materie TEXT[] NOT NULL CHECK array_length>=1`. UNIQUE constraint on `corsi.codice_identificativo`.
+- Refactor downstream:
+  - `app/api/corsi/[id]/lezioni/route.ts`: Zod schema `materie: z.array(...).min(1)`.
+  - `app/api/corsi/[id]/valutazioni/route.ts`: `.contains('materie', [materia])` instead of `.eq('materia', materia)`.
+  - `app/api/candidature/route.ts`: docente-only filter requiring `lezioni.materie && collaborators.materie_insegnate` overlap (422 on mismatch). Q&A and CoCoD'à unchanged.
+  - `app/(app)/corsi/valutazioni/page.tsx`: aggregate per-materia by iterating `lezione.materie[]` (split contribution, threshold 80% per materia bucket).
+- New UI component `components/MateriaBadges.tsx` (reusable wrapper over `MATERIA_COLORS` with flex-wrap). Replace single-materia rendering across LezioniTab* (Admin/Collab/RespCitt), `CorsiCalendario`, `AssegnazioneRespCittPage`.
+- 9 test files updated mechanically: `materia: 'Foo'` -> `materie: ['Foo']` (Title Case) where used as fixture.
+
+### Data flow
+1. Admin clicks "Esegui import" in `/import` tab Corsi.
+2. API fetches GSheet via service-account JWT; for each tab not in blacklist (`Indicazioni`, `Template`, `Copia di Foglio cittadino - Da DUPLICARE`) and with cell "Sincronizzato con il gestionale" = `TO_PROCESS`:
+   - Parse corso metadata (col G-H) and lezioni rows (col A-E).
+   - Lookup community (case-insensitive on `communities.name`).
+   - Lookup materie (strict per-community `lookup_options` type=`materia`, case-insensitive).
+   - Normalize modalità (case-insensitive, fuori enum -> ERROR).
+   - Città `ASSEGNAZIONE` (any case) -> NULL.
+   - Parse data lezione: strict format `D[D] <mese_it> YYYY` (anno mancante -> ERROR).
+   - `M&F` materia -> single lezione with `materie = ['Matematica', 'Fisica']`.
+3. INSERT corso (service role). On success INSERT lezioni. On any lezione failure: DELETE corso CASCADE, write ERROR.
+4. Final batchUpdate: PROCESSED for success tabs, ERROR for failed tabs (with note in adjacent cell H format `ERROR | <message>`).
+
+### Decisions log
+- 15 scope decisions + 5 architectural decisions (A-E) + override Q3a (Title Case) -> see `.claude/session/block-corsi-gsheet-import.md`.
+- Phase 8 will produce `docs/reports/corsi-gsheet-import-decisions.md` (stakeholder-friendly summary).
+
+### Files
+- NEW: `supabase/migrations/069_lezioni_materie_array_and_corsi_unique.sql`
+- NEW: `lib/google-sheets-shared.ts` — extracted JWT helpers
+- NEW: `lib/corsi-import-sheet.ts` — parser + runImport
+- NEW: `app/api/admin/import-corsi/run/route.ts` — POST endpoint
+- NEW: `components/import/ImportCorsiSection.tsx` — tab content
+- NEW: `components/MateriaBadges.tsx` — reusable badge component
+- MOD: `lib/types.ts` — `Lezione.materie: string[]`
+- MOD: `lib/google-sheets.ts`, `lib/contratti-import-sheet.ts`, `lib/cu-import-sheet.ts` — use shared helpers
+- MOD: `app/api/corsi/[id]/lezioni/route.ts` — Zod `materie`
+- MOD: `app/api/corsi/[id]/valutazioni/route.ts` — `.contains` filter
+- MOD: `app/api/candidature/route.ts` — docente materie overlap check
+- MOD: `app/(app)/corsi/valutazioni/page.tsx` — split aggregation
+- MOD: `components/import/ImportSection.tsx` — add Corsi tab
+- MOD: `components/corsi/LezioniTab*.tsx` (Admin/Collab/RespCitt), `CorsiCalendario.tsx`, `AssegnazioneRespCittPage.tsx` — use `MateriaBadges`
+- MOD: 9 test files in `__tests__/` — `materia` -> `materie`
+- ENV: `IMPORT_CORSI_SHEET_ID` in `.env.local`

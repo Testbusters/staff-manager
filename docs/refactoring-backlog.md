@@ -43,7 +43,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | SEC14 | Leaked password protection disabled in Supabase Auth | MEDIUM |
 | SEC15 | Missing Zod on 6+ write routes (tickets POST, ticket status, ticket messages, sign, notifications, members status) | MEDIUM |
 | SEC16 | `app_errors` table has `WITH CHECK (true)` for INSERT — any authenticated user can insert arbitrary rows | MEDIUM |
-| SEC-NEW-2 | 15+ import/export routes forward `err.message` from Google Sheets/file-parse errors to client — reveals internal service config | MEDIUM |
+| SEC-NEW-2 | 16+ import/export routes forward `err.message` from Google Sheets/file-parse errors to client — reveals internal service config (latest: `app/api/admin/import-corsi/run/route.ts:42`) | MEDIUM |
 | SEC-NEW-3 | 20+ dynamic route handlers lack UUID validation on path params — DB error instead of clean 400 | MEDIUM |
 | SEC-NEW-4 | 7 admin RLS `FOR ALL` policies (corsi/lezioni/assegnazioni/candidature/blacklist/allegati_globali/liq_requests) lack explicit `WITH CHECK` — functionally correct but non-standard | LOW |
 | TC5 | No RLS test for compensation_history leakage | HIGH |
@@ -117,6 +117,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | PERF-6 | Raw `<img>` without `width`/`height` at `page.tsx:287`, `page.tsx:1367`, `sconti/[id]:80`, `ResponsabileAvatarHero:46` — CLS risk. Fix: add explicit dimensions or use Next.js `<Image>`. | MEDIUM |
 | PERF-7 | `select('*')` on list endpoints in `tickets/route.ts`, `expenses/route.ts`, and 18+ others — over-fetches large text columns. Fix: enumerate only needed columns per endpoint. | MEDIUM |
 | API-1 | `POST /api/admin/create-user` and `POST /api/admin/collaboratori/[id]/resend-invite` return 200 instead of 201 on successful resource creation | MEDIUM |
+| API-4 | `ImportResult.summary.errors` field name shadows the `{ error: string }` failure key — rename to `errorCount` in `lib/corsi-import-sheet.ts` and all consumers | MEDIUM |
+| API-5 | `POST /api/admin/import-corsi/run` absent from `docs/sitemap.md` Section: admin — missing from all future audit scans | MEDIUM |
 | API-2 | `app/api/auth/change-password/route.ts:40` — `flagErr` destructured but never checked; silent failure if `user_profiles.must_change_password` update fails after password rotation succeeds | MEDIUM |
 | API-3 | `POST /api/import/collaboratori/run` uses `skipContract: true` as default — missing values silently coerce to true; callers that omit the field always get contract-skip behaviour without explicit opt-in | LOW |
 | PERF-8 | Bundle analyzer not configured (`@next/bundle-analyzer` absent). Cannot inspect bundle composition. Add as optional dev dependency with `ANALYZE=true npm run build` pattern. | LOW |
@@ -155,6 +157,7 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | SEC-NEW-6 | `next` 16.0.0-16.2.2 has 5 high CVEs (HTTP request smuggling, null-origin CSRF, DoS) - fix at 16.2.3 non-breaking | HIGH |
 | SEC-NEW-7 | `axios` <=1.14.0 has critical SSRF + header injection CVEs (transitive dep) - fix via `npm audit fix` | HIGH |
 | SEC-NEW-8 | `POST /api/admin/collaboratori/[id]/resend-invite` has no rate limiting - allows unbounded password regeneration + email triggers by admin | MEDIUM |
+| SEC-NEW-9 | `@xmldom/xmldom` 0.9.0-0.9.8 high CVE (transitive via googleapis) - fix available via `npm audit fix` | HIGH |
 | API6 | 8 content/ticket write routes lack Zod validation — `tickets` (POST), `tickets/[id]/status` (PATCH), `tickets/[id]/messages` (POST), `opportunities` (POST), `communications` (POST), `resources` (POST/PUT), `events` (POST/PATCH), `discounts` (POST/PATCH) — supersedes S4/SEC15 detail | MEDIUM |
 | API7 | `admin/members` pagination uses `limit` param name; email-delivery uses `page` + hardcoded `PAGE_SIZE` — no unified pagination contract across paginated endpoints | LOW |
 | API8 | `POST /api/admin/create-user` and `POST /api/admin/collaboratori/[id]/resend-invite` return default 200 - should be 201 (creates auth user + profile + collaborator records) | LOW |
@@ -176,6 +179,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | UI2 | S2: 7 native `<button>` elements — filter chips in CompensationList/ExpenseList/ApprovazioniRimborsi/ApprovazioniCompensazioni + MonitoraggioSection (×2) + SignaturePad (×2) | LOW |
 | UI3 | S4: Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files — consolidate | LOW |
 | UI4 | `docs/ui-components.md` Dialog/Sheet/Tabs snippets use hardcoded dark classes (`bg-gray-900`, `border-gray-800`, `data-[state=active]:bg-gray-800`) instead of semantic tokens (`bg-card`, `border-border`, etc.) — update snippets to token-based equivalents | LOW |
+| TC-NEW-1 | `__tests__/api/events.test.ts` (7 failures): HTTP integration tests expect 201/403/200/204 but receive 307. Proxy redirects requests without auth session. Fix: add session setup via cookie injection in `beforeAll`, or convert to DB integration via service role client. Pre-existing, surfaced during corsi-gsheet-import Phase 3. | LOW |
+| TC-NEW-2 | `__tests__/api/expense-form.test.ts` (2 failures): asserts `TICKET_CATEGORIES === ['Compenso', 'Rimborso']` but actual enum is `['Compenso', 'Rimborso', 'Altro']`. Test is stale after enum extension. Fix: update assertion to match current enum. Pre-existing, surfaced during corsi-gsheet-import Phase 3. | LOW |
 
 ---
 
@@ -923,3 +928,17 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Impact**: MEDIUM (initial JS bundle size + parse time for all collaboratori on `/corsi`)
 - **Fix**: Replace static import with `const CorsiCalendario = dynamic(() => import('./CorsiCalendario'), { ssr: false })` — the calendar doesn't need SSR.
 - **Discovered**: perf-audit 2026-03-30
+
+### API-4 — `summary.errors` field name shadows the `{ error: string }` failure key
+- **Problem**: `ImportResult.summary.errors` (count of per-tab failures) uses the same key name as the top-level `{ error: string }` used for request-level failures. A client checking `response.error` for failure detection could be confused by `response.summary.errors > 0`, which is a domain count, not a request error indicator.
+- **Files**: `lib/corsi-import-sheet.ts:646`, `app/api/admin/import-corsi/run/route.ts:40`, `components/import/ImportCorsiSection.tsx` (any consumer of `summary.errors`)
+- **Impact**: MEDIUM (client confusion risk when error-checking; low risk currently since only one internal consumer)
+- **Fix**: Rename `summary.errors` → `summary.errorCount` in the `ImportResult` type definition, the `runImport()` return statement, and every consumer that reads `summary.errors`.
+- **Discovered**: api-design audit 2026-04-13
+
+### API-5 — `POST /api/admin/import-corsi/run` absent from `docs/sitemap.md`
+- **Problem**: The route added in the corsi-gsheet-import block is not listed in the `### Section: admin` table of `docs/sitemap.md`. Future api-design, security-audit, and perf-audit runs scoped to the admin section will silently exclude it.
+- **Files**: `docs/sitemap.md` (Section: admin table)
+- **Impact**: MEDIUM (audit blind spot; no runtime effect)
+- **Fix**: Add the following row to the Section: admin table: `| /api/admin/import-corsi/run | POST | A | GSheet corsi import run |`
+- **Discovered**: api-design audit 2026-04-13 (Step 2b route coverage verification)

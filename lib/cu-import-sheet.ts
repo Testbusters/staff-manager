@@ -6,7 +6,7 @@
  *   CU_SHEET_TAB  (default: CU)
  */
 
-import { webcrypto } from 'crypto';
+import { getAccessToken } from './google-sheets-shared';
 
 export interface CUSheetRow {
   rowIndex: number;
@@ -15,41 +15,7 @@ export interface CUSheetRow {
   stato: string;
 }
 
-function pemToDer(pem: string): Buffer {
-  const b64 = pem.replace(/-----[^\n]+-----|[\r\n]/g, '');
-  return Buffer.from(b64, 'base64');
-}
-
-async function getToken(): Promise<string> {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not set');
-
-  const { client_email, private_key: rawKey } = JSON.parse(raw) as { client_email: string; private_key: string };
-  let pk = rawKey;
-  while (pk.includes('\\n')) pk = pk.replace(/\\n/g, '\n');
-  pk = pk.replace(/\r/g, '');
-
-  const now     = Math.floor(Date.now() / 1000);
-  const header  = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
-  const payload = Buffer.from(JSON.stringify({
-    iss: client_email, scope: 'https://www.googleapis.com/auth/spreadsheets',
-    aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600,
-  })).toString('base64url');
-
-  const si  = `${header}.${payload}`;
-  const key = await webcrypto.subtle.importKey('pkcs8', pemToDer(pk),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await webcrypto.subtle.sign('RSASSA-PKCS1-v1_5', key, Buffer.from(si));
-  const assertion = `${si}.${Buffer.from(sig).toString('base64url')}`;
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }),
-  });
-  const { access_token, error } = await res.json() as { access_token?: string; error?: string };
-  if (!access_token) throw new Error(`Google token error: ${error}`);
-  return access_token;
-}
+const getToken = (): Promise<string> => getAccessToken();
 
 function getSheetConfig() {
   const id  = process.env.CU_SHEET_ID;

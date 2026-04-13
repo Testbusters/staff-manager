@@ -108,7 +108,7 @@ describe('lezioni DB operations — ore generated column', () => {
       data: '2026-09-01',
       orario_inizio: '09:00',
       orario_fine: '11:00',
-      materia: 'Logica',
+      materie: ['Logica'],
     }).select().single();
 
     expect(error).toBeNull();
@@ -116,10 +116,10 @@ describe('lezioni DB operations — ore generated column', () => {
     lezioneId = data?.id ?? '';
   });
 
-  it('updates materia', async () => {
-    const { data, error } = await svc.from('lezioni').update({ materia: 'Biologia' }).eq('id', lezioneId).select().single();
+  it('updates materie', async () => {
+    const { data, error } = await svc.from('lezioni').update({ materie: ['Biologia'] }).eq('id', lezioneId).select().single();
     expect(error).toBeNull();
-    expect(data?.materia).toBe('Biologia');
+    expect(data?.materie).toEqual(['Biologia']);
   });
 });
 

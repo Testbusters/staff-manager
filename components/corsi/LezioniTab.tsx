@@ -4,13 +4,7 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Sheet,
   SheetContent,
@@ -37,7 +31,7 @@ import {
 } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CalendarDays } from 'lucide-react';
-import { MATERIA_COLORS } from '@/lib/corsi-utils';
+import { MateriaBadges } from '@/components/MateriaBadges';
 import type { Lezione } from '@/lib/types';
 
 function fmtDate(iso: string): string {
@@ -55,10 +49,10 @@ interface LezioneForm {
   data: string;
   orario_inizio: string;
   orario_fine: string;
-  materia: string;
+  materie: string[];
 }
 
-const empty: LezioneForm = { data: '', orario_inizio: '', orario_fine: '', materia: '' };
+const empty: LezioneForm = { data: '', orario_inizio: '', orario_fine: '', materie: [] };
 
 export default function LezioniTab({ corsoId, initialLezioni, materieList }: Props) {
   const [lezioni, setLezioni] = useState<Lezione[]>(initialLezioni);
@@ -71,7 +65,7 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
 
   function openCreate() {
     setEditing(null);
-    setForm({ ...empty, materia: materieList[0] ?? '' });
+    setForm({ ...empty, materie: materieList[0] ? [materieList[0]] : [] });
     setError(null);
     setSheetOpen(true);
   }
@@ -82,10 +76,17 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
       data: l.data,
       orario_inizio: l.orario_inizio.slice(0, 5),
       orario_fine: l.orario_fine.slice(0, 5),
-      materia: l.materia,
+      materie: l.materie,
     });
     setError(null);
     setSheetOpen(true);
+  }
+
+  function toggleMateria(m: string) {
+    setForm((f) => ({
+      ...f,
+      materie: f.materie.includes(m) ? f.materie.filter((x) => x !== m) : [...f.materie, m],
+    }));
   }
 
   function closeSheet() {
@@ -134,7 +135,7 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
     setDeleteId(null);
   }
 
-  const set = (key: keyof LezioneForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (key: 'data' | 'orario_inizio' | 'orario_fine') => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   return (
@@ -174,12 +175,7 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
                   </TableCell>
                   <TableCell className="text-center">{l.ore}h</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`h-2 w-2 rounded-full ${MATERIA_COLORS[l.materia] ?? 'bg-gray-400'}`}
-                      />
-                      {l.materia}
-                    </div>
+                    <MateriaBadges materie={l.materie} />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -233,25 +229,24 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
               <Input type="time" value={form.orario_fine} onChange={set('orario_fine')} required />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Materia *</label>
-              <Select
-                value={form.materia}
-                onValueChange={(v) => setForm((f) => ({ ...f, materia: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona materia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {materieList.map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium text-foreground">Materie *</label>
+              <div className="grid grid-cols-2 gap-2">
+                {materieList.map((m) => (
+                  <label key={m} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={form.materie.includes(m)}
+                      onCheckedChange={() => toggleMateria(m)}
+                    />
+                    <span>{m}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Seleziona almeno una materia. Per lezioni composite (es. M&amp;F) seleziona più materie.</p>
             </div>
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={handleSave}
-                disabled={saving || !form.data || !form.orario_inizio || !form.orario_fine || !form.materia}
+                disabled={saving || !form.data || !form.orario_inizio || !form.orario_fine || form.materie.length === 0}
                 className="bg-brand hover:bg-brand/90 text-white"
               >
                 {saving ? 'Salvataggio…' : editing ? 'Salva' : 'Aggiungi'}
