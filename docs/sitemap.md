@@ -400,6 +400,7 @@ All routes below require `amministrazione` role.
 | `/api/admin/contract-templates/[id]` | GET, PATCH, DELETE | Template detail |
 | `/api/admin/email-templates` | GET | Email template list |
 | `/api/admin/email-templates/[id]` | GET, PATCH | Email template edit |
+| `/api/admin/import-corsi/run` | POST | GSheet corsi import run |
 | (+ additional admin routes — see `app/api/admin/` for full listing) | | |
 
 ### Section: auth

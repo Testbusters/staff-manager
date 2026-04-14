@@ -118,7 +118,6 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 | PERF-7 | `select('*')` on list endpoints in `tickets/route.ts`, `expenses/route.ts`, and 18+ others — over-fetches large text columns. Fix: enumerate only needed columns per endpoint. | MEDIUM |
 | API-1 | `POST /api/admin/create-user` and `POST /api/admin/collaboratori/[id]/resend-invite` return 200 instead of 201 on successful resource creation | MEDIUM |
 | API-4 | `ImportResult.summary.errors` field name shadows the `{ error: string }` failure key — rename to `errorCount` in `lib/corsi-import-sheet.ts` and all consumers | MEDIUM |
-| API-5 | `POST /api/admin/import-corsi/run` absent from `docs/sitemap.md` Section: admin — missing from all future audit scans | MEDIUM |
 | API-2 | `app/api/auth/change-password/route.ts:40` — `flagErr` destructured but never checked; silent failure if `user_profiles.must_change_password` update fails after password rotation succeeds | MEDIUM |
 | API-3 | `POST /api/import/collaboratori/run` uses `skipContract: true` as default — missing values silently coerce to true; callers that omit the field always get contract-skip behaviour without explicit opt-in | LOW |
 | PERF-8 | Bundle analyzer not configured (`@next/bundle-analyzer` absent). Cannot inspect bundle composition. Add as optional dev dependency with `ANALYZE=true npm run build` pattern. | LOW |
@@ -936,9 +935,3 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 - **Fix**: Rename `summary.errors` → `summary.errorCount` in the `ImportResult` type definition, the `runImport()` return statement, and every consumer that reads `summary.errors`.
 - **Discovered**: api-design audit 2026-04-13
 
-### API-5 — `POST /api/admin/import-corsi/run` absent from `docs/sitemap.md`
-- **Problem**: The route added in the corsi-gsheet-import block is not listed in the `### Section: admin` table of `docs/sitemap.md`. Future api-design, security-audit, and perf-audit runs scoped to the admin section will silently exclude it.
-- **Files**: `docs/sitemap.md` (Section: admin table)
-- **Impact**: MEDIUM (audit blind spot; no runtime effect)
-- **Fix**: Add the following row to the Section: admin table: `| /api/admin/import-corsi/run | POST | A | GSheet corsi import run |`
-- **Discovered**: api-design audit 2026-04-13 (Step 2b route coverage verification)
