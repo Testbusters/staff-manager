@@ -28,26 +28,43 @@ export default async function ApprovazioniPage({
   const { tab } = await searchParams;
   const activeTab = tab === 'rimborsi' ? 'rimborsi' : 'compensi';
 
-  // Fetch all states for the active tab, including collaborator name
-  const compensations = activeTab === 'compensi'
-    ? await supabase
-        .from('compensations')
-        .select('*, collaborators(nome, cognome)')
-        .order('created_at', { ascending: false })
-        .then((r) => r.data ?? [])
-    : [];
+  // Fetch display data + accurate IN_ATTESA counts via separate COUNT queries
+  const [compensations, expenses, compInAttesaCount, expInAttesaCount] = await Promise.all([
+    activeTab === 'compensi'
+      ? supabase
+          .from('compensations')
+          .select('*, collaborators(nome, cognome)')
+          .order('created_at', { ascending: false })
+          .limit(1000)
+          .then((r) => r.data ?? [])
+      : Promise.resolve([]),
+    activeTab === 'rimborsi'
+      ? supabase
+          .from('expense_reimbursements')
+          .select('*, collaborators(nome, cognome)')
+          .order('created_at', { ascending: false })
+          .limit(1000)
+          .then((r) => r.data ?? [])
+      : Promise.resolve([]),
+    activeTab === 'compensi'
+      ? supabase
+          .from('compensations')
+          .select('id', { count: 'exact', head: true })
+          .eq('stato', 'IN_ATTESA')
+          .then((r) => r.count ?? 0)
+      : Promise.resolve(0),
+    activeTab === 'rimborsi'
+      ? supabase
+          .from('expense_reimbursements')
+          .select('id', { count: 'exact', head: true })
+          .eq('stato', 'IN_ATTESA')
+          .then((r) => r.count ?? 0)
+      : Promise.resolve(0),
+  ]);
 
-  const expenses = activeTab === 'rimborsi'
-    ? await supabase
-        .from('expense_reimbursements')
-        .select('*, collaborators(nome, cognome)')
-        .order('created_at', { ascending: false })
-        .then((r) => r.data ?? [])
-    : [];
-
-  // KPI aggregation — server-side
+  // KPI aggregation — server-side (inAttesa uses DB COUNT to avoid in-memory truncation)
   const compKpi = {
-    inAttesa: compensations.filter((c) => c.stato === 'IN_ATTESA').length,
+    inAttesa: compInAttesaCount,
     totaleLordoInAttesa: compensations
       .filter((c) => c.stato === 'IN_ATTESA')
       .reduce((s, c) => s + (c.importo_lordo ?? 0), 0),
@@ -62,7 +79,7 @@ export default async function ApprovazioniPage({
   };
 
   const expKpi = {
-    inAttesa: expenses.filter((e) => e.stato === 'IN_ATTESA').length,
+    inAttesa: expInAttesaCount,
     totaleInAttesa: expenses
       .filter((e) => e.stato === 'IN_ATTESA')
       .reduce((s, e) => s + (e.importo ?? 0), 0),

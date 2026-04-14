@@ -38,8 +38,8 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  if (assegnazione.ruolo !== 'cocoda') {
-    return NextResponse.json({ error: 'Only cocoda assegnazioni can be removed' }, { status: 400 });
+  if (!['cocoda', 'docente', 'qa'].includes(assegnazione.ruolo)) {
+    return NextResponse.json({ error: 'Only cocoda, docente, or qa assegnazioni can be removed' }, { status: 400 });
   }
 
   // Defense-in-depth: verify lezione's corso belongs to the resp.citt's city

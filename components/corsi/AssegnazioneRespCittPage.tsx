@@ -75,6 +75,12 @@ interface QAAssegnazione {
   collaborator_id: string;
 }
 
+interface DocenteAssegnazione {
+  id: string;
+  lezione_id: string;
+  collaborator_id: string;
+}
+
 interface Props {
   corsiDisponibili: Corso[];
   mieiCorsi: (Corso & { max_qa_per_lezione?: number; max_docenti_per_lezione?: number })[];
@@ -84,6 +90,7 @@ interface Props {
   collabsPerCocoda: CollabOption[];
   cocodaAssegnazioni: CocodaAssegnazione[];
   qaAssegnazioni: QAAssegnazione[];
+  docenteAssegnazioni: DocenteAssegnazione[];
   blacklistedIds: Set<string>;
   maxQAPerCorso: Record<string, number>;
 }
@@ -224,6 +231,133 @@ function CocodaPanel({
   );
 }
 
+interface QAPanelProps {
+  lezioni: CorsoLezione[];
+  maxQA: number;
+  collabsPerCocoda: CollabOption[];
+  collabMap: Map<string, CollabOption>;
+  qaAssegnazioni: QAAssegnazione[];
+  loading: string | null;
+  blacklistedIds: Set<string>;
+  selectedQAMap: Record<string, string>;
+  onAssign: (lezioneId: string) => void;
+  onRemove: (assegnazioneId: string) => void;
+  onSelectCollab: (lezioneId: string, collabId: string) => void;
+}
+
+function QAPanel({
+  lezioni,
+  maxQA,
+  collabsPerCocoda,
+  collabMap,
+  qaAssegnazioni,
+  loading,
+  blacklistedIds,
+  selectedQAMap,
+  onAssign,
+  onRemove,
+  onSelectCollab,
+}: QAPanelProps) {
+  return (
+    <div className="border-t border-border bg-muted/20 px-4 py-3">
+      <p className="text-xs font-medium text-muted-foreground mb-3">
+        Assegnazione Q&A per lezione
+      </p>
+      <div className="space-y-3">
+        {lezioni.map((lezione) => {
+          const existing = qaAssegnazioni.filter((a) => a.lezione_id === lezione.id);
+          const remaining = maxQA - existing.length;
+          const assignedIds = new Set(existing.map((a) => a.collaborator_id));
+          const isAssigning = loading === `assign-qa-${lezione.id}`;
+
+          return (
+            <div key={lezione.id} className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground whitespace-nowrap w-24 shrink-0">
+                  {fmtDate(lezione.data)}
+                </span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                  {lezione.orario_inizio}–{lezione.orario_fine}
+                </span>
+                <MateriaBadges materie={lezione.materie} />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap pl-0">
+                {existing.map((a) => {
+                  const c = collabMap.get(a.collaborator_id);
+                  const name = c ? `${c.nome} ${c.cognome}` : a.collaborator_id;
+                  return (
+                    <div key={a.id} className="flex items-center gap-1">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            <Badge variant="outline" className="text-xs">{name}</Badge>
+                            <button
+                              className="text-xs text-muted-foreground hover:text-destructive"
+                              disabled={loading === `remove-qa-${a.id}`}
+                              aria-label={`Rimuovi ${name} come Q&A`}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Rimuovi Q&A?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Rimuovere <strong>{name}</strong> come Q&A da questa lezione?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onRemove(a.id)}
+                              disabled={loading === `remove-qa-${a.id}`}
+                            >
+                              Rimuovi
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  );
+                })}
+                {remaining > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={selectedQAMap[lezione.id] ?? ''}
+                      onValueChange={(val) => onSelectCollab(lezione.id, val)}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-48">
+                        <SelectValue placeholder={`Aggiungi Q&A (${existing.length}/${maxQA})`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {collabsPerCocoda.filter((c) => !assignedIds.has(c.id)).map((c) => (
+                          <SelectItem key={c.id} value={c.id} className="text-xs">
+                            {c.cognome} {c.nome}{c.username ? ` (${c.username})` : ''}{blacklistedIds.has(c.id) ? ' ⚠ Blacklist' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-7"
+                      disabled={!selectedQAMap[lezione.id] || isAssigning}
+                      onClick={() => onAssign(lezione.id)}
+                    >
+                      Assegna
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AssegnazioneRespCittPage({
   corsiDisponibili,
   mieiCorsi,
@@ -233,17 +367,21 @@ export default function AssegnazioneRespCittPage({
   collabsPerCocoda,
   cocodaAssegnazioni: initialCocodaAssegnazioni,
   qaAssegnazioni: initialQAAssegnazioni,
+  docenteAssegnazioni: initialDocenteAssegnazioni,
   blacklistedIds,
   maxQAPerCorso,
 }: Props) {
   const [candidature, setCandidature] = useState<OwnCandidatura[]>(ownCandidature);
   const [cocodaAssegnazioni, setCocodaAssegnazioni] = useState<CocodaAssegnazione[]>(initialCocodaAssegnazioni);
   const [qaAssegnazioni, setQAAssegnazioni] = useState<QAAssegnazione[]>(initialQAAssegnazioni);
+  const [docenteAssegnazioni, setDocenteAssegnazioni] = useState<DocenteAssegnazione[]>(initialDocenteAssegnazioni);
   const [loading, setLoading] = useState<string | null>(null);
   const [expandedCorsoId, setExpandedCorsoId] = useState<string | null>(null);
+  const [expandedQACorsoId, setExpandedQACorsoId] = useState<string | null>(null);
   const [selectedCollabMap, setSelectedCollabMap] = useState<Record<string, string>>({});
+  const [selectedQAMap, setSelectedQAMap] = useState<Record<string, string>>({});
   // Corso-level bulk assignment state
-  // Key format: `${corsoId}|cocoda|0`, `${corsoId}|cocoda|1`, `${corsoId}|qa|0`, etc.
+  // Key format: `${corsoId}|cocoda|0`, `${corsoId}|cocoda|1`, `${corsoId}|docente|0`, etc.
   const [bulkSlots, setBulkSlots] = useState<Record<string, string>>({});
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
 
@@ -311,6 +449,47 @@ export default function AssegnazioneRespCittPage({
     }
   }
 
+  async function removeQALezioneAssegnazione(assegnazioneId: string) {
+    setLoading(`remove-qa-${assegnazioneId}`);
+    try {
+      const res = await fetch(`/api/assegnazioni/${assegnazioneId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setQAAssegnazioni((prev) => prev.filter((a) => a.id !== assegnazioneId));
+      } else {
+        toast.error('Errore durante la rimozione del Q&A.');
+      }
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function assignQALezione(lezioneId: string) {
+    const collaboratorId = selectedQAMap[lezioneId];
+    if (!collaboratorId) return;
+    setLoading(`assign-qa-${lezioneId}`);
+    try {
+      const res = await fetch('/api/assegnazioni', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lezione_id: lezioneId, collaborator_id: collaboratorId, ruolo: 'qa' }),
+      });
+      if (res.ok) {
+        const { assegnazione } = await res.json();
+        setQAAssegnazioni((prev) => [...prev, assegnazione]);
+        setSelectedQAMap((prev) => {
+          const next = { ...prev };
+          delete next[lezioneId];
+          return next;
+        });
+      } else {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? 'Errore durante l\'assegnazione Q&A.');
+      }
+    } finally {
+      setLoading(null);
+    }
+  }
+
   async function assignCocoda(lezioneId: string) {
     const collaboratorId = selectedCollabMap[lezioneId];
     if (!collaboratorId) return;
@@ -348,24 +527,24 @@ export default function AssegnazioneRespCittPage({
     return [...seen];
   }
 
-  function getCorsoQACollabs(corsoId: string): string[] {
+  function getCorsoDocenteCollabs(corsoId: string): string[] {
     const lezioni = lezioniByCorso[corsoId] ?? [];
     const lezioniIds = new Set(lezioni.map((l) => l.id));
     const seen = new Set<string>();
-    for (const a of qaAssegnazioni) {
+    for (const a of docenteAssegnazioni) {
       if (lezioniIds.has(a.lezione_id)) seen.add(a.collaborator_id);
     }
     return [...seen];
   }
 
-  function getCorsoAssegnazioniForCollab(corsoId: string, collaboratorId: string, ruolo: 'cocoda' | 'qa'): string[] {
+  function getCorsoAssegnazioniForCollab(corsoId: string, collaboratorId: string, ruolo: 'cocoda' | 'docente'): string[] {
     const lezioni = lezioniByCorso[corsoId] ?? [];
     const lezioniIds = new Set(lezioni.map((l) => l.id));
-    const source = ruolo === 'cocoda' ? cocodaAssegnazioni : qaAssegnazioni;
+    const source = ruolo === 'cocoda' ? cocodaAssegnazioni : docenteAssegnazioni;
     return source.filter((a) => lezioniIds.has(a.lezione_id) && a.collaborator_id === collaboratorId).map((a) => a.id);
   }
 
-  async function assignCorsoRuolo(corsoId: string, collaboratorIds: string[], ruolo: 'cocoda' | 'qa') {
+  async function assignCorsoRuolo(corsoId: string, collaboratorIds: string[], ruolo: 'cocoda' | 'docente') {
     if (collaboratorIds.length === 0) return;
     setBulkLoading(`${corsoId}|${ruolo}`);
     try {
@@ -385,7 +564,7 @@ export default function AssegnazioneRespCittPage({
         if (ruolo === 'cocoda') {
           setCocodaAssegnazioni((prev) => [...prev, ...newAssegnazioni]);
         } else {
-          setQAAssegnazioni((prev) => [...prev, ...newAssegnazioni]);
+          setDocenteAssegnazioni((prev) => [...prev, ...newAssegnazioni]);
         }
         // Clear used slots
         setBulkSlots((prev) => {
@@ -404,7 +583,7 @@ export default function AssegnazioneRespCittPage({
     }
   }
 
-  async function removeCorsoCollab(corsoId: string, collaboratorId: string, ruolo: 'cocoda' | 'qa') {
+  async function removeCorsoCollab(corsoId: string, collaboratorId: string, ruolo: 'cocoda' | 'docente') {
     const assegnazioneIds = getCorsoAssegnazioniForCollab(corsoId, collaboratorId, ruolo);
     const key = `remove-corso-${corsoId}-${collaboratorId}-${ruolo}`;
     setBulkLoading(key);
@@ -417,7 +596,7 @@ export default function AssegnazioneRespCittPage({
       if (ruolo === 'cocoda') {
         setCocodaAssegnazioni((prev) => prev.filter((a) => !(a.collaborator_id === collaboratorId && assegnazioneIds.includes(a.id))));
       } else {
-        setQAAssegnazioni((prev) => prev.filter((a) => !(a.collaborator_id === collaboratorId && assegnazioneIds.includes(a.id))));
+        setDocenteAssegnazioni((prev) => prev.filter((a) => !(a.collaborator_id === collaboratorId && assegnazioneIds.includes(a.id))));
       }
     } finally {
       setBulkLoading(null);
@@ -560,13 +739,16 @@ export default function AssegnazioneRespCittPage({
               const stato = getCorsoStato(corso.data_inizio, corso.data_fine) as CorsoStato;
               const lezioni = lezioniByCorso[corso.id] ?? [];
               const isExpanded = expandedCorsoId === corso.id;
+              const isQAExpanded = expandedQACorsoId === corso.id;
               const hasLezioni = lezioni.length > 0;
               const hasCollabs = collabsPerCocoda.length > 0;
               const canExpand = hasLezioni && hasCollabs;
               const maxQA = maxQAPerCorso[corso.id] ?? 0;
+              const maxDocenti = corso.max_docenti_per_lezione ?? 0;
               const corsoCocodaCollabs = getCorsoCocodaCollabs(corso.id);
-              const corsoQACollabs = getCorsoQACollabs(corso.id);
+              const corsoDocenteCollabs = getCorsoDocenteCollabs(corso.id);
               const showQASection = corso.modalita === 'online' && maxQA > 0;
+              const showDocenteSection = hasLezioni && hasCollabs && maxDocenti > 0;
 
               return (
                 <div key={corso.id} className="rounded-2xl bg-card border border-border overflow-hidden">
@@ -608,6 +790,17 @@ export default function AssegnazioneRespCittPage({
                         >
                           {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                           CoCoD&apos;à
+                        </Button>
+                      )}
+                      {hasLezioni && hasCollabs && showQASection && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 gap-1"
+                          onClick={() => setExpandedQACorsoId(isQAExpanded ? null : corso.id)}
+                        >
+                          {isQAExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                          Q&A
                         </Button>
                       )}
                     </div>
@@ -686,27 +879,27 @@ export default function AssegnazioneRespCittPage({
                     </div>
                   )}
 
-                  {/* Corso-level Q&A assignment (online only) */}
-                  {showQASection && hasLezioni && (
+                  {/* Docenti del corso (bulk assignment) */}
+                  {showDocenteSection && (
                     <div className="border-t border-border bg-muted/10 px-4 py-3">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-muted-foreground">Q&A del corso</p>
-                        <span className="text-xs text-muted-foreground">{corsoQACollabs.length} / {maxQA}</span>
+                        <p className="text-xs font-medium text-muted-foreground">Docenti del corso</p>
+                        <span className="text-xs text-muted-foreground">{corsoDocenteCollabs.length} / {Math.min(maxDocenti, 4)}</span>
                       </div>
-                      {corsoQACollabs.length > 0 && (
+                      {corsoDocenteCollabs.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {corsoQACollabs.map((cid) => {
+                          {corsoDocenteCollabs.map((cid) => {
                             const c = collabMap.get(cid);
                             const name = c ? `${c.nome} ${c.cognome}` : cid;
-                            const rKey = `remove-corso-${corso.id}-${cid}-qa`;
+                            const rKey = `remove-corso-${corso.id}-${cid}-docente`;
                             return (
                               <div key={cid} className="flex items-center gap-1">
                                 <Badge variant="outline" className="text-xs">{name}</Badge>
                                 <button
                                   className="text-xs text-muted-foreground hover:text-destructive"
                                   disabled={bulkLoading === rKey}
-                                  onClick={() => removeCorsoCollab(corso.id, cid, 'qa')}
-                                  aria-label={`Rimuovi ${name} Q&A da tutte le lezioni`}
+                                  onClick={() => removeCorsoCollab(corso.id, cid, 'docente')}
+                                  aria-label={`Rimuovi ${name} da tutte le lezioni`}
                                 >
                                   ×
                                 </button>
@@ -715,13 +908,13 @@ export default function AssegnazioneRespCittPage({
                           })}
                         </div>
                       )}
-                      {corsoQACollabs.length < maxQA && (
+                      {corsoDocenteCollabs.length < Math.min(maxDocenti, 4) && (
                         <div className="flex items-center gap-2 flex-wrap">
-                          {Array.from({ length: maxQA - corsoQACollabs.length }).map((_, i) => {
-                            const slotKey = `${corso.id}|qa|${i}`;
+                          {Array.from({ length: Math.min(maxDocenti, 4) - corsoDocenteCollabs.length }).map((_, i) => {
+                            const slotKey = `${corso.id}|docente|${i}`;
                             const taken = new Set([
-                              ...corsoQACollabs,
-                              ...Array.from({ length: maxQA - corsoQACollabs.length }).map((__, j) => j !== i ? bulkSlots[`${corso.id}|qa|${j}`] : '').filter(Boolean),
+                              ...corsoDocenteCollabs,
+                              ...Array.from({ length: Math.min(maxDocenti, 4) - corsoDocenteCollabs.length }).map((__, j) => j !== i ? bulkSlots[`${corso.id}|docente|${j}`] : '').filter(Boolean),
                             ]);
                             return (
                               <select
@@ -730,7 +923,7 @@ export default function AssegnazioneRespCittPage({
                                 value={bulkSlots[slotKey] ?? ''}
                                 onChange={(e) => setBulkSlots((prev) => ({ ...prev, [slotKey]: e.target.value }))}
                               >
-                                <option value="">Q&A slot {i + 1 + corsoQACollabs.length}...</option>
+                                <option value="">Docente {i + 1 + corsoDocenteCollabs.length}...</option>
                                 {collabsPerCocoda.filter((c) => !taken.has(c.id)).map((c) => (
                                   <option key={c.id} value={c.id}>
                                     {c.cognome} {c.nome}{c.username ? ` (${c.username})` : ''}{blacklistedIds.has(c.id) ? ' ⚠' : ''}
@@ -744,12 +937,12 @@ export default function AssegnazioneRespCittPage({
                             size="sm"
                             className="text-xs h-7"
                             disabled={
-                              bulkLoading === `${corso.id}|qa` ||
-                              !Array.from({ length: maxQA - corsoQACollabs.length }).some((_, i) => bulkSlots[`${corso.id}|qa|${i}`])
+                              bulkLoading === `${corso.id}|docente` ||
+                              !Array.from({ length: Math.min(maxDocenti, 4) - corsoDocenteCollabs.length }).some((_, i) => bulkSlots[`${corso.id}|docente|${i}`])
                             }
                             onClick={() => {
-                              const ids = Array.from({ length: maxQA - corsoQACollabs.length }).map((_, i) => bulkSlots[`${corso.id}|qa|${i}`]).filter(Boolean);
-                              assignCorsoRuolo(corso.id, ids, 'qa');
+                              const ids = Array.from({ length: Math.min(maxDocenti, 4) - corsoDocenteCollabs.length }).map((_, i) => bulkSlots[`${corso.id}|docente|${i}`]).filter(Boolean);
+                              assignCorsoRuolo(corso.id, ids, 'docente');
                             }}
                           >
                             Assegna a tutte le lezioni
@@ -759,7 +952,7 @@ export default function AssegnazioneRespCittPage({
                     </div>
                   )}
 
-                  {/* CoCoD'à panel */}
+                  {/* CoCoD'à panel — per lezione */}
                   {isExpanded && (
                     <CocodaPanel
                       lezioni={lezioni}
@@ -773,6 +966,25 @@ export default function AssegnazioneRespCittPage({
                       onRemove={removeAssegnazione}
                       onSelectCollab={(lezioneId, val) =>
                         setSelectedCollabMap((prev) => ({ ...prev, [lezioneId]: val }))
+                      }
+                    />
+                  )}
+
+                  {/* Q&A panel — per lezione */}
+                  {isQAExpanded && (
+                    <QAPanel
+                      lezioni={lezioni}
+                      maxQA={maxQA}
+                      collabsPerCocoda={collabsPerCocoda}
+                      collabMap={collabMap}
+                      qaAssegnazioni={qaAssegnazioni}
+                      loading={loading}
+                      blacklistedIds={blacklistedIds}
+                      selectedQAMap={selectedQAMap}
+                      onAssign={assignQALezione}
+                      onRemove={removeQALezioneAssegnazione}
+                      onSelectCollab={(lezioneId, val) =>
+                        setSelectedQAMap((prev) => ({ ...prev, [lezioneId]: val }))
                       }
                     />
                   )}

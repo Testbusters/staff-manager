@@ -440,27 +440,35 @@ export default async function DashboardPage() {
     ].filter(Boolean))];
     const resolveEmpty   = <T,>(v: T[]) => Promise.resolve({ data: v });
 
-    const [compsResult, expsResult, collabsResult, tCollabsResult] = await Promise.all([
+    const [compsResult, expsResult, collabsResult, tCollabsResult, pendingCompsCountResult, pendingExpsCountResult] = await Promise.all([
       noCollabs
         ? resolveEmpty<RComp>([])
         : svc.from('compensations')
             .select('id, collaborator_id, importo_lordo, importo_netto, nome_servizio_ruolo, competenza, data_competenza, info_specifiche, stato, created_at')
             .in('collaborator_id', allCollabIds)
             .in('stato', ['IN_ATTESA', 'APPROVATO'])
-            .order('created_at', { ascending: true }),
+            .order('created_at', { ascending: true })
+            .limit(1000),
       noCollabs
         ? resolveEmpty<RExp>([])
         : svc.from('expense_reimbursements')
             .select('id, collaborator_id, importo, categoria, descrizione, data_spesa, stato, created_at')
             .in('collaborator_id', allCollabIds)
             .in('stato', ['IN_ATTESA', 'APPROVATO'])
-            .order('created_at', { ascending: true }),
+            .order('created_at', { ascending: true })
+            .limit(1000),
       noCollabs
         ? resolveEmpty<RCollab3>([])
         : svc.from('collaborators').select('id, nome, cognome').in('id', allCollabIds),
       ticketUserIds.length > 0
         ? svc.from('collaborators').select('user_id, nome, cognome').in('user_id', ticketUserIds)
         : resolveEmpty<RTCollab>([]),
+      noCollabs
+        ? Promise.resolve({ count: 0 })
+        : svc.from('compensations').select('id', { count: 'exact', head: true }).in('collaborator_id', allCollabIds).eq('stato', 'IN_ATTESA'),
+      noCollabs
+        ? Promise.resolve({ count: 0 })
+        : svc.from('expense_reimbursements').select('id', { count: 'exact', head: true }).in('collaborator_id', allCollabIds).eq('stato', 'IN_ATTESA'),
     ]);
 
     const allComps   = (compsResult.data ?? []) as RComp[];
@@ -469,6 +477,9 @@ export default async function DashboardPage() {
     const tCollabs   = (tCollabsResult.data ?? []) as RTCollab[];
 
     // ── KPIs ─────────────────────────────────────────────────
+    // Use DB COUNT for accurate pending counts (in-memory filter on fetched data would miss records >1000)
+    const pendingCompsCount = pendingCompsCountResult.count ?? 0;
+    const pendingExpsCount  = pendingExpsCountResult.count ?? 0;
     const pendingComps = allComps.filter(c => c.stato === 'IN_ATTESA');
     const pendingExps  = allExps.filter(e => e.stato === 'IN_ATTESA');
     const liquidabile  = allComps.filter(c => c.stato === 'APPROVATO').length +
@@ -522,17 +533,17 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <RKpiCard
             label="Compensi in attesa"
-            count={pendingComps.length}
-            sub={pendingComps.length > 0 ? formatCurrencyR(pendingComps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0)) : null}
-            color={pendingComps.length > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
+            count={pendingCompsCount}
+            sub={pendingCompsCount > 0 ? formatCurrencyR(pendingComps.reduce((s, c) => s + (c.importo_lordo ?? 0), 0)) : null}
+            color={pendingCompsCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=compensi"
-            highlight={pendingComps.length > 0}
+            highlight={pendingCompsCount > 0}
           />
           <RKpiCard
             label="Rimborsi in attesa"
-            count={pendingExps.length}
-            sub={pendingExps.length > 0 ? formatCurrencyR(pendingExps.reduce((s, e) => s + (e.importo ?? 0), 0)) : null}
-            color={pendingExps.length > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
+            count={pendingExpsCount}
+            sub={pendingExpsCount > 0 ? formatCurrencyR(pendingExps.reduce((s, e) => s + (e.importo ?? 0), 0)) : null}
+            color={pendingExpsCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-muted-foreground'}
             href="/approvazioni?tab=rimborsi"
           />
           <RKpiCard
