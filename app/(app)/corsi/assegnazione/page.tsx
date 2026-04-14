@@ -54,17 +54,21 @@ export default async function CorsiAssegnazionePage() {
 
   // Fetch existing assegnazioni for miei corsi lezioni + blacklist
   const lezioniIds = (mieiCorsiLezioni ?? []).map((l: { id: string }) => l.id);
-  const [cocodaResult, qaResult, blacklistResult] = await Promise.all([
+  const [cocodaResult, qaResult, docenteResult, blacklistResult] = await Promise.all([
     lezioniIds.length > 0
       ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'cocoda')
       : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
     lezioniIds.length > 0
       ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'qa')
       : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
+    lezioniIds.length > 0
+      ? svc.from('assegnazioni').select('id, lezione_id, collaborator_id').in('lezione_id', lezioniIds).eq('ruolo', 'docente')
+      : Promise.resolve({ data: [] as { id: string; lezione_id: string; collaborator_id: string }[] }),
     svc.from('blacklist').select('collaborator_id'),
   ]);
   const cocodaAssegnazioni = cocodaResult.data;
   const qaAssegnazioni = qaResult.data;
+  const docenteAssegnazioni = docenteResult.data;
   const blacklistedIds = new Set((blacklistResult.data ?? []).map((b: { collaborator_id: string }) => b.collaborator_id));
 
   // Compute maxQAPerCorso from miei corsi data
@@ -94,6 +98,7 @@ export default async function CorsiAssegnazionePage() {
               collabsPerCocoda={[]}
               cocodaAssegnazioni={[]}
               qaAssegnazioni={[]}
+              docenteAssegnazioni={[]}
               blacklistedIds={blacklistedIds}
               maxQAPerCorso={{}}
             />
@@ -116,6 +121,7 @@ export default async function CorsiAssegnazionePage() {
         collabsPerCocoda={collabsPerCocoda ?? []}
         cocodaAssegnazioni={cocodaAssegnazioni ?? []}
         qaAssegnazioni={qaAssegnazioni ?? []}
+        docenteAssegnazioni={docenteAssegnazioni ?? []}
         blacklistedIds={blacklistedIds}
         maxQAPerCorso={maxQAPerCorso}
       />

@@ -102,6 +102,24 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  // Guard: fetch lezioni IDs, then check for active candidature and assegnazioni
+  const { data: lezioni } = await svc.from('lezioni').select('id').eq('corso_id', id);
+  const lezioniIds = (lezioni ?? []).map((l) => l.id);
+
+  if (lezioniIds.length > 0) {
+    const [{ count: candCount }, { count: assCount }] = await Promise.all([
+      svc.from('candidature').select('id', { count: 'exact', head: true }).eq('corso_id', id).neq('stato', 'ritirata'),
+      svc.from('assegnazioni').select('id', { count: 'exact', head: true }).in('lezione_id', lezioniIds),
+    ]);
+    if ((candCount ?? 0) > 0 || (assCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: 'Impossibile eliminare: il corso ha candidature attive o docenti assegnati.' },
+        { status: 409 },
+      );
+    }
+  }
+
   const { error } = await svc.from('corsi').delete().eq('id', id);
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 

@@ -4,6 +4,7 @@ import { BookOpen, Video, MessageCircle, HelpCircle, ClipboardList, PhoneCall } 
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import CorsoForm from '@/components/corsi/CorsoForm';
+import CorsoDeleteButton from '@/components/corsi/CorsoDeleteButton';
 import LezioniTab from '@/components/corsi/LezioniTab';
 import CandidatureCittaTab from '@/components/corsi/CandidatureCittaTab';
 import LezioniTabCollab from '@/components/corsi/LezioniTabCollab';
@@ -366,6 +367,7 @@ export default async function CorsoDetailPage({
             </span>
           </div>
         </div>
+        <CorsoDeleteButton corsoId={id} corsoNome={corso.nome} />
       </div>
 
       <div className="flex gap-2 mb-6 mt-4">
