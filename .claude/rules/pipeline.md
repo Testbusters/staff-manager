@@ -276,7 +276,7 @@ Never check DB state without waiting for the API response. Tests that assert DB 
 Test credentials — always use canonical accounts from `memory/test_credentials.md`. Never create new permanent staging users:
 - Collaboratore TB → `collaboratore_tb_test@test.com` · Collaboratore P4M → `collaboratore_p4m_test@test.com`
 - Responsabile compensi → `responsabile_compensi_test@test.com` · Admin → `admin_test@test.com`
-- Multi-community blocks (content, notifications, banners): insert data for BOTH communities. IDs: TB = `6a5aeb11-d4bc-4575-84ad-9c343ea95bbf` · P4M = `20ef2aac-7447-4576-b815-91d44560f00e`
+- Multi-community blocks (content, notifications, banners): insert data for BOTH communities. IDs: TB = `6fdd80e9-2464-4304-9bd7-d5703370a119` · P4M = `20ef2aac-7447-4576-b815-91d44560f00e`
 
 **State coverage rule**: for every state machine state of the entities touched by the block (IN_ATTESA, APPROVATO_RESP, APPROVATO_ADMIN, PAGATO, RIFIUTATO, DA_FIRMARE, FIRMATO…), insert at least one record. The smoke test account must have data for every UI branch — not just the happy-path state.
 

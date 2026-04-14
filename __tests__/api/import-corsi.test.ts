@@ -19,7 +19,7 @@ import {
 
 // ── Fixture lookups ──────────────────────────────────────────────────────────
 
-const TB_ID = '6a5aeb11-d4bc-4575-84ad-9c343ea95bbf';
+const TB_ID = '6fdd80e9-2464-4304-9bd7-d5703370a119';
 const P4M_ID = '20ef2aac-7447-4576-b815-91d44560f00e';
 
 function makeLookups(): CorsiImportLookups {
