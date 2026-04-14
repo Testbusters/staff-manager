@@ -88,13 +88,13 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
 
   return (
     <Dialog open={!!docId} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-lg" data-slot="dialog-content">
+      <DialogContent className="max-w-xl" data-slot="dialog-content">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-3 pr-8">
-            <DialogTitle className="text-base font-semibold leading-snug">
+          <div className="flex items-start justify-between gap-3 pr-8 min-w-0">
+            <DialogTitle className="text-base font-semibold leading-snug min-w-0 truncate">
               {loading ? <Skeleton className="h-5 w-48" /> : (doc?.titolo ?? 'Dettaglio documento')}
             </DialogTitle>
-            {doc && <SignBadge stato={doc.stato_firma} />}
+            {doc && <span className="shrink-0"><SignBadge stato={doc.stato_firma} /></span>}
           </div>
           {collab && (
             <p className="text-sm text-muted-foreground mt-1">{collab.nome} {collab.cognome}</p>
@@ -145,7 +145,7 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
             <div className="border-t border-border pt-4">
               <p className="text-xs font-medium text-muted-foreground mb-2">Documento</p>
               {isFirmato && docData?.firmatoUrl ? (
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 px-3 py-2">
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 px-3 py-2 min-w-0">
                   <div className="min-w-0">
                     <span className="text-sm text-foreground truncate block">{doc.file_firmato_name ?? 'documento_firmato.pdf'}</span>
                     <span className="text-xs text-muted-foreground">
@@ -162,8 +162,8 @@ export default function DocumentAdminModal({ docId, onClose }: Props) {
                   </a>
                 </div>
               ) : docData?.originalUrl ? (
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/60 px-3 py-2">
-                  <span className="text-sm text-foreground truncate">{doc.file_original_name ?? 'documento.pdf'}</span>
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/60 px-3 py-2 min-w-0">
+                  <span className="text-sm text-foreground truncate block">{doc.file_original_name ?? 'documento.pdf'}</span>
                   <a
                     href={docData.originalUrl}
                     target="_blank"
