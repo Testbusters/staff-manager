@@ -24,7 +24,7 @@
 |---|---|---|---|---|
 | `collaborator_id` | ✅ (auto: own) | ❌ immutable | ❌ immutable | Derived from session |
 | `descrizione` | ✅ required | ✅ | ❌ | Free text description |
-| `importo` | ✅ required | ✅ | ❌ | Positive numeric |
+| `importo` | ✅ required | ✅ | ❌ | Positive numeric. DB CHECK > 0 since migration 070. |
 | `data_spesa` | ✅ required | ✅ | ❌ | ISO date, not in the future |
 | `file_urls` | ✅ optional | ✅ (via file routes) | ❌ | Array of Storage signed paths |
 | `stato` | — (auto IN_ATTESA) | ❌ | ✅ (via action) | Changed only via transitions |
@@ -47,7 +47,7 @@
 
 | Campo | Rule |
 |---|---|
-| `importo` | Positive number, max 2 decimal places |
+| `importo` | Positive number (Zod `.positive()` + DB CHECK > 0), max 2 decimal places |
 | `data_spesa` | Valid ISO date, not in the future |
 | `file_urls` | Array of strings; each entry a valid Storage path |
 | `rejection_note` | Required string when `action=reject` |
@@ -72,3 +72,4 @@ Before starting any block that touches reimbursement data:
 - File storage: use service role client in API routes — never browser client for Supabase Storage.
 - API response key is `{ reimbursement }` (not `{ expense }`) — verify before reading in modal fetch.
 - `GET /api/expenses/[id]` returns `{ reimbursement }`. Do not assume `{ expense }`.
+- **DB-level integrity (migration 070)**: `importo` has `CHECK (importo > 0)` — any service-role insert with zero or negative amount is blocked at the DB level.
