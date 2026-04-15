@@ -11,8 +11,8 @@ Not blocking for current functionality unless marked **CRITICAL/HIGH**.
 
 Ordered by execution group (G1-G9). Execute groups in order; items within each group are independent.
 
-**Group dependencies**: G1 (CVE) → G2 (DB schema) → G3 (security code) → G4 (API design) → G5 (DRY) → G6 (perf) → G7 (tests) → G8 (large refactors) → G9 (UI/UX).
-- G2 depends on G1: clean `npm audit` baseline before schema work.
+**Group dependencies**: G1 (CVE, ✅ done 2026-04-15) → G1b (xlsx migration, standalone) → G2 (DB schema) → G3 (security code) → G4 (API design) → G5 (DRY) → G6 (perf) → G7 (tests) → G8 (large refactors) → G9 (UI/UX).
+- G2 depends on G1: clean `npm audit` baseline before schema work (G1 done; only xlsx residual, isolated in G1b).
 - G3 depends on G2: schema constraints (NOT NULL, CHECK) must be in place before code-level security fixes.
 - G4 depends on G2+G3: schema + security patterns stable before API contract changes.
 - G5 depends on G4: API routes stable before extracting shared code.
@@ -23,10 +23,8 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 
 | ID | Title | Impact | Group |
 |----|--------|---------|-------|
-| | **G1 - CVE / Dependencies** | | |
-| SEC-NEW-6 | `next` 16.0-16.2.2 - 5 high CVEs (HTTP smuggling, CSRF, DoS); fix at 16.2.3 | HIGH | G1 |
-| SEC-NEW-7 | `axios` <=1.14.0 - critical SSRF + header injection; `npm audit fix` | HIGH | G1 |
-| SEC13 | `xlsx` (SheetJS) - 2 unpatched high CVEs (prototype pollution + ReDoS); no fix available | HIGH | G1 |
+| | **G1b - xlsx migration (standalone block)** | | |
+| SEC13 | `xlsx` (SheetJS) - 2 unpatched high CVEs (prototype pollution + ReDoS); migrate to `exceljs` | HIGH | G1b |
 | | **G2 - DB Schema (migrations only)** | | |
 | DB-NEW-1 | `compensations.importo_lordo` nullable - NaN propagation in financial calcs | MEDIUM | G2 |
 | DB-NEW-2 | `compensations.importo_netto` nullable - NaN propagation | MEDIUM | G2 |
@@ -192,6 +190,8 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | SEC9 | `codice_fiscale` stripped from response for non-admin callers (line 133-136) | 2026-04-14 |
 | SEC11 | `assegnazioni_valutazione_update` WITH CHECK fixed - migration 062 | 2026-03-30 |
 | SEC12 | RLS helper `search_path` set to `public` on all 4 functions - migration 063 | 2026-03-30 |
+| SEC-NEW-6 | `next` 16.1.6 → 16.2.3 (--save-exact) — 5 high CVEs closed (HTTP smuggling, CSRF, SSRF via middleware redirect, dev HMR CSRF, DoS Server Components) | 2026-04-15 |
+| SEC-NEW-7 | `axios` transitive 1.13.5 → 1.15.0 via `npm audit fix` — critical SSRF + header injection closed | 2026-04-15 |
 | SEC-NEW-9 | `@xmldom/xmldom` not in dependency tree (verified `npm ls`) | 2026-04-14 |
 | API1 | All 53 `request.json()` calls use `.catch(() => null)` pattern | 2026-03-30 |
 | API10 | `POST /api/tickets/[id]/messages` returns `{ data: msg }` | 2026-03-30 |
@@ -394,11 +394,25 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ### SEC12 — ~~RLS helper functions mutable `search_path`~~ — RESOLVED (see resolved archive)
 
-### SEC13 — `xlsx` (SheetJS) dependency has 2 unpatched high CVEs
-- **Problem**: `npm audit` reports the `xlsx` package (SheetJS) has two high-severity CVEs with no fix available: (1) **GHSA-4r6h-8v6p-xvw6** — Prototype Pollution (CVSS 7.8, CWE-1321); (2) **GHSA-5pgg-2g8v-p4x9** — ReDoS (CVSS 7.5, CWE-1333). Both affect all versions (`range: *`). The package is used in `app/api/export/gsheet/route.ts` and `app/api/export/history/route.ts` (server-side XLSX generation). The prototype pollution vector is local (AV:L) so risk is mitigated by server-side only usage. The ReDoS (AV:N) is more directly relevant to any route parsing uploaded XLSX input.
-- **Files**: `app/api/export/gsheet/route.ts`, `app/api/export/history/route.ts`, `package.json`
-- **Impact**: HIGH (no patch available)
-- **Fix**: No upstream fix is available for the SheetJS community package. Options: (1) Switch to `exceljs` (actively maintained, no known CVEs); (2) Vendor a patched fork; (3) Pin to the last known good version and document the risk until a safe upgrade path exists. Priority: investigate `exceljs` as a drop-in replacement.
+### SEC13 — `xlsx` (SheetJS) dependency has 2 unpatched high CVEs — deferred to G1b
+- **Status (2026-04-15)**: isolated in standalone group **G1b**. Not blocking G2 per `pipeline.md` dependency chain (single residual `npm audit` vulnerability after G1 closure; 15/16 CVEs closed in block `refactor-g1-cve`).
+- **Problem**: `npm audit` reports the `xlsx` package (SheetJS) has two high-severity CVEs with no fix available: (1) **GHSA-4r6h-8v6p-xvw6** — Prototype Pollution (CVSS 7.8, CWE-1321, vector AV:L — local); (2) **GHSA-5pgg-2g8v-p4x9** — ReDoS (CVSS 7.5, CWE-1333, vector AV:N — network-reachable). Both affect all versions (`range: *`).
+- **Current usage** (6 files, server-only — audited 2026-04-15):
+  - Write paths (prototype pollution vector, mitigated by server-only execution):
+    - `lib/export-utils.ts` — `buildHistoryXLSXWorkbook`
+    - `lib/import-history-utils.ts` — history export
+    - `app/api/export/gsheet/route.ts` — GSheet export
+  - Read paths (ReDoS vector, direct exposure to uploaded input):
+    - `app/api/import/cu/run/route.ts` — CU upload parsing
+    - `app/api/import/contratti/run/route.ts` — contract upload parsing
+    - `app/api/import/collaboratori/run/route.ts` — collaboratori upload parsing
+- **Current mitigation** (accepted risk, documented 2026-04-15):
+  1. All xlsx usage is server-only (no browser runtime exposure).
+  2. Upload routes (`/api/import/*`) are admin-only and rate-limit-bounded by manual operator flow — not public ingestion.
+  3. Prototype pollution vector (AV:L) is structurally neutralized in a server-only Node.js context.
+  4. ReDoS remains a residual risk on the 3 import routes. Operators are implicitly trusted (admin role).
+- **Impact**: HIGH (no patch available) — blocking for G1b only; not blocking G2-G9.
+- **Fix (planned, G1b)**: migrate all 6 surfaces to `exceljs` (actively maintained, zero known CVEs). Alternative evaluated and deferred: vendor a patched SheetJS fork (higher maintenance cost, no quality improvement). Pinning without migration is the current state, not a long-term fix.
 
 ### SEC14 — Leaked password protection disabled in Supabase Auth
 - **Problem**: Supabase Auth's HaveIBeenPwned integration for checking compromised passwords is disabled. This means users (including collaboratori setting their own password on first login) can choose passwords known to be in breach databases.
