@@ -84,8 +84,8 @@ lib/
   password.ts     generatePassword() — shared across invite + admin reset flows
 
 proxy.ts          Auth middleware: active check → must_change_password → onboarding → app
-supabase/migrations/  065 migrations applied in sequence (see docs/migrations-log.md)
-__tests__/        391 Vitest tests (unit + API schema validation)
+supabase/migrations/  069 migrations applied in sequence (see docs/migrations-log.md)
+__tests__/        463 Vitest tests (unit + API schema validation)
 e2e/              Playwright specs (suspended — see CLAUDE.local.md)
 docs/             Product specs, implementation checklist, migration log, sitemap
 ```
@@ -223,7 +223,7 @@ Copy `.env.local.example` as a starting point. Never commit `.env.local` — it 
 
 ```bash
 # Unit + API schema tests (Vitest)
-npx vitest run              # all 369 tests
+npx vitest run              # all 463 tests
 npx vitest run __tests__/api/  # API schema tests only
 
 # Type check
