@@ -1,6 +1,6 @@
 # Playwright e2e Patterns
 
-Reference file for blocks writing or modifying `e2e/` specs. Phase 4/4b suspended via `CLAUDE.local.md` — remove that file when re-enabling.
+Reference file for blocks writing or modifying `e2e/` specs.
 
 ## Test setup
 
