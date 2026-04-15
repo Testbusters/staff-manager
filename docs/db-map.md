@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `070_financial_integrity_constraints.sql` (2026-04-15).
+> Last synced: migration `071_expense_attachments_reimbursement_id_idx.sql` (2026-04-15).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -195,6 +195,7 @@ tickets
 | `expense_reimbursements` | `er_collaborator_id_idx` | btree | |
 | `expense_reimbursements` | `er_community_id_idx` | btree | |
 | `expense_reimbursements` | `er_stato_idx` | btree | |
+| `expense_attachments` | `idx_expense_attachments_reimbursement_id` | btree | FK — added migration 071 |
 | `expense_history` | `exp_history_reimbursement_id_idx` | btree | |
 | `notification_settings` | `notif_settings_event_key_role_key` | UNIQUE | composite |
 | `notifications` | `notifications_user_id_read_idx` | btree | `(user_id, read)` — bell query |
