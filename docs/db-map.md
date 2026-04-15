@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `069_lezioni_materie_array_and_corsi_unique.sql` (2026-04-13).
+> Last synced: migration `070_financial_integrity_constraints.sql` (2026-04-15).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -292,10 +292,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-13.
+> Last refreshed: 2026-04-15.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -393,10 +394,10 @@ tickets
 | `collaborator_id` | uuid | NO | — | → collaborators.id |
 | `community_id` | uuid | YES | — | → communities.id |
 | `nome_servizio_ruolo` | text | NO | — | — |
-| `data_competenza` | date | YES | — | — |
-| `importo_lordo` | numeric | YES | — | — |
-| `ritenuta_acconto` | numeric | YES | — | — |
-| `importo_netto` | numeric | YES | — | — |
+| `data_competenza` | date | NO | — | — |
+| `importo_lordo` | numeric | NO | — | — |
+| `ritenuta_acconto` | numeric | NO | — | — |
+| `importo_netto` | numeric | NO | — | — |
 | `stato` | text | NO | `'IN_ATTESA'` | — |
 | `payment_reference` | text | YES | — | — |
 | `info_specifiche` | text | YES | — | — |

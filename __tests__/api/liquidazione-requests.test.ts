@@ -46,6 +46,7 @@ beforeAll(async () => {
       nome_servizio_ruolo: 'TEST-LIQ-COMP',
       importo_lordo: 400,
       importo_netto: 320,
+      ritenuta_acconto: 20,
       data_competenza: '2027-01-01',
       stato: 'APPROVATO',
       competenza: 'extra',

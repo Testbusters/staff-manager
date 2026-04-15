@@ -24,13 +24,6 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | ID | Title | Impact | Group |
 |----|--------|---------|-------|
 | | **G2 - DB Schema (migrations only)** | | |
-| DB-NEW-1 | `compensations.importo_lordo` nullable - NaN propagation in financial calcs | MEDIUM | G2 |
-| DB-NEW-2 | `compensations.importo_netto` nullable - NaN propagation | MEDIUM | G2 |
-| DB-NEW-3 | `compensations.ritenuta_acconto` nullable - incorrect net calculation | MEDIUM | G2 |
-| DB-NEW-4 | `compensations.data_competenza` nullable - date-range filters exclude rows | MEDIUM | G2 |
-| DB-NEW-5 | No `CHECK (importo_lordo > 0)` on compensations | MEDIUM | G2 |
-| DB-NEW-6 | No `CHECK (importo > 0)` on expense_reimbursements | MEDIUM | G2 |
-| DB-NEW-7 | No `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations | MEDIUM | G2 |
 | DB-NEW-8 | `expense_attachments.reimbursement_id` FK unindexed | MEDIUM | G2 |
 | DB-NEW-9 | `collaborators.telegram_chat_id` redundant double UNIQUE - drop full, keep partial | MEDIUM | G2 |
 | DB3 | 39 RLS policies use bare `auth.uid()` - per-row function evaluation | MEDIUM | G2 |
@@ -196,6 +189,13 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | API11 | 5 content routes use `new NextResponse(null, { status: 204 })` | 2026-03-30 |
 | PERF-11 | `CorsiCalendario` converted to `dynamic(() => import(...), { ssr: false })` | 2026-03-30 |
 | TC-NEW-2 | `expense-form.test.ts` assertions match current enum | 2026-04-14 |
+| DB-NEW-1 | `compensations.importo_lordo` SET NOT NULL — migration 070 | 2026-04-15 |
+| DB-NEW-2 | `compensations.importo_netto` SET NOT NULL — migration 070 | 2026-04-15 |
+| DB-NEW-3 | `compensations.ritenuta_acconto` SET NOT NULL + backfill (lordo-netto)/lordo*100 — migration 070 | 2026-04-15 |
+| DB-NEW-4 | `compensations.data_competenza` SET NOT NULL — migration 070 | 2026-04-15 |
+| DB-NEW-5 | `CHECK (importo_lordo > 0)` on compensations — migration 070 | 2026-04-15 |
+| DB-NEW-6 | `CHECK (importo > 0)` on expense_reimbursements — migration 070 | 2026-04-15 |
+| DB-NEW-7 | `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations — migration 070 | 2026-04-15 |
 
 ### Superseded / consolidated items
 
@@ -692,54 +692,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Fix**: Change to `ON DELETE SET NULL` and make `creator_user_id` nullable, or add `ON DELETE RESTRICT` to prevent user deletion while tickets exist.
 - **Discovered**: skill-db audit 2026-03-27
 
-### DB-NEW-1 — `compensations.importo_lordo` nullable — NaN propagation risk
-- **Problem**: `importo_lordo` has no NOT NULL constraint. A NULL value silently propagates as NaN through `importo_netto` and `ritenuta_acconto` calculations, producing corrupt financial records without a DB-level error.
-- **Files**: `supabase/migrations/` — ALTER COLUMN
-- **Impact**: MEDIUM
-- **Fix**: Verify no NULL rows exist (`SELECT COUNT(*) FROM compensations WHERE importo_lordo IS NULL`), then `ALTER TABLE compensations ALTER COLUMN importo_lordo SET NOT NULL`.
-- **Discovered**: skill-db audit 2026-03-30
-
-### DB-NEW-2 — `compensations.importo_netto` nullable — NaN propagation risk
-- **Problem**: Same as DB-NEW-1. `importo_netto` is nullable — should always be derived from `importo_lordo` and `ritenuta_acconto`, so NULL is semantically invalid.
-- **Files**: `supabase/migrations/` — ALTER COLUMN
-- **Impact**: MEDIUM
-- **Fix**: `ALTER TABLE compensations ALTER COLUMN importo_netto SET NOT NULL` (after backfill check).
-- **Discovered**: skill-db audit 2026-03-30
-
-### DB-NEW-3 — `compensations.ritenuta_acconto` nullable — incorrect net calculation
-- **Problem**: `ritenuta_acconto` is nullable. A NULL withholding rate causes `importo_netto` to be calculated incorrectly (treated as 0%) — the collaborator appears to receive gross pay.
-- **Files**: `supabase/migrations/` — ALTER COLUMN
-- **Impact**: MEDIUM
-- **Fix**: `ALTER TABLE compensations ALTER COLUMN ritenuta_acconto SET NOT NULL` (after backfill check).
-- **Discovered**: skill-db audit 2026-03-30
-
-### DB-NEW-4 — `compensations.data_competenza` nullable — date-range filters silently exclude rows
-- **Problem**: `data_competenza` is nullable. Date-range export filters (e.g. `gte`/`lte`) silently exclude NULL rows, causing compensations without a competency date to disappear from exports without any error.
-- **Files**: `supabase/migrations/` — ALTER COLUMN
-- **Impact**: MEDIUM
-- **Fix**: `ALTER TABLE compensations ALTER COLUMN data_competenza SET NOT NULL` (after backfill check).
-- **Discovered**: skill-db audit 2026-03-30
-
-### DB-NEW-5 — No `CHECK (importo_lordo > 0)` on compensations
-- **Problem**: No constraint prevents a service-role insert (bypassing Zod) from writing a zero or negative gross amount. This creates financially invalid records.
-- **Files**: `supabase/migrations/` — ADD CONSTRAINT
-- **Impact**: MEDIUM
-- **Fix**: `ALTER TABLE compensations ADD CONSTRAINT chk_comp_lordo_positive CHECK (importo_lordo > 0)` (verify no zero/negative rows first).
-- **Discovered**: skill-db audit 2026-03-30
-
-### DB-NEW-6 — No `CHECK (importo > 0)` on expense_reimbursements
-- **Problem**: Same pattern as DB-NEW-5 on the `expense_reimbursements` table. No positive-amount constraint at DB level.
-- **Files**: `supabase/migrations/` — ADD CONSTRAINT
-- **Impact**: MEDIUM
-- **Fix**: `ALTER TABLE expense_reimbursements ADD CONSTRAINT chk_exp_importo_positive CHECK (importo > 0)`.
-- **Discovered**: skill-db audit 2026-03-30
-
-### DB-NEW-7 — No `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations
-- **Problem**: The withholding rate is stored as a percentage (e.g. 20 = 20%). No DB constraint prevents inserting a value outside 0–100, which would produce mathematically invalid `importo_netto` calculations.
-- **Files**: `supabase/migrations/` — ADD CONSTRAINT
-- **Impact**: MEDIUM
-- **Fix**: `ALTER TABLE compensations ADD CONSTRAINT chk_ritenuta_range CHECK (ritenuta_acconto BETWEEN 0 AND 100)`.
-- **Discovered**: skill-db audit 2026-03-30
+### DB-NEW-1..7 — RESOLVED (see resolved archive)
 
 ### DB-NEW-8 — `expense_attachments.reimbursement_id` FK unindexed
 - **Problem**: The FK `expense_attachments.reimbursement_id → expense_reimbursements.id` has no index. Every expense detail page join and cascade delete operation requires a full sequential scan of `expense_attachments`.
