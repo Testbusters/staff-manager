@@ -23,6 +23,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "docxtemplater": "^3.68.2",
+    "exceljs": "^4.4.0",
     "googleapis": "^171.4.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.577.0",
@@ -42,7 +43,6 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
-    "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {

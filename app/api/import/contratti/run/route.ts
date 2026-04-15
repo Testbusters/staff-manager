@@ -198,7 +198,7 @@ export async function POST() {
   // ── Record import run + upload XLSX (non-blocking) ──────────────────────────
   try {
     const runId    = crypto.randomUUID();
-    const xlsx     = buildImportXLSX('contratti', details);
+    const xlsx     = await buildImportXLSX('contratti', details);
     const xlsxPath = `contratti/${runId}.xlsx`;
     await svc.storage.from('imports').upload(xlsxPath, xlsx, {
       contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

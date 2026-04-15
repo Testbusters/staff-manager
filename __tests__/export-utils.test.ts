@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import ExcelJS from 'exceljs';
 import {
   groupToCollaboratorRows,
   formatDate,
   formatEuro,
   toGSheetRow,
+  buildHistoryXLSXWorkbook,
 } from '../lib/export-utils';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -201,5 +203,85 @@ describe('toGSheetRow', () => {
     expect(gRow[5]).toBe('');
     expect(gRow[13]).toBe('');
     expect(gRow[14]).toBe('');
+  });
+});
+
+// ── buildHistoryXLSXWorkbook (round-trip) ─────────────────────────────────────
+
+async function parseWorkbook(buffer: Buffer): Promise<ExcelJS.Workbook> {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(new Uint8Array(buffer).buffer as ArrayBuffer);
+  return wb;
+}
+
+function sheetValues(ws: ExcelJS.Worksheet): unknown[][] {
+  const out: unknown[][] = [];
+  ws.eachRow({ includeEmpty: false }, (row) => {
+    const raw = row.values as unknown[];
+    const arr: unknown[] = [];
+    for (let i = 1; i < raw.length; i++) {
+      arr.push(raw[i] ?? '');
+    }
+    out.push(arr);
+  });
+  return out;
+}
+
+describe('buildHistoryXLSXWorkbook', () => {
+  it('empty rows → header-only sheet', async () => {
+    const buf = await buildHistoryXLSXWorkbook([]);
+    expect(Buffer.isBuffer(buf)).toBe(true);
+
+    const wb = await parseWorkbook(buf);
+    const ws = wb.getWorksheet('Export');
+    expect(ws).toBeDefined();
+
+    const rows = sheetValues(ws!);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveLength(15);
+    expect(rows[0][0]).toBe('Email');
+    expect(rows[0][1]).toBe('Nome e cognome');
+    expect(rows[0][9]).toBe('Compenso Lordo');
+    expect(rows[0][14]).toBe('Intestatario pagamento');
+  });
+
+  it('single row → header + 1 data row with correct values', async () => {
+    const sourceRows = groupToCollaboratorRows(
+      [makeComp('c1', 'col1', 100, 80)],
+      [],
+    );
+    const buf = await buildHistoryXLSXWorkbook(sourceRows);
+    const wb = await parseWorkbook(buf);
+    const rows = sheetValues(wb.getWorksheet('Export')!);
+    expect(rows).toHaveLength(2);
+    expect(rows[1][0]).toBe('mario@test.com');
+    expect(rows[1][1]).toBe('Mario Rossi');
+    expect(rows[1][2]).toBe('Mario');
+    expect(rows[1][3]).toBe('Rossi');
+    expect(rows[1][4]).toBe('15/01/1990');
+    expect(rows[1][13]).toBe('IT60X0542811101000000123456');
+    expect(rows[1][14]).toBe('Mario Rossi');
+  });
+
+  it('worksheet is named "Export"', async () => {
+    const buf = await buildHistoryXLSXWorkbook([]);
+    const wb = await parseWorkbook(buf);
+    expect(wb.worksheets).toHaveLength(1);
+    expect(wb.worksheets[0].name).toBe('Export');
+  });
+
+  it('multiple rows preserved in insertion order', async () => {
+    const sourceRows = groupToCollaboratorRows(
+      [makeComp('c1', 'col1', 100, 80), makeComp('c2', 'col2', 200, 160)],
+      [],
+    );
+    const buf = await buildHistoryXLSXWorkbook(sourceRows);
+    const wb = await parseWorkbook(buf);
+    const rows = sheetValues(wb.getWorksheet('Export')!);
+    expect(rows).toHaveLength(3);
+    // Data row values should match toGSheetRow output for each
+    const expected = sourceRows.map(toGSheetRow);
+    expect(rows[1]).toEqual(expected[0]);
+    expect(rows[2]).toEqual(expected[1]);
   });
 });
