@@ -217,16 +217,16 @@ export default function LezioniTab({ corsoId, initialLezioni, materieList }: Pro
               </div>
             )}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Data *</label>
-              <Input type="date" value={form.data} onChange={set('data')} required />
+              <label htmlFor="lezione-data" className="text-sm font-medium text-foreground">Data *</label>
+              <Input id="lezione-data" type="date" value={form.data} onChange={set('data')} required />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Orario inizio *</label>
-              <Input type="time" value={form.orario_inizio} onChange={set('orario_inizio')} required />
+              <label htmlFor="lezione-orario-inizio" className="text-sm font-medium text-foreground">Orario inizio *</label>
+              <Input id="lezione-orario-inizio" type="time" value={form.orario_inizio} onChange={set('orario_inizio')} required />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Orario fine *</label>
-              <Input type="time" value={form.orario_fine} onChange={set('orario_fine')} required />
+              <label htmlFor="lezione-orario-fine" className="text-sm font-medium text-foreground">Orario fine *</label>
+              <Input id="lezione-orario-fine" type="time" value={form.orario_fine} onChange={set('orario_fine')} required />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Materie *</label>

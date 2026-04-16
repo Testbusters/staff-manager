@@ -69,7 +69,7 @@ export default function TicketQuickModal() {
             <DialogTitle className="text-base font-semibold text-foreground">Apri un ticket</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-foreground">
                 Riferimento <span className="text-destructive">*</span>

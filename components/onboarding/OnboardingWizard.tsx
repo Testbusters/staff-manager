@@ -295,6 +295,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
 
       <form
         onSubmit={(e) => { e.preventDefault(); setStep(2); }}
+        noValidate
         className="space-y-5">
 
         <p className="text-sm text-muted-foreground -mt-2 mb-4">

@@ -125,7 +125,7 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
   const labelCls = 'block text-sm font-medium text-foreground';
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl bg-card border border-border p-6 space-y-5">
+    <form onSubmit={handleSubmit} noValidate className="rounded-2xl bg-card border border-border p-6 space-y-5">
       {error && (
         <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
@@ -134,12 +134,12 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
 
       <div className="grid grid-cols-2 gap-4">
         <div className={fieldCls}>
-          <label className={labelCls}>Nome *</label>
-          <Input value={form.nome} onChange={set('nome')} required placeholder="Corso Medicina 2026" />
+          <label htmlFor="corso-nome" className={labelCls}>Nome *</label>
+          <Input id="corso-nome" value={form.nome} onChange={set('nome')} required placeholder="Corso Medicina 2026" />
         </div>
         <div className={fieldCls}>
-          <label className={labelCls}>Codice identificativo *</label>
-          <Input value={form.codice_identificativo} onChange={set('codice_identificativo')} required placeholder="MED-2026-01" />
+          <label htmlFor="corso-codice" className={labelCls}>Codice identificativo *</label>
+          <Input id="corso-codice" value={form.codice_identificativo} onChange={set('codice_identificativo')} required placeholder="MED-2026-01" />
         </div>
       </div>
 
@@ -196,43 +196,43 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
           </Select>
         </div>
         <div className={fieldCls}>
-          <label className={labelCls}>Linea</label>
-          <Input value={form.linea} onChange={set('linea')} placeholder="Linea A" />
+          <label htmlFor="corso-linea" className={labelCls}>Linea</label>
+          <Input id="corso-linea" value={form.linea} onChange={set('linea')} placeholder="Linea A" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className={fieldCls}>
-          <label className={labelCls}>Data inizio *</label>
-          <Input type="date" value={form.data_inizio} onChange={set('data_inizio')} required />
+          <label htmlFor="corso-data-inizio" className={labelCls}>Data inizio *</label>
+          <Input id="corso-data-inizio" type="date" value={form.data_inizio} onChange={set('data_inizio')} required />
         </div>
         <div className={fieldCls}>
-          <label className={labelCls}>Data fine *</label>
-          <Input type="date" value={form.data_fine} onChange={set('data_fine')} required />
+          <label htmlFor="corso-data-fine" className={labelCls}>Data fine *</label>
+          <Input id="corso-data-fine" type="date" value={form.data_fine} onChange={set('data_fine')} required />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className={fieldCls}>
-          <label className={labelCls}>Max docenti per lezione</label>
-          <Input type="number" min={1} value={form.max_docenti_per_lezione} onChange={set('max_docenti_per_lezione')} />
+          <label htmlFor="corso-max-docenti" className={labelCls}>Max docenti per lezione</label>
+          <Input id="corso-max-docenti" type="number" min={1} value={form.max_docenti_per_lezione} onChange={set('max_docenti_per_lezione')} />
         </div>
         {form.modalita === 'online' && (
           <div className={fieldCls}>
-            <label className={labelCls}>Max Q&A per lezione</label>
-            <Input type="number" min={0} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
+            <label htmlFor="corso-max-qa" className={labelCls}>Max Q&A per lezione</label>
+            <Input id="corso-max-qa" type="number" min={0} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className={fieldCls}>
-          <label className={labelCls}>Responsabile DOC</label>
-          <Input value={form.responsabile_doc} onChange={set('responsabile_doc')} placeholder="Nome responsabile" />
+          <label htmlFor="corso-resp-doc" className={labelCls}>Responsabile DOC</label>
+          <Input id="corso-resp-doc" value={form.responsabile_doc} onChange={set('responsabile_doc')} placeholder="Nome responsabile" />
         </div>
         <div className={fieldCls}>
-          <label className={labelCls}>Licenza Zoom</label>
-          <Input value={form.licenza_zoom} onChange={set('licenza_zoom')} placeholder="licenza@email.com" />
+          <label htmlFor="corso-licenza-zoom" className={labelCls}>Licenza Zoom</label>
+          <Input id="corso-licenza-zoom" value={form.licenza_zoom} onChange={set('licenza_zoom')} placeholder="licenza@email.com" />
         </div>
       </div>
 
@@ -240,30 +240,30 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
         <p className="text-sm font-medium text-muted-foreground mb-3">Link utili</p>
         <div className="grid grid-cols-2 gap-4">
           <div className={fieldCls}>
-            <label className={labelCls}>Link LW</label>
-            <Input value={form.link_lw} onChange={set('link_lw')} placeholder="https://..." />
+            <label htmlFor="corso-link-lw" className={labelCls}>Link LW</label>
+            <Input id="corso-link-lw" value={form.link_lw} onChange={set('link_lw')} placeholder="https://..." />
           </div>
           <div className={fieldCls}>
-            <label className={labelCls}>Link Zoom</label>
-            <Input value={form.link_zoom} onChange={set('link_zoom')} placeholder="https://..." />
+            <label htmlFor="corso-link-zoom" className={labelCls}>Link Zoom</label>
+            <Input id="corso-link-zoom" value={form.link_zoom} onChange={set('link_zoom')} placeholder="https://..." />
           </div>
           <div className={fieldCls}>
-            <label className={labelCls}>Telegram corsisti</label>
-            <Input value={form.link_telegram_corsisti} onChange={set('link_telegram_corsisti')} placeholder="https://t.me/..." />
+            <label htmlFor="corso-telegram" className={labelCls}>Telegram corsisti</label>
+            <Input id="corso-telegram" value={form.link_telegram_corsisti} onChange={set('link_telegram_corsisti')} placeholder="https://t.me/..." />
           </div>
           {form.modalita === 'online' && (
             <div className={fieldCls}>
-              <label className={labelCls}>Q&A assignments</label>
-              <Input value={form.link_qa_assignments} onChange={set('link_qa_assignments')} placeholder="https://..." />
+              <label htmlFor="corso-qa-assignments" className={labelCls}>Q&A assignments</label>
+              <Input id="corso-qa-assignments" value={form.link_qa_assignments} onChange={set('link_qa_assignments')} placeholder="https://..." />
             </div>
           )}
           <div className={fieldCls}>
-            <label className={labelCls}>Questionari</label>
-            <Input value={form.link_questionari} onChange={set('link_questionari')} placeholder="https://..." />
+            <label htmlFor="corso-questionari" className={labelCls}>Questionari</label>
+            <Input id="corso-questionari" value={form.link_questionari} onChange={set('link_questionari')} placeholder="https://..." />
           </div>
           <div className={fieldCls}>
-            <label className={labelCls}>Emergenza</label>
-            <Input value={form.link_emergenza} onChange={set('link_emergenza')} placeholder="https://..." />
+            <label htmlFor="corso-emergenza" className={labelCls}>Emergenza</label>
+            <Input id="corso-emergenza" value={form.link_emergenza} onChange={set('link_emergenza')} placeholder="https://..." />
           </div>
         </div>
       </div>

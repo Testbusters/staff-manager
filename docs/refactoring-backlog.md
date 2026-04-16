@@ -114,20 +114,20 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | N4 | Italian DB column names - rename to English | LOW | G8 |
 | N5 | Italian PostgreSQL enum values - translate to English | LOW | G8 |
 | | **G9 - UI/UX** | | |
-| C13 | 4 corsi form components: `<label>` without `htmlFor`, inputs without `id` | MEDIUM | G9 |
+| ~~C13~~ | ~~4 corsi form components: `<label>` without `htmlFor`, inputs without `id`~~ — RESOLVED | ~~MEDIUM~~ | G9 |
 | VI-1 | 9/10/11px font sizes coexist with design system scale - consolidate | MEDIUM | G9 |
 | VI-2 | Muted-foreground text at 9-10px on dark backgrounds may fail APCA Lc 45 | MEDIUM | G9 |
 | VI-8 | `/rimborsi/[id]` IN_ATTESA state sparse - add timeline section | MEDIUM | G9 |
 | UX-2 | Form validation inconsistency: 1 form uses RHF+Zod, 30+ use useState+toast | MEDIUM | G9 |
 | UX-10 | `/profilo` 15+ fields, no sticky save button or collapsible sections | MEDIUM | G9 |
-| RESP-3 | `/corsi/eventi-citta` events table overflows at 375px | MEDIUM | G9 |
+| ~~RESP-3~~ | ~~`/corsi/eventi-citta` events table overflows at 375px~~ — RESOLVED | ~~MEDIUM~~ | G9 |
 | VI-3 | Brand red netto values - verify APCA contrast against dark bg | LOW | G9 |
 | VI-4 | `/approvazioni` too many equally-weighted elements | LOW | G9 |
 | VI-5 | `/coda` icon-only action buttons rely on colour alone | LOW | G9 |
 | VI-6 | `/login` `pb-52` excessive empty space | LOW | G9 |
 | VI-7 | `/comunicazioni` with <=2 items feels sparse | LOW | G9 |
 | VI-9 | `/rimborsi/[id]` rejection note same visual weight as attachments | LOW | G9 |
-| UX-3 | HTML `required` triggers English browser tooltip - add `noValidate` | LOW | G9 |
+| ~~UX-3~~ | ~~HTML `required` triggers English browser tooltip - add `noValidate`~~ — RESOLVED | ~~LOW~~ | G9 |
 | UX-4 | CoCoD'a button hidden when no collabs - show disabled + tooltip | LOW | G9 |
 | UX-11 | `/profilo` required field markers inconsistent | LOW | G9 |
 | UX-12 | `/profilo` Sicurezza card visually disconnected | LOW | G9 |
@@ -227,6 +227,9 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | TC3 | Integration tests added for mark-paid logic — compensation APPROVATO→LIQUIDATO + history insert + expense APPROVATO→LIQUIDATO + only-APPROVATO filter | 2026-04-16 |
 | TC4 | Email failure path tests added — mock Resend class, verify `sendEmail()` returns `{success:false}` on throw (never propagates) | 2026-04-16 |
 | TC-NEW-1 | Already resolved — `events.test.ts` passes 8/8 (proxy redirect test uses cookie-based auth correctly) | 2026-04-16 |
+| C13 | `htmlFor`+`id` added to 25 label/input pairs in CorsoForm (17), LezioniTab (3), EventiCittaPage (5) | 2026-04-16 |
+| RESP-3 | EventiCittaPage table card: `w-fit` → `w-fit max-w-full` + `overflow-x-auto` (scrollable at 375px) | 2026-04-16 |
+| UX-3 | `noValidate` added to 6 forms with `required` inputs (CorsoForm, TicketQuickModal, CommunicationList, FeedbackButton, CreateUserForm, OnboardingWizard) | 2026-04-16 |
 
 ### Superseded / consolidated items
 
