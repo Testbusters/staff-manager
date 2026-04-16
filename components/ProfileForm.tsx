@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Check, AlertTriangle, ChevronDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { ROLE_LABELS } from '@/lib/types';
+import { ROLE_LABELS, TSHIRT_SIZES } from '@/lib/types';
 import type { Role } from '@/lib/types';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -52,8 +52,6 @@ type Props = {
   communities: { id: string; name: string }[];
   guidaFigli: GuideContent;
 };
-
-const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 const readonlyCls =
   'w-full rounded-lg bg-card border border-border px-3 py-2.5 text-sm text-muted-foreground select-all';

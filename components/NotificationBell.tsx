@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 import type { Notification } from '@/lib/types';
+import { NOTIFICATION_TYPE_BADGE } from '@/lib/notification-utils';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -40,17 +41,6 @@ function entityHref(n: Notification): string | null {
   if (n.entity_type === 'discount')      return `/sconti/${n.entity_id}`;
   return null;
 }
-
-const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
-  compensation:  { label: 'Compenso',      cls: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/60 dark:text-blue-300 dark:border-blue-800/60' },
-  reimbursement: { label: 'Rimborso',      cls: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/60 dark:text-purple-300 dark:border-purple-800/60' },
-  document:      { label: 'Documento',     cls: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/60 dark:text-yellow-300 dark:border-yellow-800/60' },
-  ticket:        { label: 'Ticket',        cls: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/60 dark:text-orange-300 dark:border-orange-800/60' },
-  communication: { label: 'Comunicazione', cls: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/60 dark:text-green-300 dark:border-green-800/60' },
-  event:         { label: 'Evento',        cls: 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/60 dark:text-cyan-300 dark:border-cyan-800/60' },
-  opportunity:   { label: 'Opportunità',   cls: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/60 dark:text-indigo-300 dark:border-indigo-800/60' },
-  discount:      { label: 'Sconto',        cls: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/60' },
-};
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -178,7 +168,7 @@ export default function NotificationBell() {
           ) : (
             notifications.map((n) => {
               const href = entityHref(n);
-              const badge = n.entity_type ? TYPE_BADGE[n.entity_type] : undefined;
+              const badge = n.entity_type ? NOTIFICATION_TYPE_BADGE[n.entity_type] : undefined;
               const inner = (
                 <div
                   className={`group px-4 py-3 border-b border-border last:border-0
