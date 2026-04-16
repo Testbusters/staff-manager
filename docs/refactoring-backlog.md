@@ -24,7 +24,6 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | ID | Title | Impact | Group |
 |----|--------|---------|-------|
 | | **G2 - DB Schema (migrations only)** | | |
-| DB3 | 39 RLS policies use bare `auth.uid()` - per-row function evaluation | MEDIUM | G2 |
 | DB4 | All 90+ RLS policies lack explicit `TO` clause (all `{public}`) | MEDIUM | G2 |
 | DB13 | `tickets.community_id` FK unindexed | MEDIUM | G2 |
 | DB14 | `corsi.community_id` FK unindexed | MEDIUM | G2 |
@@ -196,6 +195,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | DB-NEW-7 | `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations — migration 070 | 2026-04-15 |
 | DB-NEW-8 | `CREATE INDEX idx_expense_attachments_reimbursement_id ON expense_attachments(reimbursement_id)` — migration 071 | 2026-04-15 |
 | DB-NEW-9 | `DROP CONSTRAINT collaborators_telegram_chat_id_key` (redundant full UNIQUE; partial idx kept) — migration 072 | 2026-04-16 |
+| DB3 | Mitigated by design — `auth.uid()` is `LANGUAGE sql STABLE`, PostgreSQL auto-inlines to `(SELECT auth.uid())`. All 39 policies already use subquery form in internal representation. No action needed. | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -615,11 +615,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ### DB1, DB2 — RESOLVED (see resolved archive)
 
-### DB3 — 39 RLS policies use bare `auth.uid()` — per-row function evaluation
-- **Problem**: Supabase's own documentation recommends wrapping `auth.uid()` and `auth.role()` in `(select ...)` to enable per-statement caching instead of per-row evaluation. Query `S4B` identified 39 policies across tables including `compensations`, `expense_reimbursements`, `tickets`, `candidature`, `assegnazioni`, `collaborators`, `user_profiles`, `liquidazione_requests`, and others that call bare `auth.uid()`. On tables with hundreds/thousands of rows, `auth.uid()` is called once per row per query instead of once per query.
-- **Files**: All RLS migration files (migrations 002 through 058).
-- **Impact**: MEDIUM (performance degradation at scale — measurable at >1000 rows per table)
-- **Fix**: Replace every `auth.uid()` with `(select auth.uid())` in USING and WITH CHECK clauses. This is a policy-wide migration — replace all at once in a single migration for consistency. Reference: https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select
+### DB3 — RESOLVED (mitigated by design — see resolved archive)
 
 ### DB4 — All 90+ RLS policies lack explicit `TO` clause (all `{public}`)
 - **Problem**: Query `S4C` confirmed that all 90+ RLS policies in the `public` schema have `roles = '{public}'`, meaning they apply to ALL roles including the `anon` role. Since the app uses `authenticated` sessions only, the `anon` role should never access any data. The current setup adds overhead: every anonymous request to any table triggers policy evaluation. It also increases the attack surface if a misconfigured route bypasses session checks.
