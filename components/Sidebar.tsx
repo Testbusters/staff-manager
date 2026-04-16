@@ -100,7 +100,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="flex-1">{item.label}</span>
-                    <span className="text-[9px] font-medium rounded-full bg-muted/60 px-1.5 py-0.5 text-muted-foreground/60 whitespace-nowrap shrink-0">
+                    <span className="text-[10px] font-medium rounded-full bg-muted/60 px-1.5 py-0.5 text-muted-foreground/60 whitespace-nowrap shrink-0">
                       In arrivo
                     </span>
                   </SidebarMenuButton>
@@ -145,7 +145,7 @@ export default function Sidebar({ navItems, userEmail, userName, avatarUrl, role
           </Avatar>
           <div className="min-w-0">
             <p className="text-xs font-medium text-sidebar-accent-foreground truncate">{userName}</p>
-            <p className="text-[10px] text-sidebar-foreground truncate">{userEmail}</p>
+            <p className="text-xs text-sidebar-foreground truncate">{userEmail}</p>
           </div>
         </div>
         <div

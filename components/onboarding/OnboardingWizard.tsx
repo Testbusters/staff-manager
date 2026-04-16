@@ -326,7 +326,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
                 <div className="w-full rounded-lg bg-muted border border-border px-3 py-2.5 text-sm text-muted-foreground font-mono select-all">
                   @{previewUsername}
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Il tuo username sarà assegnato automaticamente e non è modificabile.</p>
+                <p className="text-xs text-muted-foreground mt-1">Il tuo username sarà assegnato automaticamente e non è modificabile.</p>
               </div>
             )}
             <div>

@@ -49,7 +49,7 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
       <div className="flex">
         {([1, 2, 3] as const).map((s) => (
           <div key={s} className="flex-1 text-center">
-            <span className={`text-[10px] font-medium ${s === step ? 'text-brand' : s < step ? 'text-muted-foreground' : 'text-muted-foreground/80'}`}>
+            <span className={`text-xs font-medium ${s === step ? 'text-brand' : s < step ? 'text-muted-foreground' : 'text-muted-foreground/80'}`}>
               {STEP_LABELS[s]}
             </span>
           </div>

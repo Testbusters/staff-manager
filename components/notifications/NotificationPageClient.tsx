@@ -222,7 +222,7 @@ export default function NotificationPageClient() {
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
                       )}
                       {badge && (
-                        <span className={`shrink-0 rounded-full border px-2 py-px text-[10px] font-semibold uppercase tracking-wide ${badge.cls}`}>
+                        <span className={`shrink-0 rounded-full border px-2 py-px text-xs font-semibold uppercase tracking-wide ${badge.cls}`}>
                           {badge.label}
                         </span>
                       )}
@@ -233,7 +233,7 @@ export default function NotificationPageClient() {
                     {n.messaggio && (
                       <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.messaggio}</p>
                     )}
-                    <p className="text-[10px] text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
                   </div>
 
                   {/* Actions (visible on hover) */}
@@ -243,7 +243,7 @@ export default function NotificationPageClient() {
                         variant="ghost"
                         size="sm"
                         onClick={(e) => { e.preventDefault(); handleMarkRead(n.id); }}
-                        className="text-[10px] text-link hover:text-link/80 whitespace-nowrap h-auto p-0"
+                        className="text-xs text-link hover:text-link/80 whitespace-nowrap h-auto p-0"
                       >
                         Segna letta
                       </Button>

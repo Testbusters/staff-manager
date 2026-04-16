@@ -304,7 +304,7 @@ export default function CreateUserForm() {
               onChange={(v) => setDataFineContratto(v)}
               disabled={loading}
             />
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Usata per compilare automaticamente il template PDF del contratto.
             </p>
           </div>
@@ -344,7 +344,7 @@ export default function CreateUserForm() {
                 maxLength={50}
                 className="font-mono"
               />
-              <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
+              <p className="text-xs text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
               <label className={labelCls}>Data di ingresso <span className="text-destructive">*</span></label>
@@ -391,7 +391,7 @@ export default function CreateUserForm() {
                 maxLength={50}
                 className="font-mono"
               />
-              <p className="text-[10px] text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
+              <p className="text-xs text-muted-foreground mt-1">Generato automaticamente da nome e cognome. Puoi modificarlo.</p>
             </div>
             <div>
               <label className={labelCls}>Codice fiscale <span className="text-destructive">*</span></label>
@@ -463,7 +463,7 @@ export default function CreateUserForm() {
               <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
                 onChange={(e) => setIntestatarioPagamento(e.target.value)}
                 required disabled={loading} maxLength={100} />
-              <p className="text-[10px] text-muted-foreground mt-1">Nome e cognome dell&apos;intestatario del conto. Pre-compilato per l&apos;onboarding.</p>
+              <p className="text-xs text-muted-foreground mt-1">Nome e cognome dell&apos;intestatario del conto. Pre-compilato per l&apos;onboarding.</p>
             </div>
             <div>
               <label className={labelCls}>Data di ingresso <span className="text-destructive">*</span></label>
@@ -488,10 +488,10 @@ export default function CreateUserForm() {
                 />
                 <div>
                   <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Seleziona se il collaboratore è fiscalmente a carico di un familiare (es. genitore).
                   </p>
-                  <ul className="mt-1 space-y-0.5 text-[10px] text-muted-foreground list-none">
+                  <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground list-none">
                     <li>· Under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
                     <li>· 24+ anni: soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
                   </ul>
@@ -513,7 +513,7 @@ export default function CreateUserForm() {
                     className="pl-7"
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Importo lordo massimo che il collaboratore vuole ricevere nell&apos;anno solare.
                 </p>
               </div>

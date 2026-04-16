@@ -74,7 +74,7 @@ function FilterTab({
       }>
         {count}
       </p>
-      <p className="text-[10px] mt-0.5">{label}</p>
+      <p className="text-xs mt-0.5">{label}</p>
     </button>
   );
 }
@@ -99,7 +99,7 @@ function RecordRow(props: RecordRowProps) {
       >
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-foreground truncate">{r.collabName}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.dataCompetenza)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(r.dataCompetenza)}</p>
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <StatusBadge stato={r.stato as Parameters<typeof StatusBadge>[0]['stato']} />
@@ -118,7 +118,7 @@ function RecordRow(props: RecordRowProps) {
       >
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-foreground truncate">{r.collabName}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDate(r.createdAt)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(r.createdAt)}</p>
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <StatusBadge stato={r.stato as Parameters<typeof StatusBadge>[0]['stato']} />
@@ -136,9 +136,9 @@ function RecordRow(props: RecordRowProps) {
     >
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-foreground truncate">{r.collabName}</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">{r.tipo}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{r.tipo}</p>
       </div>
-      <p className="text-[10px] text-muted-foreground shrink-0">{fmtDate(r.createdAt)}</p>
+      <p className="text-xs text-muted-foreground shrink-0">{fmtDate(r.createdAt)}</p>
     </Link>
   );
 }
@@ -311,7 +311,7 @@ export default function AdminDashboard({ data }: { data: AdminDashboardData }) {
           }
         >
           {blockItems.length > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 rounded-full bg-red-500 dark:bg-red-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
+            <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 rounded-full bg-red-500 dark:bg-red-600 text-white text-xs font-bold flex items-center justify-center px-1">
               {blockItems.length}
             </span>
           )}

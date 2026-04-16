@@ -307,17 +307,17 @@ export default function CollaboratoreDetail({
                 <h1 className="text-xl font-semibold text-foreground">{fullName}</h1>
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   {memberStatus && (
-                    <span className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full border ${MEMBER_STATUS_COLORS[memberStatus] ?? 'bg-muted text-muted-foreground border-border'}`}>
+                    <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border ${MEMBER_STATUS_COLORS[memberStatus] ?? 'bg-muted text-muted-foreground border-border'}`}>
                       {MEMBER_STATUS_LABELS[memberStatus] ?? memberStatus}
                     </span>
                   )}
                   {collab.username && (
-                    <span className="text-[11px] font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-700/30 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-700/30 px-2 py-0.5 rounded-full">
                       @{collab.username}
                     </span>
                   )}
                   {communityNames.map((n) => (
-                    <span key={n} className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                    <span key={n} className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
                       {n}
                     </span>
                   ))}
@@ -385,14 +385,14 @@ export default function CollaboratoreDetail({
 
       {/* ── Profile data ─────────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-xl p-5">
-        <h2 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-4">
+        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
           Anagrafica
         </h2>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
           {profileFields.map(([label, value]) =>
             value ? (
               <div key={label}>
-                <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
+                <dt className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
                   {label}
                 </dt>
                 <dd className="text-foreground text-sm">{value}</dd>
@@ -401,7 +401,7 @@ export default function CollaboratoreDetail({
           )}
           {!isResponsabileProfile && (
             <div>
-              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
+              <dt className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
                 Fiscalmente a carico
               </dt>
               <dd className="text-foreground text-sm">
@@ -411,7 +411,7 @@ export default function CollaboratoreDetail({
           )}
           {!isResponsabileProfile && collab.importo_lordo_massimale != null && (
             <div>
-              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
+              <dt className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-0.5">
                 Massimale lordo annuo
               </dt>
               <dd className="text-foreground text-sm">
@@ -421,13 +421,13 @@ export default function CollaboratoreDetail({
           )}
           {collab.citta && (
             <div>
-              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">Città</dt>
+              <dt className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-0.5">Città</dt>
               <dd className="text-foreground text-sm">{collab.citta}</dd>
             </div>
           )}
           {collab.materie_insegnate && collab.materie_insegnate.length > 0 && (
             <div>
-              <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-0.5">Materie insegnate</dt>
+              <dt className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-0.5">Materie insegnate</dt>
               <dd className="text-foreground text-sm">{collab.materie_insegnate.join(', ')}</dd>
             </div>
           )}
@@ -437,7 +437,7 @@ export default function CollaboratoreDetail({
       {/* ── Telegram (admin only) ────────────────────────────────────────── */}
       {role === 'amministrazione' && (
         <div className="bg-card border border-border rounded-xl p-5">
-          <h2 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-4">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
             Telegram
           </h2>
           <div className="flex items-center justify-between gap-4">
@@ -533,11 +533,11 @@ export default function CollaboratoreDetail({
                 Salva queste credenziali - la password non sarà più visibile dopo la chiusura.
               </p>
               <div>
-                <label className="block text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Email</label>
+                <label className="block text-xs text-muted-foreground uppercase tracking-wide mb-1">Email</label>
                 <code className="block text-sm text-foreground bg-muted px-3 py-2 rounded-md select-all">{resendCreds.email}</code>
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Password</label>
+                <label className="block text-xs text-muted-foreground uppercase tracking-wide mb-1">Password</label>
                 <code className="block text-sm text-foreground bg-muted px-3 py-2 rounded-md font-mono select-all">{resendCreds.password}</code>
               </div>
             </div>
@@ -558,18 +558,18 @@ export default function CollaboratoreDetail({
             {/* Nome + Cognome */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Nome</label>
+                <label className="block text-xs text-muted-foreground mb-1">Nome</label>
                 <Input value={fNome} onChange={(e) => setFNome(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Cognome</label>
+                <label className="block text-xs text-muted-foreground mb-1">Cognome</label>
                 <Input value={fCognome} onChange={(e) => setFCognome(e.target.value)} />
               </div>
             </div>
 
             {/* Username */}
             <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Username</label>
+              <label className="block text-xs text-muted-foreground mb-1">Username</label>
               <Input
                 value={fUsername}
                 onChange={(e) => setFUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
@@ -581,7 +581,7 @@ export default function CollaboratoreDetail({
 
             {/* Telefono */}
             <div>
-              <label className="block text-[11px] text-muted-foreground mb-1">Telefono</label>
+              <label className="block text-xs text-muted-foreground mb-1">Telefono</label>
               <Input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)} />
             </div>
 
@@ -589,7 +589,7 @@ export default function CollaboratoreDetail({
             {!isResponsabileProfile && (
               <>
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">Codice fiscale</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Codice fiscale</label>
                   <Input
                     value={fCF}
                     onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
@@ -600,17 +600,17 @@ export default function CollaboratoreDetail({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] text-muted-foreground mb-1">Data di nascita</label>
+                    <label className="block text-xs text-muted-foreground mb-1">Data di nascita</label>
                     <Input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)} />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-muted-foreground mb-1">Città di nascita</label>
+                    <label className="block text-xs text-muted-foreground mb-1">Città di nascita</label>
                     <Input value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)} />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">Provincia di nascita</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Provincia di nascita</label>
                   <Input
                     value={fProvinciaNascita}
                     onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
@@ -624,11 +624,11 @@ export default function CollaboratoreDetail({
             {/* Residenza */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Comune di residenza</label>
+                <label className="block text-xs text-muted-foreground mb-1">Comune di residenza</label>
                 <Input value={fComune} onChange={(e) => setFComune(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Provincia residenza</label>
+                <label className="block text-xs text-muted-foreground mb-1">Provincia residenza</label>
                 <Input
                   value={fProvinciaRes}
                   onChange={(e) => setFProvinciaRes(e.target.value.toUpperCase())}
@@ -640,11 +640,11 @@ export default function CollaboratoreDetail({
 
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className="block text-[11px] text-muted-foreground mb-1">Indirizzo</label>
+                <label className="block text-xs text-muted-foreground mb-1">Indirizzo</label>
                 <Input value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Civico</label>
+                <label className="block text-xs text-muted-foreground mb-1">Civico</label>
                 <Input value={fCivico} onChange={(e) => setFCivico(e.target.value)} maxLength={10} />
               </div>
             </div>
@@ -653,7 +653,7 @@ export default function CollaboratoreDetail({
             {!isResponsabileProfile && (
               <>
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">Taglia t-shirt</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Taglia t-shirt</label>
                   <Select value={fTshirt || undefined} onValueChange={setFTshirt}>
                     <SelectTrigger>
                       <SelectValue placeholder="— Non specificata —" />
@@ -675,7 +675,7 @@ export default function CollaboratoreDetail({
                 </label>
 
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">
+                  <label className="block text-xs text-muted-foreground mb-1">
                     Massimale lordo annuo (max €5.000)
                   </label>
                   <div className="relative">
@@ -698,7 +698,7 @@ export default function CollaboratoreDetail({
             {role === 'amministrazione' && (
               <>
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">
+                  <label className="block text-xs text-muted-foreground mb-1">
                     Intestatario del conto bancario
                   </label>
                   <Input
@@ -710,7 +710,7 @@ export default function CollaboratoreDetail({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">Città</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Città</label>
                   <Select value={fCitta || undefined} onValueChange={setFCitta}>
                     <SelectTrigger><SelectValue placeholder="— Seleziona città —" /></SelectTrigger>
                     <SelectContent>
@@ -722,7 +722,7 @@ export default function CollaboratoreDetail({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-muted-foreground mb-1">Materie insegnate</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Materie insegnate</label>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {materiaOptions.map((opt) => {
                       const active = fMaterieInsegnate.includes(opt.nome);
