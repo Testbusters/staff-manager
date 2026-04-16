@@ -82,9 +82,9 @@ export async function proxy(request: NextRequest) {
 
   // First-login forced password change
   if (profile.must_change_password) {
-    // Allow the change-password page itself and its API route through
+    // Allow the change-password page, API routes, and auth callback through
     const isChangePasswordApi = path.startsWith('/api/');
-    if (!isChangePasswordPage && !isChangePasswordApi) {
+    if (!isChangePasswordPage && !isChangePasswordApi && !isAuthRoute) {
       return createRedirect(new URL('/change-password', origin), supabaseResponse);
     }
     return supabaseResponse;

@@ -153,7 +153,7 @@ const FALLBACKS: Record<string, FallbackFn> = {
   E5: (d) => emailDocumentoDaFirmare({ nome: d.nome, titoloDocumento: d.titoloDocumento, data: d.data, link: d.link }),
   E6: (d) => emailNuovoInviato({ nomeResponsabile: d.nomeResponsabile, nomeCollaboratore: d.nomeCollaboratore, tipo: (d.tipo as 'Compenso' | 'Rimborso') ?? 'Compenso', importo: parseFloat(d.importo ?? '0'), community: d.community, data: d.data }),
   E7: (d) => emailNuovoTicket({ nomeResponsabile: d.nomeResponsabile, nomeCollaboratore: d.nomeCollaboratore, oggetto: d.oggetto, categoria: d.categoria, data: d.data }),
-  E8: (d) => emailInvito({ email: d.email, password: d.password, ruolo: d.ruolo }),
+  E8: (d) => emailInvito({ email: d.email, password: d.password, ruolo: d.ruolo, magicLink: d.link }),
   E9: (d) => emailRispostaTicket({ nome: d.nome, oggetto: d.oggetto, data: d.data }),
   E10: (d) => emailNuovaComunicazione({ nome: d.nome, titolo: d.titolo, data: d.data }),
   E11: (d) => emailNuovoEvento({ nome: d.nome, titolo: d.titolo, data: d.data }),
@@ -204,7 +204,9 @@ export async function getRenderedEmail(
     }
 
     // CTA link
-    const ctaHref = data.link ? `${APP_URL}${data.link}` : APP_URL;
+    const ctaHref = data.link
+      ? (data.link.startsWith('http') ? data.link : `${APP_URL}${data.link}`)
+      : APP_URL;
     parts.push(buildCtaButton(substituteMarkers(template.cta_label, data), layoutCfg.brand_color, ctaHref));
 
     const html = buildLayout(parts.join('\n'), layoutCfg);

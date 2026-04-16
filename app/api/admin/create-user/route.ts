@@ -116,6 +116,19 @@ export async function POST(request: Request) {
 
   const userId = newAuthUser.user.id;
 
+  // 1b. Generate magic link for invite email CTA
+  let magicLink: string | null = null;
+  try {
+    const { data: linkData } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo: `${process.env.APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+    });
+    magicLink = linkData?.properties?.action_link ?? null;
+  } catch {
+    // generateLink failed — fall back to password-only invite
+  }
+
   // 2. Create user_profiles row (onboarding_completed=false for new users)
   const { error: profileError } = await admin.from('user_profiles').insert({
     user_id: userId,
@@ -192,7 +205,7 @@ export async function POST(request: Request) {
   // 5. Send invitation email (await — track delivery status)
   let emailSent = false;
   try {
-    const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: role });
+    const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: role, ...(magicLink ? { link: magicLink } : {}) });
     const result = await sendEmail(email, subject, html);
     emailSent = result.success;
   } catch {
