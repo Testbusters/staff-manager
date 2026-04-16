@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { TicketStatus } from '@/lib/types';
@@ -9,6 +10,13 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+
+const CreateTicketSchema = z.object({
+  categoria: z.string().min(1),
+  oggetto: z.string().min(1),
+  messaggio: z.string().optional(),
+  priority: z.enum(['BASSA', 'NORMALE', 'ALTA']).optional(),
+});
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -80,19 +88,13 @@ export async function POST(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const { categoria, oggetto, messaggio, priority } = body as {
-    categoria: string;
-    oggetto: string;
-    messaggio?: string;
-    priority?: string;
-  };
-
-  if (!categoria?.trim() || !oggetto?.trim()) {
-    return NextResponse.json({ error: 'Categoria e oggetto sono obbligatori' }, { status: 400 });
+  const parsed = CreateTicketSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { categoria, oggetto, messaggio, priority } = parsed.data;
 
-  const VALID_PRIORITIES = ['BASSA', 'NORMALE', 'ALTA'];
-  const safePriority = priority && VALID_PRIORITIES.includes(priority) ? priority : 'NORMALE';
+  const safePriority = priority ?? 'NORMALE';
 
   const { data: ticket, error } = await supabase
     .from('tickets')

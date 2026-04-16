@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+
+const CreateCommunicationSchema = z.object({
+  titolo: z.string().min(1),
+  contenuto: z.string().min(1),
+  pinned: z.boolean().optional(),
+  community_ids: z.array(z.string()).optional(),
+  expires_at: z.string().nullable().optional(),
+  file_urls: z.array(z.string()).optional(),
+});
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -22,18 +32,11 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = body as {
-    titolo: string;
-    contenuto: string;
-    pinned?: boolean;
-    community_ids?: string[];
-    expires_at?: string | null;
-    file_urls?: string[];
-  };
-
-  if (!titolo?.trim() || !contenuto?.trim()) {
-    return NextResponse.json({ error: 'Titolo e contenuto sono obbligatori' }, { status: 400 });
+  const parsed = CreateCommunicationSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

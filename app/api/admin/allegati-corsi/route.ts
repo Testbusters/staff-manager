@@ -52,6 +52,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid tipo' }, { status: 400 });
   }
 
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
+
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

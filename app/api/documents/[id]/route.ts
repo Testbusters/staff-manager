@@ -139,6 +139,11 @@ export async function PATCH(
 
   if (!file) return NextResponse.json({ error: 'File obbligatorio' }, { status: 400 });
 
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
+
   // Determine collaborator user_id for storage path
   const collabData = Array.isArray(existingDoc.collaborators)
     ? (existingDoc.collaborators[0] as { user_id: string } | undefined) ?? null

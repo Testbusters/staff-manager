@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { isValidUUID } from '@/lib/validate-id';
 
 const VALID_TIPO = ['Volontariato', 'Formazione', 'Lavoro', 'Altro'];
+
+const PatchOpportunitySchema = z.object({
+  titolo: z.string().optional(),
+  tipo: z.enum(['Volontariato', 'Formazione', 'Lavoro', 'Altro']).optional(),
+  descrizione: z.string().optional(),
+  scadenza_candidatura: z.string().nullable().optional(),
+  link_candidatura: z.string().nullable().optional(),
+  file_url: z.string().nullable().optional(),
+  community_ids: z.array(z.string()).optional(),
+});
 
 async function authorizeAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -32,22 +43,14 @@ export async function PATCH(
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await request.json().catch(() => null);
+  const parsed = PatchOpportunitySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
-  } = body as {
-    titolo?: string;
-    tipo?: string;
-    descrizione?: string;
-    scadenza_candidatura?: string | null;
-    link_candidatura?: string | null;
-    file_url?: string | null;
-    community_ids?: string[];
-  };
-
-  if (tipo && !VALID_TIPO.includes(tipo)) {
-    return NextResponse.json({ error: 'Tipo non valido' }, { status: 400 });
-  }
+  } = parsed.data;
 
   const update: Record<string, unknown> = {};
   if (titolo !== undefined) update.titolo = titolo.trim();

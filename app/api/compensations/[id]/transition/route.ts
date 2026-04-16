@@ -78,7 +78,8 @@ export async function POST(
   // Validate transition
   const check = canTransition(role, currentStato, action as CompensationAction, note);
   if (!check.ok) {
-    return NextResponse.json({ error: check.reason }, { status: 403 });
+    const status = check.reason_code === 'state' ? 409 : 403;
+    return NextResponse.json({ error: check.reason }, { status });
   }
 
   const newStato = applyTransition(action as CompensationAction);

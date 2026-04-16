@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const body = await req.json();
   const parsed = CreateLezioneSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

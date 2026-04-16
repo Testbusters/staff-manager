@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const parsed = CreateBlacklistSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

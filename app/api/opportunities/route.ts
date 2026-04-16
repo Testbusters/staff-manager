@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
@@ -7,6 +8,16 @@ import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 
 const VALID_TIPO = ['Volontariato', 'Formazione', 'Lavoro', 'Altro'];
+
+const CreateOpportunitySchema = z.object({
+  titolo: z.string().min(1),
+  tipo: z.enum(['Volontariato', 'Formazione', 'Lavoro', 'Altro']).optional(),
+  descrizione: z.string().min(1),
+  scadenza_candidatura: z.string().optional(),
+  link_candidatura: z.string().optional(),
+  file_url: z.string().optional(),
+  community_ids: z.array(z.string()).optional(),
+});
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -24,24 +35,14 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
+  const parsed = CreateOpportunitySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
-  } = body as {
-    titolo: string;
-    tipo?: string;
-    descrizione: string;
-    scadenza_candidatura?: string;
-    link_candidatura?: string;
-    file_url?: string;
-    community_ids?: string[];
-  };
-
-  if (!titolo?.trim()) return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
-  if (!descrizione?.trim()) return NextResponse.json({ error: 'La descrizione è obbligatoria' }, { status: 400 });
-  if (tipo && !VALID_TIPO.includes(tipo)) {
-    return NextResponse.json({ error: 'Tipo non valido' }, { status: 400 });
-  }
+  } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

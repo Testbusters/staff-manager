@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { isValidUUID } from '@/lib/validate-id';
+
+const PatchCommunicationSchema = z.object({
+  titolo: z.string().optional(),
+  contenuto: z.string().optional(),
+  pinned: z.boolean().optional(),
+  community_ids: z.array(z.string()).optional(),
+  expires_at: z.string().nullable().optional(),
+  file_urls: z.array(z.string()).optional(),
+});
 
 async function authorizeAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,14 +40,11 @@ export async function PATCH(
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await request.json().catch(() => null);
-  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = body as {
-    titolo?: string;
-    contenuto?: string;
-    pinned?: boolean;
-    community_ids?: string[];
-    expires_at?: string | null;
-    file_urls?: string[];
-  };
+  const parsed = PatchCommunicationSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
+  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = parsed.data;
 
   const update: Record<string, unknown> = {};
   if (titolo !== undefined) update.titolo = titolo.trim();
