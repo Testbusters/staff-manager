@@ -161,9 +161,6 @@ export default function ProfileForm({ collaborator, role, email, community, comm
   // Avatar
   const [avatarUrl, setAvatarUrl] = useState(collaborator?.foto_profilo_url ?? '');
 
-  // Community is read-only for collaboratori — only admin can change it via /admin/collaboratori/[id]
-  const currentCommunityName = communities[0]?.name ?? null;
-
   // Activity — città + materie
   const [citta, setCitta]                   = useState(collaborator?.citta ?? '');
   const [materieInsegnate, setMaterieInsegnate] = useState<string[]>(collaborator?.materie_insegnate ?? []);
@@ -629,20 +626,6 @@ export default function ProfileForm({ collaborator, role, email, community, comm
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Community — read-only, not collapsible */}
-      {role === 'collaboratore' && (
-        <div className={sectionCls}>
-          <div className="px-5 py-4 border-b border-border">
-            <h2 className="text-sm font-medium text-foreground">Community</h2>
-          </div>
-          <div className="p-5">
-            <p className="text-sm text-foreground">
-              {currentCommunityName ?? <span className="text-muted-foreground">—</span>}
-            </p>
-          </div>
-        </div>
-      )}
 
       <Section title="Preferenze">
           <label className={labelCls}>Taglia t-shirt</label>
