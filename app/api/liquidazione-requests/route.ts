@@ -217,7 +217,7 @@ export async function GET() {
 
   const { data: requests, error } = await svc
     .from('liquidazione_requests')
-    .select('*')
+    .select('id, collaborator_id, compensation_ids, expense_ids, importo_netto_totale, iban, ha_partita_iva, stato, note_admin, processed_at, processed_by, created_at')
     .eq('stato', 'in_attesa')
     .order('created_at', { ascending: true });
 

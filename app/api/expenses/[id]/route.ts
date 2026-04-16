@@ -16,7 +16,7 @@ export async function GET(
 
   const { data: reimbursement, error } = await supabase
     .from('expense_reimbursements')
-    .select('*')
+    .select('id, collaborator_id, community_id, categoria, data_spesa, importo, descrizione, stato, approved_by, approved_at, rejection_note, liquidated_at, liquidated_by, payment_reference, receipt_document_id, created_at, updated_at')
     .eq('id', id)
     .single();
 
@@ -26,13 +26,13 @@ export async function GET(
 
   const { data: attachments } = await supabase
     .from('expense_attachments')
-    .select('*')
+    .select('id, reimbursement_id, file_url, file_name, created_at')
     .eq('reimbursement_id', id)
     .order('created_at', { ascending: true });
 
   const { data: history } = await supabase
     .from('expense_history')
-    .select('*')
+    .select('id, reimbursement_id, stato_precedente, stato_nuovo, changed_by, role_label, note, created_at')
     .eq('reimbursement_id', id)
     .order('created_at', { ascending: true });
 

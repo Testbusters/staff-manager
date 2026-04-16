@@ -24,7 +24,7 @@ export async function GET() {
 
   const { data, error } = await svc
     .from('email_templates')
-    .select('*')
+    .select('key, event_group, subject, body_before, highlight_rows, body_after, cta_label, description, created_at, updated_at')
     .order('event_group')
     .order('key');
 

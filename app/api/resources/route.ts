@@ -23,7 +23,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('resources')
-    .select('*')
+    .select('id, titolo, descrizione, link, file_url, tag, community_ids, categoria, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });

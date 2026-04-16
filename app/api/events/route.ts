@@ -34,7 +34,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('id, titolo, descrizione, start_datetime, end_datetime, location, luma_url, luma_embed_url, community_ids, tipo, file_url, citta, created_at, updated_at')
     .order('start_datetime', { ascending: true, nullsFirst: false });
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });

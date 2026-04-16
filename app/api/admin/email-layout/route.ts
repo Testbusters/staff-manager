@@ -35,7 +35,7 @@ export async function GET() {
 
   const { data, error } = await svc
     .from('email_layout_config')
-    .select('*')
+    .select('id, brand_color, logo_url, header_title, footer_address, footer_legal, created_at, updated_at')
     .limit(1)
     .single();
 
@@ -70,7 +70,7 @@ export async function PATCH(request: Request) {
     .from('email_layout_config')
     .update(updatePayload)
     .eq('id', existing.id)
-    .select('*')
+    .select('id, brand_color, logo_url, header_title, footer_address, footer_legal, created_at, updated_at')
     .single();
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });

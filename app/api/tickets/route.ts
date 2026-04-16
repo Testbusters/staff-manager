@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('tickets')
-    .select('*')
+    .select('id, creator_user_id, community_id, categoria, oggetto, stato, priority, created_at')
     .order('created_at', { ascending: false });
 
   if (statoFilter) query = query.eq('stato', statoFilter);

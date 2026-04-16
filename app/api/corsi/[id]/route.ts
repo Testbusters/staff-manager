@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const [{ data: corso, error }, { data: lezioni, error: lezioniError }] = await Promise.all([
     svc.from('corsi').select('*, community:communities(id, name)').eq('id', id).single(),
-    svc.from('lezioni').select('*').eq('corso_id', id).order('data').order('orario_inizio'),
+    svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, materie, created_at, updated_at').eq('corso_id', id).order('data').order('orario_inizio'),
   ]);
 
   if (error || !corso) return NextResponse.json({ error: 'Not found' }, { status: 404 });
