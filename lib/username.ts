@@ -27,8 +27,7 @@ export function generateUsername(nome: string, cognome: string): string {
  */
 export async function generateUniqueUsername(
   base: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  svc: any,
+  svc: import('@supabase/supabase-js').SupabaseClient,
   excludeId?: string,
 ): Promise<string> {
   if (!base) return '';

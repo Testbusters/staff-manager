@@ -67,16 +67,16 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | ~~A1~~ | ~~Notification utils/helpers duplication~~ — RESOLVED (facade) | ~~MEDIUM~~ | G5 |
 | ~~A2~~ | ~~Fire-and-forget email no failure log~~ — RESOLVED | ~~MEDIUM~~ | G5 |
 | S8 | `formatDate` and `formatCurrency` duplicated across 4+ components | LOW | G5 |
-| DEV-4 | `86400000` (ms/day) magic number repeated in 6 files | LOW | G5 |
+| ~~DEV-4~~ | ~~`86400000` (ms/day) magic number repeated in 6 files~~ — RESOLVED | ~~LOW~~ | G5 |
 | DEV-7 | Cross-module coupling: expense/ imports compensation/, responsabile/ imports admin/ | LOW | G5 |
-| DEV-9 | `lib/username.ts` uses `svc: any` instead of `SupabaseClient<any, any, any>` | LOW | G5 |
+| ~~DEV-9~~ | ~~`lib/username.ts` uses `svc: any` instead of `SupabaseClient<any, any, any>`~~ — RESOLVED | ~~LOW~~ | G5 |
 | DEV-10 | `pdf-utils.ts` uses `as any` for pdfjs-dist and pdf-lib types | LOW | G5 |
-| DEV-14 | `collaboratori/page.tsx` two parallel `Map<string, boolean>` - consolidate | LOW | G5 |
+| ~~DEV-14~~ | ~~`collaboratori/page.tsx` two parallel `Map<string, boolean>` - consolidate~~ — RESOLVED | ~~LOW~~ | G5 |
 | A3 | `createServiceClient()` instantiated per route (no singleton) | LOW | G5 |
 | A4 | RBAC logic scattered across React components | LOW | G5 |
 | T1 | `SupabaseClient<any, any, any>` in notification-helpers.ts | LOW | G5 |
-| T2 | `action as CompensationAction` cast without type guard | LOW | G5 |
-| T3 | `Record<string, unknown>` for updatePayload without narrowing | LOW | G5 |
+| ~~T2~~ | ~~`action as CompensationAction` cast without type guard~~ — RESOLVED (cast not found in codebase) | ~~LOW~~ | G5 |
+| ~~T3~~ | ~~`Record<string, unknown>` for updatePayload without narrowing~~ — RESOLVED (pattern not found in codebase) | ~~LOW~~ | G5 |
 | T4 | State machine action is not a discriminated union | LOW | G5 |
 | T5 | `tipo` column in documents is `text + CHECK` instead of PostgreSQL ENUM | LOW | G5 |
 | | **G6 - Performance** | | |
@@ -90,8 +90,8 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | P3 | `getNotificationSettings` called on every transition without cache | MEDIUM | G6 |
 | P4 | `getResponsabiliForCommunity` uses unoptimized triple join | MEDIUM | G6 |
 | P1 | `GET /api/compensations` join does not enrich collaborator name | LOW | G6 |
-| P2 | Index on `collaborators.user_id` not documented (auto-created by UNIQUE) | LOW | G6 |
-| PERF-8 | Bundle analyzer not configured | LOW | G6 |
+| ~~P2~~ | ~~Index on `collaborators.user_id` not documented (auto-created by UNIQUE)~~ — RESOLVED (already in db-map.md) | ~~LOW~~ | G6 |
+| ~~PERF-8~~ | ~~Bundle analyzer not configured~~ — RESOLVED (`@next/bundle-analyzer` + `ANALYZE=true`) | ~~LOW~~ | G6 |
 | DEV-11 | `GET /api/blacklist` has no pagination - unbounded query | LOW | G6 |
 | | **G7 - Tests** — ✅ ALL RESOLVED | | |
 | ~~TC5~~ | ~~No RLS test for `compensation_history` leakage~~ — RESOLVED | ~~HIGH~~ | G7 |
@@ -123,36 +123,36 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | ~~RESP-3~~ | ~~`/corsi/eventi-citta` events table overflows at 375px~~ — RESOLVED | ~~MEDIUM~~ | G9 |
 | VI-3 | Brand red netto values - verify APCA contrast against dark bg | LOW | G9 |
 | VI-4 | `/approvazioni` too many equally-weighted elements | LOW | G9 |
-| VI-5 | `/coda` icon-only action buttons rely on colour alone | LOW | G9 |
-| VI-6 | `/login` `pb-52` excessive empty space | LOW | G9 |
+| ~~VI-5~~ | ~~`/coda` icon-only action buttons rely on colour alone~~ — RESOLVED (aria-label already present) | ~~LOW~~ | G9 |
+| ~~VI-6~~ | ~~`/login` `pb-52` excessive empty space~~ — RESOLVED (pb-24) | ~~LOW~~ | G9 |
 | VI-7 | `/comunicazioni` with <=2 items feels sparse | LOW | G9 |
 | VI-9 | `/rimborsi/[id]` rejection note same visual weight as attachments | LOW | G9 |
 | ~~UX-3~~ | ~~HTML `required` triggers English browser tooltip - add `noValidate`~~ — RESOLVED | ~~LOW~~ | G9 |
-| UX-4 | CoCoD'a button hidden when no collabs - show disabled + tooltip | LOW | G9 |
+| ~~UX-4~~ | ~~CoCoD'a button hidden when no collabs - show disabled + tooltip~~ — RESOLVED | ~~LOW~~ | G9 |
 | UX-11 | `/profilo` required field markers inconsistent | LOW | G9 |
 | UX-12 | `/profilo` Sicurezza card visually disconnected | LOW | G9 |
-| UX-13 | `/profilo?tab=impostazioni` TelegramConnect: no spinner on loading | LOW | G9 |
+| ~~UX-13~~ | ~~`/profilo?tab=impostazioni` TelegramConnect: no spinner on loading~~ — RESOLVED | ~~LOW~~ | G9 |
 | UX1 | Ticket form validation: global toast only, no inline field errors | LOW | G9 |
 | UX2 | Tab switching pattern inconsistency across pages | LOW | G9 |
-| RESP-6 | `/corsi/valutazioni` table overflows 6px | LOW | G9 |
+| ~~RESP-6~~ | ~~`/corsi/valutazioni` table overflows 6px~~ — RESOLVED | ~~LOW~~ | G9 |
 | RESP-7 | Systemic: 28-36px touch targets below 44px WCAG minimum | LOW | G9 |
-| RESP-8 | `/notifiche` "Segna tutte come lette" clipped at 375px | LOW | G9 |
-| RESP-9 | `/corsi` "Allegato CoCoD'a" clipped at 375px | LOW | G9 |
-| UI1 | 6 bare `<p>` empty states - replace with `<EmptyState>` | LOW | G9 |
-| UI2 | 7 native `<button>` elements - replace with shadcn Button | LOW | G9 |
+| ~~RESP-8~~ | ~~`/notifiche` "Segna tutte come lette" clipped at 375px~~ — RESOLVED | ~~LOW~~ | G9 |
+| ~~RESP-9~~ | ~~`/corsi` "Allegato CoCoD'a" clipped at 375px~~ — RESOLVED (element not found in codebase) | ~~LOW~~ | G9 |
+| ~~UI1~~ | ~~6 bare `<p>` empty states - replace with `<EmptyState>`~~ — RESOLVED (all already use EmptyState) | ~~LOW~~ | G9 |
+| ~~UI2~~ | ~~7 native `<button>` elements - replace with shadcn Button~~ — RESOLVED (3/9: InfoTooltip+SignaturePad; 6 in MonitoraggioSection deferred to G8/S9) | ~~LOW~~ | G9 |
 | UI3 | Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files | LOW | G9 |
-| UI4 | `docs/ui-components.md` snippets use hardcoded dark classes instead of tokens | LOW | G9 |
-| C2 | Corsi page date display: cards use ISO, table rows use DD/MM/YYYY | LOW | G9 |
-| C3 | `AssegnazioneRespCittPage` uses native `<table>` instead of shadcn Table | LOW | G9 |
-| C4 | CoCoD'a toggle should show disabled + Tooltip when unavailable | LOW | G9 |
-| C5 | `/corsi` admin "Date" column truncated at 1280px | LOW | G9 |
-| C6 | `/corsi` admin "Apri" link barely visible in dark mode | LOW | G9 |
-| C7 | `/corsi/assegnazione` heading inconsistency + icon mismatch | LOW | G9 |
-| C8 | `/corsi/valutazioni` spinbox inputs lack "/10" range hint | LOW | G9 |
-| C9 | `/corsi/[id]` active tab competes visually with primary CTA | LOW | G9 |
-| C10 | `/corsi/nuovo` "Annulla" border invisible in light mode | LOW | G9 |
-| C11 | `/corsi` collab list shows duplicates for assigned collabs | LOW | G9 |
-| C12 | `/corsi/assegnazione` "Azioni" column header absent/inconsistent | LOW | G9 |
+| ~~UI4~~ | ~~`docs/ui-components.md` snippets use hardcoded dark classes instead of tokens~~ — RESOLVED | ~~LOW~~ | G9 |
+| ~~C2~~ | ~~Corsi page date display: cards use ISO, table rows use DD/MM/YYYY~~ — RESOLVED (already DD/MM/YYYY uniform) | ~~LOW~~ | G9 |
+| ~~C3~~ | ~~`AssegnazioneRespCittPage` uses native `<table>` instead of shadcn Table~~ — RESOLVED (already shadcn Table) | ~~LOW~~ | G9 |
+| ~~C4~~ | ~~CoCoD'a toggle should show disabled + Tooltip when unavailable~~ — RESOLVED (merged with UX-4) | ~~LOW~~ | G9 |
+| ~~C5~~ | ~~`/corsi` admin "Date" column truncated at 1280px~~ — RESOLVED (w-[205px]) | ~~LOW~~ | G9 |
+| ~~C6~~ | ~~`/corsi` admin "Apri" link barely visible in dark mode~~ — RESOLVED (already text-link token) | ~~LOW~~ | G9 |
+| ~~C7~~ | ~~`/corsi/assegnazione` heading inconsistency + icon mismatch~~ — RESOLVED (headings already consistent) | ~~LOW~~ | G9 |
+| ~~C8~~ | ~~`/corsi/valutazioni` spinbox inputs lack "/10" range hint~~ — RESOLVED | ~~LOW~~ | G9 |
+| ~~C9~~ | ~~`/corsi/[id]` active tab competes visually with primary CTA~~ — RESOLVED (bg-muted token) | ~~LOW~~ | G9 |
+| ~~C10~~ | ~~`/corsi/nuovo` "Annulla" border invisible in light mode~~ — RESOLVED (variant="outline" already correct) | ~~LOW~~ | G9 |
+| ~~C11~~ | ~~`/corsi` collab list shows duplicates for assigned collabs~~ — RESOLVED (no duplicates found in codebase) | ~~LOW~~ | G9 |
+| ~~C12~~ | ~~`/corsi/assegnazione` "Azioni" column header absent/inconsistent~~ — RESOLVED | ~~LOW~~ | G9 |
 
 ### Resolved archive
 
@@ -230,6 +230,34 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | C13 | `htmlFor`+`id` added to 25 label/input pairs in CorsoForm (17), LezioniTab (3), EventiCittaPage (5) | 2026-04-16 |
 | RESP-3 | EventiCittaPage table card: `w-fit` → `w-fit max-w-full` + `overflow-x-auto` (scrollable at 375px) | 2026-04-16 |
 | UX-3 | `noValidate` added to 6 forms with `required` inputs (CorsoForm, TicketQuickModal, CommunicationList, FeedbackButton, CreateUserForm, OnboardingWizard) | 2026-04-16 |
+| DEV-4 | `MS_PER_DAY` constant extracted to `lib/constants.ts`, imported in 5 files (7 replacements) | 2026-04-16 |
+| DEV-9 | `svc: any` → `svc: import('@supabase/supabase-js').SupabaseClient` in `lib/username.ts` | 2026-04-16 |
+| DEV-14 | Two parallel `Map<string, boolean>` consolidated into single `profileStatusMap` in `collaboratori/page.tsx` | 2026-04-16 |
+| T2 | Already resolved — `action as CompensationAction` cast not found in codebase (Zod infers type) | 2026-04-16 |
+| T3 | Already resolved — `Record<string, unknown>` updatePayload pattern not found in codebase | 2026-04-16 |
+| PERF-8 | `@next/bundle-analyzer` added to `next.config.ts` with `ANALYZE=true` env flag | 2026-04-16 |
+| P2 | Already resolved — `collaborators.user_id` UNIQUE index documented in `docs/db-map.md` | 2026-04-16 |
+| VI-5 | Already resolved — all icon-only buttons in `/coda` have `aria-label` attributes | 2026-04-16 |
+| VI-6 | `/login` `pb-52` → `pb-24` (reduced excessive whitespace) | 2026-04-16 |
+| UX-4 | CoCoD'a button: hidden → always visible disabled + Tooltip when no collabs available | 2026-04-16 |
+| UX-13 | `Loader2` spinner added to TelegramConnect connect/disconnect buttons during loading | 2026-04-16 |
+| RESP-6 | `/corsi/valutazioni` table wrapper: `overflow-hidden` → `max-w-full overflow-x-auto` | 2026-04-16 |
+| RESP-8 | `/notifiche` header: `flex-wrap` + `whitespace-nowrap` prevents "Segna tutte come lette" clipping | 2026-04-16 |
+| RESP-9 | Already resolved — "Allegato CoCoD'a" element not found in codebase (removed or never existed) | 2026-04-16 |
+| UI1 | Already resolved — all 6 reported bare `<p>` empty states already use `<EmptyState>` component | 2026-04-16 |
+| UI2 | 3 native `<button>` → shadcn `Button` (InfoTooltip, SignaturePad×2); 6 in MonitoraggioSection deferred to G8/S9 | 2026-04-16 |
+| UI4 | 4 hardcoded dark classes in `docs/ui-components.md` snippets replaced with semantic tokens | 2026-04-16 |
+| C2 | Already resolved — corsi dates uniformly use DD/MM/YYYY format | 2026-04-16 |
+| C3 | Already resolved — `AssegnazioneRespCittPage` already uses shadcn `Table` | 2026-04-16 |
+| C4 | Merged with UX-4 — CoCoD'a disabled+Tooltip pattern applied | 2026-04-16 |
+| C5 | `/corsi` admin date column: `w-[175px]` → `w-[205px]` prevents truncation at 1280px | 2026-04-16 |
+| C6 | Already resolved — "Apri" link uses `text-link` semantic token (dark mode safe) | 2026-04-16 |
+| C7 | Already resolved — `/corsi/assegnazione` headings already consistent across views | 2026-04-16 |
+| C8 | Valutazioni score inputs: wrapped in flex container with `/10` range hint label | 2026-04-16 |
+| C9 | `/corsi/[id]` active tab: `bg-brand text-white` → `bg-muted text-foreground` (no longer competes with primary CTA) | 2026-04-16 |
+| C10 | Already resolved — "Annulla" uses `variant="outline"` which renders correctly in both themes | 2026-04-16 |
+| C11 | Already resolved — no duplicate entries found in collab corsi list (dedup logic already present) | 2026-04-16 |
+| C12 | `/corsi/assegnazione` empty `<TableHead>` → `<TableHead>Azioni</TableHead>` for consistency | 2026-04-16 |
 
 ### Superseded / consolidated items
 

@@ -140,7 +140,7 @@ export default function NotificationPageClient() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 mt-0.5 shrink-0">
           <ButtonGroup>
             <Button
               variant={!unreadOnly ? 'default' : 'outline'}
@@ -164,7 +164,7 @@ export default function NotificationPageClient() {
               variant="ghost"
               size="sm"
               onClick={handleMarkAllRead}
-              className="text-xs text-link hover:text-link/80 h-auto p-0"
+              className="text-xs text-link hover:text-link/80 h-auto p-0 whitespace-nowrap"
             >
               Segna tutte come lette
             </Button>

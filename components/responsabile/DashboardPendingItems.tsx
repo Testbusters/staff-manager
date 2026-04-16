@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { EXPENSE_CATEGORIA_BADGE } from '@/lib/types';
+import { MS_PER_DAY } from '@/lib/constants';
 import type { ExpenseCategory } from '@/lib/types';
 import { Receipt, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -46,7 +47,7 @@ const COMP_COMPETENZA_BADGE: Record<string, string> = {
 };
 
 function formatAge(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / MS_PER_DAY);
   if (days === 0) return 'Oggi';
   if (days === 1) return '1g';
   return `${days}g`;

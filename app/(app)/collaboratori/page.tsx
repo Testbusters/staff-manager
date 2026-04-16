@@ -45,12 +45,10 @@ export default async function CollaboratoriPage({
     .eq('role', 'collaboratore');
 
   const collabUserIds: string[] = [];
-  const inviteEmailSentMap = new Map<string, boolean>();
-  const onboardingCompletedMap = new Map<string, boolean>();
+  const profileStatusMap = new Map<string, { inviteSent: boolean; onboardingDone: boolean }>();
   for (const p of (collabProfiles ?? []) as { user_id: string; invite_email_sent: boolean; onboarding_completed: boolean }[]) {
     collabUserIds.push(p.user_id);
-    inviteEmailSentMap.set(p.user_id, p.invite_email_sent);
-    onboardingCompletedMap.set(p.user_id, p.onboarding_completed);
+    profileStatusMap.set(p.user_id, { inviteSent: p.invite_email_sent, onboardingDone: p.onboarding_completed });
   }
 
   if (collabUserIds.length === 0) {
@@ -229,7 +227,7 @@ export default async function CollaboratoriPage({
 
                 {/* Mail invito */}
                 <div className="hidden lg:block w-24 shrink-0">
-                  {inviteEmailSentMap.get(c.user_id!) ? (
+                  {profileStatusMap.get(c.user_id!)?.inviteSent ? (
                     <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
                       Inviata
                     </span>
@@ -242,7 +240,7 @@ export default async function CollaboratoriPage({
 
                 {/* Attivazione profilo */}
                 <div className="hidden lg:block w-28 shrink-0">
-                  {onboardingCompletedMap.get(c.user_id!) ? (
+                  {profileStatusMap.get(c.user_id!)?.onboardingDone ? (
                     <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
                       Completato
                     </span>

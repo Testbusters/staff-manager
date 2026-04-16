@@ -190,11 +190,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 <TabsList className="h-auto bg-transparent p-0 gap-1">
   <TabsTrigger
     value="tab1"
-    className="group ... data-[state=active]:bg-gray-800 data-[state=active]:text-gray-100 ..."
+    className="group ... data-[state=active]:bg-muted data-[state=active]:text-foreground ..."
   >
     Label
     {/* Badge that reacts to active state via group variant */}
-    <span className="bg-gray-700 text-gray-400 group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-white ...">
+    <span className="bg-muted text-muted-foreground group-data-[state=active]:bg-blue-600 group-data-[state=active]:text-white ...">
       {count}
     </span>
   </TabsTrigger>
@@ -236,7 +236,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 <Avatar className="w-7 h-7">  {/* override default size-8 */}
   <AvatarImage src={avatarUrl ?? undefined} alt="" />
-  <AvatarFallback className="bg-gray-700 text-xs text-gray-300">
+  <AvatarFallback className="bg-muted text-xs text-muted-foreground">
     {name.charAt(0).toUpperCase()}
   </AvatarFallback>
 </Avatar>
@@ -313,7 +313,7 @@ const columns: ColumnDef<MyRow>[] = [
 ];
 
 // 2. Use DataTable
-<div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+<div className="rounded-xl bg-card border border-border overflow-hidden">
   <DataTable
     columns={columns}
     data={rows}

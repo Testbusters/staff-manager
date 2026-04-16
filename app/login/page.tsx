@@ -59,7 +59,7 @@ export default function LoginPage() {
   return (
     <>
       {/* Centered login block — test credentials excluded from flex flow */}
-      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4 pb-52">
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4 pb-24">
         <div className="w-full max-w-sm">
           {/* Logo / Title */}
           <div className="text-center mb-8">
