@@ -132,7 +132,7 @@ export default function NotificationBell() {
           {unread > 0 && (
             <span
               className="absolute top-0.5 right-0.5 min-w-[14px] h-3.5 flex items-center justify-center
-                         rounded-full bg-red-500 dark:bg-red-600 text-[9px] font-bold text-white px-0.5"
+                         rounded-full bg-red-500 dark:bg-red-600 text-[10px] font-bold text-white px-0.5"
             >
               {unread > 9 ? '9+' : unread}
             </span>
@@ -190,7 +190,7 @@ export default function NotificationBell() {
                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
                     )}
                     {badge && (
-                      <span className={`shrink-0 rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide ${badge.cls}`}>
+                      <span className={`shrink-0 rounded-full border px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide ${badge.cls}`}>
                         {badge.label}
                       </span>
                     )}
@@ -201,7 +201,7 @@ export default function NotificationBell() {
                   {n.messaggio && (
                     <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-1">{n.messaggio}</p>
                   )}
-                  <p className="text-[10px] text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
                 </div>
               );
 
@@ -226,7 +226,7 @@ export default function NotificationBell() {
         {/* Footer */}
         <div className="px-4 py-2.5 border-t border-border flex items-center gap-2">
           {notifications.length >= 50 && (
-            <span className="text-[10px] text-muted-foreground flex-1">
+            <span className="text-xs text-muted-foreground flex-1">
               Potrebbero esserci notifiche più vecchie
             </span>
           )}

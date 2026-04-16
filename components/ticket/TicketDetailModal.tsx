@@ -118,7 +118,7 @@ export default function TicketDetailModal({
           ) : (
             messages.map((m) => (
               <div key={m.id} className={`flex flex-col gap-0.5 ${m.is_own ? 'items-end' : 'items-start'}`}>
-                <span className="text-[11px] text-muted-foreground">{m.author_label}</span>
+                <span className="text-xs text-muted-foreground">{m.author_label}</span>
                 <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
                   m.is_own
                     ? 'bg-brand/20 border border-brand/30 rounded-tr-sm text-foreground'
@@ -136,7 +136,7 @@ export default function TicketDetailModal({
                     </a>
                   )}
                 </div>
-                <span className="text-[10px] text-muted-foreground">{formatTime(m.created_at)}</span>
+                <span className="text-xs text-muted-foreground">{formatTime(m.created_at)}</span>
               </div>
             ))
           )}

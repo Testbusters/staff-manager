@@ -80,11 +80,11 @@ export default function PendingApprovedList({
                 <span className="text-xs font-medium text-muted-foreground">Totale da ricevere</span>
                 <div className="flex items-center gap-6">
                   <div className="text-right hidden sm:block">
-                    <p className="text-[10px] text-muted-foreground mb-0.5">Lordo</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">Lordo</p>
                     <span className="text-sm font-semibold text-foreground tabular-nums">{fmt(totalLordo)}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground mb-0.5">Netto</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">Netto</p>
                     <span className="text-sm font-semibold text-amber-700 dark:text-amber-300 tabular-nums">{fmt(totalNetto)}</span>
                   </div>
                 </div>

@@ -154,9 +154,9 @@ export default function LezioniTabCollab({
               <TableHead>Materia</TableHead>
               <TableHead>Linea</TableHead>
               <TableHead>La tua partecipazione</TableHead>
-              <TableHead>Docente <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
+              <TableHead>Docente <span className="font-normal text-muted-foreground text-xs">(posti)</span></TableHead>
               {corsoModalita === 'online' && (
-                <TableHead>Q&amp;A <span className="font-normal text-muted-foreground text-[11px]">(posti)</span></TableHead>
+                <TableHead>Q&amp;A <span className="font-normal text-muted-foreground text-xs">(posti)</span></TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -207,7 +207,7 @@ export default function LezioniTabCollab({
                         onSubmit={() => submitCandidatura(lezione.id, 'docente_lezione')}
                         onWithdraw={() => setWithdrawTarget(candidaturaDocente)}
                       />
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {postiDocente}/{maxDocenti} assegnati
                       </p>
                     </div>
@@ -227,7 +227,7 @@ export default function LezioniTabCollab({
                           onSubmit={() => submitCandidatura(lezione.id, 'qa_lezione')}
                           onWithdraw={() => setWithdrawTarget(candidaturaQA)}
                         />
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {postiQA}/{maxQA} assegnati
                         </p>
                       </div>

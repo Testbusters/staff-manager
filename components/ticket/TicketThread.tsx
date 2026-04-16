@@ -88,7 +88,7 @@ export default function TicketThread({
 
                 {/* "Nuovo" badge */}
                 {isNew && (
-                  <span className="inline-block text-[10px] font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 dark:text-amber-400 dark:bg-amber-900/30 dark:border-amber-700/40">
+                  <span className="inline-block text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 dark:text-amber-400 dark:bg-amber-900/30 dark:border-amber-700/40">
                     Nuovo
                   </span>
                 )}

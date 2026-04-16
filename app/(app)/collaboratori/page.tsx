@@ -177,7 +177,7 @@ export default async function CollaboratoriPage({
                       {[c.nome, c.cognome].filter(Boolean).join(' ') || '—'}
                     </span>
                     {c.username && (
-                      <span className="text-[11px] font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-700/30 px-1.5 py-0.5 rounded-full">
+                      <span className="text-xs font-mono bg-indigo-950/60 text-indigo-300 border border-indigo-700/30 px-1.5 py-0.5 rounded-full">
                         @{c.username}
                       </span>
                     )}
@@ -194,7 +194,7 @@ export default async function CollaboratoriPage({
                 {/* Tipo contratto */}
                 <div className="w-28 shrink-0 hidden md:block">
                   {c.tipo_contratto ? (
-                    <span className="text-[10px] font-medium uppercase tracking-wide bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                    <span className="text-xs font-medium uppercase tracking-wide bg-muted text-muted-foreground px-2 py-0.5 rounded">
                       {c.tipo_contratto}
                     </span>
                   ) : (
@@ -217,7 +217,7 @@ export default async function CollaboratoriPage({
                     communities.map((name) => (
                       <span
                         key={name}
-                        className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full"
+                        className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full"
                       >
                         {name}
                       </span>
@@ -228,11 +228,11 @@ export default async function CollaboratoriPage({
                 {/* Mail invito */}
                 <div className="hidden lg:block w-24 shrink-0">
                   {profileStatusMap.get(c.user_id!)?.inviteSent ? (
-                    <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
                       Inviata
                     </span>
                   ) : (
-                    <span className="text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full">
                       Non inviata
                     </span>
                   )}
@@ -241,11 +241,11 @@ export default async function CollaboratoriPage({
                 {/* Attivazione profilo */}
                 <div className="hidden lg:block w-28 shrink-0">
                   {profileStatusMap.get(c.user_id!)?.onboardingDone ? (
-                    <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
                       Completato
                     </span>
                   ) : (
-                    <span className="text-[10px] font-medium bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
                       In attesa
                     </span>
                   )}

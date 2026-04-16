@@ -190,7 +190,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
           {DAY_LABELS.map((d, i) => (
             <div
               key={d}
-              className={`text-center text-[11px] uppercase tracking-wider font-medium py-1.5 ${
+              className={`text-center text-xs uppercase tracking-wider font-medium py-1.5 ${
                 i >= 5 ? 'text-muted-foreground/60' : 'text-muted-foreground'
               }`}
             >
@@ -236,7 +236,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                 {/* Day number */}
                 <div className="flex items-center justify-between mb-1">
                   {isToday ? (
-                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-brand text-white text-[11px] font-bold">
+                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-brand text-white text-xs font-bold">
                       {day}
                     </span>
                   ) : (
@@ -249,7 +249,7 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                     </span>
                   )}
                   {dayEntries.length > 3 && (
-                    <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
+                    <span className="text-xs text-muted-foreground font-medium tabular-nums">
                       +{dayEntries.length - 3}
                     </span>
                   )}
@@ -276,11 +276,11 @@ export default function CorsiCalendario({ entries }: { entries: CalEntry[] }) {
                       >
                         <div className="flex items-center gap-1">
                           <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${pill.dot}`} />
-                          <span className={`text-[11px] font-medium leading-none truncate ${pill.text}`}>
+                          <span className={`text-xs font-medium leading-none truncate ${pill.text}`}>
                             {e.corso_codice}
                           </span>
                         </div>
-                        <span className={`text-[10px] leading-none tabular-nums pl-2.5 ${pill.text} opacity-80`}>
+                        <span className={`text-xs leading-none tabular-nums pl-2.5 ${pill.text} opacity-80`}>
                           {ruoloLabel} · {e.orario_inizio.slice(0, 5)}-{e.orario_fine.slice(0, 5)}, {e.ore}h
                         </span>
                       </Link>

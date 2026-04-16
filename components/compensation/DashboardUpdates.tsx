@@ -53,7 +53,7 @@ const RES_BADGE_CLS    = 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue
 const OPP_BADGE_CLS    = 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/60 dark:text-indigo-300 dark:border-indigo-800/60';
 const DISC_BADGE_CLS   = 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/60';
 
-const BADGE_BASE = 'flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide';
+const BADGE_BASE = 'flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide';
 
 type Tab = { key: string; label: string };
 type UnreadCounts = { events: number; communicationsResources: number; opportunitiesDiscounts: number };
@@ -130,7 +130,7 @@ export default function DashboardUpdates({
               >
                 {tab.label}
                 {count > 0 && (
-                  <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white leading-none tabular-nums">
+                  <span className="rounded-full bg-brand px-1.5 py-0.5 text-xs font-bold text-white leading-none tabular-nums">
                     {count}
                   </span>
                 )}
@@ -163,7 +163,7 @@ export default function DashboardUpdates({
                   {new Date(doc.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
-              <span className="flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/60 dark:text-yellow-300 dark:border-yellow-800/60">
+              <span className="flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/60 dark:text-yellow-300 dark:border-yellow-800/60">
                 {DOCUMENT_TYPE_LABELS[doc.tipo]}
               </span>
               <span className="text-muted-foreground group-hover:text-foreground text-sm transition flex-shrink-0">→</span>
