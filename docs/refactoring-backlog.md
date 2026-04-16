@@ -18,9 +18,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | SEC1 | Temporary password returned in plain text by create-user API | HIGH | G3 |
 | SEC8 | `expenses` bucket missing - attachment uploads silently fail | HIGH | G3 |
 | SEC2 | Invite email does not include a direct link with token | MEDIUM | G3 |
-| SEC3 | No rate limiting on POST compensations/reimbursements | MEDIUM | G3 |
-| SEC4 | No rate limiting on create-user | MEDIUM | G3 |
-| SEC-NEW-8 | `POST /api/admin/collaboratori/[id]/resend-invite` no rate limiting | MEDIUM | G3 |
 | SEC-NEW-4 | 7 admin RLS `FOR ALL` policies lack explicit `WITH CHECK` | LOW | G3 |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW | G3 |
 | | **G4 - API Design** | | |
@@ -98,21 +95,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: MEDIUM
 - **Fix**: Use `supabase.auth.admin.generateLink({ type: 'magiclink', email })` to add a one-time link.
 
-### SEC3 — No rate limiting on POST compensations/reimbursements
-- **Problem**: Authenticated collaborator can submit unlimited requests.
-- **Files**: `app/api/compensations/route.ts`, `app/api/expenses/route.ts`
-- **Impact**: MEDIUM
-- **Fix**: Application-level check: max N compensations in IN_ATTESA per collaborator (e.g. 20).
-
-### SEC4 — No rate limiting on create-user
-- **Problem**: Compromised admin can create unlimited users.
-- **Files**: `app/api/admin/create-user/route.ts`
-- **Impact**: MEDIUM
-- **Fix**: Rate-limit per admin user (e.g. 10 users/hour) via middleware or DB check.
-
-### SEC-NEW-8 — No rate limiting on resend-invite
-- **Problem**: `POST /api/admin/collaboratori/[id]/resend-invite` has no rate limiting.
-- **Impact**: MEDIUM
 
 ### SEC-NEW-4 — Admin RLS `FOR ALL` policies lack explicit `WITH CHECK`
 - **Problem**: 7 admin-only `FOR ALL` policies omit `WITH CHECK`. Functionally equivalent but non-standard.
