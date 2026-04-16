@@ -80,13 +80,13 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | T4 | State machine action is not a discriminated union | LOW | G5 |
 | T5 | `tipo` column in documents is `text + CHECK` instead of PostgreSQL ENUM | LOW | G5 |
 | | **G6 - Performance** | | |
-| PERF-3 | Admin dashboard: sequential `adminCollab` fetch before 25-query `Promise.all` | MEDIUM | G6 |
-| PERF-4 | Collab dashboard: sequential collaborator + community fetch before parallel block | MEDIUM | G6 |
+| ~~PERF-3~~ | ~~Admin dashboard: sequential `adminCollab` fetch~~ — RESOLVED | ~~MEDIUM~~ | G6 |
+| ~~PERF-4~~ | ~~Collab dashboard: sequential community fetch~~ — RESOLVED | ~~MEDIUM~~ | G6 |
 | PERF-5 | N+1 `createSignedUrl` calls in export/import history (up to 50) | MEDIUM | G6 |
-| PERF-6 | 5 raw `<img>` without `width`/`height` - CLS risk | MEDIUM | G6 |
+| ~~PERF-6~~ | ~~Raw `<img>` without `width`/`height`~~ — RESOLVED (4/5 fixed, SignaturePad skipped) | ~~MEDIUM~~ | G6 |
 | PERF-7 | `select('*')` on 20+ API list routes - over-fetches large text columns | MEDIUM | G6 |
-| DB11 | N+1 DB calls in `bulk-approve` routes: sequential UPDATE per collaborator | MEDIUM | G6 |
-| DB12 | N+1 notification inserts in `liquidazione-requests` route | MEDIUM | G6 |
+| ~~DB11~~ | ~~N+1 bulk-approve UPDATE loop~~ — RESOLVED (Promise.all) | ~~MEDIUM~~ | G6 |
+| ~~DB12~~ | ~~N+1 notification inserts in liquidazione-requests~~ — RESOLVED (batch insert) | ~~MEDIUM~~ | G6 |
 | P3 | `getNotificationSettings` called on every transition without cache | MEDIUM | G6 |
 | P4 | `getResponsabiliForCommunity` uses unoptimized triple join | MEDIUM | G6 |
 | P1 | `GET /api/compensations` join does not enrich collaborator name | LOW | G6 |
@@ -217,6 +217,11 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | T6 | `UserProfile` interface extended with 5 missing fields (`is_active`, `member_status`, `onboarding_completed`, `invite_email_sent`, `must_change_password`) | 2026-04-16 |
 | A1 | `lib/notification-service.ts` re-export facade created — single import for all notification builders + helpers | 2026-04-16 |
 | A2 | `getRenderedEmail` bare `catch {}` replaced with `console.error` logging; `sendEmail` already logged errors | 2026-04-16 |
+| PERF-3 | `adminCollab` query moved into existing 25-query `Promise.all` (admin dashboard) | 2026-04-16 |
+| PERF-4 | `collaborator_communities` query moved into main `Promise.all` (collab dashboard) | 2026-04-16 |
+| PERF-6 | `width`/`height` added to 4/5 raw `<img>` tags (CLS fix); SignaturePad skipped (below-fold) | 2026-04-16 |
+| DB11 | Sequential YTD UPDATE loop → `Promise.all` in both bulk-approve routes | 2026-04-16 |
+| DB12 | N+1 notification INSERT → single batch `.insert(array)` in liquidazione-requests | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -592,17 +597,11 @@ Created `lib/notification-service.ts` re-export facade. Existing consumers can m
 - **Impact**: HIGH
 - **Fix**: Add `pageSize` + `page` pagination matching the API7 standard. Default page size: 50.
 
-### DB11 — N+1 DB calls in `bulk-approve` routes: sequential `UPDATE` per collaborator
-- **Problem**: Both `app/api/compensations/bulk-approve/route.ts` and `app/api/expenses/bulk-approve/route.ts` perform a sequential `await svc.from('collaborators').update(...)` inside a `for (const [collabId, delta] of deltaByCollab)` loop — one DB write per unique collaborator in the batch. For a 100-item bulk approve with 50 distinct collaborators: 50 sequential UPDATE round-trips instead of 1 batch update or RPC.
-- **Files**: `app/api/compensations/bulk-approve/route.ts:137-143`, `app/api/expenses/bulk-approve/route.ts:137-143`
-- **Impact**: MEDIUM (latency grows linearly with distinct collaborator count in the batch)
-- **Fix**: Replace the loop with an RPC `update_ytd_batch(deltas: {id, delta}[])` that does a single `UPDATE collaborators SET approved_lordo_ytd = approved_lordo_ytd + input.delta WHERE id = input.id` for all rows in one call. Alternatively: batch-build `CASE WHEN id = X THEN val ELSE approved_lordo_ytd END` update.
+### DB11 — RESOLVED (g6-performance, 2026-04-16)
+Sequential YTD UPDATE loop replaced with `Promise.all` in both bulk-approve routes.
 
-### DB12 — N+1 notification inserts in `liquidazione-requests` route
-- **Problem**: `app/api/liquidazione-requests/route.ts` calls `await svc.from('notifications').insert(...)` inside a `for (const adminId of adminUserIds)` loop — one sequential INSERT per admin. For N admins: N round-trips instead of 1 batch insert.
-- **Files**: `app/api/liquidazione-requests/route.ts:165-171`
-- **Impact**: MEDIUM (minor at current admin count; becomes measurable if admin count grows)
-- **Fix**: Collect all notification objects into an array and issue a single `.insert(notificationsArray)` call after the loop.
+### DB12 — RESOLVED (g6-performance, 2026-04-16)
+N+1 notification INSERT loop replaced with single batch `.insert(array)` call.
 
 ### DB13, DB14, DB15 — RESOLVED (see resolved archive)
 
@@ -674,19 +673,11 @@ Split: pure functions to `lib/email-preview-utils.ts` (client-safe), `import 'se
 
 ## PERF — Performance / Bundle
 
-### PERF-3 — Admin dashboard: sequential `adminCollab` fetch before parallel block
-- **Problem**: In the admin dashboard branch of `app/(app)/page.tsx` (line 576), `adminCollab` is fetched with a standalone `await svc.from('collaborators')...` before the 25-query `Promise.all` at line 589. These queries are fully independent — `adminCollab` is not used as an input to any query in the parallel block. This serialises ~50–100ms of DB latency on every admin page load.
-- **Files**: `app/(app)/page.tsx:576–580`, `app/(app)/page.tsx:589–711`
-- **Impact**: MEDIUM (~50–100ms added to admin dashboard TTFB on every request)
-- **Fix**: Include the `adminCollab` query in the existing `Promise.all` block as one additional entry. Add `{ data: adminCollab }` destructuring from the result.
-- **Discovered**: perf-audit 2026-03-27
+### PERF-3 — RESOLVED (g6-performance, 2026-04-16)
+`adminCollab` query moved into the existing 25-query `Promise.all` block.
 
-### PERF-4 — Collab dashboard: sequential collaborator + community fetch before main parallel block
-- **Problem**: In the collaboratore dashboard branch of `app/(app)/page.tsx`, `collaborator` is fetched at line 1023, then `collaborator_communities` is fetched at line 1031 using the collaborator's `id`. These two queries are run before the 10-query `Promise.all` at line 1057. The `collaborator` → `collaborator_communities` chain is inherently sequential (communities needs the collab ID), but the result (`userCommunityIds`) is only used for in-memory filtering after the parallel block — it is not used as a DB input to any of the 10 parallel queries. The community IDs could be derived from a JOIN or fetched without blocking the main block.
-- **Files**: `app/(app)/page.tsx:1023–1033`, `app/(app)/page.tsx:1057–1087`
-- **Impact**: MEDIUM (two sequential round trips before the main parallel block on every collab page load)
-- **Fix**: Restructure to run `collaborator` + all 10 queries in one `Promise.all`, then run `collaborator_communities` only if `collaborator?.id` is available. The community filtering can be applied to already-fetched data. Alternatively, use a Supabase RPC or join to fetch collaborator + communities in one query.
-- **Discovered**: perf-audit 2026-03-27
+### PERF-4 — RESOLVED (g6-performance, 2026-04-16)
+`collaborator_communities` query moved into the main 10-query `Promise.all` block. `collaborator` fetch remains sequential (needed for docsQuery).
 
 ### PERF-5 — N+1 signed URL generation in history routes
 - **Problem**: `GET /api/export/history` and `GET /api/import/history` use `Promise.all(rows.map(async (row) => createSignedUrl(...)))` — this fires one `createSignedUrl` per row, up to 50 calls per request. Each Supabase Storage signed URL call is a network round trip. For 50 records this is 50 concurrent network calls creating overhead on the storage service.
@@ -695,17 +686,8 @@ Split: pure functions to `lib/email-preview-utils.ts` (client-safe), `import 'se
 - **Fix**: Store the signed URL at upload time (valid for 1 year) and persist it, or use Supabase Storage batch signed URL API when available. Alternatively, generate signed URLs on-demand via a separate endpoint triggered by download button click.
 - **Discovered**: perf-audit 2026-03-27
 
-### PERF-6 — Raw `<img>` tags without dimensions (CLS risk)
-- **Problem**: 5 raw `<img>` tags lack explicit `width`/`height` attributes, causing the browser to reserve no layout space until the image loads. This produces Cumulative Layout Shift (CLS > 0.1 threshold) on pages where these images appear above the fold.
-- **Files**:
-  - `app/(app)/page.tsx:287` — responsabile cittadino hero avatar
-  - `app/(app)/page.tsx:1367` — collaboratore dashboard avatar
-  - `app/(app)/sconti/[id]/page.tsx:80` — discount logo
-  - `components/responsabile/ResponsabileAvatarHero.tsx:46` — hero avatar
-  - `components/documents/SignaturePad.tsx:95` — signature preview (lower priority — below fold)
-- **Impact**: MEDIUM (CLS metric degradation on dashboard hero sections)
-- **Fix**: Replace with Next.js `<Image>` component with `fill` prop and a `relative`-positioned parent div of fixed dimensions for avatar use cases. For the discount logo, add explicit `width` and `height` props or use `<Image>` with known dimensions.
-- **Discovered**: perf-audit 2026-03-27
+### PERF-6 — RESOLVED (g6-performance, 2026-04-16)
+Added `width`/`height` to 4 of 5 raw `<img>` tags. SignaturePad skipped (below-fold, dynamic data URL).
 
 ### PERF-7 — `select('*')` on 20+ API list routes
 - **Problem**: 20+ API routes use `.select('*')` on tables that include large text columns. For list endpoints, this over-fetches all columns even when only a subset is displayed in the UI.
