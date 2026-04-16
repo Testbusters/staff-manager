@@ -45,13 +45,13 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | DB9 | `GET /api/compensations` and `GET /api/expenses` fully unbounded - no pagination | HIGH | G4 |
 | DB10 | `GET /api/tickets` fully unbounded - no pagination | HIGH | G4 |
 | S5 | mark-paid operation not atomic (no transaction) | HIGH | G4 |
-| API2 | `canTransition` failure returns 403 for both permission and state-conflict | MEDIUM | G4 |
-| API3 | State conflicts returning 400 instead of 409 in 4+ routes | MEDIUM | G4 |
-| API6 | 8 content/ticket write routes lack Zod validation (supersedes S4, SEC15) | MEDIUM | G4 |
-| API9 | Inconsistent Zod error shape in 8 routes (`{ error: [ZodIssue] }` vs standard) | MEDIUM | G4 |
-| API12 | `POST /api/auth/change-password` silently discards `flagErr` | MEDIUM | G4 |
-| API-4 | `ImportResult.summary.errors` field name shadows `{ error }` failure key | MEDIUM | G4 |
-| S7 | No `file.size` check before Buffer upload | MEDIUM | G4 |
+| ~~API2~~ | ~~`canTransition` 403 for state conflicts~~ — RESOLVED | ~~MEDIUM~~ | G4 |
+| ~~API3~~ | ~~State conflicts 400→409~~ — RESOLVED (already 409) | ~~MEDIUM~~ | G4 |
+| ~~API6~~ | ~~content/ticket write routes lack Zod~~ — RESOLVED (13 routes) | ~~MEDIUM~~ | G4 |
+| ~~API9~~ | ~~Inconsistent Zod error shape~~ — RESOLVED (6 occurrences) | ~~MEDIUM~~ | G4 |
+| ~~API12~~ | ~~change-password silently discards flagErr~~ — RESOLVED | ~~MEDIUM~~ | G4 |
+| ~~API-4~~ | ~~summary.errors field name~~ — RESOLVED (already errorCount) | ~~MEDIUM~~ | G4 |
+| ~~S7~~ | ~~No file.size check before upload~~ — RESOLVED (6 routes) | ~~MEDIUM~~ | G4 |
 | API4 | `expenses` route: collection key `expenses` vs create key `reimbursement` | LOW | G4 |
 | API5 | Duplicate bulk-action routes with inverted naming convention | LOW | G4 |
 | API7 | No unified pagination contract across endpoints | LOW | G4 |
@@ -202,6 +202,13 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | SEC-NEW-3 | UUID validation added to all 40 dynamic route handlers via shared `isValidUUID()` helper | 2026-04-16 |
 | SEC16 | Already resolved in migration 062 — `WITH CHECK (user_id = auth.uid())` | 2026-04-16 |
 | SEC-17 | Telegram webhook TOCTOU fixed — atomic `UPDATE WHERE used_at IS NULL` replaces SELECT+UPDATE | 2026-04-16 |
+| API2 | `TransitionResult.reason_code` added — state conflicts return 409, role failures stay 403 | 2026-04-16 |
+| API3 | Already 409 in all 5 state-conflict routes (documents/sign, tickets/messages, approve-bulk ×2, onboarding/complete) | 2026-04-16 |
+| API6 | Zod schema added to 13 content/ticket write routes (POST+PATCH for tickets, opportunities, communications, resources, events, discounts) | 2026-04-16 |
+| API9 | Zod error shape fixed in 5 corsi/blacklist files (6 occurrences: `{error: issues}` → `{error, issues}`) | 2026-04-16 |
+| API12 | `flagErr` now logged server-side + `warning` field returned in response | 2026-04-16 |
+| API-4 | Already renamed to `summary.errorCount` in prior block | 2026-04-16 |
+| S7 | `file.size` pre-check added to 6 upload routes (10MB docs, 50MB batch ZIP, 2MB CSV) | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -295,11 +302,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Impact**: LOW
 - **Fix**: Replace all `.like('tipo', '...')` filters with `.eq('macro_type', '...')`.
 
-### S7 — No `file.size` check before Buffer upload
-- **Problem**: Upload routes do not validate file size before converting to Buffer. The bucket has a 10 MB policy but the check happens after the server has already read the full body.
-- **Files**: `app/api/documents/route.ts:128-137`, `app/api/tickets/[id]/messages/route.ts:77-95`
-- **Impact**: MEDIUM
-- **Fix**: Add `if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: 'File too large' }, { status: 413 })` before the upload.
+### S7 — ~~No file.size check before upload~~ — RESOLVED (6 routes, see resolved archive)
 
 ### S8 — `formatDate` and `formatCurrency` duplicated across 4+ components
 - **Problem**: `formatDate` (toLocaleDateString it-IT DD/MM/YYYY) and `formatCurrency` (Intl.NumberFormat EUR) are defined locally in `CompensationList.tsx`, `ExpenseList.tsx`, `PendingApprovedList.tsx`, `PendingApprovedExpenseList.tsx`, and others. Changing the format requires updating all of them.
@@ -526,25 +529,9 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ### API1 — RESOLVED (see resolved archive)
 
-### API2 — `canTransition` failure returns 403 for both permission and state-conflict cases
-- **Problem**: `POST /api/compensations/[id]/transition` and `POST /api/expenses/[id]/transition` pass all `canTransition` failures to the client with `status: 403`. However, `canTransition` can fail for two distinct reasons:
-  1. The caller's **role** is not allowed for the action → 403 (correct)
-  2. The record's **current state** does not permit the transition (e.g. approving an already-APPROVATO record) → should be 409 (state conflict), not 403
-  Currently both cases return 403, making it impossible for clients to distinguish "you can never do this" from "you can do this, but not right now".
-- **Files**: `app/api/compensations/[id]/transition/route.ts:79`, `app/api/expenses/[id]/transition/route.ts:74`, `lib/compensation-transitions.ts:canTransition`, `lib/transitions.ts:canTransition`
-- **Impact**: MEDIUM
-- **Fix**: Enrich the `TransitionResult` type with a `reason_code` field (`'role' | 'state'`) and map to the correct status code in the route handler: `reason_code === 'role'` → 403, `reason_code === 'state'` → 409.
+### API2 — ~~`canTransition` 403 for state conflicts~~ — RESOLVED (see resolved archive)
 
-### API3 — State conflicts returning 400 instead of 409 in 4+ routes
-- **Problem**: RFC 9110 defines 409 Conflict as the correct code for "the request conflicts with the current state of the resource". The following routes return 400 for conditions that are clearly state conflicts:
-  1. `POST /api/documents/[id]/sign` line 37: `Il documento non è in stato DA_FIRMARE` → should be 409
-  2. `POST /api/tickets/[id]/messages` line 62: `Il ticket è chiuso` → should be 409
-  3. `POST /api/compensations/approve-bulk` line 54: `Alcuni compensi selezionati non sono in stato IN_ATTESA` → should be 409
-  4. `POST /api/expenses/approve-bulk` line 54: same pattern → should be 409
-  5. `POST /api/onboarding/complete` line 53: `Onboarding già completato` → should be 409
-- **Files**: listed above
-- **Impact**: MEDIUM — clients using status codes to drive UI behavior (retry logic, "try again later" vs "bad request") will show wrong UX
-- **Fix**: Change each listed status to 409. No logic change needed.
+### API3 — ~~State conflicts 400→409~~ — RESOLVED (already 409 in all 5 routes, see resolved archive)
 
 ### API4 — `expenses` route: collection key is `expenses`, create response key is `reimbursement`
 - **Problem**: `GET /api/expenses` returns `{ expenses: [] }` (using the route segment name). `POST /api/expenses` returns `{ reimbursement }` (using the domain name). The same entity has two different wrapper keys within the same route file. The documented project pattern (CLAUDE.md memory) explicitly notes this: `GET /api/expenses/[id]` returns `{ reimbursement }`, not `{ expense }`. The inconsistency exists at the collection level too.
@@ -562,19 +549,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Impact**: LOW — currently the correct endpoint is called; risk is in future maintenance
 - **Fix**: Rename to communicate caller/purpose: `bulk-approve-resp` + `bulk-approve-admin` (or `/api/compensations/batch` with a `scope` body field). Update frontend fetch calls in `ApprovazioniRimborsi.tsx`, `CodaCompensazioni.tsx`, `CodaRimborsi.tsx`.
 
-### API6 — 8 content and ticket write routes lack Zod validation
-- **Problem**: The following POST/PATCH routes do not use Zod `safeParse` — they either manually check individual fields with `if (!field)` or use TypeScript `as` casts without runtime validation. Missing Zod means: (1) unexpected field types reach the DB without sanitization, (2) error responses are inconsistent (some return Italian strings, some return nothing), (3) no `.issues` array available for client-side field-level error display.
-  - `POST /api/tickets` — manual `if (!categoria?.trim() || !oggetto?.trim())`
-  - `PATCH /api/tickets/[id]/status` — manual `if (!stato || !VALID_STATI.includes(stato))`
-  - `POST /api/tickets/[id]/messages` — no validation (just null check on `message`)
-  - `POST /api/opportunities` — manual field checks
-  - `POST /api/communications` — manual field checks
-  - `POST/PATCH /api/resources` — manual field checks
-  - `POST/PATCH /api/events` — manual field checks
-  - `POST/PATCH /api/discounts` — manual field checks
-- **Files**: listed above
-- **Impact**: MEDIUM — supersedes and extends S4/SEC15 which listed 6 routes; this entry adds the content routes
-- **Fix**: Add Zod schema + `safeParse` to each route. Return `{ error: 'Validation failed', issues: result.error.issues }` on failure. Coordinate with S4 resolution.
+### API6 — ~~content/ticket write routes lack Zod~~ — RESOLVED (13 routes, see resolved archive)
 
 ### API7 — No unified pagination contract across paginated collection endpoints
 - **Problem**: Two paginated collection endpoints use different parameter and response naming:
@@ -591,11 +566,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Impact**: LOW — no current client checks the status code; affects future client consistency
 - **Fix**: Change final return to `NextResponse.json({ email, password }, { status: 201 })`.
 
-### API9 — Inconsistent Zod validation error shape in 8 routes
-- **Problem**: The project standard for Zod validation failures is `{ error: 'Dati non validi', issues: result.error.issues }` (used in 20+ routes: `expenses`, `liquidazione-requests`, `compensations`, etc.). Eight routes wrap the issues array directly in the `error` key: `{ error: parsed.error.issues }` — an array where a string is expected. Client code that reads `data.error` as a string to display will receive `[object Object]` or `[...]`. The affected routes are all in the corsi domain plus `admin/blacklist`.
-- **Files**: `app/api/corsi/route.ts:86`, `app/api/corsi/[id]/route.ts:78,87`, `app/api/corsi/[id]/lezioni/route.ts:53`, `app/api/corsi/[id]/lezioni/[lid]/route.ts:36`, `app/api/admin/blacklist/route.ts:62`
-- **Impact**: MEDIUM — client error display shows `[object Object]` for validation failures in corsi/blacklist routes
-- **Fix**: Replace `{ error: parsed.error.issues }` with `{ error: 'Dati non validi', issues: parsed.error.issues }` in all 6 files listed above.
+### API9 — ~~Inconsistent Zod error shape~~ — RESOLVED (6 occurrences in 5 files, see resolved archive)
 
 ---
 
