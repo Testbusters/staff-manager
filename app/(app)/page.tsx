@@ -284,7 +284,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-4">
           {ownCollab?.foto_profilo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={ownCollab.foto_profilo_url} alt="avatar" className="h-12 w-12 rounded-full object-cover" />
+            <img src={ownCollab.foto_profilo_url} alt="avatar" width={48} height={48} className="h-12 w-12 rounded-full object-cover" />
           ) : (
             <div className="h-12 w-12 rounded-full bg-brand/20 flex items-center justify-center text-brand font-semibold text-lg">
               {nome.charAt(0).toUpperCase()}
@@ -583,21 +583,15 @@ export default async function DashboardPage() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    // Fetch admin's own collaborator record (may not exist for admin-only accounts)
-    const { data: adminCollab } = await svc
-      .from('collaborators')
-      .select('nome, cognome, foto_profilo_url, data_ingresso')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
     const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
     const stalledThreshold = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Parallel fetches
+    // Parallel fetches (adminCollab included — independent of all other queries)
     const [
+      adminCollabRes,
       compsInAttesaRes,
       expsInAttesaRes,
       compsApprovatoRes,
@@ -628,6 +622,11 @@ export default async function DashboardPage() {
       mustChangePwdRes,
       onboardingIncompleteRes,
     ] = await Promise.all([
+      // Admin's own collaborator record (may not exist for admin-only accounts)
+      svc.from('collaborators')
+        .select('nome, cognome, foto_profilo_url, data_ingresso')
+        .eq('user_id', user.id)
+        .maybeSingle(),
       // comps IN_ATTESA (da approvare)
       svc.from('compensations').select('importo_netto')
         .eq('stato', 'IN_ATTESA'),
@@ -1033,10 +1032,10 @@ export default async function DashboardPage() {
       blockItems,
       corsiKpi,
       hero: {
-        nome:            adminCollab?.nome ?? null,
-        cognome:         adminCollab?.cognome ?? null,
-        foto_profilo_url: adminCollab?.foto_profilo_url ?? null,
-        data_ingresso:   adminCollab?.data_ingresso ?? null,
+        nome:            adminCollabRes.data?.nome ?? null,
+        cognome:         adminCollabRes.data?.cognome ?? null,
+        foto_profilo_url: adminCollabRes.data?.foto_profilo_url ?? null,
+        data_ingresso:   adminCollabRes.data?.data_ingresso ?? null,
         roleLabel:       ROLE_LABELS['amministrazione'],
       },
     };
@@ -1044,20 +1043,14 @@ export default async function DashboardPage() {
     return <AdminDashboard data={dashData} />;
   }
 
-  // Fetch collaborator record
+  // Fetch collaborator record (needed for docs query and community lookup)
   const { data: collaborator } = await supabase
     .from('collaborators')
     .select('id, nome, cognome, iban, codice_fiscale, importo_lordo_massimale, approved_lordo_ytd, approved_year, foto_profilo_url, data_ingresso, materie_insegnate, citta')
     .eq('user_id', user.id)
     .single();
 
-  // Fetch user's community IDs for content filtering
-  const { data: collabComms } = collaborator?.id
-    ? await supabase.from('collaborator_communities').select('community_id').eq('collaborator_id', collaborator.id)
-    : { data: null };
-  const userCommunityIds: string[] = (collabComms ?? []).map((r: { community_id: string }) => r.community_id);
-
-  // Parallel main fetches
+  // Parallel main fetches (community IDs included — only used for in-memory filtering after)
   const docsQuery = collaborator
     ? supabase.from('documents')
         .select('id, titolo, tipo, created_at')
@@ -1065,6 +1058,10 @@ export default async function DashboardPage() {
         .eq('stato_firma', 'DA_FIRMARE')
         .order('created_at', { ascending: false })
     : Promise.resolve({ data: null as DashboardDocItem[] | null, error: null });
+
+  const collabCommsQuery = collaborator?.id
+    ? supabase.from('collaborator_communities').select('community_id').eq('collaborator_id', collaborator.id)
+    : Promise.resolve({ data: null as { community_id: string }[] | null, error: null });
 
   const nowIso = new Date().toISOString();
 
@@ -1079,6 +1076,7 @@ export default async function DashboardPage() {
     { data: dashOpps },
     { data: dashDiscounts },
     { data: unreadNotifs },
+    { data: collabComms },
   ] = await Promise.all([
     supabase.from('compensations').select('id, stato, importo_netto, importo_lordo, liquidated_at'),
     supabase.from('expense_reimbursements').select('id, stato, importo, liquidated_at'),
@@ -1109,7 +1107,9 @@ export default async function DashboardPage() {
       .select('entity_type')
       .eq('read', false)
       .in('entity_type', ['event', 'communication', 'opportunity', 'discount']),
+    collabCommsQuery,
   ]);
+  const userCommunityIds: string[] = (collabComms ?? []).map((r: { community_id: string }) => r.community_id);
 
   // Derive IDs for second-tier queries
   const openTickets   = (allTickets ?? []).filter((t: { id: string; oggetto: string; stato: string; priority: string }) => t.stato !== 'CHIUSO');
@@ -1389,7 +1389,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-accent flex-shrink-0 overflow-hidden flex items-center justify-center">
             {collaborator?.foto_profilo_url ? (
-              <img src={collaborator.foto_profilo_url} alt="" className="w-full h-full object-cover" />
+              <img src={collaborator.foto_profilo_url} alt="" width={56} height={56} className="w-full h-full object-cover" />
             ) : (
               <span className="text-lg font-medium text-foreground select-none">{initials}</span>
             )}

@@ -77,7 +77,7 @@ export default async function DiscountDetailPage({
       {d.logo_url && (
         <div className="flex items-center justify-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={d.logo_url} alt={d.fornitore || d.titolo} className="h-12 object-contain rounded" />
+          <img src={d.logo_url} alt={d.fornitore || d.titolo} width={120} height={48} className="h-12 object-contain rounded" />
         </div>
       )}
 

@@ -43,7 +43,7 @@ export default function ResponsabileAvatarHero({
         <div className="relative group flex-shrink-0">
           <div className="w-14 h-14 rounded-full bg-accent overflow-hidden flex items-center justify-center ring-1 ring-border">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              <img src={avatarUrl} alt="" width={56} height={56} className="w-full h-full object-cover" />
             ) : (
               <span className="text-lg font-medium text-foreground select-none">{initials}</span>
             )}

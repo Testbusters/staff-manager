@@ -134,15 +134,18 @@ export async function POST(request: Request) {
         );
       }
     }
-    for (const [collabId, delta] of deltaByCollab) {
-      const collab = collabMap.get(collabId);
-      const currentYtd = collab ? getYtd(collab) : 0;
-      const { error: ytdErr } = await svc.from('collaborators').update({
-        approved_lordo_ytd: currentYtd + delta,
-        approved_year: year,
-      }).eq('id', collabId);
-      if (ytdErr) errors.push(`ytd update failed for ${collabId}: ${ytdErr.message}`);
-    }
+    const ytdResults = await Promise.all(
+      Array.from(deltaByCollab, ([collabId, delta]) => {
+        const collab = collabMap.get(collabId);
+        const currentYtd = collab ? getYtd(collab) : 0;
+        return svc.from('collaborators').update({
+          approved_lordo_ytd: currentYtd + delta,
+          approved_year: year,
+        }).eq('id', collabId).then(({ error }) => {
+          if (error) errors.push(`ytd update failed for ${collabId}: ${error.message}`);
+        });
+      }),
+    );
   }
 
   return NextResponse.json({ approved: allowedIds, blocked, errors });
