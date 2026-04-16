@@ -162,13 +162,14 @@ export async function POST(request: Request) {
       const nRecord = compensation_ids.length + expense_ids.length;
       const collabNome = `${collab.nome ?? ''} ${collab.cognome ?? ''}`.trim();
 
-      for (const adminId of adminUserIds) {
-        // In-app notification
-        await svc.from('notifications').insert(
-          buildLiquidazioneRequestNotification('created', adminId, newRequest.id, importo_netto_totale),
-        );
+      // Batch insert all notifications in one call
+      const notifRows = adminUserIds.map((adminId) =>
+        buildLiquidazioneRequestNotification('created', adminId, newRequest.id, importo_netto_totale),
+      );
+      await svc.from('notifications').insert(notifRows);
 
-        // Email
+      // Emails (fire-and-forget per admin)
+      for (const adminId of adminUserIds) {
         const adminEmail = emailMap[adminId];
         if (adminEmail) {
           const adminName = collabMap[adminId]
