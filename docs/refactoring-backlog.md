@@ -55,7 +55,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | N5 | Italian PostgreSQL enum values - translate to English | LOW | G8 |
 | | **G9 - UI/UX** | | |
 | UX-2 | Form validation inconsistency: 1 form uses RHF+Zod, 30+ use useState+toast | MEDIUM | G9 |
-| UX-10 | `/profilo` 15+ fields, no sticky save button or collapsible sections | MEDIUM | G9 |
 | VI-3 | Brand red netto values - verify APCA contrast against dark bg | LOW | G9 |
 | VI-4 | `/approvazioni` too many equally-weighted elements | LOW | G9 |
 | VI-7 | `/comunicazioni` with <=2 items feels sparse | LOW | G9 |
@@ -223,9 +222,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: LOW urgency, HIGH risk (enum value renames irreversible in PostgreSQL)
 
 ### UX-2 — Form validation: 1 RHF+Zod vs 30+ useState+toast
-- **Impact**: MEDIUM
-
-### UX-10 — `/profilo` 15+ fields, no sticky save or collapsible sections
 - **Impact**: MEDIUM
 
 ### VI-3 — Brand red netto values - APCA contrast check
