@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import SignatureCanvas, { type SignatureCanvasHandle } from './SignatureCanvas';
 
 interface Props {
@@ -56,12 +57,12 @@ export default function SignaturePad({ onSignatureReady, onClear }: Props) {
     <div className="space-y-3">
       {/* Tab switcher */}
       <div className="flex gap-1 rounded-lg bg-muted p-1">
-        <button type="button" onClick={() => handleTabSwitch('draw')} className={tabCls('draw')}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleTabSwitch('draw')} className={tabCls('draw')}>
           Disegna firma
-        </button>
-        <button type="button" onClick={() => handleTabSwitch('upload')} className={tabCls('upload')}>
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleTabSwitch('upload')} className={tabCls('upload')}>
           Carica immagine
-        </button>
+        </Button>
       </div>
 
       {tab === 'draw' && (

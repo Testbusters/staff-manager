@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getCorsoStato, CORSO_STATO_BADGE } from '@/lib/corsi-utils';
 import { CORSO_STATO_LABELS } from '@/lib/types';
 import type { CorsoStato, Lezione } from '@/lib/types';
@@ -626,8 +627,8 @@ export default function AssegnazioneRespCittPage({
                     <TableHead className="text-xs">Nome</TableHead>
                     <TableHead className="text-xs w-[90px]">Modalità</TableHead>
                     <TableHead className="text-xs w-[120px]">Stato</TableHead>
-                    <TableHead className="text-xs w-[175px]">Date</TableHead>
-                    <TableHead className="text-xs w-[195px]"></TableHead>
+                    <TableHead className="text-xs w-[205px]">Date</TableHead>
+                    <TableHead className="text-xs w-[195px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -781,16 +782,26 @@ export default function AssegnazioneRespCittPage({
                         <Download className="h-3 w-3" />
                         Export
                       </Button>
-                      {canExpand && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 gap-1"
-                          onClick={() => setExpandedCorsoId(isExpanded ? null : corso.id)}
-                        >
-                          {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                          CoCoD&apos;à
-                        </Button>
+                      {hasLezioni && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span tabIndex={!hasCollabs ? 0 : undefined}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 gap-1"
+                                disabled={!hasCollabs}
+                                onClick={() => setExpandedCorsoId(isExpanded ? null : corso.id)}
+                              >
+                                {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                CoCoD&apos;à
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {!hasCollabs && (
+                            <TooltipContent>Nessun collaboratore disponibile per CoCoD&apos;à</TooltipContent>
+                          )}
+                        </Tooltip>
                       )}
                       {hasLezioni && hasCollabs && showQASection && (
                         <Button

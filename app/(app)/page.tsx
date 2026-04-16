@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { ROLE_LABELS } from '@/lib/types';
+import { MS_PER_DAY } from '@/lib/constants';
 import type { Role } from '@/lib/types';
 import DashboardTicketSection from '@/components/responsabile/DashboardTicketSection';
 import RKpiCard from '@/components/responsabile/RKpiCard';
@@ -979,7 +980,7 @@ export default async function DashboardPage() {
       id: string; stato: string; created_at: string; collaborator_id: string; community_id: string;
     }[]) {
       const collab = collabMap.get(c.collaborator_id);
-      const days = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000);
+      const days = Math.floor((Date.now() - new Date(c.created_at).getTime()) / MS_PER_DAY);
       blockItems.push({
         key: `stall-comp-${c.id}`,
         blockType: 'stalled_comp',
@@ -997,7 +998,7 @@ export default async function DashboardPage() {
       id: string; stato: string; created_at: string; collaborator_id: string; community_id: string;
     }[]) {
       const collab = collabMap.get(e.collaborator_id);
-      const days = Math.floor((Date.now() - new Date(e.created_at).getTime()) / 86400000);
+      const days = Math.floor((Date.now() - new Date(e.created_at).getTime()) / MS_PER_DAY);
       blockItems.push({
         key: `stall-exp-${e.id}`,
         blockType: 'stalled_exp',

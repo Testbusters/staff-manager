@@ -4,6 +4,7 @@ import TicketStatusBadge from './TicketStatusBadge';
 import type { TicketStatus } from '@/lib/types';
 import { TICKET_PRIORITY_LABELS } from '@/lib/types';
 import type { TicketPriority } from '@/lib/types';
+import { MS_PER_DAY } from '@/lib/constants';
 
 function formatAge(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -11,7 +12,7 @@ function formatAge(iso: string): string {
   if (mins < 60) return `${mins}m fa`;
   const hours = Math.floor(diffMs / 3600000);
   if (hours < 24) return `${hours}h fa`;
-  const days = Math.floor(diffMs / 86400000);
+  const days = Math.floor(diffMs / MS_PER_DAY);
   return `${days}g fa`;
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TelegramConnectProps {
@@ -69,6 +70,7 @@ export default function TelegramConnect({ telegram_connected }: TelegramConnectP
           onClick={handleDisconnect}
           disabled={loading}
         >
+          {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {loading ? 'In corso...' : 'Disconnetti Telegram'}
         </Button>
       ) : (
@@ -78,6 +80,7 @@ export default function TelegramConnect({ telegram_connected }: TelegramConnectP
           onClick={handleConnect}
           disabled={loading}
         >
+          {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {loading ? 'In corso...' : 'Connetti Telegram'}
         </Button>
       )}
