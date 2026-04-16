@@ -5,6 +5,8 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 075 | `075_filter_column_indexes.sql` | 2026-04-16 | DB8: CREATE INDEX on `compensations(data_competenza)`, `expense_reimbursements(data_spesa)`, `tickets(last_message_at DESC NULLS LAST)`. Three frequently filtered/sorted columns. Rollback in migration header. |
+| 074 | `074_rls_to_authenticated.sql` | 2026-04-16 | DB4: ALTER POLICY TO authenticated on all 98 public-schema policies with roles={public}. Defense-in-depth: anon role can no longer access any table even if proxy session check is bypassed. Dynamic DO block approach. Staging verified: 112/112 policies now {authenticated}, 0 {public}. Rollback in migration header. |
 | 073 | `073_community_id_fk_indexes.sql` | 2026-04-16 | DB13+DB14+DB15: CREATE INDEX on `tickets(community_id)`, `corsi(community_id)`, `documents(community_id)`. All three FK columns to `communities.id` were unindexed. Staging verified: 3 new indexes. Rollback in migration header. |
 | 072 | `072_drop_redundant_telegram_unique.sql` | 2026-04-16 | DB-NEW-9: DROP CONSTRAINT `collaborators_telegram_chat_id_key` (full UNIQUE). Keeps partial UNIQUE index `collaborators_telegram_chat_id_idx` (WHERE telegram_chat_id IS NOT NULL). Redundancy from migration 066 which created both. Staging verified: 1 index remaining (partial). Rollback in migration header. |
 | 071 | `071_expense_attachments_reimbursement_id_idx.sql` | 2026-04-15 | DB-NEW-8: CREATE INDEX `idx_expense_attachments_reimbursement_id` on `expense_attachments (reimbursement_id)`. Rationale: FK was unindexed, every join and cascade delete required full sequential scan. Staging verified: 2 indexes now (pkey + new FK idx). Rollback in migration header. |

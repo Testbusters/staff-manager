@@ -23,10 +23,7 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 
 | ID | Title | Impact | Group |
 |----|--------|---------|-------|
-| | **G2 - DB Schema (migrations only)** | | |
-| DB4 | All 90+ RLS policies lack explicit `TO` clause (all `{public}`) | MEDIUM | G2 |
-| DB8 | Missing filter indexes on `data_competenza`, `last_message_at`, `data_spesa` | LOW | G2 |
-| DB16 | `tickets.creator_user_id ON DELETE NO ACTION` - orphaned tickets risk | LOW | G2 |
+| | **G2 - DB Schema (migrations only)** — ✅ ALL RESOLVED | | |
 | | **G3 - Security Code** | | |
 | SEC1 | Temporary password returned in plain text by create-user API | HIGH | G3 |
 | SEC8 | `expenses` bucket missing - attachment uploads silently fail | HIGH | G3 |
@@ -196,6 +193,9 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | DB13 | `CREATE INDEX tickets_community_id_idx ON tickets(community_id)` — migration 073 | 2026-04-16 |
 | DB14 | `CREATE INDEX corsi_community_id_idx ON corsi(community_id)` — migration 073 | 2026-04-16 |
 | DB15 | `CREATE INDEX documents_community_id_idx ON documents(community_id)` — migration 073 | 2026-04-16 |
+| DB4 | `ALTER POLICY ... TO authenticated` on all 98 public-schema policies — migration 074. Defense-in-depth: anon blocked at DB level. | 2026-04-16 |
+| DB8 | 3 filter indexes: `compensations(data_competenza)`, `expense_reimbursements(data_spesa)`, `tickets(last_message_at)` — migration 075 | 2026-04-16 |
+| DB16 | Mitigated by design — `ON DELETE NO ACTION` already prevents orphaned tickets; `member_status` deactivation flow makes user deletion unnecessary. No migration needed. | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -617,24 +617,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ### DB3 — RESOLVED (mitigated by design — see resolved archive)
 
-### DB4 — All 90+ RLS policies lack explicit `TO` clause (all `{public}`)
-- **Problem**: Query `S4C` confirmed that all 90+ RLS policies in the `public` schema have `roles = '{public}'`, meaning they apply to ALL roles including the `anon` role. Since the app uses `authenticated` sessions only, the `anon` role should never access any data. The current setup adds overhead: every anonymous request to any table triggers policy evaluation. It also increases the attack surface if a misconfigured route bypasses session checks.
-- **Files**: All RLS migration files.
-- **Impact**: MEDIUM (defense-in-depth gap; minor performance overhead on anon requests)
-- **Fix**: Add `TO authenticated` to every policy that targets logged-in users. For insert-only policies (like `app_errors_insert`, `feedback_insert`) that are intentionally open: explicitly document the choice. Migration pattern: `ALTER POLICY policy_name ON table_name TO authenticated USING (...) WITH CHECK (...)`.
-
-### DB5, DB6, DB7 — RESOLVED (see resolved archive)
-
-### DB8 — Missing filter indexes on `compensations.data_competenza`, `tickets.last_message_at`
-- **Problem**: `db-map.md` documents these as known gaps. `compensations.data_competenza` is used in date-range filters during export (admin Coda lavoro). `tickets.last_message_at` is used for recency ordering in the ticket list. Both columns are queried without an index, causing full table scans as data grows. `expense_reimbursements.data_spesa` already has NOT NULL + a btree-friendly type but no index.
-- **Files**: No migration — missing indexes.
-- **Impact**: LOW (currently low row counts; becomes Medium at >5000 rows)
-- **Fix**:
-  ```sql
-  CREATE INDEX compensations_data_competenza_idx ON compensations(data_competenza);
-  CREATE INDEX tickets_last_message_at_idx ON tickets(last_message_at DESC NULLS LAST);
-  CREATE INDEX er_data_spesa_idx ON expense_reimbursements(data_spesa);
-  ```
+### DB4, DB5, DB6, DB7, DB8 — RESOLVED (see resolved archive)
 
 ### DB9 — Unbounded `GET /api/compensations` and `GET /api/expenses` list endpoints
 - **Problem**: `GET /api/compensations` and `GET /api/expenses` select ALL records for the authenticated user (filtered by RLS) with no `.limit()` or pagination. A collaborator with 500 compensations causes 500 rows to be serialized and sent on every page load. An admin query (no RLS filter) would return the entire table. API7 notes the broader pagination gap — this entry specifically flags these two as the highest-risk collection endpoints due to their state machine usage patterns.
@@ -662,12 +645,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ### DB13, DB14, DB15 — RESOLVED (see resolved archive)
 
-### DB16 — `tickets.creator_user_id ON DELETE NO ACTION` — orphaned tickets risk
-- **Problem**: The FK `tickets.creator_user_id → auth.users` uses `ON DELETE NO ACTION`. If an auth user is deleted (e.g. admin deactivates + removes account), their tickets remain with a dangling `creator_user_id` that no longer resolves. The ticket_messages, notifications, and community joins based on this FK become logically orphaned.
-- **Files**: `supabase/migrations/` — alter FK
-- **Impact**: LOW (user deletion is rare; member_status flow softly deactivates before hard delete)
-- **Fix**: Change to `ON DELETE SET NULL` and make `creator_user_id` nullable, or add `ON DELETE RESTRICT` to prevent user deletion while tickets exist.
-- **Discovered**: skill-db audit 2026-03-27
+### DB16 — RESOLVED (mitigated by design — see resolved archive)
 
 ### DB-NEW-1..9 — RESOLVED (see resolved archive)
 

@@ -461,6 +461,23 @@ Rimborsi:  IN_ATTESA → APPROVATO → LIQUIDATO  /  ↘ RIFIUTATO
 
 ---
 
+## G2 DB Schema Cleanup — Batch DB4+DB8+DB16 ✅
+
+> Closes remaining G2 backlog items. No code changes — migrations and design mitigation only.
+
+| Sub-block | Status | Notes |
+|---|---|---|
+| DB4 — RLS TO authenticated | ✅ | Migration 074: dynamic ALTER POLICY on all 98 `{public}` policies → `TO authenticated`. Defense-in-depth: blocks anon DB access even if proxy session check is bypassed. |
+| DB8 — Filter column indexes | ✅ | Migration 075: `compensations.data_competenza`, `expense_reimbursements.data_spesa`, `tickets.last_message_at DESC NULLS LAST`. Accelerates date-range filters, ordering, recency sorts. |
+| DB16 — Orphaned tickets FK | ✅ | Mitigated by design: `ON DELETE NO ACTION` already prevents parent deletion; `member_status` deactivation flow never hard-deletes auth users. No migration needed. |
+
+### Log
+| Date | Files | Test results | Notes |
+|---|---|---|---|
+| 2026-04-16 | 2 new migrations (074, 075), docs updates | N/A (migration-only) | G2 group fully resolved. All items: DB-NEW-1..9, DB3, DB4, DB8, DB13-15, DB16 closed. |
+
+---
+
 ## Legend
 
 | Symbol | Meaning |

@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `073_community_id_fk_indexes.sql` (2026-04-16).
+> Last synced: migration `075_filter_column_indexes.sql` (2026-04-16).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -216,16 +216,18 @@ tickets
 | `ticket_messages` | `ticket_messages_ticket_id_idx` | btree | FK — added migration 063 |
 | `corsi` | `corsi_community_id_idx` | btree | FK — added migration 073 |
 | `documents` | `documents_community_id_idx` | btree | FK — added migration 073 |
+| `compensations` | `compensations_data_competenza_idx` | btree | date-range filter — added migration 075 |
+| `expense_reimbursements` | `er_data_spesa_idx` | btree | date-range filter — added migration 075 |
+| `tickets` | `tickets_last_message_at_idx` | btree (DESC NULLS LAST) | recency sort — added migration 075 |
 
 **Missing indexes (potential gaps — lower priority):**
-- `compensations.data_competenza` — used in date-range filters in export
-- `expense_reimbursements.data_spesa` — used in filters
 - `notifications.created_at` — used for ordering in bell + page
-- `tickets.updated_at` / `last_message_at` — used for recency sort
 
 ---
 
 ## RLS Summary
+
+> **All RLS policies** on public-schema tables use `TO authenticated` (migration 074). No policy grants access to the `anon` role.
 
 | Table | Roles with access | Pattern |
 |---|---|---|
