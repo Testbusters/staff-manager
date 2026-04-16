@@ -44,7 +44,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | T4 | State machine action is not a discriminated union | LOW | G5 |
 | T5 | `tipo` column in documents is `text + CHECK` instead of PostgreSQL ENUM | LOW | G5 |
 | | **G8 - Large Refactors** | | |
-| DEV-6 | `CodaCompensazioni` (862L) and `CodaRimborsi` (868L): 5+ responsibilities | MEDIUM | G8 |
 | B2 | Inconsistent naming: table `expense_reimbursements`, TS `Expense`, FK `reimbursement_id` | MEDIUM | G8 |
 | S1 | `CreateUserForm.tsx` too large (409L) | LOW | G8 |
 | S2 | `CollaboratoreDetail.tsx` too large (474L) | LOW | G8 |
@@ -190,10 +189,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 
 ### T5 — `tipo` column in documents is `text + CHECK` instead of ENUM
 - **Impact**: LOW
-
-### DEV-6 — `CodaCompensazioni` (862L) + `CodaRimborsi` (868L)
-- **Fix**: Extract `BulkActionBar`, `RejectDialog`, `SectionTable`, `useBulkActions` hook.
-- **Impact**: MEDIUM
 
 ### B2 — Inconsistent naming: expense_reimbursements / Expense / reimbursement_id
 - **Fix**: Standardize on `expense_reimbursements`; rename FK `reimbursement_id` → `expense_id`.
