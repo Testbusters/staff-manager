@@ -127,16 +127,18 @@ export default async function ExpenseDetailPage({
           role={role}
         />
 
-        {historyForTimeline.length > 0 && (
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
-                Cronologia
-              </p>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              Cronologia
+            </p>
+            {historyForTimeline.length > 0 ? (
               <Timeline events={historyForTimeline} />
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-sm text-muted-foreground">Nessuna attività registrata.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
