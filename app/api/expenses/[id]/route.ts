@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isValidUUID } from '@/lib/validate-id';
 
 export async function GET(
   _request: Request,
@@ -11,6 +12,7 @@ export async function GET(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { data: reimbursement, error } = await supabase
     .from('expense_reimbursements')
@@ -61,6 +63,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   // RLS ensures the responsabile can only see reimbursements of their community collaborators
   const { data: reimbursement, error: fetchError } = await supabase

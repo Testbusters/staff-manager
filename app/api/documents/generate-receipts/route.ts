@@ -249,7 +249,8 @@ export async function POST(request: Request) {
   }, settings, communityName);
 
   if (error || !document_id) {
-    return NextResponse.json({ error: error ?? 'Errore generazione ricevuta' }, { status: 500 });
+    if (error) console.error('[generate-receipts] error:', error);
+    return NextResponse.json({ error: 'Errore generazione ricevuta' }, { status: 500 });
   }
 
   // Link receipt to this single item

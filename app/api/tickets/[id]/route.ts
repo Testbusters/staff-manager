@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
+import { isValidUUID } from '@/lib/validate-id';
 
 const BUCKET = 'tickets';
 const SIGNED_URL_TTL = 60 * 60; // 1 hour
@@ -12,6 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();

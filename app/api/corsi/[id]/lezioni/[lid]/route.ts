@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { isValidUUID } from '@/lib/validate-id';
 
 const PatchLezioneSchema = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -30,7 +31,9 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { lid } = await params;
+  const { id, lid } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
+  if (!isValidUUID(lid)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const body = await req.json();
   const parsed = PatchLezioneSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
@@ -52,7 +55,9 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { lid } = await params;
+  const { id, lid } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
+  if (!isValidUUID(lid)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

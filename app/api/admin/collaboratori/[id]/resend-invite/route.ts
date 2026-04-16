@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { generatePassword } from '@/lib/password';
+import { isValidUUID } from '@/lib/validate-id';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 

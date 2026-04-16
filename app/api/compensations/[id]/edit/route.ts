@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
+import { isValidUUID } from '@/lib/validate-id';
 
 const editSchema = z.object({
   importo_lordo: z.number().positive('Importo lordo deve essere positivo'),
@@ -47,6 +48,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   // Fetch current compensation (RLS filters access)
   const { data: comp, error: fetchError } = await supabase

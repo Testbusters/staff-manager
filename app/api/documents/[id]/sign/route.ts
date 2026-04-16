@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings } from '@/lib/notification-helpers';
+import { isValidUUID } from '@/lib/validate-id';
 
 export async function POST(
   request: Request,
@@ -24,6 +25,7 @@ export async function POST(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   // Verify document exists, belongs to caller, and is DA_FIRMARE (RLS enforced)
   const { data: doc, error: fetchError } = await supabase
@@ -69,7 +71,10 @@ export async function POST(
       upsert: true,
     });
 
-  if (uploadErr) return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+  if (uploadErr) {
+    console.error('[documents/sign] upload error:', uploadErr.message);
+    return NextResponse.json({ error: 'Errore upload documento' }, { status: 500 });
+  }
 
   const now = new Date().toISOString();
 

@@ -11,6 +11,7 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { isValidUUID } from '@/lib/validate-id';
 
 const BUCKET = 'tickets';
 
@@ -19,6 +20,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: ticketId } = await params;
+  if (!isValidUUID(ticketId)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -87,7 +89,8 @@ export async function POST(
       });
 
     if (uploadErr) {
-      return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+      console.error('[ticket-messages] upload error:', uploadErr.message);
+      return NextResponse.json({ error: 'Errore upload allegato' }, { status: 500 });
     }
 
     attachment_url = storagePath;

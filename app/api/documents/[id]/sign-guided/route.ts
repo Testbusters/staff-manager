@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings } from '@/lib/notification-helpers';
 import { fillPdfMarkers } from '@/lib/pdf-utils';
 import { buildSignedStoragePath } from '@/lib/documents-storage';
+import { isValidUUID } from '@/lib/validate-id';
 
 export async function POST(
   request: Request,
@@ -29,6 +30,7 @@ export async function POST(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { data: doc, error: fetchError } = await supabase
     .from('documents')
@@ -81,7 +83,8 @@ export async function POST(
     .upload(storagePath, signedPdf, { contentType: 'application/pdf', upsert: true });
 
   if (uploadErr) {
-    return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+    console.error('[documents/sign-guided] upload error:', uploadErr.message);
+    return NextResponse.json({ error: 'Errore upload documento' }, { status: 500 });
   }
 
   const now = new Date().toISOString();

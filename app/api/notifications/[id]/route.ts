@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isValidUUID } from '@/lib/validate-id';
 
 // PATCH /api/notifications/[id] — mark single notification as read
 export async function PATCH(
@@ -12,6 +13,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { error } = await supabase
     .from('notifications')
@@ -35,6 +37,7 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { error } = await supabase
     .from('notifications')

@@ -18,6 +18,7 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { isValidUUID } from '@/lib/validate-id';
 
 const transitionSchema = z.object({
   action: z.enum([
@@ -48,6 +49,7 @@ export async function POST(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const role = profile.role as Role;
 
   const { data: expense, error: fetchError } = await supabase

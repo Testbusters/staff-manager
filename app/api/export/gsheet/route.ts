@@ -98,8 +98,8 @@ export async function POST() {
   try {
     await writeExportRows(rows.map(toGSheetRow));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Google Sheets error: ${msg}` }, { status: 500 });
+    console.error('[export/gsheet] Google Sheets error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Errore esportazione Google Sheets' }, { status: 500 });
   }
 
   const now = new Date().toISOString();
