@@ -24,7 +24,6 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | ID | Title | Impact | Group |
 |----|--------|---------|-------|
 | | **G2 - DB Schema (migrations only)** | | |
-| DB-NEW-9 | `collaborators.telegram_chat_id` redundant double UNIQUE - drop full, keep partial | MEDIUM | G2 |
 | DB3 | 39 RLS policies use bare `auth.uid()` - per-row function evaluation | MEDIUM | G2 |
 | DB4 | All 90+ RLS policies lack explicit `TO` clause (all `{public}`) | MEDIUM | G2 |
 | DB13 | `tickets.community_id` FK unindexed | MEDIUM | G2 |
@@ -196,6 +195,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | DB-NEW-6 | `CHECK (importo > 0)` on expense_reimbursements — migration 070 | 2026-04-15 |
 | DB-NEW-7 | `CHECK (ritenuta_acconto BETWEEN 0 AND 100)` on compensations — migration 070 | 2026-04-15 |
 | DB-NEW-8 | `CREATE INDEX idx_expense_attachments_reimbursement_id ON expense_attachments(reimbursement_id)` — migration 071 | 2026-04-15 |
+| DB-NEW-9 | `DROP CONSTRAINT collaborators_telegram_chat_id_key` (redundant full UNIQUE; partial idx kept) — migration 072 | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -692,7 +692,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Fix**: Change to `ON DELETE SET NULL` and make `creator_user_id` nullable, or add `ON DELETE RESTRICT` to prevent user deletion while tickets exist.
 - **Discovered**: skill-db audit 2026-03-27
 
-### DB-NEW-1..8 — RESOLVED (see resolved archive)
+### DB-NEW-1..9 — RESOLVED (see resolved archive)
 
 ---
 
