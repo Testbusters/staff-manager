@@ -48,6 +48,10 @@ export async function POST(request: Request) {
     .update({ must_change_password: false })
     .eq('user_id', user.id);
 
+  if (flagErr) {
+    console.error('[change-password] failed to clear must_change_password flag:', flagErr.message);
+  }
+
   // Return email so the client can re-sign-in (password change invalidates the JWT)
-  return NextResponse.json({ ok: true, email: user.email });
+  return NextResponse.json({ ok: true, email: user.email, warning: flagErr ? 'Flag not cleared' : undefined });
 }

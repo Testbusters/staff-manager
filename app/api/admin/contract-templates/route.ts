@@ -59,6 +59,11 @@ export async function POST(request: Request) {
   }
   if (!file) return NextResponse.json({ error: 'File mancante' }, { status: 400 });
 
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
+
   const mimeType = file.type;
   if (mimeType !== 'application/pdf') {
     return NextResponse.json({ error: 'Solo file PDF supportati' }, { status: 400 });

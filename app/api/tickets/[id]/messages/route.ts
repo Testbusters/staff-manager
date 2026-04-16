@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import {
   buildTicketReplyNotification,
   buildTicketCollabReplyNotification,
 } from '@/lib/notification-utils';
+
+const PostMessageSchema = z.object({
+  message: z.string().min(1),
+});
 import {
   getNotificationSettings,
   getResponsabiliForUser,
@@ -65,16 +70,23 @@ export async function POST(
   }
 
   const formData = await request.formData();
-  const message = (formData.get('message') as string | null)?.trim();
+  const rawMessage = (formData.get('message') as string | null)?.trim();
   const file = formData.get('file') as File | null;
 
-  if (!message) {
-    return NextResponse.json({ error: 'Il messaggio è obbligatorio' }, { status: 400 });
+  const parsed = PostMessageSchema.safeParse({ message: rawMessage });
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { message } = parsed.data;
 
   // Upload attachment if provided
   let attachment_url: string | null = null;
   let attachment_name: string | null = null;
+
+  const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file && file.size > MAX_ATTACHMENT_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
 
   if (file && file.size > 0) {
     const messageId = crypto.randomUUID();

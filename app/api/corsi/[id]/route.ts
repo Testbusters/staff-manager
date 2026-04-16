@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (role === 'responsabile_cittadino') {
     const allowed = z.object({ citta: z.string().nullable() });
     const parsed = allowed.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
     const { data, error } = await svc.from('corsi').update(parsed.data).eq('id', id).select().single();
     if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
     return NextResponse.json({ corso: { ...data, stato: getCorsoStato(data.data_inizio, data.data_fine) } });
@@ -84,7 +84,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (role !== 'amministrazione') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const parsed = PatchCorsoSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
 
   const { data, error } = await svc.from('corsi').update(parsed.data).eq('id', id).select().single();
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });

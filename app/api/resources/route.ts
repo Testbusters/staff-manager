@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
 const WRITE_ROLES = ['amministrazione'];
+
+const CreateResourceSchema = z.object({
+  titolo: z.string().min(1),
+  descrizione: z.string().optional(),
+  link: z.string().optional(),
+  file_url: z.string().optional(),
+  tag: z.array(z.string()).optional(),
+  community_ids: z.array(z.string()).optional(),
+  categoria: z.string().optional(),
+});
 
 export async function GET() {
   const supabase = await createClient();
@@ -36,19 +47,11 @@ export async function POST(request: Request) {
   if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const { titolo, descrizione, link, file_url, tag, community_ids, categoria } = body as {
-    titolo: string;
-    descrizione?: string;
-    link?: string;
-    file_url?: string;
-    tag?: string[];
-    community_ids?: string[];
-    categoria?: string;
-  };
-
-  if (!titolo?.trim()) {
-    return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
+  const parsed = CreateResourceSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { titolo, descrizione, link, file_url, tag, community_ids, categoria } = parsed.data;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

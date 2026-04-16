@@ -1,10 +1,25 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+
+const CreateDiscountSchema = z.object({
+  titolo: z.string().min(1),
+  descrizione: z.string().optional(),
+  codice_sconto: z.string().optional(),
+  link: z.string().optional(),
+  valid_from: z.string().optional(),
+  valid_to: z.string().optional(),
+  community_ids: z.array(z.string()).optional(),
+  fornitore: z.string().optional(),
+  logo_url: z.string().optional(),
+  file_url: z.string().optional(),
+  brand: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -22,26 +37,14 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
+  const parsed = CreateDiscountSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, descrizione, codice_sconto, link,
     valid_from, valid_to, community_ids, fornitore, logo_url, file_url, brand,
-  } = body as {
-    titolo: string;
-    descrizione?: string;
-    codice_sconto?: string;
-    link?: string;
-    valid_from?: string;
-    valid_to?: string;
-    community_ids?: string[];
-    fornitore?: string;
-    logo_url?: string;
-    file_url?: string;
-    brand?: string;
-  };
-
-  if (!titolo?.trim()) {
-    return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
-  }
+  } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -36,7 +36,7 @@ export async function PATCH(
   if (!isValidUUID(lid)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const body = await req.json();
   const parsed = PatchLezioneSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
