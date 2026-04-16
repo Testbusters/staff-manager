@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { isValidUUID } from '@/lib/validate-id';
 
 const attachmentSchema = z.object({
   file_url: z.string().min(1),
@@ -17,6 +18,7 @@ export async function POST(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { data: expense, error: fetchError } = await supabase
     .from('expense_reimbursements')

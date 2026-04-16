@@ -75,8 +75,8 @@ export async function POST(request: Request) {
   try {
     rawRows = await getImportSheetRows();
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Foglio non accessibile: ${msg}` }, { status: 502 });
+    console.error('[import/collaboratori/run] sheet error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Foglio non accessibile' }, { status: 502 });
   }
 
   const toProcess = rawRows.filter(r => {

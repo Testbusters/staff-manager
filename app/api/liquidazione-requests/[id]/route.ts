@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/email';
 import { emailEsitoLiquidazione } from '@/lib/email-templates';
 import { buildLiquidazioneRequestNotification } from '@/lib/notification-utils';
 import { ROLE_LABELS } from '@/lib/types';
+import { isValidUUID } from '@/lib/validate-id';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('revoca') }),
@@ -18,6 +19,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

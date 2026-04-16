@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { isValidUUID } from '@/lib/validate-id';
 
 const ADMIN_ROLES = ['amministrazione'];
 
@@ -10,6 +11,7 @@ export async function PUT(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const { userId } = await params;
+  if (!isValidUUID(userId)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -6,6 +6,7 @@ import { getNotificationSettings, getCollaboratorInfo } from '@/lib/notification
 import { emailValutazioneCorso } from '@/lib/email-templates';
 import { sendEmail } from '@/lib/email';
 import { sendTelegram, telegramValutazioneCorso } from '@/lib/telegram';
+import { isValidUUID } from '@/lib/validate-id';
 
 const ValutazioneSchema = z.object({
   collaborator_id: z.string().uuid(),
@@ -40,6 +41,7 @@ export async function PATCH(
   }
 
   const { id: corsoId } = await params;
+  if (!isValidUUID(corsoId)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const body = await req.json();
   const parsed = ValutazioneSchema.safeParse(body);

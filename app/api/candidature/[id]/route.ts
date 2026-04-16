@@ -5,6 +5,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/email';
 import { emailAssegnazioneCorsi } from '@/lib/email-templates';
 import { getCollaboratorInfo } from '@/lib/notification-helpers';
+import { isValidUUID } from '@/lib/validate-id';
 
 const ReviewSchema = z.object({
   stato: z.enum(['accettata', 'ritirata', 'in_attesa']),
@@ -27,6 +28,7 @@ export async function PATCH(
   if (!profile?.is_active) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const role = profile.role;
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

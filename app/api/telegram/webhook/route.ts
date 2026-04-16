@@ -55,33 +55,31 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Look up the token
+  // Atomically claim the token: UPDATE ... WHERE used_at IS NULL AND not expired
+  // Prevents TOCTOU: concurrent requests with the same token — only one succeeds.
   const now = new Date().toISOString();
   const { data: tokenRow } = await svc
     .from('telegram_tokens')
-    .select('id, collaborator_id, expires_at, used_at')
+    .update({ used_at: now })
     .eq('token', token)
+    .is('used_at', null)
+    .gte('expires_at', now)
+    .select('id, collaborator_id')
     .maybeSingle();
 
-  if (!tokenRow || tokenRow.used_at || tokenRow.expires_at < now) {
+  if (!tokenRow) {
     // Invalid/expired/already used — send friendly error, still 200
     sendTelegram(BigInt(chatId), '❌ Il link di collegamento non è valido o è scaduto.\n\nGenera un nuovo link dalla sezione <b>Impostazioni</b> del tuo profilo.').catch(() => {});
     return NextResponse.json({ ok: true });
   }
 
-  // Mark token as used and set chat_id on collaborator atomically
-  const [updateTokenResult, updateCollabResult] = await Promise.all([
-    svc
-      .from('telegram_tokens')
-      .update({ used_at: now })
-      .eq('id', tokenRow.id),
-    svc
-      .from('collaborators')
-      .update({ telegram_chat_id: chatId })
-      .eq('id', tokenRow.collaborator_id),
-  ]);
+  // Token claimed — set chat_id on collaborator
+  const { error: collabErr } = await svc
+    .from('collaborators')
+    .update({ telegram_chat_id: chatId })
+    .eq('id', tokenRow.collaborator_id);
 
-  if (updateTokenResult.error || updateCollabResult.error) {
+  if (collabErr) {
     sendTelegram(BigInt(chatId), '❌ Si è verificato un errore durante il collegamento. Riprova.').catch(() => {});
     return NextResponse.json({ ok: true });
   }

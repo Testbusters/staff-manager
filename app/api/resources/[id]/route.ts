@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { isValidUUID } from '@/lib/validate-id';
 
 const WRITE_ROLES = ['amministrazione'];
 
@@ -25,6 +26,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const auth = await authorizeWriter(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -61,6 +63,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const auth = await authorizeWriter(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });

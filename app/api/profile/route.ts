@@ -83,7 +83,10 @@ export async function PATCH(request: Request) {
       email: newEmail,
       email_confirm: true,
     });
-    if (emailError) return NextResponse.json({ error: 'Errore aggiornamento email: ' + emailError.message }, { status: 500 });
+    if (emailError) {
+      console.error('[profile] email update error:', emailError.message);
+      return NextResponse.json({ error: 'Errore aggiornamento email' }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true, emailChanged });

@@ -27,17 +27,17 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | | **G3 - Security Code** | | |
 | SEC1 | Temporary password returned in plain text by create-user API | HIGH | G3 |
 | SEC8 | `expenses` bucket missing - attachment uploads silently fail | HIGH | G3 |
-| SEC-NEW-5 | `POST /api/auth/change-password` no Zod schema, no max-length bound | HIGH | G3 |
+| ~~SEC-NEW-5~~ | ~~`POST /api/auth/change-password` no Zod schema~~ — RESOLVED | ~~HIGH~~ | G3 |
 | SEC2 | Invite email does not include a direct link with token | MEDIUM | G3 |
 | SEC3 | No rate limiting on POST compensations/reimbursements | MEDIUM | G3 |
 | SEC4 | No rate limiting on create-user | MEDIUM | G3 |
-| SEC10 | DB error messages forwarded verbatim to client in 20+ routes | MEDIUM | G3 |
+| ~~SEC10~~ | ~~DB error messages forwarded verbatim to client~~ — RESOLVED | ~~MEDIUM~~ | G3 |
 | SEC14 | Leaked password protection disabled in Supabase Auth | MEDIUM | G3 |
-| SEC16 | `app_errors` INSERT RLS `WITH CHECK (true)` - any user can insert | MEDIUM | G3 |
-| SEC-NEW-2 | 16+ import/export routes forward `err.message` to client | MEDIUM | G3 |
-| SEC-NEW-3 | 20+ dynamic route handlers lack UUID path-param validation | MEDIUM | G3 |
+| ~~SEC16~~ | ~~`app_errors` INSERT RLS~~ — RESOLVED (migration 062) | ~~MEDIUM~~ | G3 |
+| ~~SEC-NEW-2~~ | ~~16+ import/export routes forward `err.message` to client~~ — RESOLVED | ~~MEDIUM~~ | G3 |
+| ~~SEC-NEW-3~~ | ~~40 dynamic route handlers lack UUID path-param validation~~ — RESOLVED | ~~MEDIUM~~ | G3 |
 | SEC-NEW-8 | `POST /api/admin/collaboratori/[id]/resend-invite` no rate limiting | MEDIUM | G3 |
-| SEC-17 | Telegram webhook TOCTOU: non-atomic token validation | MEDIUM | G3 |
+| ~~SEC-17~~ | ~~Telegram webhook TOCTOU: non-atomic token validation~~ — RESOLVED | ~~MEDIUM~~ | G3 |
 | SEC-NEW-4 | 7 admin RLS `FOR ALL` policies lack explicit `WITH CHECK` | LOW | G3 |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW | G3 |
 | | **G4 - API Design** | | |
@@ -196,6 +196,12 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | DB4 | `ALTER POLICY ... TO authenticated` on all 98 public-schema policies — migration 074. Defense-in-depth: anon blocked at DB level. | 2026-04-16 |
 | DB8 | 3 filter indexes: `compensations(data_competenza)`, `expense_reimbursements(data_spesa)`, `tickets(last_message_at)` — migration 075 | 2026-04-16 |
 | DB16 | Mitigated by design — `ON DELETE NO ACTION` already prevents orphaned tickets; `member_status` deactivation flow makes user deletion unnecessary. No migration needed. | 2026-04-16 |
+| SEC-NEW-5 | Zod schema on `POST /api/auth/change-password` (min 8, max 128 chars) — block g3-security-hardening | 2026-04-16 |
+| SEC10 | Error messages sanitized in 16+ API routes — generic responses + `console.error` server-side | 2026-04-16 |
+| SEC-NEW-2 | Import/export `err.message` replaced with generic strings in 16 routes | 2026-04-16 |
+| SEC-NEW-3 | UUID validation added to all 40 dynamic route handlers via shared `isValidUUID()` helper | 2026-04-16 |
+| SEC16 | Already resolved in migration 062 — `WITH CHECK (user_id = auth.uid())` | 2026-04-16 |
+| SEC-17 | Telegram webhook TOCTOU fixed — atomic `UPDATE WHERE used_at IS NULL` replaces SELECT+UPDATE | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -382,11 +388,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ### SEC9 — ~~`codice_fiscale` exposed in collaborator list~~ — RESOLVED (see resolved archive)
 
-### SEC10 — DB error messages forwarded verbatim to client in 20+ routes
-- **Problem**: Many routes return `NextResponse.json({ error: error.message }, { status: 500 })` directly, forwarding raw Supabase/PostgREST error strings (which may include table names, column names, constraint names, or RLS policy details) to the browser. This leaks internal schema information.
-- **Files (sample)**: `app/api/tickets/route.ts:38,109`, `app/api/expenses/route.ts:43,88`, `app/api/opportunities/route.ts:66`, `app/api/resources/route.ts:18,72`, `app/api/admin/collaboratori/[id]/profile/route.ts:125`, and 15+ more routes.
-- **Impact**: MEDIUM
-- **Fix**: Log the raw error server-side (`console.error(error.message)`) and return a generic string: `return NextResponse.json({ error: 'Database error' }, { status: 500 })`. Exceptions: upload error messages (often user-actionable) and unique constraint violations (needed for UX) — those can keep descriptive messages.
+### SEC10 — ~~DB error messages forwarded verbatim to client~~ — RESOLVED (see resolved archive)
 
 ### SEC11 — ~~`assegnazioni_valutazione_update` WITH CHECK~~ — RESOLVED (see resolved archive)
 
@@ -403,25 +405,11 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 ### SEC15 — ~~Missing Zod validation on 6 write routes~~ — SUPERSEDED by API6
 - **Disposition**: Superseded by API6, which lists all 8 routes lacking Zod validation (extends SEC15's 6-route list with content routes).
 
-### SEC16 — `app_errors` INSERT RLS policy uses `WITH CHECK (true)` — any authenticated user can insert
-- **Problem**: Supabase Security Advisor flags `app_errors_insert` as having `WITH CHECK (true)` for the `authenticated` role. This allows any authenticated user to insert arbitrary rows into the `app_errors` table, potentially flooding it with noise, obscuring real errors, or abusing it as a logging channel.
-- **Files**: Migration where `app_errors_insert` policy was created.
-- **Impact**: MEDIUM
-- **Fix**: Restrict the INSERT policy to only the fields the application writes (e.g. add a CHECK on `user_id = auth.uid()` and/or restrict `error_type` to a known enum). Alternatively, use service role only for inserts and remove the RLS INSERT policy entirely.
+### SEC16 — ~~`app_errors` INSERT RLS~~ — RESOLVED (migration 062, already fixed before G3)
 
-### SEC-NEW-2 — Import/export routes forward `err.message` from external services to client
-- **Problem**: 15+ import/export routes (Google Sheets import, history export, XLSX generation) catch errors and return `err.message` directly in the JSON response. These messages can reveal internal service configuration details (GSheet IDs, OAuth scopes, file paths) to authenticated users.
-- **Files**: `app/api/export/`, `app/api/admin/import/`, related import routes
-- **Impact**: MEDIUM
-- **Fix**: Replace `err.message` in catch blocks for external service calls with a generic `'Errore servizio esterno'` string. Log the real error server-side: `console.error('[import]', err.message)`.
-- **Discovered**: security-audit 2026-03-30
+### SEC-NEW-2 — ~~Import/export routes forward `err.message` to client~~ — RESOLVED (see resolved archive)
 
-### SEC-NEW-3 — Dynamic route handlers lack UUID path-param validation
-- **Problem**: All 20+ dynamic API routes (e.g. `/api/compensations/[id]`, `/api/tickets/[id]`) use `params.id` directly in Supabase queries without validating UUID format. An invalid UUID (e.g. `../admin`, `' OR 1=1`) causes a Supabase DB error (not a clean 400), leaking internal error shape to the caller.
-- **Files**: All `app/api/**/*[id]*/route.ts` files (20+ handlers)
-- **Impact**: MEDIUM
-- **Fix**: Add `z.string().uuid().parse(id)` at the top of each dynamic handler, wrapped in try/catch returning `{ error: 'ID non valido' }` with status 400.
-- **Discovered**: security-audit 2026-03-30
+### SEC-NEW-3 — ~~Dynamic route handlers lack UUID path-param validation~~ — RESOLVED (see resolved archive)
 
 ### SEC-NEW-4 — Admin RLS `FOR ALL` policies lack explicit `WITH CHECK`
 - **Problem**: 7 admin-only `FOR ALL` RLS policies on `corsi`, `lezioni`, `assegnazioni`, `candidature`, `blacklist`, `allegati_globali`, `liquidazione_requests` omit `WITH CHECK`. In Postgres, `FOR ALL` without `WITH CHECK` inherits `USING` for write checks — functionally equivalent, but the pattern is non-standard and harder to audit. Future policy changes risk missing the write-check implication.

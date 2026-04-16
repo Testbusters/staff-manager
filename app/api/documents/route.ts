@@ -143,7 +143,10 @@ export async function POST(request: Request) {
       upsert: false,
     });
 
-  if (uploadErr) return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+  if (uploadErr) {
+    console.error('[documents] upload error:', uploadErr.message);
+    return NextResponse.json({ error: 'Errore upload documento' }, { status: 500 });
+  }
 
   // Insert document record
   const { data: doc, error } = await serviceClient
