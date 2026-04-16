@@ -20,7 +20,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | SEC2 | Invite email does not include a direct link with token | MEDIUM | G3 |
 | SEC3 | No rate limiting on POST compensations/reimbursements | MEDIUM | G3 |
 | SEC4 | No rate limiting on create-user | MEDIUM | G3 |
-| SEC14 | Leaked password protection disabled in Supabase Auth | MEDIUM | G3 |
 | SEC-NEW-8 | `POST /api/admin/collaboratori/[id]/resend-invite` no rate limiting | MEDIUM | G3 |
 | SEC-NEW-4 | 7 admin RLS `FOR ALL` policies lack explicit `WITH CHECK` | LOW | G3 |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW | G3 |
@@ -35,10 +34,7 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | API8 | `POST /api/admin/create-user` returns 200 instead of 201 | LOW | G4 |
 | API13 | `POST /api/import/collaboratori/run` `skipContract` defaults to `true` | LOW | G4 |
 | | **G6 - Performance** | | |
-| PERF-5 | N+1 `createSignedUrl` calls in export/import history (up to 50) | MEDIUM | G6 |
 | PERF-7 | `select('*')` on 20+ API list routes - over-fetches large text columns | MEDIUM | G6 |
-| P3 | `getNotificationSettings` called on every transition without cache | MEDIUM | G6 |
-| P4 | `getResponsabiliForCommunity` uses unoptimized triple join | MEDIUM | G6 |
 | P1 | `GET /api/compensations` join does not enrich collaborator name | LOW | G6 |
 | DEV-11 | `GET /api/blacklist` has no pagination - unbounded query | LOW | G6 |
 | | **G5 remnants - DRY / Code Quality** | | |
@@ -115,11 +111,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: MEDIUM
 - **Fix**: Rate-limit per admin user (e.g. 10 users/hour) via middleware or DB check.
 
-### SEC14 — Leaked password protection disabled in Supabase Auth
-- **Problem**: HaveIBeenPwned integration disabled. Users can choose compromised passwords.
-- **Impact**: MEDIUM
-- **Fix**: Enable in Supabase Dashboard → Authentication → Password Security. No code change.
-
 ### SEC-NEW-8 — No rate limiting on resend-invite
 - **Problem**: `POST /api/admin/collaboratori/[id]/resend-invite` has no rate limiting.
 - **Impact**: MEDIUM
@@ -177,23 +168,8 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 ### API13 — `POST /api/import/collaboratori/run` `skipContract` defaults to `true`
 - **Impact**: LOW
 
-### PERF-5 — N+1 signed URL generation in history routes
-- **Problem**: Up to 50 `createSignedUrl` calls per request.
-- **Files**: `app/api/export/history/route.ts:36-55`, `app/api/import/history/route.ts:41-62`
-- **Impact**: MEDIUM
-
 ### PERF-7 — `select('*')` on 20+ API list routes
 - **Problem**: Over-fetches large text columns on list endpoints.
-- **Impact**: MEDIUM
-
-### P3 — `getNotificationSettings` called per transition without cache
-- **Problem**: 15 rows read from DB on every compensation/reimbursement transition.
-- **Files**: `lib/notification-helpers.ts`
-- **Impact**: MEDIUM
-
-### P4 — `getResponsabiliForCommunity` unoptimized triple join
-- **Problem**: select UCA → filter user_profiles → fetch collaborators → `auth.admin.listUsers()`.
-- **Files**: `lib/notification-helpers.ts:62-101`
 - **Impact**: MEDIUM
 
 ### P1 — GET compensations join does not enrich collaborator name
