@@ -58,14 +58,14 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 | API8 | `POST /api/admin/create-user` returns 200 instead of 201 | LOW | G4 |
 | API13 | `POST /api/import/collaboratori/run` `skipContract` defaults to `true` | LOW | G4 |
 | | **G5 - DRY / Code Quality** | | |
-| DEV-1 | `TYPE_BADGE` map duplicated in `NotificationBell` and `NotificationPageClient` | MEDIUM | G5 |
-| DEV-2 | `TSHIRT_SIZES` in 3 components + 2 Zod schemas; OnboardingWizard missing XXXL | MEDIUM | G5 |
-| DEV-8 | `email-template-service.ts` imported by client without `server-only` guard | MEDIUM | G5 |
-| DEV-12 | Invite tracking badges: hardcoded colors + `text-[10px]` below minimum | MEDIUM | G5 |
-| DEV-13 | `CollaboratoreDetail.tsx` invite props data clump - extract type | MEDIUM | G5 |
-| T6 | `UserProfile` interface missing `invite_email_sent` + `must_change_password` | MEDIUM | G5 |
-| A1 | Logic duplication between notification-utils and notification-helpers | MEDIUM | G5 |
-| A2 | Fire-and-forget email with no failure log | MEDIUM | G5 |
+| ~~DEV-1~~ | ~~`TYPE_BADGE` map duplicated~~ — RESOLVED | ~~MEDIUM~~ | G5 |
+| ~~DEV-2~~ | ~~`TSHIRT_SIZES` duplicated + XXXL bug~~ — RESOLVED | ~~MEDIUM~~ | G5 |
+| ~~DEV-8~~ | ~~`email-template-service.ts` missing `server-only`~~ — RESOLVED | ~~MEDIUM~~ | G5 |
+| ~~DEV-12~~ | ~~Invite tracking badges hardcoded colors~~ — RESOLVED | ~~MEDIUM~~ | G5 |
+| ~~DEV-13~~ | ~~CollaboratoreDetail invite props data clump~~ — RESOLVED | ~~MEDIUM~~ | G5 |
+| ~~T6~~ | ~~`UserProfile` interface incomplete~~ — RESOLVED | ~~MEDIUM~~ | G5 |
+| ~~A1~~ | ~~Notification utils/helpers duplication~~ — RESOLVED (facade) | ~~MEDIUM~~ | G5 |
+| ~~A2~~ | ~~Fire-and-forget email no failure log~~ — RESOLVED | ~~MEDIUM~~ | G5 |
 | S8 | `formatDate` and `formatCurrency` duplicated across 4+ components | LOW | G5 |
 | DEV-4 | `86400000` (ms/day) magic number repeated in 6 files | LOW | G5 |
 | DEV-7 | Cross-module coupling: expense/ imports compensation/, responsabile/ imports admin/ | LOW | G5 |
@@ -209,6 +209,14 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | API12 | `flagErr` now logged server-side + `warning` field returned in response | 2026-04-16 |
 | API-4 | Already renamed to `summary.errorCount` in prior block | 2026-04-16 |
 | S7 | `file.size` pre-check added to 6 upload routes (10MB docs, 50MB batch ZIP, 2MB CSV) | 2026-04-16 |
+| DEV-1 | `NOTIFICATION_TYPE_BADGE` centralized in `lib/notification-utils.ts`, local copies removed from NotificationBell + NotificationPageClient | 2026-04-16 |
+| DEV-2 | `TSHIRT_SIZES` centralized in `lib/types.ts` as `const` array + `TshirtSize` type; removed 3 local copies + fixed missing XXXL in OnboardingWizard | 2026-04-16 |
+| DEV-8 | `import 'server-only'` added to `lib/email-template-service.ts`; client-safe functions extracted to `lib/email-preview-utils.ts` | 2026-04-16 |
+| DEV-12 | Invite tracking badges in CollaboratoreDetail: hardcoded colors → semantic dark-mode-safe tokens (`bg-green-100 dark:bg-green-900/60` etc.), `text-[10px]` → `text-xs` | 2026-04-16 |
+| DEV-13 | `InviteTrackingProps` interface extracted; `CollaboratoreDetailProps extends InviteTrackingProps` reduces prop data clump | 2026-04-16 |
+| T6 | `UserProfile` interface extended with 5 missing fields (`is_active`, `member_status`, `onboarding_completed`, `invite_email_sent`, `must_change_password`) | 2026-04-16 |
+| A1 | `lib/notification-service.ts` re-export facade created — single import for all notification builders + helpers | 2026-04-16 |
+| A2 | `getRenderedEmail` bare `catch {}` replaced with `console.error` logging; `sendEmail` already logged errors | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -241,17 +249,11 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ## A — Architecture / Coupling
 
-### A1 — Logic duplication between notification-utils.ts and notification-helpers.ts
-- **Problem**: The two files are always imported together. No unified abstraction layer. Each transition route has 6+ imports from these two files.
-- **Files**: `lib/notification-utils.ts`, `lib/notification-helpers.ts`, `app/api/compensations/[id]/transition/route.ts:9-19`
-- **Impact**: MEDIUM
-- **Fix**: Create `lib/notification-service.ts` that re-exports builders + helpers from a single entry point.
+### A1 — RESOLVED (g5-dry-quality, 2026-04-16)
+Created `lib/notification-service.ts` re-export facade. Existing consumers can migrate gradually.
 
-### A2 — Fire-and-forget email with no failure log
-- **Problem**: `sendEmail(...).catch(() => {})` silences every Resend error. If the provider is down, no user receives notifications and no admin is alerted.
-- **Files**: `lib/email.ts:5-20` (used in 8+ routes)
-- **Impact**: MEDIUM
-- **Fix**: Add async error logging (console.error or an `email_errors` table) for operational visibility.
+### A2 — RESOLVED (g5-dry-quality, 2026-04-16)
+`sendEmail` already logged. Added `console.error` to `getRenderedEmail` catch path for template rendering errors.
 
 ### A3 — `createServiceClient()` instantiated in every route (no singleton)
 - **Problem**: Every API route creates a new service client instance with the same credentials. DRY violation.
@@ -612,19 +614,11 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 
 ## DEV — Code Quality / Coupling / Type Safety
 
-### DEV-1 — `TYPE_BADGE` map duplicated in `NotificationBell` and `NotificationPageClient`
-- **Problem**: The exact same 8-entry `TYPE_BADGE: Record<string, { label: string; cls: string }>` object is copy-pasted verbatim in both `components/NotificationBell.tsx:44` and `components/notifications/NotificationPageClient.tsx:26`. Any update to an entity label or badge color class must be applied in two places — guaranteed drift.
-- **Files**: `components/NotificationBell.tsx:44–53`, `components/notifications/NotificationPageClient.tsx:26–35`
-- **Impact**: MEDIUM
-- **Fix**: Export `NOTIFICATION_TYPE_BADGE` from `lib/notification-utils.ts` and import it in both components.
-- **Discovered**: skill-dev audit 2026-03-27
+### DEV-1 — RESOLVED (g5-dry-quality, 2026-04-16)
+Exported `NOTIFICATION_TYPE_BADGE` from `lib/notification-utils.ts`, imported in both components.
 
-### DEV-2 — `TSHIRT_SIZES` array duplicated in 3 components and 2 Zod schemas; `OnboardingWizard` is missing `XXXL`
-- **Problem**: The allowed T-shirt sizes are defined separately in: `components/ProfileForm.tsx:57` (7 values, includes XXXL), `components/onboarding/OnboardingWizard.tsx:44` (6 values, **missing XXXL**), `components/responsabile/CollaboratoreDetail.tsx:519` (inline array, 7 values), `app/api/profile/route.ts:31` (Zod enum, 7 values), `app/api/admin/collaboratori/[id]/profile/route.ts:24` (Zod enum, 7 values). The OnboardingWizard omits XXXL — a collaborator who wears XXXL cannot set their size during onboarding, creating a data gap that only an admin or self-edit can fix.
-- **Files**: listed above
-- **Impact**: MEDIUM (active data bug in OnboardingWizard; DRY violation across 5 files)
-- **Fix**: Add `export const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const;` to `lib/types.ts`. Import `TSHIRT_SIZES` in all 3 components and use `z.enum(TSHIRT_SIZES)` in both Zod schemas.
-- **Discovered**: skill-dev audit 2026-03-27
+### DEV-2 — RESOLVED (g5-dry-quality, 2026-04-16)
+Centralized `TSHIRT_SIZES` in `lib/types.ts`, imported in 5 files, fixed XXXL bug in OnboardingWizard.
 
 ### DEV-3 — RESOLVED (see resolved archive)
 
@@ -659,12 +653,8 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Fix**: Move `StatusBadge` to `components/ui/` (it is domain-neutral). Move `CollaboratorAvatar` to `components/ui/` or a shared `components/shared/` folder. `CompenseTabs` importing from `expense/` is acceptable as it is the composition root — document the dependency explicitly.
 - **Discovered**: skill-dev audit 2026-03-27
 
-### DEV-8 — `email-template-service.ts` imported by client component without `server-only` guard
-- **Problem**: `lib/email-template-service.ts` defines `getServiceClient()` which reads `process.env.SUPABASE_SERVICE_ROLE_KEY` and `getLayoutConfig()` which calls that client. The file also exports `buildPreviewHtml()`, which is a pure string function. `components/impostazioni/EmailTemplateManager.tsx` (a `'use client'` component) imports `buildPreviewHtml` from this file. Next.js tree-shaking prevents `getServiceClient` from being included in the client bundle because it is not reachable from `buildPreviewHtml`, but there is no `import 'server-only'` guard to enforce this at build time. A future developer adding a new import or refactoring the file could accidentally leak the service role key.
-- **Files**: `lib/email-template-service.ts:54–55`, `components/impostazioni/EmailTemplateManager.tsx:12`
-- **Impact**: MEDIUM (latent risk — not currently leaking, but no guard)
-- **Fix**: Split the file: move `buildPreviewHtml` and all pure HTML helpers to `lib/email-preview-utils.ts` (client-safe, no secrets). Keep `getServiceClient`, `getLayoutConfig`, and all DB-touching functions in `lib/email-template-service.ts` with `import 'server-only'` at the top. Update imports in `EmailTemplateManager` to point to the new client-safe file.
-- **Discovered**: skill-dev audit 2026-03-27
+### DEV-8 — RESOLVED (g5-dry-quality, 2026-04-16)
+Split: pure functions to `lib/email-preview-utils.ts` (client-safe), `import 'server-only'` on original. Client imports updated.
 
 ### DEV-9 — `lib/username.ts` uses `svc: any` parameter type
 - **Problem**: `lib/username.ts:31` declares the Supabase client parameter as `svc: any`. The project-standard type for this pattern (documented in CLAUDE.md Known Patterns) is `SupabaseClient<any, any, any>` from `@supabase/supabase-js`, which is the intentional workaround for PostgREST generic type incompatibility. Using bare `any` instead of the documented pattern is inconsistent and silences type-checking on `svc` method calls entirely.
