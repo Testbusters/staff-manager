@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { generatePassword } from '@/lib/password';
 import { isValidUUID } from '@/lib/validate-id';
+import { RESEND_INVITE_COOLDOWN_MS } from '@/lib/rate-limits';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 
@@ -61,6 +62,18 @@ export async function POST(
       { error: 'L\'utente ha già completato il cambio password' },
       { status: 422 },
     );
+  }
+
+  // Rate limit: cooldown per target user via auth.users.updated_at
+  const { data: authUser } = await admin.auth.admin.getUserById(collab.user_id);
+  if (authUser?.user?.updated_at) {
+    const lastUpdate = new Date(authUser.user.updated_at).getTime();
+    if (Date.now() - lastUpdate < RESEND_INVITE_COOLDOWN_MS) {
+      return NextResponse.json(
+        { error: 'Attendi almeno 5 minuti prima di reinviare l\'invito' },
+        { status: 429 },
+      );
+    }
   }
 
   // Generate new password and update auth user

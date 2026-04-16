@@ -51,7 +51,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | DEV-6 | `CodaCompensazioni` (862L) and `CodaRimborsi` (868L): 5+ responsibilities | MEDIUM | G8 |
 | S9 | `MonitoraggioSection.tsx` 1031 lines: 5+ responsibilities | MEDIUM | G8 |
 | B2 | Inconsistent naming: table `expense_reimbursements`, TS `Expense`, FK `reimbursement_id` | MEDIUM | G8 |
-| B3 | `community_id` nullable on `expense_reimbursements` | MEDIUM | G8 |
 | S1 | `CreateUserForm.tsx` too large (409L) | LOW | G8 |
 | S2 | `CollaboratoreDetail.tsx` too large (474L) | LOW | G8 |
 | S3 | `OnboardingWizard.tsx` complex local state (408L) | LOW | G8 |
@@ -225,10 +224,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 
 ### B2 — Inconsistent naming: expense_reimbursements / Expense / reimbursement_id
 - **Fix**: Standardize on `expense_reimbursements`; rename FK `reimbursement_id` → `expense_id`.
-- **Impact**: MEDIUM
-
-### B3 — `community_id` nullable on `expense_reimbursements`
-- **Fix**: Check for nulls → add `NOT NULL` if none.
 - **Impact**: MEDIUM
 
 ### S1 — `CreateUserForm.tsx` too large (409L)

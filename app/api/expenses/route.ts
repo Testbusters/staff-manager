@@ -12,6 +12,7 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { emailNuovoInviato } from '@/lib/email-templates';
+import { MAX_PENDING_EXPENSES } from '@/lib/rate-limits';
 
 const createSchema = z.object({
   categoria: z.enum(EXPENSE_CATEGORIES),
@@ -73,6 +74,20 @@ export async function POST(request: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
+
+  // Rate limit: cap pending expenses per collaborator
+  const { count: pendingCount } = await supabase
+    .from('expense_reimbursements')
+    .select('*', { count: 'exact', head: true })
+    .eq('collaborator_id', col.id)
+    .in('stato', ['IN_ATTESA', 'INVIATO']);
+
+  if ((pendingCount ?? 0) >= MAX_PENDING_EXPENSES) {
+    return NextResponse.json(
+      { error: 'Limite rimborsi in attesa raggiunto' },
+      { status: 429 },
+    );
   }
 
   const { data: reimbursement, error } = await supabase

@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { generateUsername, generateUniqueUsername } from '@/lib/username';
 import { generatePassword } from '@/lib/password';
+import { MAX_USERS_PER_HOUR } from '@/lib/rate-limits';
 
 const schema = z.object({
   email: z.string().email(),
@@ -79,6 +80,20 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  // Rate limit: cap user creation globally per hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recentCount } = await admin
+    .from('collaborators')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', oneHourAgo);
+
+  if ((recentCount ?? 0) >= MAX_USERS_PER_HOUR) {
+    return NextResponse.json(
+      { error: 'Limite creazione utenti raggiunto (riprova tra un\'ora)' },
+      { status: 429 },
+    );
+  }
 
   const password = generatePassword();
 
