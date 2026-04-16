@@ -206,7 +206,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
           description="Crea il primo evento per questa città."
         />
       ) : (
-        <div className="w-fit rounded-lg border border-border bg-card overflow-hidden">
+        <div className="w-fit max-w-full rounded-lg border border-border bg-card overflow-x-auto">
           <Table className="w-auto">
             <TableHeader>
               <TableRow className="bg-muted/40">
@@ -279,8 +279,8 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
           <form onSubmit={handleSave}>
             <div className="space-y-4 pt-2 overflow-y-auto max-h-[60vh] pr-1">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Titolo *</label>
-                <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dell'evento" />
+                <label htmlFor="evento-titolo" className="text-sm font-medium text-foreground">Titolo *</label>
+                <Input id="evento-titolo" value={form.titolo} onChange={set('titolo')} placeholder="Nome dell'evento" />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium text-foreground">Tipo</label>
@@ -297,17 +297,17 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">Data inizio</label>
-                  <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
+                  <label htmlFor="evento-start" className="text-sm font-medium text-foreground">Data inizio</label>
+                  <Input id="evento-start" type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">Data fine</label>
-                  <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
+                  <label htmlFor="evento-end" className="text-sm font-medium text-foreground">Data fine</label>
+                  <Input id="evento-end" type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Luogo</label>
-                <Input value={form.location} onChange={set('location')} placeholder="Es. Online, Milano — Via Roma 1" />
+                <label htmlFor="evento-luogo" className="text-sm font-medium text-foreground">Luogo</label>
+                <Input id="evento-luogo" value={form.location} onChange={set('location')} placeholder="Es. Online, Milano — Via Roma 1" />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium text-foreground">Descrizione</label>
@@ -318,8 +318,8 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Link Luma</label>
-                <Input value={form.luma_url} onChange={set('luma_url')} placeholder="https://lu.ma/..." />
+                <label htmlFor="evento-luma" className="text-sm font-medium text-foreground">Link Luma</label>
+                <Input id="evento-luma" value={form.luma_url} onChange={set('luma_url')} placeholder="https://lu.ma/..." />
               </div>
             </div>
             <DialogFooter className="pt-4">

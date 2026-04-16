@@ -90,7 +90,7 @@ export default function FeedbackButton() {
                 <DialogTitle className="text-base font-semibold text-foreground">Invia feedback</DialogTitle>
               </DialogHeader>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 {/* Categoria */}
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Categoria</label>

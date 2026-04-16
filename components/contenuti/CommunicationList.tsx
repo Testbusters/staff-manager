@@ -81,7 +81,7 @@ function CommunicationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div className="space-y-1">
         <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
         <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo comunicazione" required />
