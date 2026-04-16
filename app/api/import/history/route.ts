@@ -38,28 +38,32 @@ export async function GET(request: Request) {
   const { data: rows, error } = await query;
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
-  const runs: ImportRunWithUrl[] = await Promise.all(
-    (rows ?? []).map(async (row) => {
-      let download_url: string | null = null;
-      if (row.storage_path) {
-        const { data: signed } = await svc.storage
-          .from('imports')
-          .createSignedUrl(row.storage_path, 3600);
-        download_url = signed?.signedUrl ?? null;
-      }
-      return {
-        id:           row.id,
-        tipo:         row.tipo as ImportTipo,
-        imported:     row.imported,
-        skipped:      row.skipped,
-        errors:       row.errors,
-        duration_ms:  row.duration_ms,
-        created_at:   row.created_at,
-        storage_path: row.storage_path,
-        download_url,
-      };
-    }),
-  );
+  // Batch-sign all storage paths in a single call instead of N+1 individual requests
+  const paths = (rows ?? [])
+    .map((r) => r.storage_path)
+    .filter((p): p is string => p != null);
+
+  const urlMap = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await svc.storage
+      .from('imports')
+      .createSignedUrls(paths, 3600);
+    for (const entry of signed ?? []) {
+      if (entry.signedUrl && entry.path) urlMap.set(entry.path, entry.signedUrl);
+    }
+  }
+
+  const runs: ImportRunWithUrl[] = (rows ?? []).map((row) => ({
+    id:           row.id,
+    tipo:         row.tipo as ImportTipo,
+    imported:     row.imported,
+    skipped:      row.skipped,
+    errors:       row.errors,
+    duration_ms:  row.duration_ms,
+    created_at:   row.created_at,
+    storage_path: row.storage_path,
+    download_url: row.storage_path ? (urlMap.get(row.storage_path) ?? null) : null,
+  }));
 
   return NextResponse.json({ runs });
 }

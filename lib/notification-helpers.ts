@@ -22,8 +22,22 @@ export interface PersonInfo {
   telegram_chat_id: bigint | null;
 }
 
+// Module-level TTL cache for notification settings (5 min).
+// Settings change rarely — avoids re-querying on every notification dispatch.
+const SETTINGS_CACHE_TTL_MS = 5 * 60 * 1000;
+let settingsCache: { data: SettingsMap; expiry: number } | null = null;
+
+/** Clear the in-memory notification settings cache (for testing). */
+export function clearNotificationSettingsCache(): void {
+  settingsCache = null;
+}
+
 // Returns a Map keyed by "event_key:recipient_role"
 export async function getNotificationSettings(svc: Svc): Promise<SettingsMap> {
+  if (settingsCache && Date.now() < settingsCache.expiry) {
+    return settingsCache.data;
+  }
+
   const { data } = await svc
     .from('notification_settings')
     .select('event_key, recipient_role, inapp_enabled, email_enabled, telegram_enabled');
@@ -36,7 +50,21 @@ export async function getNotificationSettings(svc: Svc): Promise<SettingsMap> {
       telegram_enabled: row.telegram_enabled ?? false,
     });
   }
+
+  settingsCache = { data: map, expiry: Date.now() + SETTINGS_CACHE_TTL_MS };
   return map;
+}
+
+// Builds an email lookup map for a small set of user IDs using targeted getUserById calls.
+// For small sets (1-5 responsabili) this is far cheaper than listUsers() which fetches ALL auth users.
+async function getEmailMap(userIds: string[], svc: Svc): Promise<Record<string, string>> {
+  const results = await Promise.all(
+    userIds.map(async (uid) => {
+      const { data } = await svc.auth.admin.getUserById(uid);
+      return [uid, data?.user?.email ?? ''] as const;
+    }),
+  );
+  return Object.fromEntries(results);
 }
 
 // Fetches collaborator info + email from auth.
@@ -86,15 +114,12 @@ export async function getResponsabiliForCommunity(
   const activeIds = (profiles ?? []).map((p) => p.user_id);
   if (activeIds.length === 0) return [];
 
-  const [{ data: collabs }, { data: authData }] = await Promise.all([
+  const [{ data: collabs }, emailMap] = await Promise.all([
     svc.from('collaborators').select('user_id, nome, cognome, telegram_chat_id').in('user_id', activeIds),
-    svc.auth.admin.listUsers(),
+    getEmailMap(activeIds, svc),
   ]);
 
   const collabMap = Object.fromEntries((collabs ?? []).map((c) => [c.user_id, c]));
-  const emailMap = Object.fromEntries(
-    (authData?.users ?? []).map((u) => [u.id, u.email ?? '']),
-  );
 
   return activeIds.map((uid) => ({
     user_id: uid,
@@ -139,15 +164,12 @@ export async function getResponsabiliForCollaborator(
   const activeIds = (profiles ?? []).map((p) => p.user_id);
   if (activeIds.length === 0) return [];
 
-  const [{ data: collabs }, { data: authData }] = await Promise.all([
+  const [{ data: collabs }, emailMap] = await Promise.all([
     svc.from('collaborators').select('user_id, nome, cognome, telegram_chat_id').in('user_id', activeIds),
-    svc.auth.admin.listUsers(),
+    getEmailMap(activeIds, svc),
   ]);
 
   const collabMap = Object.fromEntries((collabs ?? []).map((c) => [c.user_id, c]));
-  const emailMap = Object.fromEntries(
-    (authData?.users ?? []).map((u) => [u.id, u.email ?? '']),
-  );
 
   return activeIds.map((uid) => ({
     user_id: uid,
@@ -160,6 +182,7 @@ export async function getResponsabiliForCollaborator(
 }
 
 // Returns active collaboratori filtered by community membership.
+// Broadcast function — uses listUsers() intentionally (50+ users, single call is cheaper than N getUserById).
 // communityIds = [] means "all communities" → returns all active collaboratori.
 export async function getCollaboratoriForCommunities(
   communityIds: string[],
@@ -237,6 +260,7 @@ export async function getCollaboratoriForCity(
 }
 
 // Returns all active collaboratori with their email (for broadcast content notifications).
+// Broadcast function — uses listUsers() intentionally (50+ users, single call is cheaper than N getUserById).
 export async function getAllActiveCollaboratori(svc: Svc): Promise<PersonInfo[]> {
   const { data: profiles } = await svc
     .from('user_profiles')
