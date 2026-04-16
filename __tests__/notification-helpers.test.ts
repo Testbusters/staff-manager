@@ -11,7 +11,8 @@ function createMockSvc(rows: Array<Record<string, unknown>>) {
     from: () => ({
       select: () => Promise.resolve({ data: rows, error: null }),
     }),
-  } as never; // cast: only the subset used by getNotificationSettings matters
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any; // cast: only the subset used by getNotificationSettings matters
 }
 
 describe('getNotificationSettings — TTL cache (P3)', () => {
