@@ -25,10 +25,7 @@ Ordered by execution group (G1-G9). Execute groups in order; items within each g
 |----|--------|---------|-------|
 | | **G2 - DB Schema (migrations only)** | | |
 | DB4 | All 90+ RLS policies lack explicit `TO` clause (all `{public}`) | MEDIUM | G2 |
-| DB13 | `tickets.community_id` FK unindexed | MEDIUM | G2 |
-| DB14 | `corsi.community_id` FK unindexed | MEDIUM | G2 |
 | DB8 | Missing filter indexes on `data_competenza`, `last_message_at`, `data_spesa` | LOW | G2 |
-| DB15 | `documents.community_id` FK unindexed | LOW | G2 |
 | DB16 | `tickets.creator_user_id ON DELETE NO ACTION` - orphaned tickets risk | LOW | G2 |
 | | **G3 - Security Code** | | |
 | SEC1 | Temporary password returned in plain text by create-user API | HIGH | G3 |
@@ -196,6 +193,9 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 | DB-NEW-8 | `CREATE INDEX idx_expense_attachments_reimbursement_id ON expense_attachments(reimbursement_id)` — migration 071 | 2026-04-15 |
 | DB-NEW-9 | `DROP CONSTRAINT collaborators_telegram_chat_id_key` (redundant full UNIQUE; partial idx kept) — migration 072 | 2026-04-16 |
 | DB3 | Mitigated by design — `auth.uid()` is `LANGUAGE sql STABLE`, PostgreSQL auto-inlines to `(SELECT auth.uid())`. All 39 policies already use subquery form in internal representation. No action needed. | 2026-04-16 |
+| DB13 | `CREATE INDEX tickets_community_id_idx ON tickets(community_id)` — migration 073 | 2026-04-16 |
+| DB14 | `CREATE INDEX corsi_community_id_idx ON corsi(community_id)` — migration 073 | 2026-04-16 |
+| DB15 | `CREATE INDEX documents_community_id_idx ON documents(community_id)` — migration 073 | 2026-04-16 |
 
 ### Superseded / consolidated items
 
@@ -660,26 +660,7 @@ Items verified as resolved in codebase (2026-04-14 audit). Kept for historical r
 - **Impact**: MEDIUM (minor at current admin count; becomes measurable if admin count grows)
 - **Fix**: Collect all notification objects into an array and issue a single `.insert(notificationsArray)` call after the loop.
 
-### DB13 — `tickets.community_id` FK column unindexed
-- **Problem**: `tickets.community_id → communities.id` has no index. The `tickets_manager_read` RLS policy joins `collaborators → collaborator_communities → user_community_access` and then filters via `creator_user_id`; if any future query filters by `community_id` directly (e.g. community-scoped ticket list), it performs a sequential scan.
-- **Files**: `supabase/migrations/` — add index
-- **Impact**: MEDIUM
-- **Fix**: `CREATE INDEX tickets_community_id_idx ON tickets(community_id);`
-- **Discovered**: skill-db audit 2026-03-27
-
-### DB14 — `corsi.community_id` FK column unindexed
-- **Problem**: `corsi.community_id → communities.id` has no index. Queries filtering corsi by community (e.g. resp.citt joining corsi on city, admin per-community corsi list) perform sequential scans on the full corsi table.
-- **Files**: `supabase/migrations/` — add index
-- **Impact**: MEDIUM
-- **Fix**: `CREATE INDEX corsi_community_id_idx ON corsi(community_id);`
-- **Discovered**: skill-db audit 2026-03-27
-
-### DB15 — `documents.community_id` FK column unindexed
-- **Problem**: `documents.community_id → communities.id` has no index. Responsabile document queries use `can_manage_community(community_id)` in `documents_manager_read` RLS policy — if any query filters by `community_id`, it scans the full documents table.
-- **Files**: `supabase/migrations/` — add index
-- **Impact**: LOW (responsabile document queries currently go through `collaborator_id` first)
-- **Fix**: `CREATE INDEX documents_community_id_idx ON documents(community_id);`
-- **Discovered**: skill-db audit 2026-03-27
+### DB13, DB14, DB15 — RESOLVED (see resolved archive)
 
 ### DB16 — `tickets.creator_user_id ON DELETE NO ACTION` — orphaned tickets risk
 - **Problem**: The FK `tickets.creator_user_id → auth.users` uses `ON DELETE NO ACTION`. If an auth user is deleted (e.g. admin deactivates + removes account), their tickets remain with a dangling `creator_user_id` that no longer resolves. The ticket_messages, notifications, and community joins based on this FK become logically orphaned.
