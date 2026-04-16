@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Check, AlertTriangle, ChevronDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS, TSHIRT_SIZES } from '@/lib/types';
@@ -58,6 +58,40 @@ const readonlyCls =
 const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 const sectionCls = 'rounded-2xl bg-card border border-border';
 const sectionHeader = 'px-5 py-4 border-b border-border';
+
+function Section({
+  title,
+  subtitle,
+  headerRight,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  subtitle?: string;
+  headerRight?: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <Collapsible defaultOpen={defaultOpen} className={sectionCls}>
+      <CollapsibleTrigger asChild>
+        <button type="button" className="w-full px-5 py-4 border-b border-border flex items-center justify-between gap-2 text-left">
+          <div className="min-w-0">
+            <h2 className="text-sm font-medium text-foreground">{title}</h2>
+            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {headerRight}
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+          </div>
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="p-5 space-y-4">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -139,6 +173,33 @@ export default function ProfileForm({ collaborator, role, email, community, comm
   const [loading, setLoading]           = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Dirty state — compare current values to initial
+  const initial = useMemo(() => ({
+    email, nome: collaborator?.nome ?? '', cognome: collaborator?.cognome ?? '',
+    codiceFiscale: collaborator?.codice_fiscale ?? '', dataNascita: collaborator?.data_nascita ?? '',
+    luogoNascita: collaborator?.luogo_nascita ?? '', provinciaNascita: collaborator?.provincia_nascita ?? '',
+    comuneRes: collaborator?.comune ?? '', provinciaRes: collaborator?.provincia_residenza ?? '',
+    telefono: collaborator?.telefono ?? '', indirizzo: collaborator?.indirizzo ?? '',
+    civico: collaborator?.civico_residenza ?? '', iban: collaborator?.iban ?? '',
+    intestatarioPagamento: collaborator?.intestatario_pagamento ?? '',
+    sonoFiglio: collaborator?.sono_un_figlio_a_carico ?? false,
+    massimale: collaborator?.importo_lordo_massimale != null ? String(collaborator.importo_lordo_massimale) : '',
+    tshirt: collaborator?.tshirt_size ?? '', citta: collaborator?.citta ?? '',
+    materieInsegnate: collaborator?.materie_insegnate ?? [],
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
+
+  const isDirty =
+    emailVal !== initial.email || nome !== initial.nome || cognome !== initial.cognome ||
+    codiceFiscale !== initial.codiceFiscale || dataNascita !== initial.dataNascita ||
+    luogoNascita !== initial.luogoNascita || provinciaNascita !== initial.provinciaNascita ||
+    comuneRes !== initial.comuneRes || provinciaRes !== initial.provinciaRes ||
+    telefono !== initial.telefono || indirizzo !== initial.indirizzo || civico !== initial.civico ||
+    iban !== initial.iban || intestatarioPagamento !== initial.intestatarioPagamento ||
+    sonoFiglio !== initial.sonoFiglio || massimale !== initial.massimale ||
+    tshirt !== initial.tshirt || citta !== initial.citta ||
+    JSON.stringify(materieInsegnate) !== JSON.stringify(initial.materieInsegnate);
 
   useEffect(() => {
     const comm = community || 'testbusters';
@@ -293,12 +354,7 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         </div>
       </div>
 
-      {/* Informazioni personali — editable */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Informazioni personali</h2>
-        </div>
-        <div className="p-5 space-y-4">
+      <Section title="Informazioni personali">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Nome</label>
@@ -381,15 +437,9 @@ export default function ProfileForm({ collaborator, role, email, community, comm
                 disabled={loading} maxLength={2} className="font-mono uppercase" />
             </div>
           </div>
-        </div>
-      </div>
+      </Section>
 
-      {/* Contacts — editable */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Contatti</h2>
-        </div>
-        <div className="p-5 space-y-4">
+      <Section title="Contatti">
           <div>
             <label className={labelCls}>Email</label>
             <Input
@@ -409,16 +459,9 @@ export default function ProfileForm({ collaborator, role, email, community, comm
               disabled={loading}
             />
           </div>
-        </div>
-      </div>
+      </Section>
 
-      {/* Payment — editable */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Dati pagamento</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Visibile solo a te e all&apos;amministrazione.</p>
-        </div>
-        <div className="p-5 space-y-4">
+      <Section title="Dati pagamento" subtitle="Visibile solo a te e all'amministrazione.">
           <div>
             <label className={labelCls}>Intestatario del conto bancario</label>
             <Input
@@ -446,26 +489,22 @@ export default function ProfileForm({ collaborator, role, email, community, comm
             />
             <p className="text-xs text-muted-foreground mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
           </div>
-        </div>
-      </div>
+      </Section>
 
-      {/* Dati fiscali */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-foreground">Dati fiscali</h2>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowGuida(true)}
-              className="text-xs text-link hover:text-link/80 h-auto p-0 underline underline-offset-2"
-            >
-              Come funziona la prestazione occasionale?
-            </Button>
-          </div>
-        </div>
-        <div className="p-5 space-y-5">
+      <Section
+        title="Dati fiscali"
+        headerRight={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); setShowGuida(true); }}
+            className="text-xs text-link hover:text-link/80 h-auto p-0 underline underline-offset-2"
+          >
+            Guida fiscale
+          </Button>
+        }
+      >
           <div>
             <label className="flex items-start gap-3 cursor-pointer">
               <Checkbox
@@ -481,7 +520,7 @@ export default function ProfileForm({ collaborator, role, email, community, comm
                 </p>
                 <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground list-none">
                   <li>· Figli under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
-                  <li>· Figli 24+ anni (dall'1/01 dell'anno del 24° compleanno): soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
+                  <li>· Figli 24+ anni (dall&apos;1/01 dell&apos;anno del 24° compleanno): soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
                 </ul>
               </div>
             </label>
@@ -519,8 +558,7 @@ export default function ProfileForm({ collaborator, role, email, community, comm
               </p>
             </div>
           )}
-        </div>
-      </div>
+      </Section>
 
       {/* Guida fiscale — modal */}
       <Dialog open={showGuida} onOpenChange={(v) => { if (!v) setShowGuida(false); }}>
@@ -592,10 +630,10 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         </DialogContent>
       </Dialog>
 
-      {/* Community — read-only for collaboratori (admin assigns via /admin/collaboratori/[id]) */}
+      {/* Community — read-only, not collapsible */}
       {role === 'collaboratore' && (
         <div className={sectionCls}>
-          <div className={sectionHeader}>
+          <div className="px-5 py-4 border-b border-border">
             <h2 className="text-sm font-medium text-foreground">Community</h2>
           </div>
           <div className="p-5">
@@ -606,12 +644,7 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         </div>
       )}
 
-      {/* Preferences — editable */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Preferenze</h2>
-        </div>
-        <div className="p-5">
+      <Section title="Preferenze">
           <label className={labelCls}>Taglia t-shirt</label>
           <Select value={tshirt || undefined} onValueChange={setTshirt} disabled={loading}>
             <SelectTrigger><SelectValue placeholder="— Non specificata —" /></SelectTrigger>
@@ -619,17 +652,9 @@ export default function ProfileForm({ collaborator, role, email, community, comm
               {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
-      </div>
+      </Section>
 
-
-      {/* Attività — città + materie */}
-      <div className={sectionCls}>
-        <div className={sectionHeader}>
-          <h2 className="text-sm font-medium text-foreground">Attività</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Città e materie che insegni.</p>
-        </div>
-        <div className="p-5 space-y-5">
+      <Section title="Attività" subtitle="Città e materie che insegni.">
           <div>
             <label className={labelCls}>
               Città <span className="text-destructive">*</span>
@@ -678,26 +703,30 @@ export default function ProfileForm({ collaborator, role, email, community, comm
               <p className="text-xs text-muted-foreground mt-1.5">Seleziona almeno una materia.</p>
             )}
           </div>
-        </div>
-      </div>
+      </Section>
 
-      <Button
-        type="submit"
-        disabled={loading}
-        className="bg-brand hover:bg-brand/90 text-white"
-      >
-        {loading ? (
-          <>
-            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Salvataggio…
-          </>
-        ) : (
-          'Salva modifiche'
-        )}
-      </Button>
+      {/* Sticky save bar — visible only when form is dirty */}
+      {isDirty && (
+        <div className="sticky bottom-0 z-10 -mx-6 px-6 py-3 bg-background/80 backdrop-blur-sm border-t border-border">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-brand hover:bg-brand/90 text-white"
+          >
+            {loading ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Salvataggio…
+              </>
+            ) : (
+              'Salva modifiche'
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
