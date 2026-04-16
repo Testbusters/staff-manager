@@ -98,16 +98,18 @@ export default async function CompensationDetailPage({
           compensation={compensation}
         />
 
-        {(history ?? []).length > 0 && (
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
-                Cronologia
-              </p>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              Cronologia
+            </p>
+            {(history ?? []).length > 0 ? (
               <Timeline events={history ?? []} />
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-sm text-muted-foreground">Nessuna attività registrata.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
