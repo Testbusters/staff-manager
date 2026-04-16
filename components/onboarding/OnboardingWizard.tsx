@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { TSHIRT_SIZES } from '@/lib/types';
 import type { ContractTemplateType } from '@/lib/types';
 import { generateUsername } from '@/lib/username';
 import { Input } from '@/components/ui/input';
@@ -42,9 +43,6 @@ interface Props {
   tipoLabel: string | null;
   community: string;
 }
-
-const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-
 
 const labelCls = 'block text-xs text-muted-foreground mb-1.5';
 

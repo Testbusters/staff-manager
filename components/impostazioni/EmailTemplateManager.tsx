@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import EmailLayoutEditor from './EmailLayoutEditor';
-import type { EmailTemplateRow, EmailLayoutConfig } from '@/lib/email-template-service';
-import { buildPreviewHtml } from '@/lib/email-template-service';
+import type { EmailTemplateRow, EmailLayoutConfig } from '@/lib/email-preview-utils';
+import { buildPreviewHtml } from '@/lib/email-preview-utils';
 
 // ── Sample data for preview ───────────────────────────────────────────────────
 

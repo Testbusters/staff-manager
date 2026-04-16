@@ -19,6 +19,7 @@ import ResetPasswordDialog from '@/components/collaboratori/ResetPasswordDialog'
 import {
   DOCUMENT_TYPE_LABELS,
   DOCUMENT_SIGN_STATUS_LABELS,
+  TSHIRT_SIZES,
   type DocumentType,
   type DocumentSignStatus,
   type Role,
@@ -62,7 +63,13 @@ interface LookupOption {
   nome: string;
 }
 
-interface CollaboratoreDetailProps {
+export interface InviteTrackingProps {
+  inviteEmailSent?: boolean;
+  onboardingCompleted?: boolean;
+  mustChangePassword?: boolean;
+}
+
+interface CollaboratoreDetailProps extends InviteTrackingProps {
   collab: CollabData;
   userId: string | null;
   memberStatus: string | null;
@@ -75,9 +82,6 @@ interface CollaboratoreDetailProps {
   cittaOptions?: LookupOption[];
   materiaOptions?: LookupOption[];
   telegramConnected?: boolean;
-  inviteEmailSent?: boolean;
-  onboardingCompleted?: boolean;
-  mustChangePassword?: boolean;
 }
 
 const MEMBER_STATUS_LABELS: Record<string, string> = {
@@ -353,25 +357,25 @@ export default function CollaboratoreDetail({
       {role === 'amministrazione' && (
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Mail invito:</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">Mail invito:</span>
             {inviteEmailSent ? (
-              <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/60 dark:text-green-300 dark:border-green-800/60 px-2 py-0.5 rounded-full">
                 Inviata
               </span>
             ) : (
-              <span className="text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/60 dark:text-red-300 dark:border-red-800/60 px-2 py-0.5 rounded-full">
                 Non inviata
               </span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Attivazione profilo:</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">Attivazione profilo:</span>
             {onboardingCompleted ? (
-              <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/60 dark:text-green-300 dark:border-green-800/60 px-2 py-0.5 rounded-full">
                 Completato
               </span>
             ) : (
-              <span className="text-[10px] font-medium bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
                 In attesa
               </span>
             )}
@@ -655,7 +659,7 @@ export default function CollaboratoreDetail({
                       <SelectValue placeholder="— Non specificata —" />
                     </SelectTrigger>
                     <SelectContent>
-                      {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((s) => (
+                      {TSHIRT_SIZES.map((s) => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
                     </SelectContent>
