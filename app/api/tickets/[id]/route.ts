@@ -30,7 +30,7 @@ export async function GET(
   // Fetch ticket (RLS ensures access)
   const { data: ticket, error: ticketErr } = await supabase
     .from('tickets')
-    .select('*')
+    .select('id, creator_user_id, community_id, categoria, oggetto, stato, priority, created_at')
     .eq('id', id)
     .single();
 
@@ -41,7 +41,7 @@ export async function GET(
   // Fetch messages
   const { data: rawMessages, error: msgErr } = await supabase
     .from('ticket_messages')
-    .select('*')
+    .select('id, ticket_id, author_user_id, message, attachment_url, attachment_name, created_at')
     .eq('ticket_id', id)
     .order('created_at', { ascending: true });
 

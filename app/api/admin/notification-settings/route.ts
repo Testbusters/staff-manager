@@ -27,7 +27,7 @@ export async function GET() {
 
   const { data, error } = await svc
     .from('notification_settings')
-    .select('*')
+    .select('id, event_key, recipient_role, inapp_enabled, email_enabled, telegram_enabled, created_at')
     .order('event_key');
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });

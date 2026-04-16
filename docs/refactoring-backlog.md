@@ -31,7 +31,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | API8 | `POST /api/admin/create-user` returns 200 instead of 201 | LOW | G4 |
 | API13 | `POST /api/import/collaboratori/run` `skipContract` defaults to `true` | LOW | G4 |
 | | **G6 - Performance** | | |
-| PERF-7 | `select('*')` on 20+ API list routes - over-fetches large text columns | MEDIUM | G6 |
 | P1 | `GET /api/compensations` join does not enrich collaborator name | LOW | G6 |
 | DEV-11 | `GET /api/blacklist` has no pagination - unbounded query | LOW | G6 |
 | | **G5 remnants - DRY / Code Quality** | | |
@@ -141,10 +140,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 
 ### API13 — `POST /api/import/collaboratori/run` `skipContract` defaults to `true`
 - **Impact**: LOW
-
-### PERF-7 — `select('*')` on 20+ API list routes
-- **Problem**: Over-fetches large text columns on list endpoints.
-- **Impact**: MEDIUM
 
 ### P1 — GET compensations join does not enrich collaborator name
 - **Files**: `app/api/compensations/route.ts:44-47`

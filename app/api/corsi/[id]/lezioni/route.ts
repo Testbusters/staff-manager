@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   );
   const { data, error } = await svc
     .from('lezioni')
-    .select('*')
+    .select('id, corso_id, data, orario_inizio, orario_fine, materie, created_at, updated_at')
     .eq('corso_id', id)
     .order('data')
     .order('orario_inizio');

@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('expense_reimbursements')
-    .select('*')
+    .select('id, collaborator_id, community_id, categoria, data_spesa, importo, descrizione, stato, liquidated_at, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (statoFilter) {

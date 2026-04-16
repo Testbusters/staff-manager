@@ -26,7 +26,7 @@ export async function GET(
 
   const { data: history } = await supabase
     .from('compensation_history')
-    .select('*')
+    .select('id, compensation_id, stato_precedente, stato_nuovo, changed_by, role_label, note, created_at')
     .eq('compensation_id', id)
     .order('created_at', { ascending: true });
 

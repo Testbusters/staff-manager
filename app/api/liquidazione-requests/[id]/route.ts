@@ -46,7 +46,7 @@ export async function PATCH(
 
   const { data: req, error: fetchError } = await svc
     .from('liquidazione_requests')
-    .select('*')
+    .select('id, collaborator_id, compensation_ids, expense_ids, importo_netto_totale, iban, ha_partita_iva, stato, note_admin, processed_at, processed_by, created_at')
     .eq('id', id)
     .single();
 
