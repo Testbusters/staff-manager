@@ -9,41 +9,31 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createTicketSchema, type CreateTicketFormValues } from '@/lib/schemas/ticket';
 import { toast } from 'sonner';
 
 export default function TicketQuickModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [categoria, setCategoria] = useState('');
-  const [priority, setPriority] = useState<TicketPriority>('NORMALE');
-  const [oggetto, setOggetto] = useState('');
-  const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function handleClose() {
-    setOpen(false);
-    setCategoria('');
-    setPriority('NORMALE');
-    setOggetto('');
-    setMessaggio('');
-  }
+  const form = useForm<CreateTicketFormValues>({
+    resolver: zodResolver(createTicketSchema),
+    defaultValues: { categoria: '', oggetto: '', messaggio: '', priority: 'NORMALE' },
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!categoria || !oggetto.trim()) {
-      toast.error('Riferimento e oggetto sono obbligatori.', { duration: 5000 });
-      return;
-    }
+  async function onSubmit(values: CreateTicketFormValues) {
     setLoading(true);
 
     const res = await fetch('/api/tickets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        categoria,
-        priority,
-        oggetto: oggetto.trim(),
-        messaggio: messaggio.trim() || undefined,
+        categoria: values.categoria,
+        priority: values.priority,
+        oggetto: values.oggetto.trim(),
+        messaggio: values.messaggio?.trim() || undefined,
       }),
     });
 
@@ -63,75 +53,72 @@ export default function TicketQuickModal() {
         Apri ticket
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+      <Dialog open={open} onOpenChange={(v) => { if (!v) form.reset(); setOpen(v); }}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">Apri un ticket</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">
-                Riferimento <span className="text-destructive">*</span>
-              </label>
-              <Select value={categoria || undefined} onValueChange={setCategoria}>
-                <SelectTrigger><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
-                <SelectContent>
-                  {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
+              <FormField control={form.control} name="categoria" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Riferimento <span className="text-destructive">*</span></FormLabel>
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">
-                Oggetto <span className="text-destructive">*</span>
-              </label>
-              <Input
-                type="text"
-                value={oggetto}
-                onChange={(e) => setOggetto(e.target.value)}
-                placeholder="Descrivi brevemente il problema o la richiesta"
-                maxLength={200}
-                required
-              />
-            </div>
+              <FormField control={form.control} name="oggetto" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Oggetto <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Descrivi brevemente il problema o la richiesta" maxLength={200} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">
-                Messaggio <span className="text-muted-foreground font-normal">(opzionale)</span>
-              </label>
-              <Textarea
-                value={messaggio}
-                onChange={(e) => setMessaggio(e.target.value)}
-                placeholder="Aggiungi dettagli o contesto..."
-                rows={4}
-                className="resize-none"
-              />
-            </div>
+              <FormField control={form.control} name="messaggio" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Messaggio <span className="text-muted-foreground font-normal">(opzionale)</span></FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Aggiungi dettagli o contesto..." rows={4} className="resize-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-            <div className="space-y-1.5">
-              <label htmlFor="quick-priority" className="block text-sm font-medium text-foreground">
-                Priorità
-              </label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
-                <SelectTrigger id="quick-priority"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(TICKET_PRIORITY_LABELS) as TicketPriority[]).map((p) => (
-                    <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <FormField control={form.control} name="priority" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priorità</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {(Object.keys(TICKET_PRIORITY_LABELS) as TicketPriority[]).map((p) => (
+                        <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-            <div className="flex items-center gap-3 pt-1">
-              <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-                {loading ? 'Apertura…' : 'Apri ticket'}
-              </Button>
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Annulla
-              </Button>
-            </div>
-          </form>
+              <div className="flex items-center gap-3 pt-1">
+                <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+                  {loading ? 'Apertura…' : 'Apri ticket'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => { form.reset(); setOpen(false); }}>
+                  Annulla
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>

@@ -2,16 +2,23 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { z } from 'zod';
 import { toast } from 'sonner';
 import { Shield, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Form, FormControl, FormField, FormItem, FormMessage, useForm, zodResolver } from '@/components/ui/form';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
+const createCommunitySchema = z.object({
+  name: z.string().min(1, 'Il nome non può essere vuoto'),
+});
+type CreateCommunityForm = z.infer<typeof createCommunitySchema>;
 
 type Community = { id: string; name: string; is_active: boolean };
 type Responsabile = { user_id: string; display_name: string; email: string; communities: { id: string; name: string }[]; can_publish_announcements: boolean };
@@ -26,22 +33,23 @@ export default function CommunityManager({
   const router = useRouter();
 
   // ── Create community ──────────────────────────────────────
-  const [newName, setNewName] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
+  const createForm = useForm<CreateCommunityForm>({
+    resolver: zodResolver(createCommunitySchema),
+    defaultValues: { name: '' },
+  });
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newName.trim()) return;
+  async function handleCreate(values: CreateCommunityForm) {
     setCreateLoading(true);
     const res = await fetch('/api/admin/communities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName.trim() }),
+      body: JSON.stringify({ name: values.name.trim() }),
     });
     setCreateLoading(false);
     if (!res.ok) { const j = await res.json(); toast.error(j.error ?? 'Errore.', { duration: 5000 }); return; }
     toast.success('Community creata.');
-    setNewName('');
+    createForm.reset();
     router.refresh();
   }
 
@@ -152,14 +160,21 @@ export default function CommunityManager({
           <h2 className="text-sm font-medium text-foreground">Crea community</h2>
         </div>
         <div className="p-5">
-          <form onSubmit={handleCreate} className="flex gap-3">
-            <Input value={newName} onChange={(e) => setNewName(e.target.value)}
-              placeholder="Nome community"
-              className="flex-1" />
-            <Button type="submit" disabled={createLoading || !newName.trim()} className="bg-brand hover:bg-brand/90 text-white">
-              {createLoading ? 'Creazione…' : 'Crea'}
-            </Button>
-          </form>
+          <Form {...createForm}>
+            <form onSubmit={createForm.handleSubmit(handleCreate)} className="flex gap-3">
+              <FormField control={createForm.control} name="name" render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormControl>
+                    <Input {...field} placeholder="Nome community" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <Button type="submit" disabled={createLoading || !createForm.watch('name').trim()} className="bg-brand hover:bg-brand/90 text-white">
+                {createLoading ? 'Creazione…' : 'Crea'}
+              </Button>
+            </form>
+          </Form>
         </div>
       </div>
 

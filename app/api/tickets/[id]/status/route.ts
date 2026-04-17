@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { TicketStatus } from '@/lib/types';
 import { buildTicketStatusNotification } from '@/lib/notification-utils';
 import { getNotificationSettings } from '@/lib/notification-helpers';
 import { isValidUUID } from '@/lib/validate-id';
+import { ticketStatusSchema } from '@/lib/schemas/ticket';
 
 const VALID_STATI: TicketStatus[] = ['APERTO', 'IN_LAVORAZIONE', 'CHIUSO'];
-
-const PatchTicketStatusSchema = z.object({
-  stato: z.enum(['APERTO', 'IN_LAVORAZIONE', 'CHIUSO']),
-});
 
 export async function PATCH(
   request: Request,
@@ -36,7 +32,7 @@ export async function PATCH(
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = PatchTicketStatusSchema.safeParse(body);
+  const parsed = ticketStatusSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }

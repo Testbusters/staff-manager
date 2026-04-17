@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2, Circle, Plus, X } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { documentUploadSchema, type DocumentUploadFormValues } from '@/lib/schemas/document';
 
 interface CollaboratorOption {
   id: string;
@@ -63,13 +65,22 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
 
   const [selectedCollab, setSelectedCollab] = useState<CollaboratorOption | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [tipo, setTipo] = useState<DocumentType | ''>('');
-  const [anno, setAnno] = useState(String(currentYear));
-  const [titolo, setTitolo] = useState('');
-  const [statoFirma, setStatoFirma] = useState<DocumentSignStatus>('NON_RICHIESTO');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const form = useForm<DocumentUploadFormValues>({
+    resolver: zodResolver(documentUploadSchema),
+    defaultValues: {
+      tipo: '',
+      anno: currentYear,
+      titolo: '',
+      stato_firma: 'NON_RICHIESTO',
+    },
+  });
+
+  const tipo = form.watch('tipo');
+  const isContratto = tipo.startsWith('CONTRATTO_');
 
   const prevPreviewUrl = useRef<string | null>(null);
 
@@ -99,27 +110,29 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
     setStep(startStep);
     setSelectedCollab(null);
     setSearchQuery('');
-    setTipo('');
-    setAnno(String(currentYear));
-    setTitolo('');
-    setStatoFirma('NON_RICHIESTO');
+    form.reset({ tipo: '', anno: currentYear, titolo: '', stato_firma: 'NON_RICHIESTO' });
     handleFileChange(null);
     if (andClose) setIsOpen(false);
   };
 
   const handleSubmit = async () => {
     if (!file) return;
+    // Validate metadata fields before submitting
+    const valid = await form.trigger();
+    if (!valid) return;
+
+    const values = form.getValues();
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('tipo', tipo);
-      formData.append('titolo', titolo.trim());
-      formData.append('anno', anno || String(currentYear));
+      formData.append('tipo', values.tipo);
+      formData.append('titolo', values.titolo.trim());
+      formData.append('anno', String(values.anno));
       if (isAdmin && selectedCollab) {
         formData.append('collaborator_id', selectedCollab.id);
-        if (tipo.startsWith('CONTRATTO_')) {
-          formData.append('stato_firma', statoFirma);
+        if (values.tipo.startsWith('CONTRATTO_') && values.stato_firma) {
+          formData.append('stato_firma', values.stato_firma);
         }
       }
       const res = await fetch('/api/documents', { method: 'POST', body: formData });
@@ -146,8 +159,6 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
       })
     : [];
 
-  const isContratto = tipo.startsWith('CONTRATTO_');
-
   if (!isOpen) {
     return (
       <Button
@@ -163,6 +174,7 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
   return (
     <Card>
       <CardContent className="p-6">
+        <Form {...form}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-foreground">Carica documento</h2>
           <Button
@@ -223,83 +235,94 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
           <div className="space-y-4">
             {/* Tipo + Anno */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">
-                  Tipo <span className="text-destructive">*</span>
-                </label>
-                <Select
-                  value={tipo || undefined}
-                  onValueChange={(v) => { setTipo(v as DocumentType); setStatoFirma('NON_RICHIESTO'); }}
-                >
-                  <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
-                  <SelectContent>
-                    {UPLOAD_TIPI.map((t) => (
-                      <SelectItem key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">Anno</label>
-                <Input
-                  type="number"
-                  value={anno}
-                  onChange={(e) => setAnno(e.target.value)}
-                  min={2000}
-                  max={2100}
-                />
-              </div>
+              <FormField control={form.control} name="tipo" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Tipo <span className="text-destructive">*</span></FormLabel>
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={(v) => { field.onChange(v); form.setValue('stato_firma', 'NON_RICHIESTO'); }}
+                  >
+                    <FormControl><SelectTrigger><SelectValue placeholder="- Seleziona -" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {UPLOAD_TIPI.map((t) => (
+                        <SelectItem key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="anno" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Anno</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || currentYear)}
+                      min={2000}
+                      max={2100}
+                    />
+                  </FormControl>
+                </FormItem>
+              )} />
             </div>
 
             {/* Titolo */}
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">
-                Titolo <span className="text-destructive">*</span>
-              </label>
-              <Input
-                type="text"
-                value={titolo}
-                onChange={(e) => setTitolo(e.target.value)}
-                placeholder="es. Contratto collaborazione febbraio 2026"
-              />
-            </div>
+            <FormField control={form.control} name="titolo" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs text-muted-foreground">Titolo <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="es. Contratto collaborazione febbraio 2026"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-            {/* Stato firma — admin only, CONTRATTO only */}
+            {/* Stato firma - admin only, CONTRATTO only */}
             {isAdmin && isContratto && (
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">Firma richiesta</label>
-                <div className="flex gap-4">
-                  {(['DA_FIRMARE', 'NON_RICHIESTO'] as DocumentSignStatus[]).map((s) => (
-                    <label key={s} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="stato_firma"
-                        value={s}
-                        checked={statoFirma === s}
-                        onChange={() => setStatoFirma(s)}
-                        className="accent-[var(--color-brand)]"
-                      />
-                      <span className="text-sm text-foreground">
-                        {s === 'DA_FIRMARE' ? 'Sì — richiedi firma' : 'No — solo informativo'}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              <FormField control={form.control} name="stato_firma" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Firma richiesta</FormLabel>
+                  <div className="flex gap-4">
+                    {(['DA_FIRMARE', 'NON_RICHIESTO'] as DocumentSignStatus[]).map((s) => (
+                      <label key={s} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="stato_firma"
+                          value={s}
+                          checked={field.value === s}
+                          onChange={() => field.onChange(s)}
+                          className="accent-[var(--color-brand)]"
+                        />
+                        <span className="text-sm text-foreground">
+                          {s === 'DA_FIRMARE' ? 'Si - richiedi firma' : 'No - solo informativo'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </FormItem>
+              )} />
             )}
 
             <div className="flex items-center justify-between pt-2">
               {isAdmin ? (
-                <Button variant="ghost" onClick={() => setStep(1)}>← Indietro</Button>
+                <Button variant="ghost" onClick={() => setStep(1)}>&#8592; Indietro</Button>
               ) : (
                 <Button variant="ghost" onClick={() => reset(true)}>Annulla</Button>
               )}
               <Button
-                onClick={() => setStep(3)}
-                disabled={!tipo || !titolo.trim()}
+                onClick={async () => {
+                  const valid = await form.trigger(['tipo', 'titolo']);
+                  if (valid) setStep(3);
+                }}
+                disabled={!tipo || !form.watch('titolo').trim()}
                 className="bg-brand hover:bg-brand/90 text-white"
               >
-                Avanti →
+                Avanti &#8594;
               </Button>
             </div>
           </div>
@@ -334,17 +357,18 @@ export default function DocumentUploadForm({ collaborators, isAdmin }: Props) {
             )}
 
             <div className="flex items-center justify-between pt-2">
-              <Button variant="ghost" onClick={() => setStep(2)}>← Indietro</Button>
+              <Button variant="ghost" onClick={() => setStep(2)}>&#8592; Indietro</Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!file || submitting}
                 className="bg-brand hover:bg-brand/90 text-white"
               >
-                {submitting ? 'Caricamento…' : 'Carica documento'}
+                {submitting ? 'Caricamento...' : 'Carica documento'}
               </Button>
             </div>
           </div>
         )}
+        </Form>
       </CardContent>
     </Card>
   );

@@ -1,22 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { z } from 'zod';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
 import { MAX_PENDING_COMPENSATIONS } from '@/lib/rate-limits';
-
-const createSchema = z.object({
-  collaborator_id: z.string().uuid(),
-  community_id: z.string().uuid().optional(),
-  data_competenza: z.string(),
-  nome_servizio_ruolo: z.string().min(1),
-  competenza: z.string().min(1),
-  info_specifiche: z.string().optional(),
-  importo_lordo: z.number().positive('Importo lordo deve essere positivo'),
-  ritenuta_acconto: z.number().min(0),
-  importo_netto: z.number().positive(),
-});
+import { createCompensationSchema } from '@/lib/schemas/compensation';
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -61,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = createSchema.safeParse(body);
+  const parsed = createCompensationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }

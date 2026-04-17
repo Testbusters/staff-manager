@@ -1,20 +1,11 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
-
-const CreateCommunicationSchema = z.object({
-  titolo: z.string().min(1),
-  contenuto: z.string().min(1),
-  pinned: z.boolean().optional(),
-  community_ids: z.array(z.string()).optional(),
-  expires_at: z.string().nullable().optional(),
-  file_urls: z.array(z.string()).optional(),
-});
+import { createCommunicationSchema } from '@/lib/schemas/communication';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -32,7 +23,7 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const parsed = CreateCommunicationSchema.safeParse(body);
+  const parsed = createCommunicationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }

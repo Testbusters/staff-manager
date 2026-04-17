@@ -1,23 +1,13 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { createOpportunitySchema } from '@/lib/schemas/opportunity';
 
 const VALID_TIPO = ['Volontariato', 'Formazione', 'Lavoro', 'Altro'];
-
-const CreateOpportunitySchema = z.object({
-  titolo: z.string().min(1),
-  tipo: z.enum(['Volontariato', 'Formazione', 'Lavoro', 'Altro']).optional(),
-  descrizione: z.string().min(1),
-  scadenza_candidatura: z.string().optional(),
-  link_candidatura: z.string().optional(),
-  file_url: z.string().optional(),
-  community_ids: z.array(z.string()).optional(),
-});
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -35,7 +25,7 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const parsed = CreateOpportunitySchema.safeParse(body);
+  const parsed = createOpportunitySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
