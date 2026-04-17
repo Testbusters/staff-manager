@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     .single();
 
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
-  if (!['responsabile_compensi', 'amministrazione'].includes(profile.role)) {
+  if (profile.role !== 'amministrazione') {
     return NextResponse.json({ error: 'Accesso non autorizzato' }, { status: 403 });
   }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   // Fetch the requested reimbursements
   const { data: expenses, error: fetchError } = await svc
     .from('expense_reimbursements')
-    .select('id, community_id, stato')
+    .select('id, stato')
     .in('id', ids);
 
   if (fetchError) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
@@ -55,26 +55,6 @@ export async function POST(request: Request) {
       { error: 'Alcuni rimborsi selezionati non sono in stato IN_ATTESA.' },
       { status: 409 },
     );
-  }
-
-  // Responsabile: verify community access for each reimbursement
-  if (role === 'responsabile_compensi') {
-    const { data: access } = await svc
-      .from('user_community_access')
-      .select('community_id')
-      .eq('user_id', user.id);
-
-    const managedIds = new Set((access ?? []).map((a: { community_id: string }) => a.community_id));
-    const unauthorized = (expenses ?? []).filter(
-      (e) => e.community_id && !managedIds.has(e.community_id),
-    );
-
-    if (unauthorized.length > 0) {
-      return NextResponse.json(
-        { error: 'Alcuni rimborsi non appartengono alle community a te assegnate.' },
-        { status: 403 },
-      );
-    }
   }
 
   const now = new Date().toISOString();

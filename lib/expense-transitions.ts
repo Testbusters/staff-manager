@@ -13,9 +13,9 @@ interface TransitionDef {
 }
 
 export const ALLOWED_EXPENSE_TRANSITIONS: Record<ExpenseAction, TransitionDef> = {
-  approve:           { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: false },
-  reject:            { fromStates: ['IN_ATTESA'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: true  },
-  mark_liquidated:   { fromStates: ['APPROVATO'], allowedRoles: ['responsabile_compensi', 'amministrazione'], requiresNote: false },
+  approve:           { fromStates: ['IN_ATTESA'], allowedRoles: ['amministrazione'], requiresNote: false },
+  reject:            { fromStates: ['IN_ATTESA'], allowedRoles: ['amministrazione'], requiresNote: true  },
+  mark_liquidated:   { fromStates: ['APPROVATO'], allowedRoles: ['amministrazione'], requiresNote: false },
   revert_to_pending: { fromStates: ['APPROVATO'], allowedRoles: ['amministrazione'],                          requiresNote: true  },
 };
 

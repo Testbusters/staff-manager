@@ -16,12 +16,11 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 |----|--------|---------|-------|
 | | **G3 - Security Code** | | |
 | SEC1 | Temporary password returned in plain text by create-user API | HIGH | G3 |
-| SEC9 | `responsabile_compensi` can approve/reject expenses via API (RBAC gap) | HIGH | G3 |
-| DB-RLS-1 | 3 dead expense RLS policies reference stale `INVIATO`/`INTEGRAZIONI_RICHIESTE` states | HIGH | G3 |
 | DB-RLS-2 | `expense_history` FK CASCADE deletes audit trail on expense deletion | MEDIUM | G3 |
 | SEC2 | Invite email does not include a direct link with token | MEDIUM | G3 |
 | SEC10 | DELETE `/api/expenses/[id]` phantom success for `responsabile_compensi` (no DELETE RLS) | MEDIUM | G3 |
 | SEC11 | `GET /api/expenses` unvalidated `?stato=` query param in `.in()` filter | MEDIUM | G3 |
+| SEC15 | `exp_history_insert_authenticated` RLS allows any active user to forge expense audit trail | MEDIUM | G3 |
 | SEC14 | Attachment upload trusts client-supplied MIME type (no magic-byte check) | LOW | G3 |
 | SEC-NEW-4 | 7 admin RLS `FOR ALL` policies lack explicit `WITH CHECK` | LOW | G3 |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW | G3 |
@@ -47,8 +46,7 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | DEV-11 | `GET /api/blacklist` has no pagination - unbounded query | LOW | G6 |
 | | **G5 remnants - DRY / Code Quality** | | |
 | S8 | `formatDate` and `formatCurrency` duplicated across 4+ components | LOW | G5 |
-| DEV-12 | Floating promise on expense approve button (no error feedback) | HIGH | G5 |
-| DEV-13 | Phantom state `INVIATO` in expense rate-limit query | LOW | G5 |
+| DEV-14 | `MassimaleImpact` type defined in client component, imported by API route | MEDIUM | G5 |
 | DEV-7 | Cross-module coupling: expense/ imports compensation/, responsabile/ imports admin/ | LOW | G5 |
 | DEV-10 | `pdf-utils.ts` uses `as any` for pdfjs-dist and pdf-lib types | LOW | G5 |
 | A3 | `createServiceClient()` instantiated per route (no singleton) | LOW | G5 |
@@ -88,16 +86,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: HIGH
 - **Fix**: Consider Supabase magic link instead of a temporary password. If password is kept, send it only via email - never in the response body.
 
-### SEC9 — `responsabile_compensi` can approve/reject expenses via API (RBAC gap)
-- **Problem**: `lib/expense-transitions.ts` grants `responsabile_compensi` approve/reject/mark_liquidated actions. Three API routes (`[id]/transition`, `approve-bulk`, `approve-all`) delegate to that function without explicit role pre-check. UI correctly blocks this, but direct API calls bypass the restriction.
-- **Files**: `lib/expense-transitions.ts:16-18`, `app/api/expenses/[id]/transition/route.ts:74`, `app/api/expenses/approve-bulk/route.ts:25`, `app/api/expenses/approve-all/route.ts:27`
-- **Impact**: HIGH
-- **Fix**: Add explicit role pre-check in each route; remove resp from `ALLOWED_EXPENSE_TRANSITIONS` for approve/reject/mark_liquidated.
-
-### DB-RLS-1 — 3 dead expense RLS policies reference stale states
-- **Problem**: `expenses_own_update_inviato`, `expenses_responsabile_update`, and `exp_attachments_own_insert` reference `INVIATO` and `INTEGRAZIONI_RICHIESTE` states removed in migration 023. Policies are effectively dead - no rows match. Mitigated by API-level service role usage and state checks, but defense-in-depth is absent.
-- **Impact**: HIGH
-- **Fix**: Single migration: (1) drop `expenses_own_update_inviato`, recreate with `stato = 'IN_ATTESA'`; (2) drop `expenses_responsabile_update` (resp has read-only access per RBAC matrix); (3) fix `exp_attachments_own_insert` to reference `'IN_ATTESA'`.
 
 ### DB-RLS-2 — `expense_history` FK CASCADE deletes audit trail
 - **Problem**: `expense_history.reimbursement_id` uses ON DELETE CASCADE. Deleting an expense destroys the full audit trail. Financial records require preserved history.
@@ -110,6 +98,12 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: MEDIUM
 - **Fix**: Use `supabase.auth.admin.generateLink({ type: 'magiclink', email })` to add a one-time link.
 
+
+### SEC15 — `exp_history_insert_authenticated` RLS too broad
+- **Problem**: `exp_history_insert_authenticated` policy has `WITH CHECK (is_active_user())` - any active user can insert `expense_history` rows for any `reimbursement_id`, including expenses they don't own. Financial audit trail integrity bypass via direct Supabase client.
+- **Files**: `supabase/migrations/002_rls.sql`
+- **Impact**: MEDIUM
+- **Fix**: Add `EXISTS (SELECT 1 FROM expense_reimbursements e WHERE e.id = expense_history.reimbursement_id AND (e.collaborator_id = get_my_collaborator_id() OR get_my_role() IN ('amministrazione', 'responsabile_compensi')))` to WITH CHECK. Same pattern applies to `compensation_history`.
 
 ### SEC-NEW-4 — Admin RLS `FOR ALL` policies lack explicit `WITH CHECK`
 - **Problem**: 7 admin-only `FOR ALL` policies omit `WITH CHECK`. Functionally equivalent but non-standard.
@@ -227,6 +221,12 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Files**: `lib/pdf-utils.ts:34,236`
 - **Impact**: LOW
 
+### DEV-14 — `MassimaleImpact` type defined in client component, imported by API route
+- **Problem**: `MassimaleImpact` type lives in `components/admin/MassimaleCheckModal.tsx` but is imported by `app/api/expenses/bulk-approve/route.ts`. Server code depending on client component for type definition is a wrong-direction dependency.
+- **Files**: `components/admin/MassimaleCheckModal.tsx`, `app/api/expenses/bulk-approve/route.ts:7`
+- **Impact**: MEDIUM
+- **Fix**: Move `MassimaleImpact` to `lib/types.ts`, update both importers.
+
 ### A3 — `createServiceClient()` instantiated per route (no singleton)
 - **Impact**: LOW
 - **Fix**: `lib/supabase/service-client.ts` singleton.
@@ -311,17 +311,6 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 ### UI3 — Inline badge color maps duplicated in 10 files
 - **Impact**: LOW
 
-### DEV-12 — Floating promise on expense approve button (no error feedback)
-- **Problem**: `onClick: () => perform('approve')` in `ExpenseActionPanel.tsx` discards the async result. Network errors or state update failures produce no user feedback.
-- **Files**: `components/expense/ExpenseActionPanel.tsx:98`
-- **Impact**: HIGH
-- **Fix**: Convert to `onClick: async () => { await perform('approve'); }` or handle errors explicitly.
-
-### DEV-13 — Phantom state `INVIATO` in expense rate-limit query
-- **Problem**: `.in('stato', ['IN_ATTESA', 'INVIATO'])` references `INVIATO` state removed by migration 023. Dead code.
-- **Files**: `app/api/expenses/route.ts:84`
-- **Impact**: LOW
-- **Fix**: Replace with `.eq('stato', 'IN_ATTESA')`.
 
 ### SEC10 — DELETE `/api/expenses/[id]` phantom success for `responsabile_compensi`
 - **Problem**: `responsabile_compensi` passes the role check but has no DELETE RLS policy on `expense_reimbursements`. `.delete()` silently removes 0 rows and route returns 204 - false success.

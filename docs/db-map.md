@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `076_expenses_storage_bucket.sql` (2026-04-17).
+> Last synced: migration `077_fix_expense_rls_stale_states.sql` (2026-04-17).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -248,7 +248,7 @@ tickets
 | `collaborator_communities` | own (SELECT), admin (ALL), responsabile (SELECT via uca) | |
 | `communities` | all active users (SELECT), admin (ALL) | `is_active_user()` |
 | `compensations` | own (SELECT), responsabile (SELECT+limited UPDATE), admin (ALL), own insert | Responsabile UPDATE limited to INVIATO/INTEGRAZIONI_RICHIESTE states |
-| `expense_reimbursements` | own (SELECT+UPDATE if INVIATO), responsabile (SELECT+limited UPDATE), admin (ALL) | |
+| `expense_reimbursements` | own (SELECT+UPDATE if IN_ATTESA with WITH CHECK), responsabile (SELECT only), admin (ALL) | Migration 077: dropped resp UPDATE, fixed collab UPDATE state, added WITH CHECK |
 | `documents` | own (SELECT), responsabile (SELECT via `can_manage_community`), admin (ALL), own UPDATE if DA_FIRMARE | |
 | `tickets` | own (SELECT/INSERT), responsabile (SELECT via cc→uca chain), admin (ALL+UPDATE), resp UPDATE | |
 | `ticket_messages` | read if ticket accessible, insert for all authenticated | |
@@ -300,6 +300,7 @@ tickets
 | `notifications` | `user_id` | `.eq('user_id', userId)` |
 
 ---
+
 
 
 

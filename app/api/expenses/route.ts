@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     .from('expense_reimbursements')
     .select('*', { count: 'exact', head: true })
     .eq('collaborator_id', col.id)
-    .in('stato', ['IN_ATTESA', 'INVIATO']);
+    .eq('stato', 'IN_ATTESA');
 
   if ((pendingCount ?? 0) >= MAX_PENDING_EXPENSES) {
     return NextResponse.json(
