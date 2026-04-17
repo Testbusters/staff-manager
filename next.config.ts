@@ -55,6 +55,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   async headers() {
+    // CSP is production-only; Turbopack dev runtime blocks eval() regardless
+    // of the unsafe-eval directive, causing a false-positive React console error.
+    if (process.env.NODE_ENV === "development") {
+      return [{ source: "/(.*)", headers: securityHeaders.filter(h => h.key !== "Content-Security-Policy") }];
+    }
     return [
       {
         source: "/(.*)",
