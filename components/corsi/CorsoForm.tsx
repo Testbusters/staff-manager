@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createCorsoSchema, type CreateCorsoFormValues } from '@/lib/schemas/corso';
 import type { Corso, CorsoStato } from '@/lib/types';
 
 interface Props {
@@ -22,75 +24,56 @@ interface Props {
   materieList: string[];
 }
 
-interface FormData {
-  nome: string;
-  codice_identificativo: string;
-  community_id: string;
-  modalita: 'online' | 'in_aula';
-  citta: string;
-  linea: string;
-  responsabile_doc: string;
-  licenza_zoom: string;
-  data_inizio: string;
-  data_fine: string;
-  max_docenti_per_lezione: string;
-  max_qa_per_lezione: string;
-  link_lw: string;
-  link_zoom: string;
-  link_telegram_corsisti: string;
-  link_qa_assignments: string;
-  link_questionari: string;
-  link_emergenza: string;
-}
 
 export default function CorsoForm({ mode, initialData, communities, cittaList }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState<FormData>({
-    nome: initialData?.nome ?? '',
-    codice_identificativo: initialData?.codice_identificativo ?? '',
-    community_id: initialData?.community_id ?? (communities[0]?.id ?? ''),
-    modalita: initialData?.modalita ?? 'online',
-    citta: initialData?.citta ?? '',
-    linea: initialData?.linea ?? '',
-    responsabile_doc: initialData?.responsabile_doc ?? '',
-    licenza_zoom: initialData?.licenza_zoom ?? '',
-    data_inizio: initialData?.data_inizio ?? '',
-    data_fine: initialData?.data_fine ?? '',
-    max_docenti_per_lezione: String(initialData?.max_docenti_per_lezione ?? 8),
-    max_qa_per_lezione: String(initialData?.max_qa_per_lezione ?? 6),
-    link_lw: initialData?.link_lw ?? '',
-    link_zoom: initialData?.link_zoom ?? '',
-    link_telegram_corsisti: initialData?.link_telegram_corsisti ?? '',
-    link_qa_assignments: initialData?.link_qa_assignments ?? '',
-    link_questionari: initialData?.link_questionari ?? '',
-    link_emergenza: initialData?.link_emergenza ?? '',
+  const form = useForm<CreateCorsoFormValues>({
+    resolver: zodResolver(createCorsoSchema),
+    defaultValues: {
+      nome: initialData?.nome ?? '',
+      codice_identificativo: initialData?.codice_identificativo ?? '',
+      community_id: initialData?.community_id ?? (communities[0]?.id ?? ''),
+      modalita: initialData?.modalita ?? 'online',
+      citta: initialData?.citta ?? '',
+      linea: initialData?.linea ?? '',
+      responsabile_doc: initialData?.responsabile_doc ?? '',
+      licenza_zoom: initialData?.licenza_zoom ?? '',
+      data_inizio: initialData?.data_inizio ?? '',
+      data_fine: initialData?.data_fine ?? '',
+      max_docenti_per_lezione: initialData?.max_docenti_per_lezione ?? 8,
+      max_qa_per_lezione: initialData?.max_qa_per_lezione ?? 6,
+      link_lw: initialData?.link_lw ?? '',
+      link_zoom: initialData?.link_zoom ?? '',
+      link_telegram_corsisti: initialData?.link_telegram_corsisti ?? '',
+      link_qa_assignments: initialData?.link_qa_assignments ?? '',
+      link_questionari: initialData?.link_questionari ?? '',
+      link_emergenza: initialData?.link_emergenza ?? '',
+    },
   });
 
-  const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [key]: e.target.value }));
+  const modalita = form.watch('modalita');
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function onSubmit(values: CreateCorsoFormValues) {
     setSaving(true);
     setError(null);
 
     const payload = {
-      ...form,
-      citta: form.citta || null,
-      linea: form.linea || null,
-      responsabile_doc: form.responsabile_doc || null,
-      licenza_zoom: form.licenza_zoom || null,
-      link_lw: form.link_lw || null,
-      link_zoom: form.link_zoom || null,
-      link_telegram_corsisti: form.link_telegram_corsisti || null,
-      link_qa_assignments: form.link_qa_assignments || null,
-      link_questionari: form.link_questionari || null,
-      link_emergenza: form.link_emergenza || null,
-      max_docenti_per_lezione: parseInt(form.max_docenti_per_lezione, 10),
-      max_qa_per_lezione: parseInt(form.max_qa_per_lezione, 10),
+      ...values,
+      citta: values.citta || null,
+      linea: values.linea || null,
+      responsabile_doc: values.responsabile_doc || null,
+      licenza_zoom: values.licenza_zoom || null,
+      link_lw: values.link_lw || null,
+      link_zoom: values.link_zoom || null,
+      link_telegram_corsisti: values.link_telegram_corsisti || null,
+      link_qa_assignments: values.link_qa_assignments || null,
+      link_questionari: values.link_questionari || null,
+      link_emergenza: values.link_emergenza || null,
+      max_docenti_per_lezione: values.max_docenti_per_lezione ?? 8,
+      max_qa_per_lezione: values.max_qa_per_lezione ?? 6,
     };
 
     const url = mode === 'create' ? '/api/corsi' : `/api/corsi/${initialData!.id}`;
@@ -121,11 +104,9 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
     }
   }
 
-  const fieldCls = 'space-y-1.5';
-  const labelCls = 'block text-sm font-medium text-foreground';
-
   return (
-    <form onSubmit={handleSubmit} noValidate className="rounded-2xl bg-card border border-border p-6 space-y-5">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="rounded-2xl bg-card border border-border p-6 space-y-5">
       {error && (
         <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
@@ -133,138 +114,175 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <div className={fieldCls}>
-          <label htmlFor="corso-nome" className={labelCls}>Nome *</label>
-          <Input id="corso-nome" value={form.nome} onChange={set('nome')} required placeholder="Corso Medicina 2026" />
-        </div>
-        <div className={fieldCls}>
-          <label htmlFor="corso-codice" className={labelCls}>Codice identificativo *</label>
-          <Input id="corso-codice" value={form.codice_identificativo} onChange={set('codice_identificativo')} required placeholder="MED-2026-01" />
-        </div>
+        <FormField control={form.control} name="nome" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Nome <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input {...field} placeholder="Corso Medicina 2026" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="codice_identificativo" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Codice identificativo <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input {...field} placeholder="MED-2026-01" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className={fieldCls}>
-          <label className={labelCls}>Community *</label>
-          <Select
-            value={form.community_id}
-            onValueChange={(v) => setForm((f) => ({ ...f, community_id: v }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleziona community" />
-            </SelectTrigger>
-            <SelectContent>
-              {communities.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className={fieldCls}>
-          <label className={labelCls}>Modalità *</label>
-          <Select
-            value={form.modalita}
-            onValueChange={(v) => setForm((f) => ({ ...f, modalita: v as 'online' | 'in_aula' }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="online">Online</SelectItem>
-              <SelectItem value="in_aula">In aula</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField control={form.control} name="community_id" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Community <span className="text-destructive">*</span></FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Seleziona community" /></SelectTrigger></FormControl>
+              <SelectContent>
+                {communities.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="modalita" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Modalità <span className="text-destructive">*</span></FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+              <SelectContent>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="in_aula">In aula</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className={fieldCls}>
-          <label className={labelCls}>Città</label>
-          <Select
-            value={form.citta || '__candidatura__'}
-            onValueChange={(v) => setForm((f) => ({ ...f, citta: v === '__candidatura__' ? '' : v }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Aperta a candidatura" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__candidatura__">Aperta a candidatura città</SelectItem>
-              {cittaList.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className={fieldCls}>
-          <label htmlFor="corso-linea" className={labelCls}>Linea</label>
-          <Input id="corso-linea" value={form.linea} onChange={set('linea')} placeholder="Linea A" />
-        </div>
+        <FormField control={form.control} name="citta" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Città</FormLabel>
+            <Select value={field.value || '__candidatura__'} onValueChange={(v) => field.onChange(v === '__candidatura__' ? '' : v)}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Aperta a candidatura" /></SelectTrigger></FormControl>
+              <SelectContent>
+                <SelectItem value="__candidatura__">Aperta a candidatura città</SelectItem>
+                {cittaList.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="linea" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Linea</FormLabel>
+            <FormControl><Input {...field} value={field.value ?? ''} placeholder="Linea A" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className={fieldCls}>
-          <label htmlFor="corso-data-inizio" className={labelCls}>Data inizio *</label>
-          <Input id="corso-data-inizio" type="date" value={form.data_inizio} onChange={set('data_inizio')} required />
-        </div>
-        <div className={fieldCls}>
-          <label htmlFor="corso-data-fine" className={labelCls}>Data fine *</label>
-          <Input id="corso-data-fine" type="date" value={form.data_fine} onChange={set('data_fine')} required />
-        </div>
+        <FormField control={form.control} name="data_inizio" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Data inizio <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input type="date" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="data_fine" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Data fine <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input type="date" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className={fieldCls}>
-          <label htmlFor="corso-max-docenti" className={labelCls}>Max docenti per lezione</label>
-          <Input id="corso-max-docenti" type="number" min={1} value={form.max_docenti_per_lezione} onChange={set('max_docenti_per_lezione')} />
-        </div>
-        {form.modalita === 'online' && (
-          <div className={fieldCls}>
-            <label htmlFor="corso-max-qa" className={labelCls}>Max Q&A per lezione</label>
-            <Input id="corso-max-qa" type="number" min={0} value={form.max_qa_per_lezione} onChange={set('max_qa_per_lezione')} />
-          </div>
+        <FormField control={form.control} name="max_docenti_per_lezione" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Max docenti per lezione</FormLabel>
+            <FormControl>
+              <Input type="number" min={1} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10) || 0)} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        {modalita === 'online' && (
+          <FormField control={form.control} name="max_qa_per_lezione" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Max Q&A per lezione</FormLabel>
+              <FormControl>
+                <Input type="number" min={0} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10) || 0)} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className={fieldCls}>
-          <label htmlFor="corso-resp-doc" className={labelCls}>Responsabile DOC</label>
-          <Input id="corso-resp-doc" value={form.responsabile_doc} onChange={set('responsabile_doc')} placeholder="Nome responsabile" />
-        </div>
-        <div className={fieldCls}>
-          <label htmlFor="corso-licenza-zoom" className={labelCls}>Licenza Zoom</label>
-          <Input id="corso-licenza-zoom" value={form.licenza_zoom} onChange={set('licenza_zoom')} placeholder="licenza@email.com" />
-        </div>
+        <FormField control={form.control} name="responsabile_doc" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Responsabile DOC</FormLabel>
+            <FormControl><Input {...field} value={field.value ?? ''} placeholder="Nome responsabile" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="licenza_zoom" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium">Licenza Zoom</FormLabel>
+            <FormControl><Input {...field} value={field.value ?? ''} placeholder="licenza@email.com" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
       </div>
 
       <div className="border-t border-border pt-4">
         <p className="text-sm font-medium text-muted-foreground mb-3">Link utili</p>
         <div className="grid grid-cols-2 gap-4">
-          <div className={fieldCls}>
-            <label htmlFor="corso-link-lw" className={labelCls}>Link LW</label>
-            <Input id="corso-link-lw" value={form.link_lw} onChange={set('link_lw')} placeholder="https://..." />
-          </div>
-          <div className={fieldCls}>
-            <label htmlFor="corso-link-zoom" className={labelCls}>Link Zoom</label>
-            <Input id="corso-link-zoom" value={form.link_zoom} onChange={set('link_zoom')} placeholder="https://..." />
-          </div>
-          <div className={fieldCls}>
-            <label htmlFor="corso-telegram" className={labelCls}>Telegram corsisti</label>
-            <Input id="corso-telegram" value={form.link_telegram_corsisti} onChange={set('link_telegram_corsisti')} placeholder="https://t.me/..." />
-          </div>
-          {form.modalita === 'online' && (
-            <div className={fieldCls}>
-              <label htmlFor="corso-qa-assignments" className={labelCls}>Q&A assignments</label>
-              <Input id="corso-qa-assignments" value={form.link_qa_assignments} onChange={set('link_qa_assignments')} placeholder="https://..." />
-            </div>
+          <FormField control={form.control} name="link_lw" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Link LW</FormLabel>
+              <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://..." /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="link_zoom" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Link Zoom</FormLabel>
+              <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://..." /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="link_telegram_corsisti" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Telegram corsisti</FormLabel>
+              <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://t.me/..." /></FormControl>
+            </FormItem>
+          )} />
+          {modalita === 'online' && (
+            <FormField control={form.control} name="link_qa_assignments" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium">Q&A assignments</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://..." /></FormControl>
+              </FormItem>
+            )} />
           )}
-          <div className={fieldCls}>
-            <label htmlFor="corso-questionari" className={labelCls}>Questionari</label>
-            <Input id="corso-questionari" value={form.link_questionari} onChange={set('link_questionari')} placeholder="https://..." />
-          </div>
-          <div className={fieldCls}>
-            <label htmlFor="corso-emergenza" className={labelCls}>Emergenza</label>
-            <Input id="corso-emergenza" value={form.link_emergenza} onChange={set('link_emergenza')} placeholder="https://..." />
-          </div>
+          <FormField control={form.control} name="link_questionari" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Questionari</FormLabel>
+              <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://..." /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="link_emergenza" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Emergenza</FormLabel>
+              <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://..." /></FormControl>
+            </FormItem>
+          )} />
         </div>
       </div>
 
@@ -282,6 +300,7 @@ export default function CorsoForm({ mode, initialData, communities, cittaList }:
           </Button>
         )}
       </div>
-    </form>
+      </form>
+    </Form>
   );
 }

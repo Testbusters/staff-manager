@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Controller } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
 import CollaboratorAvatar from '@/components/admin/CollaboratorAvatar';
 import ResetPasswordDialog from '@/components/collaboratori/ResetPasswordDialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { adminProfilePatchSchema, type AdminProfilePatchFormValues } from '@/lib/schemas/collaborator';
 import {
   DOCUMENT_TYPE_LABELS,
   DOCUMENT_SIGN_STATUS_LABELS,
@@ -126,27 +129,31 @@ export default function CollaboratoreDetail({
 
   const isResponsabileProfile = collabRole === 'responsabile_compensi';
 
-  // ── Form fields ───────────────────────────────────────────────────────────
-  const [fNome, setFNome]                         = useState(collab.nome ?? '');
-  const [fCognome, setFCognome]                   = useState(collab.cognome ?? '');
-  const [fUsername, setFUsername]                 = useState(collab.username ?? '');
-  const [fCF, setFCF]                             = useState(collab.codice_fiscale ?? '');
-  const [fDataNascita, setFDataNascita]           = useState(collab.data_nascita ?? '');
-  const [fLuogoNascita, setFLuogoNascita]         = useState(collab.luogo_nascita ?? '');
-  const [fProvinciaNascita, setFProvinciaNascita] = useState(collab.provincia_nascita ?? '');
-  const [fComune, setFComune]                     = useState(collab.comune ?? '');
-  const [fProvinciaRes, setFProvinciaRes]         = useState(collab.provincia_residenza ?? '');
-  const [fIndirizzo, setFIndirizzo]               = useState(collab.indirizzo ?? '');
-  const [fCivico, setFCivico]                     = useState(collab.civico_residenza ?? '');
-  const [fTelefono, setFTelefono]                 = useState(collab.telefono ?? '');
-  const [fTshirt, setFTshirt]                     = useState(collab.tshirt_size ?? '');
-  const [fSonoFiglio, setFSonoFiglio]             = useState(collab.sono_un_figlio_a_carico);
-  const [fMassimale, setFMassimale]               = useState<string>(
-    collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '',
-  );
-  const [fIntestatario, setFIntestatario]         = useState(collab.intestatario_pagamento ?? '');
-  const [fCitta, setFCitta]                       = useState(collab.citta ?? '');
-  const [fMaterieInsegnate, setFMaterieInsegnate] = useState<string[]>(collab.materie_insegnate ?? []);
+  // ── Edit form (RHF) ──────────────────────────────────────────────────────
+  const editForm = useForm<AdminProfilePatchFormValues>({
+    resolver: zodResolver(adminProfilePatchSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      nome:                     collab.nome ?? '',
+      cognome:                  collab.cognome ?? '',
+      username:                 collab.username ?? '',
+      codice_fiscale:           collab.codice_fiscale ?? null,
+      data_nascita:             collab.data_nascita ?? null,
+      luogo_nascita:            collab.luogo_nascita ?? null,
+      provincia_nascita:        collab.provincia_nascita ?? null,
+      comune:                   collab.comune ?? null,
+      provincia_residenza:      collab.provincia_residenza ?? null,
+      indirizzo:                collab.indirizzo ?? null,
+      civico_residenza:         collab.civico_residenza ?? null,
+      telefono:                 collab.telefono ?? null,
+      tshirt_size:              (collab.tshirt_size as AdminProfilePatchFormValues['tshirt_size']) ?? null,
+      sono_un_figlio_a_carico:  collab.sono_un_figlio_a_carico,
+      importo_lordo_massimale:  collab.importo_lordo_massimale ?? null,
+      intestatario_pagamento:   collab.intestatario_pagamento ?? null,
+      citta:                    collab.citta ?? '',
+      materie_insegnate:        collab.materie_insegnate ?? [],
+    },
+  });
 
   // Lookup options provided by the parent page (server-fetched)
   const cittaOptions   = cittaOptionsProp;
@@ -185,58 +192,61 @@ export default function CollaboratoreDetail({
   }
 
   const openEditModal = () => {
-    setFNome(collab.nome ?? '');
-    setFCognome(collab.cognome ?? '');
-    setFUsername(collab.username ?? '');
-    setFCF(collab.codice_fiscale ?? '');
-    setFDataNascita(collab.data_nascita ?? '');
-    setFLuogoNascita(collab.luogo_nascita ?? '');
-    setFProvinciaNascita(collab.provincia_nascita ?? '');
-    setFComune(collab.comune ?? '');
-    setFProvinciaRes(collab.provincia_residenza ?? '');
-    setFIndirizzo(collab.indirizzo ?? '');
-    setFCivico(collab.civico_residenza ?? '');
-    setFTelefono(collab.telefono ?? '');
-    setFTshirt(collab.tshirt_size ?? '');
-    setFSonoFiglio(collab.sono_un_figlio_a_carico);
-    setFMassimale(collab.importo_lordo_massimale != null ? String(collab.importo_lordo_massimale) : '');
-    setFIntestatario(collab.intestatario_pagamento ?? '');
-    setFCitta(collab.citta ?? '');
-    setFMaterieInsegnate(collab.materie_insegnate ?? []);
+    editForm.reset({
+      nome:                     collab.nome ?? '',
+      cognome:                  collab.cognome ?? '',
+      username:                 collab.username ?? '',
+      codice_fiscale:           collab.codice_fiscale ?? null,
+      data_nascita:             collab.data_nascita ?? null,
+      luogo_nascita:            collab.luogo_nascita ?? null,
+      provincia_nascita:        collab.provincia_nascita ?? null,
+      comune:                   collab.comune ?? null,
+      provincia_residenza:      collab.provincia_residenza ?? null,
+      indirizzo:                collab.indirizzo ?? null,
+      civico_residenza:         collab.civico_residenza ?? null,
+      telefono:                 collab.telefono ?? null,
+      tshirt_size:              (collab.tshirt_size as AdminProfilePatchFormValues['tshirt_size']) ?? null,
+      sono_un_figlio_a_carico:  collab.sono_un_figlio_a_carico,
+      importo_lordo_massimale:  collab.importo_lordo_massimale ?? null,
+      intestatario_pagamento:   collab.intestatario_pagamento ?? null,
+      citta:                    collab.citta ?? '',
+      materie_insegnate:        collab.materie_insegnate ?? [],
+    });
     setEditModalOpen(true);
   };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveProfile = async () => {
     setProfileSaving(true);
+    const v = editForm.getValues();
 
     const body: Record<string, unknown> = {
-      nome:                fNome.trim() || undefined,
-      cognome:             fCognome.trim() || undefined,
-      comune:              fComune.trim() || null,
-      provincia_residenza: fProvinciaRes.trim().toUpperCase() || null,
-      indirizzo:           fIndirizzo.trim() || null,
-      civico_residenza:    fCivico.trim() || null,
-      telefono:            fTelefono.trim() || null,
+      nome:                (v.nome ?? '').trim() || undefined,
+      cognome:             (v.cognome ?? '').trim() || undefined,
+      comune:              (v.comune ?? '').trim() || null,
+      provincia_residenza: (v.provincia_residenza ?? '').trim().toUpperCase() || null,
+      indirizzo:           (v.indirizzo ?? '').trim() || null,
+      civico_residenza:    (v.civico_residenza ?? '').trim() || null,
+      telefono:            (v.telefono ?? '').trim() || null,
     };
 
     if (!isResponsabileProfile) {
-      body.codice_fiscale          = fCF.trim().toUpperCase() || null;
-      body.data_nascita            = fDataNascita || null;
-      body.luogo_nascita           = fLuogoNascita.trim() || null;
-      body.provincia_nascita       = fProvinciaNascita.trim().toUpperCase() || null;
-      body.tshirt_size             = fTshirt || null;
-      body.sono_un_figlio_a_carico = fSonoFiglio;
-      body.importo_lordo_massimale = fMassimale !== '' ? parseFloat(fMassimale) : null;
+      body.codice_fiscale          = (v.codice_fiscale ?? '').trim().toUpperCase() || null;
+      body.data_nascita            = v.data_nascita || null;
+      body.luogo_nascita           = (v.luogo_nascita ?? '').trim() || null;
+      body.provincia_nascita       = (v.provincia_nascita ?? '').trim().toUpperCase() || null;
+      body.tshirt_size             = v.tshirt_size || null;
+      body.sono_un_figlio_a_carico = v.sono_un_figlio_a_carico;
+      body.importo_lordo_massimale = v.importo_lordo_massimale ?? null;
     }
 
     if (role === 'amministrazione') {
-      body.intestatario_pagamento = fIntestatario.trim() || null;
-      if (fCitta) body.citta = fCitta;
-      if (fMaterieInsegnate.length > 0) body.materie_insegnate = fMaterieInsegnate;
+      body.intestatario_pagamento = (v.intestatario_pagamento ?? '').trim() || null;
+      if (v.citta) body.citta = v.citta;
+      if ((v.materie_insegnate ?? []).length > 0) body.materie_insegnate = v.materie_insegnate;
     }
 
-    if (fUsername.trim().length >= 3) body.username = fUsername.trim();
+    const uname = (v.username ?? '').trim();
+    if (uname.length >= 3) body.username = uname;
 
     const res = await fetch(`/api/admin/collaboratori/${collab.id}/profile`, {
       method: 'PATCH',
@@ -554,199 +564,263 @@ export default function CollaboratoreDetail({
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSaveProfile} className="space-y-4 pt-1">
+          <Form {...editForm}>
+          <form onSubmit={editForm.handleSubmit(handleSaveProfile)} noValidate className="space-y-4 pt-1">
             {/* Nome + Cognome */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Nome</label>
-                <Input value={fNome} onChange={(e) => setFNome(e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Cognome</label>
-                <Input value={fCognome} onChange={(e) => setFCognome(e.target.value)} />
-              </div>
+              <FormField control={editForm.control} name="nome" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Nome</FormLabel>
+                  <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="cognome" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Cognome</FormLabel>
+                  <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
             {/* Username */}
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">Username</label>
-              <Input
-                value={fUsername}
-                onChange={(e) => setFUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                maxLength={50}
-                placeholder="username"
-                className="font-mono"
-              />
-            </div>
+            <FormField control={editForm.control} name="username" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Username</FormLabel>
+                <FormControl>
+                  <Input
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    maxLength={50}
+                    placeholder="username"
+                    className="font-mono"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
             {/* Telefono */}
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">Telefono</label>
-              <Input type="tel" value={fTelefono} onChange={(e) => setFTelefono(e.target.value)} />
-            </div>
+            <FormField control={editForm.control} name="telefono" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Telefono</FormLabel>
+                <FormControl><Input type="tel" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
             {/* Collaboratore-only fields */}
             {!isResponsabileProfile && (
               <>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Codice fiscale</label>
-                  <Input
-                    value={fCF}
-                    onChange={(e) => setFCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                    maxLength={16}
-                    className="font-mono"
-                  />
-                </div>
+                <FormField control={editForm.control} name="codice_fiscale" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Codice fiscale</FormLabel>
+                    <FormControl>
+                      <Input
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') || null)}
+                        maxLength={16}
+                        className="font-mono"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">Data di nascita</label>
-                    <Input type="date" value={fDataNascita} onChange={(e) => setFDataNascita(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">Città di nascita</label>
-                    <Input value={fLuogoNascita} onChange={(e) => setFLuogoNascita(e.target.value)} />
-                  </div>
+                  <FormField control={editForm.control} name="data_nascita" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Data di nascita</FormLabel>
+                      <FormControl><Input type="date" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={editForm.control} name="luogo_nascita" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Città di nascita</FormLabel>
+                      <FormControl><Input value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                 </div>
 
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Provincia di nascita</label>
-                  <Input
-                    value={fProvinciaNascita}
-                    onChange={(e) => setFProvinciaNascita(e.target.value.toUpperCase())}
-                    maxLength={2}
-                    className="font-mono uppercase w-24"
-                  />
-                </div>
+                <FormField control={editForm.control} name="provincia_nascita" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Provincia di nascita</FormLabel>
+                    <FormControl>
+                      <Input
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase() || null)}
+                        maxLength={2}
+                        className="font-mono uppercase w-24"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </>
             )}
 
             {/* Residenza */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Comune di residenza</label>
-                <Input value={fComune} onChange={(e) => setFComune(e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Provincia residenza</label>
-                <Input
-                  value={fProvinciaRes}
-                  onChange={(e) => setFProvinciaRes(e.target.value.toUpperCase())}
-                  maxLength={2}
-                  className="font-mono uppercase w-24"
-                />
-              </div>
+              <FormField control={editForm.control} name="comune" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Comune di residenza</FormLabel>
+                  <FormControl><Input value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="provincia_residenza" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Provincia residenza</FormLabel>
+                  <FormControl>
+                    <Input
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase() || null)}
+                      maxLength={2}
+                      className="font-mono uppercase w-24"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs text-muted-foreground mb-1">Indirizzo</label>
-                <Input value={fIndirizzo} onChange={(e) => setFIndirizzo(e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Civico</label>
-                <Input value={fCivico} onChange={(e) => setFCivico(e.target.value)} maxLength={10} />
-              </div>
+              <FormField control={editForm.control} name="indirizzo" render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel className="text-xs">Indirizzo</FormLabel>
+                  <FormControl><Input value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="civico_residenza" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Civico</FormLabel>
+                  <FormControl><Input value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} maxLength={10} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
             {/* Collaboratore-only extra fields */}
             {!isResponsabileProfile && (
               <>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Taglia t-shirt</label>
-                  <Select value={fTshirt || undefined} onValueChange={setFTshirt}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="— Non specificata —" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TSHIRT_SIZES.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Controller control={editForm.control} name="tshirt_size" render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Taglia t-shirt</FormLabel>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="— Non specificata —" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TSHIRT_SIZES.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
+                  </FormItem>
+                )} />
 
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <Checkbox
-                    checked={fSonoFiglio}
-                    onCheckedChange={(v) => setFSonoFiglio(!!v)}
-                  />
-                  <span className="text-sm text-foreground">Fiscalmente a carico</span>
-                </label>
-
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">
-                    Massimale lordo annuo (max €5.000)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={5000}
-                      step={1}
-                      value={fMassimale}
-                      onChange={(e) => setFMassimale(e.target.value)}
-                      className="pl-7"
+                <Controller control={editForm.control} name="sono_un_figlio_a_carico" render={({ field }) => (
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <Checkbox
+                      checked={!!field.value}
+                      onCheckedChange={(v) => field.onChange(!!v)}
                     />
+                    <span className="text-sm text-foreground">Fiscalmente a carico</span>
+                  </label>
+                )} />
+
+                <Controller control={editForm.control} name="importo_lordo_massimale" render={({ field, fieldState }) => (
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Massimale lordo annuo (max €5.000)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={5000}
+                        step={1}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          field.onChange(isNaN(v) ? null : v);
+                        }}
+                        className="pl-7"
+                      />
+                    </div>
+                    {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
                   </div>
-                </div>
+                )} />
               </>
             )}
 
             {/* Admin-only */}
             {role === 'amministrazione' && (
               <>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">
-                    Intestatario del conto bancario
-                  </label>
-                  <Input
-                    placeholder="Mario Rossi"
-                    value={fIntestatario}
-                    onChange={(e) => setFIntestatario(e.target.value)}
-                    maxLength={100}
-                  />
-                </div>
+                <FormField control={editForm.control} name="intestatario_pagamento" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Intestatario del conto bancario</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Mario Rossi"
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value || null)}
+                        maxLength={100}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Città</label>
-                  <Select value={fCitta || undefined} onValueChange={setFCitta}>
-                    <SelectTrigger><SelectValue placeholder="— Seleziona città —" /></SelectTrigger>
-                    <SelectContent>
-                      {cittaOptions.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Controller control={editForm.control} name="citta" render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Città</FormLabel>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder="— Seleziona città —" /></SelectTrigger>
+                      <SelectContent>
+                        {cittaOptions.map((opt) => (
+                          <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
+                  </FormItem>
+                )} />
 
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Materie insegnate</label>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {materiaOptions.map((opt) => {
-                      const active = fMaterieInsegnate.includes(opt.nome);
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() =>
-                            setFMaterieInsegnate((prev) =>
-                              active ? prev.filter((m) => m !== opt.nome) : [...prev, opt.nome],
-                            )
-                          }
-                          className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition ${
-                            active
-                              ? 'bg-brand text-white border-brand'
-                              : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                          }`}
-                        >
-                          {opt.nome}
-                        </button>
-                      );
-                    })}
+                <Controller control={editForm.control} name="materie_insegnate" render={({ field }) => (
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Materie insegnate</label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {materiaOptions.map((opt) => {
+                        const active = (field.value ?? []).includes(opt.nome);
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              field.onChange(
+                                active ? (field.value ?? []).filter((m: string) => m !== opt.nome) : [...(field.value ?? []), opt.nome],
+                              )
+                            }
+                            className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition ${
+                              active
+                                ? 'bg-brand text-white border-brand'
+                                : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                            }`}
+                          >
+                            {opt.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )} />
               </>
             )}
 
@@ -770,6 +844,7 @@ export default function CollaboratoreDetail({
               </Button>
             </div>
           </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

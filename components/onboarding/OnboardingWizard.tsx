@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Controller } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { TSHIRT_SIZES } from '@/lib/types';
 import type { ContractTemplateType } from '@/lib/types';
@@ -13,6 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { onboardingSchema, type OnboardingFormValues } from '@/lib/schemas/collaborator';
 
 type PrefillData = {
   nome: string | null;
@@ -44,36 +47,39 @@ interface Props {
   community: string;
 }
 
-const labelCls = 'block text-xs text-muted-foreground mb-1.5';
-
 const sectionTitle = 'text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 mt-1';
 
 export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, community }: Props) {
   const router = useRouter();
 
-  // Step 1 — dati anagrafici
-  const [nome, setNome]                       = useState(prefill?.nome ?? '');
-  const [cognome, setCognome]                 = useState(prefill?.cognome ?? '');
-  const [codiceFiscale, setCF]                = useState(prefill?.codice_fiscale ?? '');
-  const [dataNascita, setDataNascita]         = useState(prefill?.data_nascita ?? '');
-  const [luogoNascita, setLuogo]              = useState(prefill?.luogo_nascita ?? '');
-  const [provinciaNascita, setProvinciaNascita] = useState(prefill?.provincia_nascita ?? '');
-  const [comune, setComune]                   = useState(prefill?.comune ?? '');
-  const [provinciaRes, setPrvinciaRes]        = useState(prefill?.provincia_residenza ?? '');
-  const [indirizzo, setIndirizzo]             = useState(prefill?.indirizzo ?? '');
-  const [civico, setCivico]                   = useState(prefill?.civico_residenza ?? '');
-  const [telefono, setTelefono]               = useState(prefill?.telefono ?? '');
-  const [iban, setIban]                       = useState(prefill?.iban ?? '');
-  const [intestatarioPagamento, setIntestatarioPagamento] = useState(prefill?.intestatario_pagamento ?? '');
-  const [tshirt, setTshirt]                   = useState(prefill?.tshirt_size ?? '');
-  const [sonoFiglio, setSonoFiglio]           = useState(prefill?.sono_un_figlio_a_carico ?? false);
-  const [massimale, setMassimale]             = useState<number>(prefill?.importo_lordo_massimale ?? 5000);
+  const form = useForm<OnboardingFormValues>({
+    resolver: zodResolver(onboardingSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      nome:                     prefill?.nome ?? '',
+      cognome:                  prefill?.cognome ?? '',
+      codice_fiscale:           prefill?.codice_fiscale ?? null,
+      data_nascita:             prefill?.data_nascita ?? null,
+      luogo_nascita:            prefill?.luogo_nascita ?? null,
+      provincia_nascita:        prefill?.provincia_nascita ?? null,
+      comune:                   prefill?.comune ?? null,
+      provincia_residenza:      prefill?.provincia_residenza ?? null,
+      indirizzo:                prefill?.indirizzo ?? null,
+      civico_residenza:         prefill?.civico_residenza ?? null,
+      telefono:                 prefill?.telefono ?? null,
+      iban:                     prefill?.iban ?? '',
+      intestatario_pagamento:   prefill?.intestatario_pagamento ?? null,
+      tshirt_size:              (prefill?.tshirt_size as OnboardingFormValues['tshirt_size']) ?? null,
+      sono_un_figlio_a_carico:  prefill?.sono_un_figlio_a_carico ?? false,
+      importo_lordo_massimale:  prefill?.importo_lordo_massimale ?? null,
+      citta:                    prefill?.citta ?? '',
+      materie_insegnate:        [],
+    },
+  });
 
-  // Activity — città e materie
-  const [citta, setCitta]                     = useState(prefill?.citta ?? '');
+  // Activity — città e materie (lookup options)
   const [cittaOptions, setCittaOptions]       = useState<LookupOption[]>([]);
-  const [materieInsegnate, setMaterieInsegnate] = useState<string[]>([]);
-  const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
+  const [materiaOptions, setMateriaOptions]   = useState<LookupOption[]>([]);
 
   useEffect(() => {
     const comm = community || 'testbusters';
@@ -84,7 +90,9 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
   }, [community]);
 
   // Username preview (readonly — shows pre-set or computed from nome+cognome)
-  const previewUsername = prefill?.username ?? generateUsername(nome, cognome);
+  const watchedNome = form.watch('nome');
+  const watchedCognome = form.watch('cognome');
+  const previewUsername = prefill?.username ?? generateUsername(watchedNome, watchedCognome);
 
   // Step tracking
   const [step, setStep]           = useState<1 | 2>(1);
@@ -93,41 +101,47 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
   const [contractGenerated, setContractGenerated] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
-  // Validate step 1
+  // Validate step 1 — watch all fields to derive button-disabled state
+  const w = form.watch();
   const step1Valid =
-    nome.trim() && cognome.trim() && codiceFiscale.trim() &&
-    dataNascita && luogoNascita.trim() && provinciaNascita.trim() &&
-    comune.trim() && provinciaRes.trim() && indirizzo.trim() && civico.trim() &&
-    telefono.trim() && iban.trim() && intestatarioPagamento.trim() && tshirt &&
-    citta.trim() &&
-    materieInsegnate.length > 0 &&
-    massimale > 0 && massimale <= 5000;
+    (w.nome ?? '').trim() !== '' && (w.cognome ?? '').trim() !== '' &&
+    (w.codice_fiscale ?? '').trim() !== '' &&
+    !!w.data_nascita && (w.luogo_nascita ?? '').trim() !== '' &&
+    (w.provincia_nascita ?? '').trim() !== '' &&
+    (w.comune ?? '').trim() !== '' && (w.provincia_residenza ?? '').trim() !== '' &&
+    (w.indirizzo ?? '').trim() !== '' && (w.civico_residenza ?? '').trim() !== '' &&
+    (w.telefono ?? '').trim() !== '' && (w.iban ?? '').trim() !== '' &&
+    (w.intestatario_pagamento ?? '').trim() !== '' && !!w.tshirt_size &&
+    (w.citta ?? '').trim() !== '' &&
+    (w.materie_insegnate ?? []).length > 0 &&
+    w.importo_lordo_massimale != null && w.importo_lordo_massimale > 0 && w.importo_lordo_massimale <= 5000;
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
+    const v = form.getValues();
 
     const res = await fetch('/api/onboarding/complete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        nome:                nome.trim(),
-        cognome:             cognome.trim(),
-        codice_fiscale:      codiceFiscale.trim().toUpperCase(),
-        data_nascita:        dataNascita,
-        luogo_nascita:       luogoNascita.trim(),
-        provincia_nascita:   provinciaNascita.trim().toUpperCase(),
-        comune:              comune.trim(),
-        provincia_residenza: provinciaRes.trim().toUpperCase(),
-        indirizzo:           indirizzo.trim(),
-        civico_residenza:    civico.trim(),
-        telefono:            telefono.trim(),
-        iban:                iban.trim().toUpperCase().replace(/\s/g, ''),
-        intestatario_pagamento: intestatarioPagamento.trim(),
-        tshirt_size:             tshirt,
-        sono_un_figlio_a_carico: sonoFiglio,
-        importo_lordo_massimale: massimale,
-        citta:                   citta.trim(),
-        materie_insegnate:       materieInsegnate,
+        nome:                     (v.nome ?? '').trim(),
+        cognome:                  (v.cognome ?? '').trim(),
+        codice_fiscale:           (v.codice_fiscale ?? '').trim().toUpperCase(),
+        data_nascita:             v.data_nascita,
+        luogo_nascita:            (v.luogo_nascita ?? '').trim(),
+        provincia_nascita:        (v.provincia_nascita ?? '').trim().toUpperCase(),
+        comune:                   (v.comune ?? '').trim(),
+        provincia_residenza:      (v.provincia_residenza ?? '').trim().toUpperCase(),
+        indirizzo:                (v.indirizzo ?? '').trim(),
+        civico_residenza:         (v.civico_residenza ?? '').trim(),
+        telefono:                 (v.telefono ?? '').trim(),
+        iban:                     (v.iban ?? '').trim().toUpperCase().replace(/\s/g, ''),
+        intestatario_pagamento:   (v.intestatario_pagamento ?? '').trim(),
+        tshirt_size:              v.tshirt_size,
+        sono_un_figlio_a_carico:  v.sono_un_figlio_a_carico,
+        importo_lordo_massimale:  v.importo_lordo_massimale,
+        citta:                    (v.citta ?? '').trim(),
+        materie_insegnate:        v.materie_insegnate,
       }),
     });
 
@@ -293,6 +307,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         </div>
       </div>
 
+      <Form {...form}>
       <form
         onSubmit={(e) => { e.preventDefault(); setStep(2); }}
         noValidate
@@ -307,71 +322,97 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
           <p className={sectionTitle}>Identità</p>
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Nome <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="Mario" value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required />
-              </div>
-              <div>
-                <label className={labelCls}>Cognome <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="Rossi" value={cognome}
-                  onChange={(e) => setCognome(e.target.value)}
-                  required />
-              </div>
+              <FormField control={form.control} name="nome" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Nome <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="Mario" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="cognome" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Cognome <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="Rossi" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
             {previewUsername && (
               <div>
-                <label className={labelCls}>Username</label>
+                <label className="block text-xs text-muted-foreground mb-1">Username</label>
                 <div className="w-full rounded-lg bg-muted border border-border px-3 py-2.5 text-sm text-muted-foreground font-mono select-all">
                   @{previewUsername}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Il tuo username sarà assegnato automaticamente e non è modificabile.</p>
               </div>
             )}
-            <div>
-              <label className={labelCls}>Codice fiscale <span className="text-destructive">*</span></label>
-              <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
-                onChange={(e) => setCF(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                required maxLength={16} className="font-mono" />
-            </div>
+            <FormField control={form.control} name="codice_fiscale" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Codice fiscale <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="RSSMRA80A01H501U"
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') || null)}
+                    maxLength={16}
+                    className="font-mono"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Data di nascita <span className="text-destructive">*</span></label>
-                <DatePicker
-                  value={dataNascita}
-                  onChange={(v) => setDataNascita(v)}
-                  captionLayout="dropdown"
-                  fromYear={1940}
-                  toYear={new Date().getFullYear() - 16}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Città di nascita <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="Roma" value={luogoNascita}
-                  onChange={(e) => setLuogo(e.target.value)}
-                  required />
-              </div>
+              <Controller control={form.control} name="data_nascita" render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Data di nascita <span className="text-destructive">*</span></FormLabel>
+                  <DatePicker
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    captionLayout="dropdown"
+                    fromYear={1940}
+                    toYear={new Date().getFullYear() - 16}
+                  />
+                  {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="luogo_nascita" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Città di nascita <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="Roma" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
-            <div>
-              <label className={labelCls}>Provincia di nascita (sigla) <span className="text-destructive">*</span></label>
-              <Input type="text" placeholder="RM" value={provinciaNascita}
-                onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
-                required maxLength={2} className="font-mono uppercase" />
-            </div>
+            <FormField control={form.control} name="provincia_nascita" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Provincia di nascita (sigla) <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="RM"
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value.toUpperCase() || null)}
+                    maxLength={2}
+                    className="font-mono uppercase"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="col-span-2">
-                <label className={labelCls}>Via/Piazza di residenza <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="Via Roma" value={indirizzo}
-                  onChange={(e) => setIndirizzo(e.target.value)}
-                  required />
-              </div>
-              <div>
-                <label className={labelCls}>Civico <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="1" value={civico}
-                  onChange={(e) => setCivico(e.target.value)}
-                  required maxLength={10} />
-              </div>
+              <FormField control={form.control} name="indirizzo" render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel className="text-xs">Via/Piazza di residenza <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="Via Roma" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="civico_residenza" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Civico <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} maxLength={10} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
           </div>
         </div>
@@ -381,25 +422,36 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
           <p className={sectionTitle}>Residenza</p>
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Comune <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="Milano" value={comune}
-                  onChange={(e) => setComune(e.target.value)}
-                  required />
-              </div>
-              <div>
-                <label className={labelCls}>Provincia (sigla) <span className="text-destructive">*</span></label>
-                <Input type="text" placeholder="MI" value={provinciaRes}
-                  onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                  required maxLength={2} className="font-mono uppercase" />
-              </div>
+              <FormField control={form.control} name="comune" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Comune <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="Milano" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="provincia_residenza" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Provincia (sigla) <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="MI"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase() || null)}
+                      maxLength={2}
+                      className="font-mono uppercase"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
-            <div>
-              <label className={labelCls}>Telefono di contatto <span className="text-destructive">*</span></label>
-              <Input type="tel" placeholder="+39 333 0000000" value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                required />
-            </div>
+            <FormField control={form.control} name="telefono" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Telefono di contatto <span className="text-destructive">*</span></FormLabel>
+                <FormControl><Input type="tel" placeholder="+39 333 0000000" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
         </div>
 
@@ -407,30 +459,35 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         <div>
           <p className={sectionTitle}>Pagamento e preferenze</p>
           <div className="space-y-3">
-            <div>
-              <label className={labelCls}>Intestatario del conto bancario <span className="text-destructive">*</span></label>
-              <Input type="text" placeholder="Mario Rossi" value={intestatarioPagamento}
-                onChange={(e) => setIntestatarioPagamento(e.target.value)}
-                required maxLength={100} />
-              <p className="text-xs text-muted-foreground mt-1">
-                Nome e cognome dell&apos;intestatario del conto su cui riceverai il pagamento. Può essere diverso dal tuo se non hai un conto a tuo nome.
-              </p>
-            </div>
-            <div>
-              <label className={labelCls}>IBAN <span className="text-destructive">*</span></label>
-              <Input type="text" placeholder="IT60 X054 2811 1010 0000 0123 456" value={iban}
-                onChange={(e) => setIban(e.target.value)}
-                required maxLength={34} className="font-mono" />
-            </div>
-            <div>
-              <label className={labelCls}>Taglia t-shirt <span className="text-destructive">*</span></label>
-              <Select value={tshirt || undefined} onValueChange={setTshirt}>
-                <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
-                <SelectContent>
-                  {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField control={form.control} name="intestatario_pagamento" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Intestatario del conto bancario <span className="text-destructive">*</span></FormLabel>
+                <FormControl><Input placeholder="Mario Rossi" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} maxLength={100} /></FormControl>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nome e cognome dell&apos;intestatario del conto su cui riceverai il pagamento. Può essere diverso dal tuo se non hai un conto a tuo nome.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="iban" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">IBAN <span className="text-destructive">*</span></FormLabel>
+                <FormControl><Input placeholder="IT60 X054 2811 1010 0000 0123 456" {...field} maxLength={34} className="font-mono" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <Controller control={form.control} name="tshirt_size" render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Taglia t-shirt <span className="text-destructive">*</span></FormLabel>
+                <Select value={field.value || undefined} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue placeholder="— Seleziona —" /></SelectTrigger>
+                  <SelectContent>
+                    {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
+              </FormItem>
+            )} />
           </div>
         </div>
 
@@ -449,59 +506,63 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
           </div>
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/40 p-3.5">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <Checkbox
-                  checked={sonoFiglio}
-                  onCheckedChange={(v) => setSonoFiglio(!!v)}
-                  className="mt-0.5 shrink-0"
-                />
-                <div>
-                  <span className="text-sm font-medium text-foreground">Sono fiscalmente a carico</span>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Seleziona questa opzione se sei fiscalmente a carico di un genitore o di un familiare — ovvero se il tuo reddito annuo complessivo non supera le soglie fiscali previste:{' '}
-                    <strong className="text-foreground">€4.000</strong> (under 24 anni) oppure{' '}
-                    <strong className="text-foreground">€2.840,51</strong> (24 anni e oltre).
-                    Ci permetterà di applicare la ritenuta d&apos;acconto nella misura corretta.
-                  </p>
-                </div>
-              </label>
+              <Controller control={form.control} name="sono_un_figlio_a_carico" render={({ field }) => (
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(v) => field.onChange(!!v)}
+                    className="mt-0.5 shrink-0"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">Sono fiscalmente a carico</span>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Seleziona questa opzione se sei fiscalmente a carico di un genitore o di un familiare — ovvero se il tuo reddito annuo complessivo non supera le soglie fiscali previste:{' '}
+                      <strong className="text-foreground">€4.000</strong> (under 24 anni) oppure{' '}
+                      <strong className="text-foreground">€2.840,51</strong> (24 anni e oltre).
+                      Ci permetterà di applicare la ritenuta d&apos;acconto nella misura corretta.
+                    </p>
+                  </div>
+                </label>
+              )} />
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className={labelCls} style={{ margin: 0 }}>
-                  Massimale lordo annuo <span className="text-destructive">*</span>
-                </label>
-                <a
-                  href="https://www.inps.it/it/it/dettaglio-approfondimento.schede-informative.49893.i-contributi-dei-lavoratori-autonomi-occasionali.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-link hover:text-link/80"
-                >
-                  Come scegliere il valore?
-                </a>
+            <Controller control={form.control} name="importo_lordo_massimale" render={({ field, fieldState }) => (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs text-muted-foreground mb-1" style={{ margin: 0 }}>
+                    Massimale lordo annuo <span className="text-destructive">*</span>
+                  </label>
+                  <a
+                    href="https://www.inps.it/it/it/dettaglio-approfondimento.schede-informative.49893.i-contributi-dei-lavoratori-autonomi-occasionali.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-link hover:text-link/80"
+                  >
+                    Come scegliere il valore?
+                  </a>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5000}
+                    step={1}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      field.onChange(isNaN(v) ? null : v);
+                    }}
+                    className="pl-7 font-mono"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Il massimale contrattuale che intendi raggiungere. La prestazione occasionale non può superare{' '}
+                  <strong className="text-foreground">€5.000 lordi/anno</strong> dallo stesso committente (max €5.000).
+                </p>
+                {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
               </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={5000}
-                  step={1}
-                  value={massimale}
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    setMassimale(isNaN(v) ? 0 : v);
-                  }}
-                  className="pl-7 font-mono"
-                  required
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Il massimale contrattuale che intendi raggiungere. La prestazione occasionale non può superare{' '}
-                <strong className="text-foreground">€5.000 lordi/anno</strong> dallo stesso committente (max €5.000).
-              </p>
-            </div>
+            )} />
           </div>
         </div>
 
@@ -509,49 +570,55 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
         <div>
           <p className={sectionTitle}>Attività</p>
           <div className="space-y-3">
-            <div>
-              <label className={labelCls}>Città di attività <span className="text-destructive">*</span></label>
-              <Select value={citta || undefined} onValueChange={setCitta}>
-                <SelectTrigger>
-                  <SelectValue placeholder={cittaOptions.length === 0 ? 'Caricamento...' : '— Seleziona città —'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {cittaOptions.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">La città in cui svolgi la tua attività con noi.</p>
-            </div>
-            <div>
-              <label className={labelCls}>Materie insegnate <span className="text-destructive">*</span></label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {materiaOptions.map((opt) => {
-                  const active = materieInsegnate.includes(opt.nome);
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() =>
-                        setMaterieInsegnate((prev) =>
-                          active ? prev.filter((m) => m !== opt.nome) : [...prev, opt.nome],
-                        )
-                      }
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                        active
-                          ? 'bg-brand text-white border-brand'
-                          : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                      }`}
-                    >
-                      {opt.nome}
-                    </button>
-                  );
-                })}
+            <Controller control={form.control} name="citta" render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Città di attività <span className="text-destructive">*</span></FormLabel>
+                <Select value={field.value || undefined} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={cittaOptions.length === 0 ? 'Caricamento...' : '— Seleziona città —'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cittaOptions.map((opt) => (
+                      <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">La città in cui svolgi la tua attività con noi.</p>
+                {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
+              </FormItem>
+            )} />
+            <Controller control={form.control} name="materie_insegnate" render={({ field, fieldState }) => (
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Materie insegnate <span className="text-destructive">*</span></label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {materiaOptions.map((opt) => {
+                    const active = (field.value ?? []).includes(opt.nome);
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() =>
+                          field.onChange(
+                            active ? (field.value ?? []).filter((m: string) => m !== opt.nome) : [...(field.value ?? []), opt.nome],
+                          )
+                        }
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                          active
+                            ? 'bg-brand text-white border-brand'
+                            : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                        }`}
+                      >
+                        {opt.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(field.value ?? []).length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">Seleziona almeno una materia.</p>
+                )}
+                {fieldState.error && <p className="text-destructive text-xs font-medium">{fieldState.error.message}</p>}
               </div>
-              {materieInsegnate.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-1">Seleziona almeno una materia.</p>
-              )}
-            </div>
+            )} />
           </div>
         </div>
 
@@ -559,6 +626,7 @@ export default function OnboardingWizard({ prefill, tipoContratto, tipoLabel, co
           Avanti — Genera contratto
         </Button>
       </form>
+      </Form>
       </CardContent>
     </Card>
   );

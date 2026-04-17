@@ -8,39 +8,30 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createTicketSchema, type CreateTicketFormValues } from '@/lib/schemas/ticket';
 import { toast } from 'sonner';
-
-type FieldErrors = { categoria?: string; oggetto?: string };
 
 export default function TicketForm() {
   const router = useRouter();
-  const [categoria, setCategoria] = useState('');
-  const [oggetto, setOggetto] = useState('');
-  const [priority, setPriority] = useState<TicketPriority>('NORMALE');
-  const [messaggio, setMessaggio] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<FieldErrors>({});
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const newErrors: FieldErrors = {};
-    if (!categoria) newErrors.categoria = 'Seleziona un riferimento.';
-    if (!oggetto.trim()) newErrors.oggetto = 'L\'oggetto è obbligatorio.';
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    setErrors({});
+  const form = useForm<CreateTicketFormValues>({
+    resolver: zodResolver(createTicketSchema),
+    defaultValues: { categoria: '', oggetto: '', messaggio: '', priority: 'NORMALE' },
+  });
+
+  async function onSubmit(values: CreateTicketFormValues) {
     setLoading(true);
 
     const res = await fetch('/api/tickets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        categoria,
-        oggetto: oggetto.trim(),
-        priority,
-        messaggio: messaggio.trim() || undefined,
+        categoria: values.categoria,
+        oggetto: values.oggetto.trim(),
+        priority: values.priority,
+        messaggio: values.messaggio?.trim() || undefined,
       }),
     });
 
@@ -56,77 +47,70 @@ export default function TicketForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Riferimento + Priorità — 2-col grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label htmlFor="categoria" className="block text-sm font-medium text-foreground">
-            Riferimento <span className="text-destructive">*</span>
-          </label>
-          <Select value={categoria || undefined} onValueChange={(v) => { setCategoria(v); setErrors((e) => ({ ...e, categoria: undefined })); }}>
-            <SelectTrigger id="categoria" className={errors.categoria ? 'border-destructive' : ''}><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger>
-            <SelectContent>
-              {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          {errors.categoria && <p className="text-xs text-destructive">{errors.categoria}</p>}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        {/* Riferimento + Priorità — 2-col grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="categoria" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Riferimento <span className="text-destructive">*</span></FormLabel>
+              <Select value={field.value || undefined} onValueChange={field.onChange}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Seleziona un riferimento" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {TICKET_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="priority" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Priorità</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {(['BASSA', 'NORMALE', 'ALTA'] as TicketPriority[]).map((p) => (
+                    <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="priority" className="block text-sm font-medium text-foreground">
-            Priorità
-          </label>
-          <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
-            <SelectTrigger id="priority"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {(['BASSA', 'NORMALE', 'ALTA'] as TicketPriority[]).map((p) => (
-                <SelectItem key={p} value={p}>{TICKET_PRIORITY_LABELS[p]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Oggetto */}
+        <FormField control={form.control} name="oggetto" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Oggetto <span className="text-destructive">*</span></FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Descrivi brevemente il problema o la richiesta" maxLength={200} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        {/* Messaggio iniziale */}
+        <FormField control={form.control} name="messaggio" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Messaggio iniziale <span className="text-muted-foreground font-normal">(opzionale)</span></FormLabel>
+            <FormControl>
+              <Textarea {...field} placeholder="Aggiungi dettagli, contesto o eventuali allegati potranno essere aggiunti dopo la creazione..." rows={5} className="resize-none" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        <div className="flex items-center gap-3 pt-1">
+          <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+            {loading ? 'Apertura…' : 'Apri ticket'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.push('/ticket')}>
+            Annulla
+          </Button>
         </div>
-      </div>
-
-      {/* Oggetto */}
-      <div className="space-y-1.5">
-        <label htmlFor="oggetto" className="block text-sm font-medium text-foreground">
-          Oggetto <span className="text-destructive">*</span>
-        </label>
-        <Input
-          id="oggetto"
-          type="text"
-          value={oggetto}
-          onChange={(e) => { setOggetto(e.target.value); setErrors((err) => ({ ...err, oggetto: undefined })); }}
-          placeholder="Descrivi brevemente il problema o la richiesta"
-          maxLength={200}
-          className={errors.oggetto ? 'border-destructive' : ''}
-        />
-        {errors.oggetto && <p className="text-xs text-destructive">{errors.oggetto}</p>}
-      </div>
-
-      {/* Messaggio iniziale */}
-      <div className="space-y-1.5">
-        <label htmlFor="messaggio" className="block text-sm font-medium text-foreground">
-          Messaggio iniziale <span className="text-muted-foreground font-normal">(opzionale)</span>
-        </label>
-        <Textarea
-          id="messaggio"
-          value={messaggio}
-          onChange={(e) => setMessaggio(e.target.value)}
-          placeholder="Aggiungi dettagli, contesto o eventuali allegati potranno essere aggiunti dopo la creazione..."
-          rows={5}
-          className="resize-none"
-        />
-      </div>
-
-      <div className="flex items-center gap-3 pt-1">
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Apertura…' : 'Apri ticket'}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.push('/ticket')}>
-          Annulla
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }

@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import {
   buildTicketReplyNotification,
   buildTicketCollabReplyNotification,
 } from '@/lib/notification-utils';
-
-const PostMessageSchema = z.object({
-  message: z.string().min(1),
-});
+import { ticketMessageSchema } from '@/lib/schemas/ticket';
 import {
   getNotificationSettings,
   getResponsabiliForUser,
@@ -73,7 +69,7 @@ export async function POST(
   const rawMessage = (formData.get('message') as string | null)?.trim();
   const file = formData.get('file') as File | null;
 
-  const parsed = PostMessageSchema.safeParse({ message: rawMessage });
+  const parsed = ticketMessageSchema.safeParse({ message: rawMessage });
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }

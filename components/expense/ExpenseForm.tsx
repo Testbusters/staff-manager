@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
 import { EXPENSE_CATEGORIES } from '@/lib/types';
 import { Input } from '@/components/ui/input';
@@ -14,18 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DatePicker } from '@/components/ui/date-picker';
 import { toast } from 'sonner';
-
-const expenseSchema = z.object({
-  categoria: z.string().min(1, 'Seleziona una categoria'),
-  data_spesa: z.string().min(1, 'Data obbligatoria'),
-  importo: z.string().min(1, 'Importo obbligatorio').refine(
-    (v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0,
-    { message: 'Importo deve essere maggiore di 0' },
-  ),
-  descrizione: z.string().optional(),
-});
-
-type ExpenseFormValues = z.infer<typeof expenseSchema>;
+import { expenseSchema, type ExpenseFormValues } from '@/lib/schemas/expense';
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);

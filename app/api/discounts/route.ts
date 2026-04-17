@@ -1,25 +1,11 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/notification-helpers';
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
-
-const CreateDiscountSchema = z.object({
-  titolo: z.string().min(1),
-  descrizione: z.string().optional(),
-  codice_sconto: z.string().optional(),
-  link: z.string().optional(),
-  valid_from: z.string().optional(),
-  valid_to: z.string().optional(),
-  community_ids: z.array(z.string()).optional(),
-  fornitore: z.string().optional(),
-  logo_url: z.string().optional(),
-  file_url: z.string().optional(),
-  brand: z.string().optional(),
-});
+import { createDiscountSchema } from '@/lib/schemas/discount';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -37,7 +23,7 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const parsed = CreateDiscountSchema.safeParse(body);
+  const parsed = createDiscountSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }

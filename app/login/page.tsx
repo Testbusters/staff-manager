@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, useForm, zodResolver } from '@/components/ui/form';
+import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth';
 import AppLogo from '@/components/ui/AppLogo';
 
 const TEST_USERS = [
@@ -19,28 +21,32 @@ const TEST_USERS = [
 ] as const;
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const passwordRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
   const supabase = createClient();
   const { setTheme } = useTheme();
+
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
 
   // Login page is always dark — override any stored preference
   useEffect(() => {
     setTheme('dark');
   }, [setTheme]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: LoginFormValues) => {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    });
     if (error) {
       setError('Email o password non corretti');
       setLoading(false);
@@ -69,58 +75,63 @@ export default function LoginPage() {
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-6 shadow-sm">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">Email</label>
-                <Input
-                  type="email"
-                  placeholder="nome@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                  required
-                  autoComplete="email"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">Password</label>
-                <div className="relative">
-                  <Input
-                    ref={passwordRef}
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
-                    required
-                    autoComplete="current-password"
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition"
-                    aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField control={form.control} name="email" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="nome@email.com"
+                        disabled={loading}
+                        autoComplete="email"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="password" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          disabled={loading}
+                          autoComplete="current-password"
+                          className="pr-10"
+                        />
+                      </FormControl>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition"
+                        aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </FormItem>
+                )} />
 
-              {error && (
-                <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-3 py-2.5 text-xs text-red-600 dark:text-red-400">
-                  {error}
-                </div>
-              )}
+                {error && (
+                  <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-3 py-2.5 text-xs text-red-600 dark:text-red-400">
+                    {error}
+                  </div>
+                )}
 
-              <Button
-                type="submit"
-                disabled={loading || !email || !password}
-                className="w-full bg-brand hover:bg-brand/90 text-white"
-              >
-                {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={loading || !form.watch('email') || !form.watch('password')}
+                  className="w-full bg-brand hover:bg-brand/90 text-white"
+                >
+                  {loading ? <>{spinner} Accesso in corso…</> : 'Accedi'}
+                </Button>
+              </form>
+            </Form>
           </div>
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
@@ -138,9 +149,8 @@ export default function LoginPage() {
               key={u.email}
               type="button"
               onClick={() => {
-                setEmail(u.email);
-                setPassword('Testbusters123');
-                passwordRef.current?.focus();
+                form.setValue('email', u.email);
+                form.setValue('password', 'Testbusters123');
               }}
               className="rounded-lg bg-background border border-border px-2 py-2.5 text-left hover:border-muted-foreground/30 hover:bg-muted/60 transition"
             >

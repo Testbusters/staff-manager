@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Controller } from 'react-hook-form';
 import { Check, AlertTriangle, ChevronDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS, TSHIRT_SIZES } from '@/lib/types';
@@ -14,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { profileFormSchema, type ProfileFormValues } from '@/lib/schemas/collaborator';
 
 type Collaborator = {
   nome: string;
@@ -55,7 +58,7 @@ type Props = {
 
 const readonlyCls =
   'w-full rounded-lg bg-card border border-border px-3 py-2.5 text-sm text-muted-foreground select-all';
-const labelCls = 'block text-xs text-muted-foreground mb-1.5';
+const labelCls = 'text-xs text-muted-foreground';
 const sectionCls = 'rounded-2xl bg-card border border-border';
 const sectionHeader = 'px-5 py-4 border-b border-border';
 
@@ -96,7 +99,7 @@ function Section({
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <p className={labelCls}>{label}</p>
+      <p className={`${labelCls} mb-1.5`}>{label}</p>
       <div className={readonlyCls}>{value || <span className="text-muted-foreground italic">—</span>}</div>
     </div>
   );
@@ -133,70 +136,41 @@ function GuideBox({ guide }: { guide: GuideContent }) {
 }
 
 export default function ProfileForm({ collaborator, role, email, community, communities, guidaFigli }: Props) {
-  // Editable personal data
-  const [emailVal, setEmailVal]       = useState(email);
-  const [nome, setNome]               = useState(collaborator?.nome ?? '');
-  const [cognome, setCognome]         = useState(collaborator?.cognome ?? '');
-  const [codiceFiscale, setCodiceFiscale] = useState(collaborator?.codice_fiscale ?? '');
-  const [dataNascita, setDataNascita] = useState(collaborator?.data_nascita ?? '');
-  const [luogoNascita, setLuogoNascita] = useState(collaborator?.luogo_nascita ?? '');
-  const [provinciaNascita, setProvinciaNascita] = useState(collaborator?.provincia_nascita ?? '');
-  const [comuneRes, setComuneRes]     = useState(collaborator?.comune ?? '');
-  const [provinciaRes, setPrvinciaRes] = useState(collaborator?.provincia_residenza ?? '');
-  // Contacts
-  const [telefono, setTelefono]   = useState(collaborator?.telefono ?? '');
-  const [indirizzo, setIndirizzo] = useState(collaborator?.indirizzo ?? '');
-  const [civico, setCivico]       = useState(collaborator?.civico_residenza ?? '');
-  // Payment
-  const [iban, setIban] = useState(collaborator?.iban ?? '');
-  const [intestatarioPagamento, setIntestatarioPagamento] = useState(collaborator?.intestatario_pagamento ?? '');
-  // Fiscal
-  const [sonoFiglio, setSonoFiglio]   = useState(collaborator?.sono_un_figlio_a_carico ?? false);
-  const [massimale, setMassimale]     = useState<string>(
-    collaborator?.importo_lordo_massimale != null ? String(collaborator.importo_lordo_massimale) : '',
-  );
-  const [showGuida, setShowGuida]     = useState(false);
-  // Preferences
-  const [tshirt, setTshirt]     = useState(collaborator?.tshirt_size ?? '');
-  // Avatar
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      email,
+      nome: collaborator?.nome ?? '',
+      cognome: collaborator?.cognome ?? '',
+      codice_fiscale: collaborator?.codice_fiscale ?? '',
+      data_nascita: collaborator?.data_nascita ?? '',
+      luogo_nascita: collaborator?.luogo_nascita ?? '',
+      provincia_nascita: collaborator?.provincia_nascita ?? '',
+      comune: collaborator?.comune ?? '',
+      provincia_residenza: collaborator?.provincia_residenza ?? '',
+      telefono: collaborator?.telefono ?? '',
+      indirizzo: collaborator?.indirizzo ?? '',
+      civico_residenza: collaborator?.civico_residenza ?? '',
+      iban: collaborator?.iban ?? '',
+      intestatario_pagamento: collaborator?.intestatario_pagamento ?? '',
+      tshirt_size: collaborator?.tshirt_size ?? '',
+      sono_un_figlio_a_carico: collaborator?.sono_un_figlio_a_carico ?? false,
+      importo_lordo_massimale: collaborator?.importo_lordo_massimale != null ? String(collaborator.importo_lordo_massimale) : '',
+      citta: collaborator?.citta ?? '',
+      materie_insegnate: collaborator?.materie_insegnate ?? [],
+    },
+  });
+
+  const { isDirty, isSubmitting } = form.formState;
+  const sonoFiglio = form.watch('sono_un_figlio_a_carico');
+
+  const [showGuida, setShowGuida] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(collaborator?.foto_profilo_url ?? '');
-
-  // Activity — città + materie
-  const [citta, setCitta]                   = useState(collaborator?.citta ?? '');
-  const [materieInsegnate, setMaterieInsegnate] = useState<string[]>(collaborator?.materie_insegnate ?? []);
-  const [cittaOptions, setCittaOptions]     = useState<LookupOption[]>([]);
-  const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
-
-  const [loading, setLoading]           = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Dirty state — compare current values to initial
-  const initial = useMemo(() => ({
-    email, nome: collaborator?.nome ?? '', cognome: collaborator?.cognome ?? '',
-    codiceFiscale: collaborator?.codice_fiscale ?? '', dataNascita: collaborator?.data_nascita ?? '',
-    luogoNascita: collaborator?.luogo_nascita ?? '', provinciaNascita: collaborator?.provincia_nascita ?? '',
-    comuneRes: collaborator?.comune ?? '', provinciaRes: collaborator?.provincia_residenza ?? '',
-    telefono: collaborator?.telefono ?? '', indirizzo: collaborator?.indirizzo ?? '',
-    civico: collaborator?.civico_residenza ?? '', iban: collaborator?.iban ?? '',
-    intestatarioPagamento: collaborator?.intestatario_pagamento ?? '',
-    sonoFiglio: collaborator?.sono_un_figlio_a_carico ?? false,
-    massimale: collaborator?.importo_lordo_massimale != null ? String(collaborator.importo_lordo_massimale) : '',
-    tshirt: collaborator?.tshirt_size ?? '', citta: collaborator?.citta ?? '',
-    materieInsegnate: collaborator?.materie_insegnate ?? [],
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), []);
-
-  const isDirty =
-    emailVal !== initial.email || nome !== initial.nome || cognome !== initial.cognome ||
-    codiceFiscale !== initial.codiceFiscale || dataNascita !== initial.dataNascita ||
-    luogoNascita !== initial.luogoNascita || provinciaNascita !== initial.provinciaNascita ||
-    comuneRes !== initial.comuneRes || provinciaRes !== initial.provinciaRes ||
-    telefono !== initial.telefono || indirizzo !== initial.indirizzo || civico !== initial.civico ||
-    iban !== initial.iban || intestatarioPagamento !== initial.intestatarioPagamento ||
-    sonoFiglio !== initial.sonoFiglio || massimale !== initial.massimale ||
-    tshirt !== initial.tshirt || citta !== initial.citta ||
-    JSON.stringify(materieInsegnate) !== JSON.stringify(initial.materieInsegnate);
+  const [cittaOptions, setCittaOptions] = useState<LookupOption[]>([]);
+  const [materiaOptions, setMateriaOptions] = useState<LookupOption[]>([]);
 
   useEffect(() => {
     const comm = community || 'testbusters';
@@ -206,50 +180,42 @@ export default function ProfileForm({ collaborator, role, email, community, comm
       .then((r) => r.json()).then((d) => setMateriaOptions(d.options ?? [])).catch(() => {});
   }, [community]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!citta) { toast.error('Seleziona la tua città.'); return; }
-    if (materieInsegnate.length === 0) { toast.error('Seleziona almeno una materia insegnata.'); return; }
-
-    setLoading(true);
-
-    const emailTrimmed = emailVal.trim().toLowerCase();
+  const onSubmit = async (values: ProfileFormValues) => {
+    const emailTrimmed = values.email.trim().toLowerCase();
     const res = await fetch('/api/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email:               emailTrimmed !== email.toLowerCase() ? emailTrimmed : undefined,
-        nome:                nome.trim() || undefined,
-        cognome:             cognome.trim() || undefined,
-        codice_fiscale:      codiceFiscale.trim().toUpperCase() || null,
-        data_nascita:        dataNascita || null,
-        luogo_nascita:       luogoNascita.trim() || null,
-        provincia_nascita:   provinciaNascita.trim().toUpperCase() || null,
-        comune:              comuneRes.trim() || null,
-        provincia_residenza: provinciaRes.trim().toUpperCase() || null,
-        telefono:            telefono || null,
-        indirizzo:           indirizzo || null,
-        civico_residenza:    civico.trim() || null,
-        iban:                iban.toUpperCase().replace(/\s/g, '') || null,
-        intestatario_pagamento: intestatarioPagamento.trim() || null,
-        tshirt_size:               tshirt || null,
-        sono_un_figlio_a_carico:   sonoFiglio,
-        importo_lordo_massimale:   massimale !== '' ? parseFloat(massimale) : null,
-        citta,
-        materie_insegnate:         materieInsegnate,
+        nome:                values.nome.trim() || undefined,
+        cognome:             values.cognome.trim() || undefined,
+        codice_fiscale:      values.codice_fiscale.trim().toUpperCase() || null,
+        data_nascita:        values.data_nascita || null,
+        luogo_nascita:       values.luogo_nascita.trim() || null,
+        provincia_nascita:   values.provincia_nascita.trim().toUpperCase() || null,
+        comune:              values.comune.trim() || null,
+        provincia_residenza: values.provincia_residenza.trim().toUpperCase() || null,
+        telefono:            values.telefono || null,
+        indirizzo:           values.indirizzo || null,
+        civico_residenza:    values.civico_residenza.trim() || null,
+        iban:                values.iban.toUpperCase().replace(/\s/g, '') || null,
+        intestatario_pagamento: values.intestatario_pagamento.trim() || null,
+        tshirt_size:               values.tshirt_size || null,
+        sono_un_figlio_a_carico:   values.sono_un_figlio_a_carico,
+        importo_lordo_massimale:   values.importo_lordo_massimale !== '' ? parseFloat(values.importo_lordo_massimale) : null,
+        citta:                     values.citta,
+        materie_insegnate:         values.materie_insegnate,
       }),
     });
 
     const data = await res.json();
-    if (!res.ok) { setLoading(false); toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
+    if (!res.ok) { toast.error(data.error ?? 'Errore durante il salvataggio.', { duration: 5000 }); return; }
     if (data.emailChanged) {
       const supabase = createClient();
       await supabase.auth.refreshSession();
     }
 
-    setLoading(false);
-
+    form.reset(values);
     toast.success('Profilo salvato.');
   };
 
@@ -285,7 +251,8 @@ export default function ProfileForm({ collaborator, role, email, community, comm
   }
 
   return (
-    <form onSubmit={handleSave} className="space-y-4">
+    <Form {...form}>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       {/* Foto profilo */}
       <div className={sectionCls}>
         <div className={sectionHeader}>
@@ -353,139 +320,193 @@ export default function ProfileForm({ collaborator, role, email, community, comm
 
       <Section title="Informazioni personali">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Nome</label>
-              <Input type="text" placeholder="Mario" value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                disabled={loading} />
-            </div>
-            <div>
-              <label className={labelCls}>Cognome</label>
-              <Input type="text" placeholder="Rossi" value={cognome}
-                onChange={(e) => setCognome(e.target.value)}
-                disabled={loading} />
-            </div>
+            <FormField control={form.control} name="nome" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Nome</FormLabel>
+                <FormControl>
+                  <Input placeholder="Mario" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="cognome" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Cognome</FormLabel>
+                <FormControl>
+                  <Input placeholder="Rossi" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
-          <div>
-            <label className={labelCls}>Codice fiscale</label>
-            <Input type="text" placeholder="RSSMRA80A01H501U" value={codiceFiscale}
-              onChange={(e) => setCodiceFiscale(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-              disabled={loading} maxLength={16} className="font-mono" />
-          </div>
+          <FormField control={form.control} name="codice_fiscale" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Codice fiscale</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="RSSMRA80A01H501U"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                  disabled={isSubmitting}
+                  maxLength={16}
+                  className="font-mono"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Data di nascita</label>
-              <DatePicker
-                value={dataNascita}
-                onChange={(v) => setDataNascita(v)}
-                disabled={loading}
-                captionLayout="dropdown"
-                fromYear={1940}
-                toYear={new Date().getFullYear() - 16}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Città di nascita</label>
-              <Input type="text" placeholder="Roma" value={luogoNascita}
-                onChange={(e) => setLuogoNascita(e.target.value)}
-                disabled={loading} />
-            </div>
+            <FormField control={form.control} name="data_nascita" render={() => (
+              <FormItem>
+                <FormLabel className={labelCls}>Data di nascita</FormLabel>
+                <Controller
+                  control={form.control}
+                  name="data_nascita"
+                  render={({ field: { value, onChange } }) => (
+                    <DatePicker
+                      value={value}
+                      onChange={onChange}
+                      disabled={isSubmitting}
+                      captionLayout="dropdown"
+                      fromYear={1940}
+                      toYear={new Date().getFullYear() - 16}
+                    />
+                  )}
+                />
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="luogo_nascita" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Città di nascita</FormLabel>
+                <FormControl>
+                  <Input placeholder="Roma" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
-          <div>
-            <label className={labelCls}>Provincia di nascita (sigla)</label>
-            <Input type="text" placeholder="RM" value={provinciaNascita}
-              onChange={(e) => setProvinciaNascita(e.target.value.toUpperCase())}
-              disabled={loading} maxLength={2} className="font-mono uppercase" />
-          </div>
+          <FormField control={form.control} name="provincia_nascita" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Provincia di nascita (sigla)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="RM"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                  disabled={isSubmitting}
+                  maxLength={2}
+                  className="font-mono uppercase"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="col-span-2">
-              <label className={labelCls}>Via/Piazza di residenza</label>
-              <Input
-                type="text"
-                placeholder="Via Roma"
-                value={indirizzo}
-                onChange={(e) => setIndirizzo(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Civico</label>
-              <Input
-                type="text"
-                placeholder="1"
-                value={civico}
-                onChange={(e) => setCivico(e.target.value)}
-                disabled={loading}
-                maxLength={10}
-              />
-            </div>
+            <FormField control={form.control} name="indirizzo" render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel className={labelCls}>Via/Piazza di residenza</FormLabel>
+                <FormControl>
+                  <Input placeholder="Via Roma" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="civico_residenza" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Civico</FormLabel>
+                <FormControl>
+                  <Input placeholder="1" {...field} disabled={isSubmitting} maxLength={10} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Comune di residenza</label>
-              <Input type="text" placeholder="Milano" value={comuneRes}
-                onChange={(e) => setComuneRes(e.target.value)}
-                disabled={loading} />
-            </div>
-            <div>
-              <label className={labelCls}>Provincia di residenza (sigla)</label>
-              <Input type="text" placeholder="MI" value={provinciaRes}
-                onChange={(e) => setPrvinciaRes(e.target.value.toUpperCase())}
-                disabled={loading} maxLength={2} className="font-mono uppercase" />
-            </div>
+            <FormField control={form.control} name="comune" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Comune di residenza</FormLabel>
+                <FormControl>
+                  <Input placeholder="Milano" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="provincia_residenza" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Provincia di residenza (sigla)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="MI"
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    disabled={isSubmitting}
+                    maxLength={2}
+                    className="font-mono uppercase"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
       </Section>
 
       <Section title="Contatti">
-          <div>
-            <label className={labelCls}>Email</label>
-            <Input
-              type="email"
-              value={emailVal}
-              onChange={(e) => setEmailVal(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>Telefono di contatto</label>
-            <Input
-              type="tel"
-              placeholder="+39 333 0000000"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              disabled={loading}
-            />
-          </div>
+          <FormField control={form.control} name="email" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Email</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="telefono" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Telefono di contatto</FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="+39 333 0000000" {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
       </Section>
 
       <Section title="Dati pagamento" subtitle="Visibile solo a te e all'amministrazione.">
-          <div>
-            <label className={labelCls}>Intestatario del conto bancario</label>
-            <Input
-              type="text"
-              placeholder="Mario Rossi"
-              value={intestatarioPagamento}
-              onChange={(e) => setIntestatarioPagamento(e.target.value)}
-              disabled={loading}
-              maxLength={100}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Indica il nome e cognome dell&apos;intestatario del conto bancario su cui sarà accreditato il pagamento. Può essere diverso dal tuo se non hai un conto a tuo nome.
-            </p>
-          </div>
-          <div>
-            <label className={labelCls}>IBAN</label>
-            <Input
-              type="text"
-              placeholder="IT60 X054 2811 1010 0000 0123 456"
-              value={iban}
-              onChange={(e) => setIban(e.target.value)}
-              disabled={loading}
-              className="font-mono"
-              maxLength={34}
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
-          </div>
+          <FormField control={form.control} name="intestatario_pagamento" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Intestatario del conto bancario</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Mario Rossi"
+                  {...field}
+                  disabled={isSubmitting}
+                  maxLength={100}
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground mt-1">
+                Indica il nome e cognome dell&apos;intestatario del conto bancario su cui sarà accreditato il pagamento. Può essere diverso dal tuo se non hai un conto a tuo nome.
+              </p>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="iban" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>IBAN</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="IT60 X054 2811 1010 0000 0123 456"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                  disabled={isSubmitting}
+                  className="font-mono"
+                  maxLength={34}
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground mt-1.5">Inserisci senza spazi. Verrà normalizzato automaticamente.</p>
+              <FormMessage />
+            </FormItem>
+          )} />
       </Section>
 
       <Section
@@ -502,58 +523,63 @@ export default function ProfileForm({ collaborator, role, email, community, comm
           </Button>
         }
       >
-          <div>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox
-                checked={sonoFiglio}
-                onCheckedChange={(v) => setSonoFiglio(!!v)}
-                disabled={loading}
-                className="mt-0.5 flex-shrink-0"
-              />
-              <div>
-                <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Seleziona se sei fiscalmente a carico di un familiare (es. genitore).
-                </p>
-                <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground list-none">
-                  <li>· Figli under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
-                  <li>· Figli 24+ anni (dall&apos;1/01 dell&apos;anno del 24° compleanno): soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
-                </ul>
-              </div>
-            </label>
-            {sonoFiglio && <GuideBox guide={guidaFigli} />}
-          </div>
+          <FormField control={form.control} name="sono_un_figlio_a_carico" render={({ field }) => (
+            <FormItem>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(v) => field.onChange(!!v)}
+                  disabled={isSubmitting}
+                  className="mt-0.5 flex-shrink-0"
+                />
+                <div>
+                  <span className="text-sm text-foreground">Sono fiscalmente a carico</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Seleziona se sei fiscalmente a carico di un familiare (es. genitore).
+                  </p>
+                  <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground list-none">
+                    <li>· Figli under 24: soglia <span className="font-medium text-foreground">4.000 € lordi/anno</span></li>
+                    <li>· Figli 24+ anni (dall&apos;1/01 dell&apos;anno del 24° compleanno): soglia <span className="font-medium text-foreground">2.840,51 € lordi/anno</span></li>
+                  </ul>
+                </div>
+              </label>
+              {sonoFiglio && <GuideBox guide={guidaFigli} />}
+            </FormItem>
+          )} />
 
           {role === 'collaboratore' && (
-            <div>
-              <label className={labelCls}>
-                Massimale lordo annuo <span className="text-muted-foreground">(max €5.000)</span>
-                <span className="text-destructive ml-1">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={5000}
-                  step={1}
-                  placeholder="es. 2840 o 4000 o 5000"
-                  value={massimale}
-                  onChange={(e) => setMassimale(e.target.value)}
-                  disabled={loading}
-                  required
-                  className="pl-7"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                Importo lordo massimo che vuoi ricevere da noi nell&apos;anno solare.
-                Se hai altre collaborazioni, abbassa questo valore per rispettare i tuoi limiti personali.
-                <Button type="button" variant="ghost" size="sm" onClick={() => setShowGuida(true)}
-                  className="ml-1 text-link hover:text-link/80 underline underline-offset-2 h-auto p-0 text-xs">
-                  Come scegliere il valore?
-                </Button>
-              </p>
-            </div>
+            <FormField control={form.control} name="importo_lordo_massimale" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>
+                  Massimale lordo annuo <span className="text-muted-foreground">(max €5.000)</span>
+                  <span className="text-destructive ml-1">*</span>
+                </FormLabel>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={5000}
+                      step={1}
+                      placeholder="es. 2840 o 4000 o 5000"
+                      {...field}
+                      disabled={isSubmitting}
+                      className="pl-7"
+                    />
+                  </FormControl>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Importo lordo massimo che vuoi ricevere da noi nell&apos;anno solare.
+                  Se hai altre collaborazioni, abbassa questo valore per rispettare i tuoi limiti personali.
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowGuida(true)}
+                    className="ml-1 text-link hover:text-link/80 underline underline-offset-2 h-auto p-0 text-xs">
+                    Come scegliere il valore?
+                  </Button>
+                </p>
+                <FormMessage />
+              </FormItem>
+            )} />
           )}
       </Section>
 
@@ -628,64 +654,74 @@ export default function ProfileForm({ collaborator, role, email, community, comm
       </Dialog>
 
       <Section title="Preferenze">
-          <label className={labelCls}>Taglia t-shirt</label>
-          <Select value={tshirt || undefined} onValueChange={setTshirt} disabled={loading}>
-            <SelectTrigger><SelectValue placeholder="— Non specificata —" /></SelectTrigger>
-            <SelectContent>
-              {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <FormField control={form.control} name="tshirt_size" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Taglia t-shirt</FormLabel>
+              <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isSubmitting}>
+                <FormControl><SelectTrigger><SelectValue placeholder="— Non specificata —" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
       </Section>
 
       <Section title="Attività" subtitle="Città e materie che insegni.">
-          <div>
-            <label className={labelCls}>
-              Città <span className="text-destructive">*</span>
-            </label>
-            <Select value={citta || undefined} onValueChange={setCitta} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder="— Seleziona città —" />
-              </SelectTrigger>
-              <SelectContent>
-                {cittaOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField control={form.control} name="citta" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>
+                Città <span className="text-destructive">*</span>
+              </FormLabel>
+              <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isSubmitting}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="— Seleziona città —" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {cittaOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.nome}>{opt.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
 
-          <div>
-            <label className={labelCls}>
-              Materie insegnate <span className="text-destructive">*</span>
-            </label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {materiaOptions.map((opt) => {
-                const active = materieInsegnate.includes(opt.nome);
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    disabled={loading}
-                    onClick={() =>
-                      setMaterieInsegnate((prev) =>
-                        active ? prev.filter((m) => m !== opt.nome) : [...prev, opt.nome],
-                      )
-                    }
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                      active
-                        ? 'bg-brand text-white border-brand'
-                        : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                    }`}
-                  >
-                    {opt.nome}
-                  </button>
-                );
-              })}
-            </div>
-            {materieInsegnate.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-1.5">Seleziona almeno una materia.</p>
-            )}
-          </div>
+          <FormField control={form.control} name="materie_insegnate" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>
+                Materie insegnate <span className="text-destructive">*</span>
+              </FormLabel>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {materiaOptions.map((opt) => {
+                  const active = (field.value ?? []).includes(opt.nome);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() =>
+                        field.onChange(
+                          active ? field.value.filter((m: string) => m !== opt.nome) : [...field.value, opt.nome],
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                        active
+                          ? 'bg-brand text-white border-brand'
+                          : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                      }`}
+                    >
+                      {opt.nome}
+                    </button>
+                  );
+                })}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )} />
       </Section>
 
       {/* Sticky save bar — visible only when form is dirty */}
@@ -693,10 +729,10 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         <div className="sticky bottom-0 z-10 -mx-6 px-6 py-3 bg-background/80 backdrop-blur-sm border-t border-border">
           <Button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="bg-brand hover:bg-brand/90 text-white"
           >
-            {loading ? (
+            {isSubmitting ? (
               <>
                 <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -711,5 +747,6 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         </div>
       )}
     </form>
+    </Form>
   );
 }

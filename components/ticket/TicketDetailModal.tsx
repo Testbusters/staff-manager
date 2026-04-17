@@ -8,6 +8,8 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import TicketStatusBadge from './TicketStatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { ticketMessageSchema, type TicketMessageFormValues } from '@/lib/schemas/ticket';
 import { toast } from 'sonner';
 
 type TicketMessage = {
@@ -44,9 +46,13 @@ export default function TicketDetailModal({
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const form = useForm<TicketMessageFormValues>({
+    resolver: zodResolver(ticketMessageSchema),
+    defaultValues: { message: '' },
+  });
 
   async function fetchTicket() {
     const res = await fetch(`/api/tickets/${ticketId}`);
@@ -63,13 +69,11 @@ export default function TicketDetailModal({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  async function handleReply(e: React.FormEvent) {
-    e.preventDefault();
-    if (!reply.trim()) return;
+  async function onReply(values: TicketMessageFormValues) {
     setSending(true);
 
     const fd = new FormData();
-    fd.append('message', reply.trim());
+    fd.append('message', values.message.trim());
     const res = await fetch(`/api/tickets/${ticketId}/messages`, { method: 'POST', body: fd });
     setSending(false);
 
@@ -78,7 +82,7 @@ export default function TicketDetailModal({
       toast.error(d.error ?? 'Errore invio', { duration: 5000 });
       return;
     }
-    setReply('');
+    form.reset();
     await fetchTicket();
   }
 
@@ -145,24 +149,27 @@ export default function TicketDetailModal({
 
         {/* Reply form */}
         {!loading && !isClosed && (
-          <form onSubmit={handleReply} className="border-t border-border px-4 py-3 flex-shrink-0">
-            <div className="flex gap-2">
-              <Textarea
-                value={reply}
-                onChange={(e) => setReply(e.target.value)}
-                rows={2}
-                placeholder="Scrivi un messaggio…"
-                className="flex-1 resize-none"
-              />
-              <Button
-                type="submit"
-                disabled={sending || !reply.trim()}
-                className="self-end bg-brand hover:bg-brand/90 text-white"
-              >
-                {sending ? '…' : 'Invia'}
-              </Button>
-            </div>
-          </form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onReply)} className="border-t border-border px-4 py-3 flex-shrink-0">
+              <div className="flex gap-2">
+                <FormField control={form.control} name="message" render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Textarea {...field} rows={2} placeholder="Scrivi un messaggio…" className="resize-none" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <Button
+                  type="submit"
+                  disabled={sending || !form.watch('message').trim()}
+                  className="self-end bg-brand hover:bg-brand/90 text-white"
+                >
+                  {sending ? '…' : 'Invia'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
         {!loading && isClosed && (
           <div className="border-t border-border px-4 py-3 flex-shrink-0">

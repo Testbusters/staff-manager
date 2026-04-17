@@ -6,6 +6,8 @@ import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { changePasswordSchema, type ChangePasswordFormValues } from '@/lib/schemas/password';
 import { toast } from 'sonner';
 
 function useToggle(initial = false): [boolean, () => void] {
@@ -25,33 +27,28 @@ const RULES: Rule[] = [
 ];
 
 export default function ChangePasswordPage() {
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm]   = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showPass,    toggleShowPass]    = useToggle();
   const [showConfirm, toggleShowConfirm] = useToggle();
   const router = useRouter();
 
-  const rulesPassed  = RULES.every((r) => r.test(password));
-  const mismatch     = confirm.length > 0 && password !== confirm;
-  const canSubmit    = rulesPassed && !mismatch && confirm.length > 0 && !loading;
+  const form = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { password: '', confirm: '' },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rulesPassed) {
-      toast.error('La password non soddisfa i requisiti di sicurezza.', { duration: 5000 });
-      return;
-    }
-    if (password !== confirm) {
-      toast.error('Le password non coincidono.', { duration: 5000 });
-      return;
-    }
+  const password = form.watch('password');
+  const confirm = form.watch('confirm');
+  const rulesPassed = RULES.every((r) => r.test(password));
+  const mismatch = confirm.length > 0 && password !== confirm;
+
+  const onSubmit = async (values: ChangePasswordFormValues) => {
     setLoading(true);
 
     const res = await fetch('/api/auth/change-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password: values.password }),
     });
 
     const data = await res.json();
@@ -64,7 +61,7 @@ export default function ChangePasswordPage() {
 
     // Password change invalidates the current JWT — re-sign-in to get a fresh session cookie.
     const supabase = createClient();
-    await supabase.auth.signInWithPassword({ email: data.email, password });
+    await supabase.auth.signInWithPassword({ email: data.email, password: values.password });
     router.push('/');
   };
 
@@ -93,90 +90,98 @@ export default function ChangePasswordPage() {
         </div>
 
         <div className="rounded-2xl bg-card border border-border p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 
-            {/* Password field */}
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Nuova password</label>
-              <div className="relative">
-                <Input
-                  type={showPass ? 'text' : 'password'}
-                  placeholder="Minimo 8 caratteri"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  required
-                  autoComplete="new-password"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={toggleShowPass}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showPass ? 'Nascondi password' : 'Mostra password'}
-                  tabIndex={-1}
-                >
-                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+              {/* Password field */}
+              <FormField control={form.control} name="password" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Nuova password</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type={showPass ? 'text' : 'password'}
+                        placeholder="Minimo 8 caratteri"
+                        disabled={loading}
+                        autoComplete="new-password"
+                        className="pr-10"
+                      />
+                    </FormControl>
+                    <button
+                      type="button"
+                      onClick={toggleShowPass}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showPass ? 'Nascondi password' : 'Mostra password'}
+                      tabIndex={-1}
+                    >
+                      {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
 
-              {/* Strength checklist — shown once the user starts typing */}
-              {password.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {RULES.map((rule) => {
-                    const ok = rule.test(password);
-                    return (
-                      <li key={rule.label} className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
-                        {ok
-                          ? <Check className="h-3 w-3 shrink-0" />
-                          : <X className="h-3 w-3 shrink-0" />}
-                        {rule.label}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+                  {/* Strength checklist */}
+                  {password.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {RULES.map((rule) => {
+                        const ok = rule.test(password);
+                        return (
+                          <li key={rule.label} className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                            {ok
+                              ? <Check className="h-3 w-3 shrink-0" />
+                              : <X className="h-3 w-3 shrink-0" />}
+                            {rule.label}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-            {/* Confirm field */}
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Conferma password</label>
-              <div className="relative">
-                <Input
-                  type={showConfirm ? 'text' : 'password'}
-                  placeholder="Ripeti la nuova password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  disabled={loading}
-                  required
-                  autoComplete="new-password"
-                  className={`pr-10 ${mismatch ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                />
-                <button
-                  type="button"
-                  onClick={toggleShowConfirm}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showConfirm ? 'Nascondi conferma' : 'Mostra conferma'}
-                  tabIndex={-1}
-                >
-                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {mismatch && (
-                <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
-                  <X className="h-3 w-3" /> Le password non coincidono
-                </p>
-              )}
-            </div>
+              {/* Confirm field */}
+              <FormField control={form.control} name="confirm" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Conferma password</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type={showConfirm ? 'text' : 'password'}
+                        placeholder="Ripeti la nuova password"
+                        disabled={loading}
+                        autoComplete="new-password"
+                        className="pr-10"
+                      />
+                    </FormControl>
+                    <button
+                      type="button"
+                      onClick={toggleShowConfirm}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showConfirm ? 'Nascondi conferma' : 'Mostra conferma'}
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {mismatch && (
+                    <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                      <X className="h-3 w-3" /> Le password non coincidono
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="w-full bg-brand hover:bg-brand/90 text-white"
-            >
-              {loading ? <>{spinner} Aggiornamento…</> : 'Imposta nuova password'}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                disabled={!rulesPassed || mismatch || !confirm || loading}
+                className="w-full bg-brand hover:bg-brand/90 text-white"
+              >
+                {loading ? <>{spinner} Aggiornamento…</> : 'Imposta nuova password'}
+              </Button>
+            </form>
+          </Form>
         </div>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, MapPin, Plus } from 'lucide-react';
@@ -12,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createEventSchema, type CreateEventFormValues } from '@/lib/schemas/event';
 import {
   Pagination,
   PaginationContent,
@@ -76,92 +79,143 @@ function EventForm({
   onCancel: () => void;
   submitLabel?: string;
 }) {
-  const [form, setForm] = useState<FormData>({
-    titolo: initial?.titolo ?? '',
-    descrizione: initial?.descrizione ?? '',
-    start_datetime: initial?.start_datetime ?? '',
-    end_datetime: initial?.end_datetime ?? '',
-    location: initial?.location ?? '',
-    luma_url: initial?.luma_url ?? '',
-    luma_embed_url: initial?.luma_embed_url ?? '',
-    community_ids: initial?.community_ids ?? [],
-    tipo: initial?.tipo ?? '',
-    file_url: initial?.file_url ?? '',
-  });
   const [loading, setLoading] = useState(false);
 
-  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const form = useForm<CreateEventFormValues>({
+    resolver: zodResolver(createEventSchema),
+    defaultValues: {
+      titolo: initial?.titolo ?? '',
+      descrizione: initial?.descrizione ?? '',
+      start_datetime: initial?.start_datetime ?? '',
+      end_datetime: initial?.end_datetime ?? '',
+      location: initial?.location ?? '',
+      luma_url: initial?.luma_url ?? '',
+      luma_embed_url: initial?.luma_embed_url ?? '',
+      community_ids: initial?.community_ids ?? [],
+      tipo: initial?.tipo ?? '',
+      file_url: initial?.file_url ?? '',
+    },
+  });
 
-  const setRich = (k: keyof FormData) => (v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.titolo.trim()) { toast.error('Il titolo è obbligatorio.', { duration: 5000 }); return; }
+  async function onSubmit(values: CreateEventFormValues) {
     setLoading(true);
-    try { await onSave(form); }
-    catch (err) { toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 }); setLoading(false); }
+    try {
+      await onSave({
+        titolo: values.titolo,
+        descrizione: values.descrizione ?? '',
+        start_datetime: values.start_datetime ?? '',
+        end_datetime: values.end_datetime ?? '',
+        location: values.location ?? '',
+        luma_url: values.luma_url ?? '',
+        luma_embed_url: values.luma_embed_url ?? '',
+        community_ids: values.community_ids ?? [],
+        tipo: values.tipo ?? '',
+        file_url: values.file_url ?? '',
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 });
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
-        <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dell'evento" required />
-      </div>
-      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Data/ora inizio</label>
-          <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <FormField control={form.control} name="titolo" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-xs">Titolo <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input {...field} placeholder="Nome dell'evento" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="descrizione" render={() => (
+          <FormItem>
+            <Controller
+              control={form.control}
+              name="descrizione"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor value={value ?? ''} onChange={onChange} placeholder="Descrizione" />
+              )}
+            />
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField control={form.control} name="start_datetime" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Data/ora inizio</FormLabel>
+              <FormControl><Input type="datetime-local" {...field} value={field.value ?? ''} /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="end_datetime" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Data/ora fine</FormLabel>
+              <FormControl><Input type="datetime-local" {...field} value={field.value ?? ''} /></FormControl>
+            </FormItem>
+          )} />
+        </div>
+        <FormField control={form.control} name="location" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="Luogo (es. Online, Milano)" /></FormControl>
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="luma_url" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="URL pagina Luma" type="url" /></FormControl>
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="luma_embed_url" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="URL embed Luma (per iframe)" /></FormControl>
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField control={form.control} name="tipo" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Tipo evento</FormLabel>
+              <Select value={field.value || undefined} onValueChange={field.onChange}>
+                <FormControl><SelectTrigger><SelectValue placeholder="— Nessun tipo —" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {TIPO_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="file_url" render={({ field }) => (
+            <FormItem className="self-end">
+              <FormControl><Input {...field} placeholder="URL file allegato" /></FormControl>
+            </FormItem>
+          )} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Data/ora fine</label>
-          <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
+          <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
+          <Controller
+            control={form.control}
+            name="community_ids"
+            render={({ field: { value, onChange } }) => (
+              <div className="flex flex-wrap gap-3">
+                {communities.map((c) => (
+                  <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
+                    <Checkbox
+                      checked={(value ?? []).includes(c.id)}
+                      onCheckedChange={(v) =>
+                        onChange(v ? [...(value ?? []), c.id] : (value ?? []).filter((id: string) => id !== c.id))
+                      }
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          />
         </div>
-      </div>
-      <Input value={form.location} onChange={set('location')} placeholder="Luogo (es. Online, Milano)" />
-      <Input value={form.luma_url} onChange={set('luma_url')} placeholder="URL pagina Luma" type="url" />
-      <Input value={form.luma_embed_url} onChange={set('luma_embed_url')} placeholder="URL embed Luma (per iframe)" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Tipo evento</label>
-          <Select value={form.tipo || undefined} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
-            <SelectTrigger><SelectValue placeholder="— Nessun tipo —" /></SelectTrigger>
-            <SelectContent>
-              {TIPO_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" className="self-end" />
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
-        <div className="flex flex-wrap gap-3">
-          {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-              <Checkbox
-                checked={form.community_ids.includes(c.id)}
-                onCheckedChange={(v) => setForm((f) => ({
-                  ...f,
-                  community_ids: v
-                    ? [...f.community_ids, c.id]
-                    : f.community_ids.filter((id) => id !== c.id),
-                }))}
-              />
-              {c.name}
-            </label>
-          ))}
-        </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+          <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+            {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
 
