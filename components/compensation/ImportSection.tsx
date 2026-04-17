@@ -189,7 +189,7 @@ export default function ImportSection() {
 
               {state.rows.length > 0 && (
                 <div className="overflow-hidden rounded-lg border border-border">
-                  <Table>
+                  <Table className="w-auto">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead>Riga</TableHead>

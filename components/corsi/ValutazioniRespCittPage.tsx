@@ -237,7 +237,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
             <Badge variant="outline" className="font-mono text-xs">{cv.corso.codice}</Badge>
           </div>
 
-          <div className="w-fit max-w-full rounded-2xl bg-card border border-border overflow-x-auto">
+          <div className="w-fit rounded-2xl bg-card border border-border overflow-hidden">
             {renderCorsoEntries(cv.corso.id, cv.entries)}
           </div>
         </div>

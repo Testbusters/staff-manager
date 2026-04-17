@@ -251,7 +251,7 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
           {inAttesa.length === 0 ? (
             <div className="px-4 py-8"><EmptyState icon={CheckCircle} title="Nessun rimborso in attesa" description="Tutti i rimborsi sono stati processati." /></div>
           ) : (
-            <Table>
+            <Table className="w-auto">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
@@ -321,7 +321,7 @@ export default function CodaRimborsi({ expenses, hasReceiptTemplate }: { expense
           {approvati.length === 0 ? (
             <div className="px-4 py-8"><EmptyState icon={CreditCard} title="Nessun rimborso da liquidare" description="Non ci sono rimborsi approvati in attesa di liquidazione." /></div>
           ) : (
-            <Table>
+            <Table className="w-auto">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" /><TableHead className="text-xs font-medium text-muted-foreground">Collaboratore</TableHead>

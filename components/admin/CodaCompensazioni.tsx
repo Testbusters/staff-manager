@@ -252,7 +252,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
           {inAttesa.length === 0 ? (
             <div className="px-4 py-8"><EmptyState icon={CheckCircle} title="Nessun compenso in attesa" description="Tutti i compensi sono stati processati." /></div>
           ) : (
-            <Table>
+            <Table className="w-auto">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" />
@@ -322,7 +322,7 @@ export default function CodaCompensazioni({ compensations, hasReceiptTemplate }:
           {approvati.length === 0 ? (
             <div className="px-4 py-8"><EmptyState icon={CreditCard} title="Nessun compenso da liquidare" description="Non ci sono compensi approvati in attesa di liquidazione." /></div>
           ) : (
-            <Table>
+            <Table className="w-auto">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
                   <TableHead className="w-10" /><TableHead className="text-xs font-medium text-muted-foreground">Collaboratore</TableHead>

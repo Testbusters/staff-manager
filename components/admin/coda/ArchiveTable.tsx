@@ -28,7 +28,7 @@ export default function ArchiveTable({
   onCycleSort: () => void;
 }) {
   return (
-    <Table>
+    <Table className="w-auto">
       <TableHeader>
         <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border">
           <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Collaboratore</TableHead>

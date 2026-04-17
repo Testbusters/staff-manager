@@ -29,7 +29,7 @@ export default function PendingApprovedList({
   const totalNetto = approved.reduce((s, c) => s + (c.importo_netto ?? 0), 0);
 
   return (
-    <div className="overflow-x-auto mb-6">
+    <div className="w-fit mb-6">
     <div className="rounded-xl bg-card border border-amber-300 dark:border-amber-700/30">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Da ricevere</p>
@@ -38,7 +38,7 @@ export default function PendingApprovedList({
         </span>
       </div>
 
-      <Table>
+      <Table className="w-auto">
         <TableHeader>
           <TableRow>
             <TableHead>Nome servizio / Ruolo</TableHead>
