@@ -441,7 +441,7 @@ export default function LezioniTabRespCitt({
         const filteredQA = filteredCollabs(lezione.id, 'qa');
 
         return (
-          <div key={lezione.id} className="rounded-2xl bg-card border border-border overflow-hidden w-full">
+          <div key={lezione.id} className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
             {/* Lezione header */}
             <div className="flex items-center gap-4 px-4 py-3 border-b border-border bg-muted/30">
               <span className="text-sm font-medium text-foreground">{fmtDate(lezione.data)}</span>

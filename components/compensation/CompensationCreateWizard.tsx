@@ -226,7 +226,7 @@ export default function CompensationCreateWizard({
               {searchQ || communityFilter ? 'Nessun collaboratore trovato.' : 'Inserisci un termine di ricerca o seleziona una community.'}
             </p>
           ) : (
-            <Table>
+            <Table className="w-auto">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>

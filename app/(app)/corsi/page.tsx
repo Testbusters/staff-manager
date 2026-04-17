@@ -215,32 +215,33 @@ export default async function CorsiPage({
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Corsi</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Gestisci i corsi e le lezioni per ogni community.
-          </p>
+      <div className="w-fit">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Corsi</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Gestisci i corsi e le lezioni per ogni community.
+            </p>
+          </div>
+          <Link href="/corsi/nuovo">
+            <Button className="bg-brand hover:bg-brand/90 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuovo corso
+            </Button>
+          </Link>
         </div>
-        <Link href="/corsi/nuovo">
-          <Button className="bg-brand hover:bg-brand/90 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Nuovo corso
-          </Button>
-        </Link>
-      </div>
 
-      <CorsiFilterBar communities={(communities ?? []) as { id: string; name: string }[]} />
+        <CorsiFilterBar communities={(communities ?? []) as { id: string; name: string }[]} />
 
-      {corsi.length === 0 ? (
-        <EmptyState
-          icon={GraduationCap}
-          title="Nessun corso trovato"
-          description="Crea il primo corso con il pulsante in alto a destra."
-        />
-      ) : (
-        <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
-          <Table className="w-auto">
+        {corsi.length === 0 ? (
+          <EmptyState
+            icon={GraduationCap}
+            title="Nessun corso trovato"
+            description="Crea il primo corso con il pulsante in alto a destra."
+          />
+        ) : (
+          <div className="rounded-2xl bg-card border border-border overflow-hidden">
+            <Table className="w-auto">
             <TableHeader>
               <TableRow>
                 <TableHead>Codice</TableHead>
@@ -285,8 +286,9 @@ export default async function CorsiPage({
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

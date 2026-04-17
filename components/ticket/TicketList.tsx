@@ -55,10 +55,10 @@ export default function TicketList({
     : tickets.filter((t) => t.stato === filterStato);
 
   return (
-    <div className="space-y-4">
+    <div className="w-fit space-y-4">
       {/* Filter + action bar */}
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+        <div className="flex items-center gap-2 pb-0.5">
           <Button
             onClick={() => setFilterStato('ALL')}
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium h-auto ${
@@ -103,7 +103,6 @@ export default function TicketList({
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-x-auto">
         <Card className="w-fit overflow-hidden">
           <CardContent className="p-0">
           <Table className="w-auto">
@@ -153,7 +152,6 @@ export default function TicketList({
           </Table>
           </CardContent>
         </Card>
-        </div>
       )}
     </div>
   );

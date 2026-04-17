@@ -138,7 +138,7 @@ function RunResultPanel({ result, onReset }: { result: ImportResult; onReset: ()
         skipped={summary.skipped}
       />
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="w-fit rounded-xl border border-border bg-card overflow-hidden">
         <Table className="w-auto">
           <TableHeader>
             <TableRow>

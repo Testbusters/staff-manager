@@ -144,7 +144,7 @@ export default function LezioniTabCollab({
         </div>
       )}
 
-      <div className="rounded-2xl bg-card border border-border overflow-hidden w-full">
+      <div className="rounded-2xl bg-card border border-border overflow-hidden w-fit">
         <Table className="w-auto">
           <TableHeader>
             <TableRow>

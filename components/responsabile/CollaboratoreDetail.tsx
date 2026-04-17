@@ -487,7 +487,7 @@ export default function CollaboratoreDetail({
             <EmptyState icon={FileText} title="Nessun documento." />
           </div>
         ) : (
-          <Table>
+          <Table className="w-auto">
             <TableHeader>
               <TableRow>
                 {['Titolo', 'Tipo', 'Firma', 'Data', ''].map((h) => (

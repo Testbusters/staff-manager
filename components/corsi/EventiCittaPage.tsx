@@ -173,30 +173,31 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-xl font-semibold text-foreground">
-            Eventi di {citta}
-          </h1>
+      <div className="w-fit">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-muted-foreground" />
+            <h1 className="text-xl font-semibold text-foreground">
+              Eventi di {citta}
+            </h1>
+          </div>
+          <Button onClick={openNew} className="bg-brand hover:bg-brand/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuovo evento
+          </Button>
         </div>
-        <Button onClick={openNew} className="bg-brand hover:bg-brand/90 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          Nuovo evento
-        </Button>
-      </div>
 
-      {/* List */}
-      {events.length === 0 ? (
-        <EmptyState
-          icon={CalendarDays}
-          title={`Nessun evento per ${citta}`}
-          description="Crea il primo evento per questa città."
-        />
-      ) : (
-        <div className="w-fit max-w-full rounded-lg border border-border bg-card overflow-x-auto">
-          <Table className="w-auto">
+        {/* List */}
+        {events.length === 0 ? (
+          <EmptyState
+            icon={CalendarDays}
+            title={`Nessun evento per ${citta}`}
+            description="Crea il primo evento per questa città."
+          />
+        ) : (
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <Table className="w-auto">
             <TableHeader>
               <TableRow className="bg-muted/40">
                 <TableHead>Data inizio</TableHead>
@@ -254,8 +255,9 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>

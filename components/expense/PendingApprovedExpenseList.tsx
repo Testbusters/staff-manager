@@ -23,7 +23,7 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
   const total = approved.reduce((s, e) => s + (e.importo ?? 0), 0);
 
   return (
-    <div className="rounded-xl bg-card border border-amber-300 dark:border-amber-700/30 mb-6">
+    <div className="w-fit rounded-xl bg-card border border-amber-300 dark:border-amber-700/30 mb-6">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Da liquidare</p>
         <span className="text-xs text-muted-foreground">
@@ -31,7 +31,7 @@ export default function PendingApprovedExpenseList({ expenses }: { expenses: Exp
         </span>
       </div>
 
-      <Table>
+      <Table className="w-auto">
         <TableHeader>
           <TableRow>
             <TableHead>Categoria</TableHead>

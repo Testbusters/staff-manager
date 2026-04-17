@@ -130,7 +130,7 @@ export default async function CollaboratoriPage({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-6xl">
       {/* Header */}
       <header className="mb-6 flex items-center gap-3">
         <h1 className="text-xl font-semibold text-foreground">Collaboratori</h1>
