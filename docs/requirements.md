@@ -1017,3 +1017,30 @@ Migration-only block: add `NOT NULL` and `CHECK` constraints on financial column
 - MOD: `docs/refactoring-backlog.md` — move DB-NEW-1..7 from priority index to resolved archive
 - MOD: `docs/implementation-checklist.md` — log row
 - MOD: `docs/prd/prd.md` + GDoc Changelog — mandatory per pipeline
+
+---
+
+## SEC8 — Expenses storage bucket + server-side upload
+
+### Problem
+`ExpenseForm.tsx` uploads attachments via `supabase.storage.from('expenses')` on the client. The `expenses` bucket does not exist - every upload silently fails. Additionally, client-side storage access violates the project rule (all storage operations through API routes with service role).
+
+### Solution
+1. Create private `expenses` bucket via migration
+2. Rewrite `POST /api/expenses/[id]/attachments` to accept FormData, upload via service role, store storage path
+3. Remove client-side storage access from `ExpenseForm.tsx` - send files via FormData POST
+4. Generate signed URLs (1h TTL) in SSR detail page and GET API route
+
+### Scope
+- Storage path: `{collaboratorId}/{expenseId}/{filename}` (collaborator-scoped)
+- Max file size: 10 MB
+- Accepted MIME types: `application/pdf`, `image/jpeg`, `image/png`
+- `expense_attachments.file_url` stores the storage path (not a full URL)
+- Signed URLs generated server-side on read (SSR page + GET API)
+
+### Files
+- NEW: `supabase/migrations/076_expenses_storage_bucket.sql`
+- MOD: `app/api/expenses/[id]/attachments/route.ts` — FormData + service role upload
+- MOD: `components/expense/ExpenseForm.tsx` — remove client storage, send FormData
+- MOD: `app/(app)/rimborsi/[id]/page.tsx` — signed URLs for attachments
+- MOD: `app/api/expenses/[id]/route.ts` — signed URLs in GET response

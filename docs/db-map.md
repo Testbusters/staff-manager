@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `075_filter_column_indexes.sql` (2026-04-16).
+> Last synced: migration `076_expenses_storage_bucket.sql` (2026-04-17).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -104,6 +104,18 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 | `import_runs` | Import run history | `tipo`, `executed_by`, `imported`, `skipped`, `errors`, `detail_json`, `duration_ms`, `storage_path` | `tipo` values: `collaboratori`, `contratti`, `cu` |
 | `feedback` | User feedback submissions | `user_id`, `role`, `categoria`, `pagina`, `messaggio`, `stato` | `stato` values: `nuovo`, `letto`, `chiuso` |
 | `app_errors` | Client-side errors (fire-and-forget) | `message`, `stack`, `url`, `user_id` | Written by `app/(app)/error.tsx` |
+
+---
+
+## Storage Buckets
+
+| Bucket | Public | Purpose | Access pattern |
+|---|---|---|---|
+| `avatars` | yes | Profile pictures | Direct URL via `NEXT_PUBLIC_SUPABASE_URL/storage/v1/object/public/avatars/{userId}/avatar` |
+| `documents` | no | Contracts, CU, receipts | Signed URLs (1h TTL) via service role |
+| `expenses` | no | Expense attachment files (PDF, JPG, PNG) | Signed URLs (1h TTL) via service role. Path: `{collaboratorId}/{expenseId}/{filename}`. Upload via `POST /api/expenses/[id]/attachments`. Max 10 MB. |
+| `corsi-allegati` | no | Global course attachments | Service role access |
+| `export-snapshots` | no | GSheet export snapshots | Service role access |
 
 ---
 
@@ -299,10 +311,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-15.
+> Last refreshed: 2026-04-17.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`

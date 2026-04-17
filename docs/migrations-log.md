@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 076 | `076_expenses_storage_bucket.sql` | 2026-04-17 | INSERT `expenses` private bucket into `storage.buckets`. All access via service role signed URLs. ON CONFLICT DO NOTHING for idempotency. |
 | 075 | `075_filter_column_indexes.sql` | 2026-04-16 | DB8: CREATE INDEX on `compensations(data_competenza)`, `expense_reimbursements(data_spesa)`, `tickets(last_message_at DESC NULLS LAST)`. Three frequently filtered/sorted columns. Rollback in migration header. |
 | 074 | `074_rls_to_authenticated.sql` | 2026-04-16 | DB4: ALTER POLICY TO authenticated on all 98 public-schema policies with roles={public}. Defense-in-depth: anon role can no longer access any table even if proxy session check is bypassed. Dynamic DO block approach. Staging verified: 112/112 policies now {authenticated}, 0 {public}. Rollback in migration header. |
 | 073 | `073_community_id_fk_indexes.sql` | 2026-04-16 | DB13+DB14+DB15: CREATE INDEX on `tickets(community_id)`, `corsi(community_id)`, `documents(community_id)`. All three FK columns to `communities.id` were unindexed. Staging verified: 3 new indexes. Rollback in migration header. |
