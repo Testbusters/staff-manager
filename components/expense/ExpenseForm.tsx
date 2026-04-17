@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createClient } from '@/lib/supabase/client';
 import { EXPENSE_CATEGORIES } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,7 +48,6 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
 
 export default function ExpenseForm() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [files, setFiles] = useState<File[]>([]);
@@ -103,29 +101,20 @@ export default function ExpenseForm() {
       const expenseId: string = createData.reimbursement.id;
 
       if (files.length > 0) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Sessione scaduta');
-
         const uploadFailed: string[] = [];
 
         for (const file of files) {
-          const path = `${user.id}/${expenseId}/${file.name}`;
-          const { error: uploadErr } = await supabase.storage
-            .from('expenses')
-            .upload(path, file, { upsert: true });
-
-          if (uploadErr) {
-            uploadFailed.push(`${file.name}: ${uploadErr.message}`);
+          const fd = new FormData();
+          fd.append('file', file);
+          const res = await fetch(`/api/expenses/${expenseId}/attachments`, {
+            method: 'POST',
+            body: fd,
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            uploadFailed.push(`${file.name}: ${errData.error ?? 'Errore sconosciuto'}`);
             continue;
           }
-
-          const { data: urlData } = supabase.storage.from('expenses').getPublicUrl(path);
-
-          await fetch(`/api/expenses/${expenseId}/attachments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_url: urlData.publicUrl, file_name: file.name }),
-          });
         }
 
         if (uploadFailed.length > 0) {
