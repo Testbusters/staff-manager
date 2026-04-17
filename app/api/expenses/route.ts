@@ -70,6 +70,14 @@ export async function POST(request: Request) {
 
   if (!col) return NextResponse.json({ error: 'Collaboratore non trovato' }, { status: 403 });
 
+  const { data: cc } = await supabase
+    .from('collaborator_communities')
+    .select('community_id')
+    .eq('collaborator_id', col.id)
+    .single();
+
+  if (!cc) return NextResponse.json({ error: 'Community non trovata' }, { status: 403 });
+
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -94,6 +102,7 @@ export async function POST(request: Request) {
     .from('expense_reimbursements')
     .insert({
       collaborator_id: col.id,
+      community_id: cc.community_id,
       ...parsed.data,
       stato: 'IN_ATTESA',
     })

@@ -60,7 +60,8 @@ export async function POST(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const storagePath = `${expense.collaborator_id}/${id}/${file.name}`;
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9._\-]/g, '_');
+  const storagePath = `${expense.collaborator_id}/${id}/${sanitizedName}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await svc.storage
@@ -77,7 +78,7 @@ export async function POST(
     .insert({
       reimbursement_id: id,
       file_url: storagePath,
-      file_name: file.name,
+      file_name: sanitizedName,
     })
     .select()
     .single();
