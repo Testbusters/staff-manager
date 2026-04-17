@@ -75,3 +75,5 @@ Before starting any block that touches reimbursement data:
 - API response key is `{ reimbursement }` (not `{ expense }`) — verify before reading in modal fetch.
 - `GET /api/expenses/[id]` returns `{ reimbursement }`. Do not assume `{ expense }`.
 - **DB-level integrity (migration 070)**: `importo` has `CHECK (importo > 0)` — any service-role insert with zero or negative amount is blocked at the DB level.
+- **RLS policies (migration 077)**: `expenses_own_update` enforces `stato = 'IN_ATTESA'` + collaborator ownership with `WITH CHECK`; `expenses_responsabile_update` dropped (resp is read-only); `exp_attachments_own_insert` enforces `stato = 'IN_ATTESA'` for collaborator attachment uploads. `responsabile_compensi` has SELECT-only RLS access via community JOIN.
+- **Rate limit**: `MAX_PENDING_EXPENSES` caps `IN_ATTESA` expenses per collaborator (defined in `lib/rate-limits.ts`).
