@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     .single();
 
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
-  if (!['responsabile_compensi', 'amministrazione'].includes(profile.role)) {
+  if (profile.role !== 'amministrazione') {
     return NextResponse.json({ error: 'Accesso non autorizzato' }, { status: 403 });
   }
 
@@ -39,20 +39,6 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
-
-  // Responsabile: verify they manage this community
-  if (role === 'responsabile_compensi') {
-    const { data: access } = await serviceClient
-      .from('user_community_access')
-      .select('community_id')
-      .eq('user_id', user.id)
-      .eq('community_id', community_id)
-      .maybeSingle();
-
-    if (!access) {
-      return NextResponse.json({ error: 'Community non gestita' }, { status: 403 });
-    }
-  }
 
   // Find all collaborator IDs in this community
   const { data: collabCommunities, error: ccError } = await serviceClient

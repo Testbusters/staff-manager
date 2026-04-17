@@ -46,22 +46,26 @@ export default function ExpenseActionPanel({ expenseId, stato, role }: ExpenseAc
 
   const perform = async (action: ExpenseAction, extra?: Record<string, unknown>) => {
     setLoading(action);
+    try {
+      const res = await fetch(`/api/expenses/${expenseId}/transition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...extra }),
+      });
 
-    const res = await fetch(`/api/expenses/${expenseId}/transition`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...extra }),
-    });
+      const data = await res.json();
 
-    const data = await res.json();
-    setLoading(null);
+      if (!res.ok) {
+        toast.error(data.error ?? 'Errore durante la transizione', { duration: 5000 });
+        return;
+      }
 
-    if (!res.ok) {
-      toast.error(data.error ?? 'Errore durante la transizione', { duration: 5000 });
-      return;
+      router.refresh();
+    } catch {
+      toast.error('Errore di rete', { duration: 5000 });
+    } finally {
+      setLoading(null);
     }
-
-    router.refresh();
   };
 
   const actions: Array<{
