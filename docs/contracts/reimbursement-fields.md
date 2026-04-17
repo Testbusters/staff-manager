@@ -13,8 +13,9 @@
 | **Create** | `POST /api/expenses` | `collaboratore` (self) | Always creates IN_ATTESA |
 | **Edit** | `PATCH /api/expenses/[id]` | `collaboratore` (own, IN_ATTESA only) | Cannot edit after submitted |
 | **Status transition** | `PATCH /api/expenses/[id]` (action param) | `amministrazione` | approve / reject / liquidate / reopen |
-| **File upload** | `POST /api/expenses/[id]/files` | `collaboratore` | Appends to `file_urls[]` |
-| **File delete** | `DELETE /api/expenses/[id]/files/[index]` | `collaboratore` (IN_ATTESA only) | Removes from `file_urls[]` |
+| **File upload** | `POST /api/expenses/[id]/attachments` | `collaboratore` (own, IN_ATTESA only) | FormData upload. Server-side storage via service role. Max 10 MB, PDF/JPG/PNG. Filename sanitized. Storage path: `{collaboratorId}/{expenseId}/{filename}`. |
+| **Detail (SSR)** | `app/(app)/rimborsi/[id]/page.tsx` | all roles | Attachments enriched with batch signed URLs (1h TTL) |
+| **Detail (API)** | `GET /api/expenses/[id]` | all roles | Returns `{ reimbursement, attachments, history }`. Attachments include signed URLs. |
 
 ---
 
@@ -26,7 +27,8 @@
 | `descrizione` | ✅ required | ✅ | ❌ | Free text description |
 | `importo` | ✅ required | ✅ | ❌ | Positive numeric. DB CHECK > 0 since migration 070. |
 | `data_spesa` | ✅ required | ✅ | ❌ | ISO date, not in the future |
-| `file_urls` | ✅ optional | ✅ (via file routes) | ❌ | Array of Storage signed paths |
+| `community_id` | ✅ (auto: from collaborator_communities) | ❌ immutable | ❌ immutable | Derived from collaborator's community |
+| attachments | ✅ (via upload route, IN_ATTESA only) | ✅ (via upload route, IN_ATTESA only) | ❌ | Stored in `expense_attachments` table + `expenses` private bucket |
 | `stato` | — (auto IN_ATTESA) | ❌ | ✅ (via action) | Changed only via transitions |
 | `rejection_note` | — | — | ✅ (on reject) | Required when `action=reject` |
 
@@ -49,7 +51,7 @@
 |---|---|
 | `importo` | Positive number (Zod `.positive()` + DB CHECK > 0), max 2 decimal places |
 | `data_spesa` | Valid ISO date, not in the future |
-| `file_urls` | Array of strings; each entry a valid Storage path |
+| attachments | Upload: max 10 MB per file, MIME `application/pdf`, `image/jpeg`, `image/png`. Filename sanitized (`[^a-zA-Z0-9._-]` → `_`). At least 1 required by business rule (enforced in UI, not API). |
 | `rejection_note` | Required string when `action=reject` |
 
 ---

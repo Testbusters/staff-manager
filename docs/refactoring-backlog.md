@@ -16,8 +16,13 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 |----|--------|---------|-------|
 | | **G3 - Security Code** | | |
 | SEC1 | Temporary password returned in plain text by create-user API | HIGH | G3 |
-| SEC8 | `expenses` bucket missing - attachment uploads silently fail | HIGH | G3 |
+| SEC9 | `responsabile_compensi` can approve/reject expenses via API (RBAC gap) | HIGH | G3 |
+| DB-RLS-1 | 3 dead expense RLS policies reference stale `INVIATO`/`INTEGRAZIONI_RICHIESTE` states | HIGH | G3 |
+| DB-RLS-2 | `expense_history` FK CASCADE deletes audit trail on expense deletion | MEDIUM | G3 |
 | SEC2 | Invite email does not include a direct link with token | MEDIUM | G3 |
+| SEC10 | DELETE `/api/expenses/[id]` phantom success for `responsabile_compensi` (no DELETE RLS) | MEDIUM | G3 |
+| SEC11 | `GET /api/expenses` unvalidated `?stato=` query param in `.in()` filter | MEDIUM | G3 |
+| SEC14 | Attachment upload trusts client-supplied MIME type (no magic-byte check) | LOW | G3 |
 | SEC-NEW-4 | 7 admin RLS `FOR ALL` policies lack explicit `WITH CHECK` | LOW | G3 |
 | SEC6 | No documented rotation policy for `RESEND_API_KEY` | LOW | G3 |
 | | **G4 - API Design** | | |
@@ -30,11 +35,20 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | API7 | No unified pagination contract across endpoints | LOW | G4 |
 | API8 | `POST /api/admin/create-user` returns 200 instead of 201 | LOW | G4 |
 | API13 | `POST /api/import/collaboratori/run` `skipContract` defaults to `true` | LOW | G4 |
+| API14 | `bulk-approve` and `bulk-liquidate` return 400 for state-conflict (should be 409) | MEDIUM | G4 |
+| API15 | `POST /api/expenses/[id]/attachments` returns 403 for state-guard (should be 422) | LOW | G4 |
+| API16 | `POST /api/expenses/[id]/transition` fetches DB before validating request body | LOW | G4 |
+| API17 | `POST /api/expenses/[id]/transition` returns only `{ stato }` — no updated entity | LOW | G4 |
+| API18 | `approve-all` returns `{ updated }`, `approve-bulk` returns `{ approved }` — inconsistent bulk key | LOW | G4 |
+| API19 | Sitemap/filesystem mismatch: `GET,PATCH` on `[id]`, `GET` on `attachments` — none implemented | MEDIUM | G4 |
+| API20 | `approve-bulk/route.ts` undocumented in sitemap | LOW | G4 |
 | | **G6 - Performance** | | |
 | P1 | `GET /api/compensations` join does not enrich collaborator name | LOW | G6 |
 | DEV-11 | `GET /api/blacklist` has no pagination - unbounded query | LOW | G6 |
 | | **G5 remnants - DRY / Code Quality** | | |
 | S8 | `formatDate` and `formatCurrency` duplicated across 4+ components | LOW | G5 |
+| DEV-12 | Floating promise on expense approve button (no error feedback) | HIGH | G5 |
+| DEV-13 | Phantom state `INVIATO` in expense rate-limit query | LOW | G5 |
 | DEV-7 | Cross-module coupling: expense/ imports compensation/, responsabile/ imports admin/ | LOW | G5 |
 | DEV-10 | `pdf-utils.ts` uses `as any` for pdfjs-dist and pdf-lib types | LOW | G5 |
 | A3 | `createServiceClient()` instantiated per route (no singleton) | LOW | G5 |
@@ -74,11 +88,21 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: HIGH
 - **Fix**: Consider Supabase magic link instead of a temporary password. If password is kept, send it only via email - never in the response body.
 
-### SEC8 — `expenses` bucket missing - expense attachment uploads silently fail
-- **Problem**: `components/expense/ExpenseForm.tsx` uploads to `storage.from('expenses')` which does not exist. Every attachment upload silently fails. Also violates the project rule that storage operations must go through API routes with service role.
-- **Files**: `components/expense/ExpenseForm.tsx:126,134`, missing migration for bucket creation
+### SEC9 — `responsabile_compensi` can approve/reject expenses via API (RBAC gap)
+- **Problem**: `lib/expense-transitions.ts` grants `responsabile_compensi` approve/reject/mark_liquidated actions. Three API routes (`[id]/transition`, `approve-bulk`, `approve-all`) delegate to that function without explicit role pre-check. UI correctly blocks this, but direct API calls bypass the restriction.
+- **Files**: `lib/expense-transitions.ts:16-18`, `app/api/expenses/[id]/transition/route.ts:74`, `app/api/expenses/approve-bulk/route.ts:25`, `app/api/expenses/approve-all/route.ts:27`
 - **Impact**: HIGH
-- **Fix**: (1) Create `expenses` bucket via migration with `public: false`, (2) Move upload to `POST /api/expenses/[id]/attachments` using service role, (3) Remove direct storage access from client component.
+- **Fix**: Add explicit role pre-check in each route; remove resp from `ALLOWED_EXPENSE_TRANSITIONS` for approve/reject/mark_liquidated.
+
+### DB-RLS-1 — 3 dead expense RLS policies reference stale states
+- **Problem**: `expenses_own_update_inviato`, `expenses_responsabile_update`, and `exp_attachments_own_insert` reference `INVIATO` and `INTEGRAZIONI_RICHIESTE` states removed in migration 023. Policies are effectively dead - no rows match. Mitigated by API-level service role usage and state checks, but defense-in-depth is absent.
+- **Impact**: HIGH
+- **Fix**: Single migration: (1) drop `expenses_own_update_inviato`, recreate with `stato = 'IN_ATTESA'`; (2) drop `expenses_responsabile_update` (resp has read-only access per RBAC matrix); (3) fix `exp_attachments_own_insert` to reference `'IN_ATTESA'`.
+
+### DB-RLS-2 — `expense_history` FK CASCADE deletes audit trail
+- **Problem**: `expense_history.reimbursement_id` uses ON DELETE CASCADE. Deleting an expense destroys the full audit trail. Financial records require preserved history.
+- **Impact**: MEDIUM
+- **Fix**: Change FK to ON DELETE RESTRICT. DELETE route already checks `stato = 'IN_ATTESA'` (only fresh expenses deletable).
 
 ### SEC2 — Invite email does not include a direct link with token
 - **Problem**: Invite email has no pre-authenticated app link. User must remember email/password from admin console.
@@ -139,6 +163,48 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 
 ### API13 — `POST /api/import/collaboratori/run` `skipContract` defaults to `true`
 - **Impact**: LOW
+
+### API14 — `bulk-approve` and `bulk-liquidate` return 400 for state-conflict (should be 409)
+- **Problem**: Both routes check that records are in the expected prior state and return 400 when they are not. A state conflict (approving a non-IN_ATTESA record, liquidating a non-APPROVATO record) is not a malformed request — it is a valid request that conflicts with current server state, which maps to 409 per RFC 9457.
+- **Files**: `app/api/expenses/bulk-approve/route.ts:53-57` · `app/api/expenses/bulk-liquidate/route.ts:48-53`
+- **Impact**: MEDIUM
+- **Fix**: Change `{ status: 400 }` to `{ status: 409 }` on the state-guard returns in both routes. No logic change needed.
+
+### API15 — `POST /api/expenses/[id]/attachments` returns 403 for state-guard (should be 422)
+- **Problem**: Line 32 returns 403 when `expense.stato !== 'IN_ATTESA'`. This is a business rule (not a permission denial) — the caller is authenticated and authorized; the upload is blocked because the record is in the wrong state. RFC 9457 maps this to 422 (semantically invalid given current state). A 403 implies the caller lacks permission, which is misleading.
+- **Files**: `app/api/expenses/[id]/attachments/route.ts:32-34`
+- **Impact**: LOW
+- **Fix**: Change `{ status: 403 }` to `{ status: 422 }` on the state-guard return.
+
+### API16 — `POST /api/expenses/[id]/transition` fetches DB before validating request body
+- **Problem**: The route fetches `expense_reimbursements` (line 55-63) before calling `request.json()` + `safeParse` (lines 65-68). This wastes a DB round-trip on invalid requests. Validation should always happen before any DB operation.
+- **Files**: `app/api/expenses/[id]/transition/route.ts:55-68`
+- **Impact**: LOW
+- **Fix**: Move the `request.json()` + `safeParse` block to immediately after the `isValidUUID` check (line 52), before the expense fetch.
+
+### API17 — `POST /api/expenses/[id]/transition` returns only `{ stato }` — no updated entity
+- **Problem**: Success response is `{ stato: newStato }` (line 242). Clients must fire a second GET to get the updated `approved_at`, `liquidated_at`, `rejection_note`, and `payment_reference` fields. This forces an extra round-trip after every transition.
+- **Files**: `app/api/expenses/[id]/transition/route.ts:242`
+- **Impact**: LOW
+- **Fix**: Return the updated record: `{ reimbursement: updatedExpense }` by re-fetching after the update, or pass the merged payload directly.
+
+### API18 — Bulk endpoint response key inconsistency (`updated` vs `approved`)
+- **Problem**: `POST /api/expenses/approve-all` returns `{ updated: N }` while `POST /api/expenses/approve-bulk` returns `{ approved: N }`. Both perform the same logical operation (bulk approve) but use different keys for the count. This breaks any client code trying to handle both uniformly.
+- **Files**: `app/api/expenses/approve-all/route.ts:121` · `app/api/expenses/approve-bulk/route.ts:101`
+- **Impact**: LOW
+- **Fix**: Standardize on `{ approved: N }` for all bulk-approve routes. Update `approve-all` success response accordingly.
+
+### API19 — Sitemap declares methods not implemented: PATCH on `[id]`, GET on `attachments`
+- **Problem**: `docs/sitemap.md` lists `GET, PATCH` for `/api/expenses/[id]` (only GET and DELETE exist) and `GET, POST` for `/api/expenses/[id]/attachments` (only POST exists). These are dead contracts — clients or future developers expecting PATCH edit capability or GET attachment listing will find no handler.
+- **Files**: `app/api/expenses/[id]/route.ts` · `app/api/expenses/[id]/attachments/route.ts` · `docs/sitemap.md:290-292`
+- **Impact**: MEDIUM
+- **Fix**: Either implement the missing handlers (PATCH for inline edits, GET for attachment listing) or correct the sitemap to reflect only the methods that exist. If `GET /attachments` is intentionally omitted (attachments returned inside `GET /expenses/[id]`), update sitemap to `POST` only.
+
+### API20 — `approve-bulk/route.ts` undocumented in sitemap
+- **Problem**: `app/api/expenses/approve-bulk/route.ts` exists on the filesystem but is absent from `docs/sitemap.md`. The sitemap only lists `bulk-approve`. Both routes exist, both are POST handlers for bulk approval, but they differ: `approve-bulk` targets resp+admin (max 100 IDs, no massimale check), `bulk-approve` targets admin-only (max 500 IDs, massimale check). The duplication and the undocumented route are a maintenance hazard.
+- **Files**: `app/api/expenses/approve-bulk/route.ts` · `docs/sitemap.md`
+- **Impact**: LOW
+- **Fix**: Document `approve-bulk` in sitemap. Long-term: consolidate into one route with `force` flag or explicit massimale parameter (API5 covers the naming part).
 
 ### P1 — GET compensations join does not enrich collaborator name
 - **Files**: `app/api/compensations/route.ts:44-47`
@@ -244,3 +310,33 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 
 ### UI3 — Inline badge color maps duplicated in 10 files
 - **Impact**: LOW
+
+### DEV-12 — Floating promise on expense approve button (no error feedback)
+- **Problem**: `onClick: () => perform('approve')` in `ExpenseActionPanel.tsx` discards the async result. Network errors or state update failures produce no user feedback.
+- **Files**: `components/expense/ExpenseActionPanel.tsx:98`
+- **Impact**: HIGH
+- **Fix**: Convert to `onClick: async () => { await perform('approve'); }` or handle errors explicitly.
+
+### DEV-13 — Phantom state `INVIATO` in expense rate-limit query
+- **Problem**: `.in('stato', ['IN_ATTESA', 'INVIATO'])` references `INVIATO` state removed by migration 023. Dead code.
+- **Files**: `app/api/expenses/route.ts:84`
+- **Impact**: LOW
+- **Fix**: Replace with `.eq('stato', 'IN_ATTESA')`.
+
+### SEC10 — DELETE `/api/expenses/[id]` phantom success for `responsabile_compensi`
+- **Problem**: `responsabile_compensi` passes the role check but has no DELETE RLS policy on `expense_reimbursements`. `.delete()` silently removes 0 rows and route returns 204 - false success.
+- **Files**: `app/api/expenses/[id]/route.ts:84`
+- **Impact**: MEDIUM
+- **Fix**: Remove `responsabile_compensi` from the DELETE handler's role list, or add a DELETE RLS policy.
+
+### SEC11 — `GET /api/expenses` unvalidated `?stato=` query param
+- **Problem**: `stato` query param split on comma and fed into `.in('stato', stati)` with no allowlist. Callers can probe internal enum names.
+- **Files**: `app/api/expenses/route.ts:39`
+- **Impact**: MEDIUM
+- **Fix**: Add `z.enum(EXPENSE_STATUSES).array()` validation or allowlist filter before the query.
+
+### SEC14 — Attachment upload trusts client-supplied MIME type
+- **Problem**: `file.type` is browser-controlled. An attacker can set `type = "application/pdf"` while uploading a different file type.
+- **Files**: `app/api/expenses/[id]/attachments/route.ts:53`
+- **Impact**: LOW
+- **Fix**: Add magic-byte detection for PDF/JPEG/PNG.

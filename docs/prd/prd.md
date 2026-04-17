@@ -195,6 +195,7 @@ FR-REIMB-08: The system shall allow the Responsabile Compensi to permanently del
 FR-REIMB-05: The system shall restrict the authority to approve, reject, and liquidate reimbursement requests exclusively to the Amministrazione role.
 FR-REIMB-06: The same rejection and reopen rules that apply to compensations shall apply to reimbursements: rejection requires a written reason; the collaboratore may reopen a rejected request, returning it to Pending status.
 FR-REIMB-07: Upon liquidation, the system shall automatically generate and archive a payment receipt document for the reimbursement.
+FR-REIMB-09: Reimbursement attachments shall be stored in a private Supabase Storage bucket (`expenses`). All upload operations go through a server-side API route using the service role client — client-side storage access is not permitted. Supported file types: PDF, JPEG, PNG. Maximum file size: 10 MB per file. Storage path format: `{collaboratorId}/{expenseId}/{sanitizedFilename}`. Attachment URLs are generated as signed URLs with a 1-hour TTL on every detail page load (SSR and API).
 
 ### 11. Document Management & Electronic Signing
 The document module maintains a formal archive of official documents associated with each collaboratore. Three document types are managed by the portal: employment contracts (generated or uploaded at the time of onboarding), annual income tax certificates (CU, imported in bulk each year), and payment receipts (generated automatically when a compensation or reimbursement is liquidated).
