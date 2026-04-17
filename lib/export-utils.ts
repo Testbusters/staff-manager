@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export interface ExportCollaboratorRow {
   collaborator_id: string;
@@ -216,10 +216,12 @@ const HISTORY_HEADERS = [
   'Intestatario pagamento',
 ];
 
-export function buildHistoryXLSXWorkbook(rows: ExportCollaboratorRow[]): XLSX.WorkBook {
-  const data = [HISTORY_HEADERS, ...rows.map(toGSheetRow)];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Export');
-  return wb;
+export async function buildHistoryXLSXWorkbook(rows: ExportCollaboratorRow[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Export');
+  ws.addRow(HISTORY_HEADERS);
+  for (const r of rows) {
+    ws.addRow(toGSheetRow(r));
+  }
+  return Buffer.from(await wb.xlsx.writeBuffer());
 }

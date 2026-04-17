@@ -1,6 +1,22 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { isValidUUID } from '@/lib/validate-id';
+
+const PatchDiscountSchema = z.object({
+  titolo: z.string().optional(),
+  descrizione: z.string().nullable().optional(),
+  codice_sconto: z.string().nullable().optional(),
+  link: z.string().nullable().optional(),
+  valid_from: z.string().nullable().optional(),
+  valid_to: z.string().nullable().optional(),
+  community_ids: z.array(z.string()).optional(),
+  fornitore: z.string().optional(),
+  logo_url: z.string().nullable().optional(),
+  file_url: z.string().nullable().optional(),
+  brand: z.string().optional(),
+});
 
 async function authorizeAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,27 +39,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const auth = await authorizeAdmin(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await request.json().catch(() => null);
+  const parsed = PatchDiscountSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, descrizione, codice_sconto, link,
     valid_from, valid_to, community_ids, fornitore, logo_url, file_url, brand,
-  } = body as {
-    titolo?: string;
-    descrizione?: string | null;
-    codice_sconto?: string | null;
-    link?: string | null;
-    valid_from?: string | null;
-    valid_to?: string | null;
-    community_ids?: string[];
-    fornitore?: string;
-    logo_url?: string | null;
-    file_url?: string | null;
-    brand?: string;
-  };
+  } = parsed.data;
 
   const update: Record<string, unknown> = {};
   if (titolo !== undefined) update.titolo = titolo.trim();
@@ -80,6 +89,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const auth = await authorizeAdmin(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });

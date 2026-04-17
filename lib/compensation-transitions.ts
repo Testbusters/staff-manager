@@ -31,7 +31,7 @@ export const ACTION_TO_STATE: Record<CompensationAction, CompensationStatus> = {
 
 export type TransitionResult =
   | { ok: true }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; reason_code: 'role' | 'state' | 'note' | 'unknown' };
 
 /**
  * Pure function — zero side effects, no Supabase.
@@ -45,21 +45,21 @@ export function canTransition(
   note?: string,
 ): TransitionResult {
   const def = ALLOWED_TRANSITIONS[action];
-  if (!def) return { ok: false, reason: 'Azione non riconosciuta' };
+  if (!def) return { ok: false, reason: 'Azione non riconosciuta', reason_code: 'unknown' };
 
   if (!def.allowedRoles.includes(role)) {
-    return { ok: false, reason: 'Ruolo non autorizzato per questa azione' };
+    return { ok: false, reason: 'Ruolo non autorizzato per questa azione', reason_code: 'role' };
   }
 
   if (!def.fromStates.includes(stato)) {
-    return { ok: false, reason: `Transizione non consentita dallo stato ${stato}` };
+    return { ok: false, reason: `Transizione non consentita dallo stato ${stato}`, reason_code: 'state' };
   }
 
   // Note validation: only run when note is provided (used by API routes).
   // When note is undefined (UI visibility checks), skip — the modal enforces the requirement.
   if (def.requiresNote && note !== undefined) {
     if (note.trim().length === 0) {
-      return { ok: false, reason: 'La motivazione del rifiuto è obbligatoria' };
+      return { ok: false, reason: 'La motivazione del rifiuto è obbligatoria', reason_code: 'note' };
     }
   }
 

@@ -1,5 +1,8 @@
 // Email template service — reads templates from DB at send time, falls back to hardcoded.
 // Layout config is module-level cached and revalidated every 5 minutes.
+// SERVER-ONLY: this file uses SUPABASE_SERVICE_ROLE_KEY.
+
+import 'server-only';
 
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import {
@@ -17,31 +20,14 @@ import {
   emailNuovoContenuto,
   layout as rawLayout,
 } from '@/lib/email-templates';
+import {
+  substituteMarkers,
+  type EmailTemplateRow,
+  type EmailLayoutConfig,
+} from '@/lib/email-preview-utils';
 
-export interface EmailTemplateRow {
-  id: string;
-  key: string;
-  label: string;
-  event_group: string;
-  has_highlight: boolean;
-  subject: string;
-  body_before: string;
-  highlight_rows: { label: string; value: string }[];
-  body_after: string;
-  cta_label: string;
-  available_markers: string[];
-  updated_at: string;
-}
-
-export interface EmailLayoutConfig {
-  id: string;
-  brand_color: string;
-  logo_url: string;
-  header_title: string;
-  footer_address: string;
-  footer_legal: string;
-  updated_at: string;
-}
+// Re-export types for existing consumers
+export type { EmailTemplateRow, EmailLayoutConfig } from '@/lib/email-preview-utils';
 
 // ── Layout config cache ────────────────────────────────────────────────────────
 
@@ -71,13 +57,7 @@ async function getLayoutConfig(): Promise<EmailLayoutConfig | null> {
   return null;
 }
 
-// ── Marker substitution ───────────────────────────────────────────────────────
-
-function substituteMarkers(text: string, data: Record<string, string>): string {
-  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] ?? `{{${key}}}`);
-}
-
-// ── HTML building helpers (mirrors email-templates.ts) ────────────────────────
+// ── HTML building helpers (server-side only, used by getRenderedEmail) ────────
 
 const APP_URL = process.env.APP_URL ?? 'http://localhost:3000';
 
@@ -173,7 +153,7 @@ const FALLBACKS: Record<string, FallbackFn> = {
   E5: (d) => emailDocumentoDaFirmare({ nome: d.nome, titoloDocumento: d.titoloDocumento, data: d.data, link: d.link }),
   E6: (d) => emailNuovoInviato({ nomeResponsabile: d.nomeResponsabile, nomeCollaboratore: d.nomeCollaboratore, tipo: (d.tipo as 'Compenso' | 'Rimborso') ?? 'Compenso', importo: parseFloat(d.importo ?? '0'), community: d.community, data: d.data }),
   E7: (d) => emailNuovoTicket({ nomeResponsabile: d.nomeResponsabile, nomeCollaboratore: d.nomeCollaboratore, oggetto: d.oggetto, categoria: d.categoria, data: d.data }),
-  E8: (d) => emailInvito({ email: d.email, password: d.password, ruolo: d.ruolo }),
+  E8: (d) => emailInvito({ email: d.email, password: d.password, ruolo: d.ruolo, magicLink: d.link }),
   E9: (d) => emailRispostaTicket({ nome: d.nome, oggetto: d.oggetto, data: d.data }),
   E10: (d) => emailNuovaComunicazione({ nome: d.nome, titolo: d.titolo, data: d.data }),
   E11: (d) => emailNuovoEvento({ nome: d.nome, titolo: d.titolo, data: d.data }),
@@ -224,13 +204,17 @@ export async function getRenderedEmail(
     }
 
     // CTA link
-    const ctaHref = data.link ? `${APP_URL}${data.link}` : APP_URL;
+    const ctaHref = data.link
+      ? (data.link.startsWith('http') ? data.link : `${APP_URL}${data.link}`)
+      : APP_URL;
     parts.push(buildCtaButton(substituteMarkers(template.cta_label, data), layoutCfg.brand_color, ctaHref));
 
     const html = buildLayout(parts.join('\n'), layoutCfg);
 
     return { subject, html };
-  } catch {
+  } catch (err) {
+    // Log template rendering error for operational visibility (A2)
+    console.error(`[email-template] failed to render ${key}:`, err instanceof Error ? err.message : err);
     // Fallback to hardcoded template
     const fallback = FALLBACKS[key];
     if (fallback) {
@@ -239,32 +223,4 @@ export async function getRenderedEmail(
     // Last resort: empty email
     return { subject: '', html: rawLayout('') };
   }
-}
-
-// ── Preview utility (client-usable, no DB calls) ──────────────────────────────
-// Called in browser context with template + layout data already fetched.
-
-export function buildPreviewHtml(
-  template: EmailTemplateRow,
-  layoutCfg: EmailLayoutConfig,
-  data: Record<string, string>,
-): string {
-  const parts: string[] = [];
-
-  if (data.nome) {
-    parts.push(buildGreeting(data.nome));
-  }
-  if (template.body_before) {
-    parts.push(buildBodyText(substituteMarkers(template.body_before, data)));
-  }
-  if (template.has_highlight && Array.isArray(template.highlight_rows) && template.highlight_rows.length > 0) {
-    parts.push(buildHighlight(template.highlight_rows, data));
-  }
-  if (template.body_after) {
-    parts.push(buildBodyText(substituteMarkers(template.body_after, data)));
-  }
-  const ctaHref = data.link ? `${APP_URL}${data.link}` : APP_URL;
-  parts.push(buildCtaButton(substituteMarkers(template.cta_label, data), layoutCfg.brand_color, ctaHref));
-
-  return buildLayout(parts.join('\n'), layoutCfg);
 }

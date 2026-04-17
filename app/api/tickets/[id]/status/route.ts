@@ -4,6 +4,8 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { TicketStatus } from '@/lib/types';
 import { buildTicketStatusNotification } from '@/lib/notification-utils';
 import { getNotificationSettings } from '@/lib/notification-helpers';
+import { isValidUUID } from '@/lib/validate-id';
+import { ticketStatusSchema } from '@/lib/schemas/ticket';
 
 const VALID_STATI: TicketStatus[] = ['APERTO', 'IN_LAVORAZIONE', 'CHIUSO'];
 
@@ -12,6 +14,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: ticketId } = await params;
+  if (!isValidUUID(ticketId)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -29,11 +32,11 @@ export async function PATCH(
   }
 
   const body = await request.json().catch(() => null);
-  const { stato } = body as { stato: TicketStatus };
-
-  if (!stato || !VALID_STATI.includes(stato)) {
-    return NextResponse.json({ error: 'Stato non valido' }, { status: 400 });
+  const parsed = ticketStatusSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { stato } = parsed.data;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

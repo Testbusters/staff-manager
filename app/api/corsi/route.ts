@@ -7,27 +7,7 @@ import { getCollaboratoriForCity, getNotificationSettings } from '@/lib/notifica
 import { sendEmail } from '@/lib/email';
 import { emailNuovoCorsoInCitta } from '@/lib/email-templates';
 import { sendTelegram, telegramNuovoCorsoInCitta } from '@/lib/telegram';
-
-const CreateCorsoSchema = z.object({
-  nome: z.string().min(1),
-  codice_identificativo: z.string().min(1),
-  community_id: z.string().uuid(),
-  modalita: z.enum(['online', 'in_aula']),
-  citta: z.string().nullable().optional(),
-  linea: z.string().nullable().optional(),
-  responsabile_doc: z.string().nullable().optional(),
-  licenza_zoom: z.string().nullable().optional(),
-  data_inizio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  data_fine: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  max_docenti_per_lezione: z.number().int().min(1).optional(),
-  max_qa_per_lezione: z.number().int().min(0).optional(),
-  link_lw: z.string().nullable().optional(),
-  link_zoom: z.string().nullable().optional(),
-  link_telegram_corsisti: z.string().nullable().optional(),
-  link_qa_assignments: z.string().nullable().optional(),
-  link_questionari: z.string().nullable().optional(),
-  link_emergenza: z.string().nullable().optional(),
-});
+import { createCorsoSchema } from '@/lib/schemas/corso';
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -94,8 +74,8 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const parsed = CreateCorsoSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  const parsed = createCorsoSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

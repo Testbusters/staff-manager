@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { isValidUUID } from '@/lib/validate-id';
 
 const patchSchema = z.object({
   nome: z.string().min(1).max(100),
@@ -30,6 +31,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const cookieStore = await cookies();
   const user = await getCallerUser(cookieStore);
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -67,6 +69,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const cookieStore = await cookies();
   const user = await getCallerUser(cookieStore);
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isValidUUID } from '@/lib/validate-id';
 
 export async function GET(
   _request: Request,
@@ -11,6 +12,7 @@ export async function GET(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { data: compensation, error } = await supabase
     .from('compensations')
@@ -24,7 +26,7 @@ export async function GET(
 
   const { data: history } = await supabase
     .from('compensation_history')
-    .select('*')
+    .select('id, compensation_id, stato_precedente, stato_nuovo, changed_by, role_label, note, created_at')
     .eq('compensation_id', id)
     .order('created_at', { ascending: true });
 
@@ -54,6 +56,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   // RLS ensures the responsabile can only see compensations of their community collaborators
   const { data: compensation, error: fetchError } = await supabase

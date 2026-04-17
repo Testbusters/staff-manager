@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getDocumentUrls } from '@/lib/documents-storage';
+import { isValidUUID } from '@/lib/validate-id';
 
 function getServiceClient() {
   return createServiceClient(
@@ -28,6 +29,7 @@ export async function GET(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   // RLS ensures only authorized users can read this document
   const { data: doc, error } = await supabase
@@ -68,6 +70,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const serviceClient = getServiceClient();
 
@@ -119,6 +122,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const serviceClient = getServiceClient();
 
   const { data: existingDoc } = await serviceClient
@@ -134,6 +138,11 @@ export async function PATCH(
   const markAsSigned = formData.get('mark_as_signed') === 'true';
 
   if (!file) return NextResponse.json({ error: 'File obbligatorio' }, { status: 400 });
+
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
 
   // Determine collaborator user_id for storage path
   const collabData = Array.isArray(existingDoc.collaborators)
@@ -151,7 +160,10 @@ export async function PATCH(
       upsert: false,
     });
 
-  if (uploadErr) return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+  if (uploadErr) {
+    console.error('[documents] upload error:', uploadErr.message);
+    return NextResponse.json({ error: 'Errore upload documento' }, { status: 500 });
+  }
 
   // Build update payload
   const updatePayload: Record<string, unknown> = {

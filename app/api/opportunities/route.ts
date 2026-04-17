@@ -5,6 +5,7 @@ import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/n
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { createOpportunitySchema } from '@/lib/schemas/opportunity';
 
 const VALID_TIPO = ['Volontariato', 'Formazione', 'Lavoro', 'Altro'];
 
@@ -24,24 +25,14 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
+  const parsed = createOpportunitySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, tipo, descrizione,
     scadenza_candidatura, link_candidatura, file_url, community_ids,
-  } = body as {
-    titolo: string;
-    tipo?: string;
-    descrizione: string;
-    scadenza_candidatura?: string;
-    link_candidatura?: string;
-    file_url?: string;
-    community_ids?: string[];
-  };
-
-  if (!titolo?.trim()) return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
-  if (!descrizione?.trim()) return NextResponse.json({ error: 'La descrizione è obbligatoria' }, { status: 400 });
-  if (tipo && !VALID_TIPO.includes(tipo)) {
-    return NextResponse.json({ error: 'Tipo non valido' }, { status: 400 });
-  }
+  } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

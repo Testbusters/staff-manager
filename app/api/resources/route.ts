@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { createResourceSchema } from '@/lib/schemas/resource';
 
 const WRITE_ROLES = ['amministrazione'];
 
@@ -12,7 +13,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('resources')
-    .select('*')
+    .select('id, titolo, descrizione, link, file_url, tag, community_ids, categoria, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
@@ -36,19 +37,11 @@ export async function POST(request: Request) {
   if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const { titolo, descrizione, link, file_url, tag, community_ids, categoria } = body as {
-    titolo: string;
-    descrizione?: string;
-    link?: string;
-    file_url?: string;
-    tag?: string[];
-    community_ids?: string[];
-    categoria?: string;
-  };
-
-  if (!titolo?.trim()) {
-    return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
+  const parsed = createResourceSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { titolo, descrizione, link, file_url, tag, community_ids, categoria } = parsed.data;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

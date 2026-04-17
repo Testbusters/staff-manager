@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import type { TicketStatus } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { ticketMessageSchema, type TicketMessageFormValues } from '@/lib/schemas/ticket';
 import { toast } from 'sonner';
 
 export default function TicketMessageForm({
@@ -17,20 +19,19 @@ export default function TicketMessageForm({
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [message, setMessage] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!message.trim()) {
-      toast.error('Inserisci un messaggio.', { duration: 5000 });
-      return;
-    }
+  const form = useForm<TicketMessageFormValues>({
+    resolver: zodResolver(ticketMessageSchema),
+    defaultValues: { message: '' },
+  });
+
+  async function onSubmit(values: TicketMessageFormValues) {
     setSending(true);
 
     const fd = new FormData();
-    fd.append('message', message.trim());
+    fd.append('message', values.message.trim());
     const file = fileRef.current?.files?.[0];
     if (file) fd.append('file', file);
 
@@ -46,7 +47,7 @@ export default function TicketMessageForm({
       return;
     }
 
-    setMessage('');
+    form.reset();
     setFileName(null);
     if (fileRef.current) fileRef.current.value = '';
     setSending(false);
@@ -56,15 +57,16 @@ export default function TicketMessageForm({
   if (ticketStato === 'CHIUSO') return null;
 
   return (
-    <form onSubmit={handleSend} className="space-y-3">
-        <Textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Scrivi un messaggio…"
-          aria-label="Messaggio"
-          rows={4}
-          className="resize-none"
-        />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <FormField control={form.control} name="message" render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Textarea {...field} placeholder="Scrivi un messaggio…" aria-label="Messaggio" rows={4} className="resize-none" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* File attachment */}
@@ -88,10 +90,11 @@ export default function TicketMessageForm({
             )}
           </div>
 
-          <Button type="submit" disabled={sending || !message.trim()} className="bg-brand hover:bg-brand/90 text-white">
+          <Button type="submit" disabled={sending || !form.watch('message').trim()} className="bg-brand hover:bg-brand/90 text-white">
             {sending ? 'Invio…' : 'Invia risposta'}
           </Button>
         </div>
       </form>
+    </Form>
   );
 }

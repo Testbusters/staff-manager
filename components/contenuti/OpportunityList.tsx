@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Briefcase, CalendarDays, Paperclip, Plus } from 'lucide-react';
@@ -14,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createOpportunitySchema, type CreateOpportunityFormValues } from '@/lib/schemas/opportunity';
 import {
   Pagination,
   PaginationContent,
@@ -64,87 +67,123 @@ function OpportunityForm({
   onCancel: () => void;
   submitLabel?: string;
 }) {
-  const [form, setForm] = useState<FormData>({
-    titolo: initial?.titolo ?? '',
-    tipo: initial?.tipo ?? 'Altro',
-    descrizione: initial?.descrizione ?? '',
-    scadenza_candidatura: initial?.scadenza_candidatura ?? '',
-    link_candidatura: initial?.link_candidatura ?? '',
-    file_url: initial?.file_url ?? '',
-    community_ids: initial?.community_ids ?? [],
-  });
   const [loading, setLoading] = useState(false);
 
-  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const form = useForm<CreateOpportunityFormValues>({
+    resolver: zodResolver(createOpportunitySchema),
+    defaultValues: {
+      titolo: initial?.titolo ?? '',
+      tipo: (initial?.tipo as CreateOpportunityFormValues['tipo']) ?? 'Altro',
+      descrizione: initial?.descrizione ?? '',
+      scadenza_candidatura: initial?.scadenza_candidatura ?? '',
+      link_candidatura: initial?.link_candidatura ?? '',
+      file_url: initial?.file_url ?? '',
+      community_ids: initial?.community_ids ?? [],
+    },
+  });
 
-  const setRich = (k: keyof FormData) => (v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.titolo.trim()) { toast.error('Il titolo è obbligatorio.', { duration: 5000 }); return; }
-    if (!form.descrizione.trim()) { toast.error('La descrizione è obbligatoria.', { duration: 5000 }); return; }
+  async function onSubmit(values: CreateOpportunityFormValues) {
     setLoading(true);
-    try { await onSave(form); }
-    catch (err) { toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 }); setLoading(false); }
+    try {
+      await onSave({
+        titolo: values.titolo,
+        tipo: values.tipo ?? 'Altro',
+        descrizione: values.descrizione,
+        scadenza_candidatura: values.scadenza_candidatura ?? '',
+        link_candidatura: values.link_candidatura ?? '',
+        file_url: values.file_url ?? '',
+        community_ids: values.community_ids ?? [],
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 });
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="col-span-2 space-y-1">
-          <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
-          <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo dell'opportunità" required />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField control={form.control} name="titolo" render={({ field }) => (
+            <FormItem className="col-span-2">
+              <FormLabel className="text-xs">Titolo <span className="text-destructive">*</span></FormLabel>
+              <FormControl><Input {...field} placeholder="Titolo dell'opportunità" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="tipo" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Tipo</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {TIPO_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="scadenza_candidatura" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Scadenza candidatura</FormLabel>
+              <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+            </FormItem>
+          )} />
+        </div>
+        <FormField control={form.control} name="descrizione" render={() => (
+          <FormItem>
+            <FormLabel className="text-xs">Descrizione <span className="text-destructive">*</span></FormLabel>
+            <Controller
+              control={form.control}
+              name="descrizione"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor value={value} onChange={onChange} placeholder="Descrizione dell'opportunità" />
+              )}
+            />
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField control={form.control} name="link_candidatura" render={({ field }) => (
+            <FormItem>
+              <FormControl><Input {...field} placeholder="Link candidatura (URL)" type="url" /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="file_url" render={({ field }) => (
+            <FormItem>
+              <FormControl><Input {...field} placeholder="URL file allegato" /></FormControl>
+            </FormItem>
+          )} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Tipo</label>
-          <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TIPO_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
+          <Controller
+            control={form.control}
+            name="community_ids"
+            render={({ field: { value, onChange } }) => (
+              <div className="flex flex-wrap gap-3">
+                {communities.map((c) => (
+                  <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
+                    <Checkbox
+                      checked={(value ?? []).includes(c.id)}
+                      onCheckedChange={(v) =>
+                        onChange(v ? [...(value ?? []), c.id] : (value ?? []).filter((id: string) => id !== c.id))
+                      }
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Scadenza candidatura</label>
-          <Input type="date" value={form.scadenza_candidatura} onChange={set('scadenza_candidatura')} />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-foreground">Descrizione <span className="text-destructive">*</span></label>
-        <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione dell'opportunità" />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input value={form.link_candidatura} onChange={set('link_candidatura')} placeholder="Link candidatura (URL)" type="url" />
-        <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
-        <div className="flex flex-wrap gap-3">
-          {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-              <Checkbox
-                checked={form.community_ids.includes(c.id)}
-                onCheckedChange={(v) => setForm((f) => ({
-                  ...f,
-                  community_ids: v
-                    ? [...f.community_ids, c.id]
-                    : f.community_ids.filter((id) => id !== c.id),
-                }))}
-              />
-              {c.name}
-            </label>
-          ))}
-        </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+          <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+            {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
 

@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { generateUsername, generateUniqueUsername } from '@/lib/username';
 import { generatePassword } from '@/lib/password';
+import { MAX_USERS_PER_HOUR } from '@/lib/rate-limits';
 
 const schema = z.object({
   email: z.string().email(),
@@ -80,6 +81,20 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  // Rate limit: cap user creation globally per hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recentCount } = await admin
+    .from('collaborators')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', oneHourAgo);
+
+  if ((recentCount ?? 0) >= MAX_USERS_PER_HOUR) {
+    return NextResponse.json(
+      { error: 'Limite creazione utenti raggiunto (riprova tra un\'ora)' },
+      { status: 429 },
+    );
+  }
+
   const password = generatePassword();
 
   // 1. Create auth user
@@ -100,6 +115,19 @@ export async function POST(request: Request) {
   }
 
   const userId = newAuthUser.user.id;
+
+  // 1b. Generate magic link for invite email CTA
+  let magicLink: string | null = null;
+  try {
+    const { data: linkData } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo: `${process.env.APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+    });
+    magicLink = linkData?.properties?.action_link ?? null;
+  } catch {
+    // generateLink failed — fall back to password-only invite
+  }
 
   // 2. Create user_profiles row (onboarding_completed=false for new users)
   const { error: profileError } = await admin.from('user_profiles').insert({
@@ -177,7 +205,7 @@ export async function POST(request: Request) {
   // 5. Send invitation email (await — track delivery status)
   let emailSent = false;
   try {
-    const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: role });
+    const { subject, html } = await getRenderedEmail('E8', { email, password, ruolo: role, ...(magicLink ? { link: magicLink } : {}) });
     const result = await sendEmail(email, subject, html);
     emailSent = result.success;
   } catch {

@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { z } from 'zod';
+
+const ChangePasswordSchema = z.object({
+  password: z.string().min(8, 'Password troppo corta (minimo 8 caratteri)').max(128, 'Password troppo lunga (massimo 128 caratteri)'),
+});
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -18,10 +23,11 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: 'Payload non valido' }, { status: 400 });
-  const { password } = body;
-  if (!password || password.length < 8) {
-    return NextResponse.json({ error: 'Password troppo corta (minimo 8 caratteri)' }, { status: 400 });
+  const parsed = ChangePasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+  const { password } = parsed.data;
 
   // Use service role to update password + clear flag atomically
   const admin = createClient(
@@ -42,6 +48,10 @@ export async function POST(request: Request) {
     .update({ must_change_password: false })
     .eq('user_id', user.id);
 
+  if (flagErr) {
+    console.error('[change-password] failed to clear must_change_password flag:', flagErr.message);
+  }
+
   // Return email so the client can re-sign-in (password change invalidates the JWT)
-  return NextResponse.json({ ok: true, email: user.email });
+  return NextResponse.json({ ok: true, email: user.email, warning: flagErr ? 'Flag not cleared' : undefined });
 }

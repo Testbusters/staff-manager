@@ -5,6 +5,7 @@ import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/n
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { createDiscountSchema } from '@/lib/schemas/discount';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -22,26 +23,14 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
+  const parsed = createDiscountSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, descrizione, codice_sconto, link,
     valid_from, valid_to, community_ids, fornitore, logo_url, file_url, brand,
-  } = body as {
-    titolo: string;
-    descrizione?: string;
-    codice_sconto?: string;
-    link?: string;
-    valid_from?: string;
-    valid_to?: string;
-    community_ids?: string[];
-    fornitore?: string;
-    logo_url?: string;
-    file_url?: string;
-    brand?: string;
-  };
-
-  if (!titolo?.trim()) {
-    return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
-  }
+  } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { generatePassword } from '@/lib/password';
+import { isValidUUID } from '@/lib/validate-id';
+import { RESEND_INVITE_COOLDOWN_MS } from '@/lib/rate-limits';
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 
@@ -62,6 +64,18 @@ export async function POST(
     );
   }
 
+  // Rate limit: cooldown per target user via auth.users.updated_at
+  const { data: authUser } = await admin.auth.admin.getUserById(collab.user_id);
+  if (authUser?.user?.updated_at) {
+    const lastUpdate = new Date(authUser.user.updated_at).getTime();
+    if (Date.now() - lastUpdate < RESEND_INVITE_COOLDOWN_MS) {
+      return NextResponse.json(
+        { error: 'Attendi almeno 5 minuti prima di reinviare l\'invito' },
+        { status: 429 },
+      );
+    }
+  }
+
   // Generate new password and update auth user
   const password = generatePassword();
   const { error: updateErr } = await admin.auth.admin.updateUserById(collab.user_id, {
@@ -79,6 +93,19 @@ export async function POST(
     .update({ must_change_password: true })
     .eq('user_id', collab.user_id);
 
+  // Generate magic link for invite email CTA
+  let magicLink: string | null = null;
+  try {
+    const { data: linkData } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: collab.email,
+      options: { redirectTo: `${process.env.APP_URL ?? 'http://localhost:3000'}/auth/callback` },
+    });
+    magicLink = linkData?.properties?.action_link ?? null;
+  } catch {
+    // generateLink failed — fall back to password-only invite
+  }
+
   // Send invite email
   let emailSent = false;
   try {
@@ -86,6 +113,7 @@ export async function POST(
       email: collab.email,
       password,
       ruolo: 'Collaboratore',
+      ...(magicLink ? { link: magicLink } : {}),
     });
     const result = await sendEmail(collab.email, subject, html);
     emailSent = result.success;

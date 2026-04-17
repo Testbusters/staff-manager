@@ -20,6 +20,7 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { isValidUUID } from '@/lib/validate-id';
 
 const transitionSchema = z.object({
   action: z.enum([
@@ -51,6 +52,7 @@ export async function POST(
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const role = profile.role as Role;
 
   // Fetch current compensation (RLS filters access)
@@ -76,7 +78,8 @@ export async function POST(
   // Validate transition
   const check = canTransition(role, currentStato, action as CompensationAction, note);
   if (!check.ok) {
-    return NextResponse.json({ error: check.reason }, { status: 403 });
+    const status = check.reason_code === 'state' ? 409 : 403;
+    return NextResponse.json({ error: check.reason }, { status });
   }
 
   const newStato = applyTransition(action as CompensationAction);

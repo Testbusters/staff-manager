@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Controller } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -11,6 +12,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { compensationWizardSchema, type CompensationWizardFormValues } from '@/lib/schemas/compensation';
 import { calcRitenuta } from '@/lib/ritenuta';
 
 type Community = { id: string; name: string };
@@ -27,14 +30,6 @@ type CollaboratorResult = {
 };
 
 type WizardStep = 'step1' | 'step2' | 'step3';
-
-type FormData = {
-  data_competenza: string;
-  nome_servizio_ruolo: string;
-  competenza: string;
-  info_specifiche: string;
-  importo_lordo: string;
-};
 
 type Competenza = { key: string; label: string };
 
@@ -84,15 +79,17 @@ export default function CompensationCreateWizard({
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [selectedCollab, setSelectedCollab] = useState<CollaboratorResult | null>(null);
 
-  // Step 2 state
-  const [formData, setFormData] = useState<FormData>({
-    data_competenza: '',
-    nome_servizio_ruolo: '',
-    competenza: '',
-    info_specifiche: '',
-    importo_lordo: '',
+  // Step 2 state (react-hook-form)
+  const form = useForm<CompensationWizardFormValues>({
+    resolver: zodResolver(compensationWizardSchema),
+    defaultValues: {
+      data_competenza: '',
+      nome_servizio_ruolo: '',
+      competenza: '',
+      info_specifiche: '',
+      importo_lordo: '',
+    },
   });
-  const [step2Error, setStep2Error] = useState('');
 
   // Step 3 state
   const [submitting, setSubmitting] = useState(false);
@@ -127,20 +124,9 @@ export default function CompensationCreateWizard({
     setStep('step2');
   }
 
-  function validateStep2(): string {
-    if (!formData.nome_servizio_ruolo.trim()) return 'Nome servizio / Ruolo obbligatorio';
-    if (!formData.data_competenza) return 'Data di competenza obbligatoria';
-    if (!formData.competenza) return 'Competenza obbligatoria';
-    if (!formData.importo_lordo || parseFloat(formData.importo_lordo) <= 0) {
-      return 'Importo lordo obbligatorio e deve essere positivo';
-    }
-    return '';
-  }
-
-  function handleStep2Next() {
-    const err = validateStep2();
-    if (err) { setStep2Error(err); return; }
-    setStep2Error('');
+  async function handleStep2Next() {
+    const valid = await form.trigger(['nome_servizio_ruolo', 'data_competenza', 'competenza', 'importo_lordo']);
+    if (!valid) return;
     setStep('step3');
   }
 
@@ -149,21 +135,22 @@ export default function CompensationCreateWizard({
     setSubmitting(true);
     setSubmitError('');
 
-    const lordo = parseFloat(formData.importo_lordo);
+    const values = form.getValues();
+    const lordo = parseFloat(values.importo_lordo);
     const communityName = selectedCollab.communities[0]?.name ?? '';
     const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
 
     const payload: Record<string, unknown> = {
       collaborator_id: selectedCollab.id,
-      nome_servizio_ruolo: formData.nome_servizio_ruolo.trim(),
-      data_competenza: formData.data_competenza,
-      competenza: formData.competenza,
+      nome_servizio_ruolo: values.nome_servizio_ruolo.trim(),
+      data_competenza: values.data_competenza,
+      competenza: values.competenza,
       importo_lordo: lordo,
       ritenuta_acconto: ritenuta,
       importo_netto: netto,
     };
-    if (formData.info_specifiche.trim()) payload.info_specifiche = formData.info_specifiche.trim();
+    if (values.info_specifiche?.trim()) payload.info_specifiche = values.info_specifiche.trim();
 
     try {
       const res = await fetch('/api/compensations', {
@@ -291,7 +278,8 @@ export default function CompensationCreateWizard({
 
   // ── Step 2 — Dati compenso ────────────────────────────────────────────────
   if (step === 'step2' && selectedCollab) {
-    const lordo = parseFloat(formData.importo_lordo) || 0;
+    const importoLordoRaw = form.watch('importo_lordo');
+    const lordo = parseFloat(importoLordoRaw) || 0;
     const communityName = selectedCollab.communities[0]?.name ?? '';
     const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
@@ -306,125 +294,116 @@ export default function CompensationCreateWizard({
         </div>
         <StepIndicator current={2} />
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Nome servizio / Ruolo <span className="text-destructive">*</span>
-            </label>
-            <Input
-              type="text"
-              value={formData.nome_servizio_ruolo}
-              onChange={(e) => setFormData((prev) => ({ ...prev, nome_servizio_ruolo: e.target.value }))}
-              placeholder="Es. Compenso lezioni marzo"
-            />
-          </div>
+        <Form {...form}>
+          <div className="space-y-4">
+            <FormField control={form.control} name="nome_servizio_ruolo" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Nome servizio / Ruolo <span className="text-destructive">*</span></FormLabel>
+                <FormControl><Input type="text" {...field} placeholder="Es. Compenso lezioni marzo" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
+            <FormField control={form.control} name="data_competenza" render={() => (
+              <FormItem>
+                <FormLabel className="text-xs">Data di competenza <span className="text-destructive">*</span></FormLabel>
+                <Controller
+                  control={form.control}
+                  name="data_competenza"
+                  render={({ field: { value, onChange } }) => (
+                    <DatePicker value={value} onChange={onChange} />
+                  )}
+                />
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Data di competenza <span className="text-destructive">*</span>
-            </label>
-            <DatePicker
-              value={formData.data_competenza}
-              onChange={(v) => setFormData((prev) => ({ ...prev, data_competenza: v }))}
-            />
-          </div>
+            {competenze.length > 0 && (
+              <FormField control={form.control} name="competenza" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Competenza <span className="text-destructive">*</span></FormLabel>
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="— Nessuna —" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {competenze.map((c) => (
+                        <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
 
-          {competenze.length > 0 && (
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Competenza <span className="text-destructive">*</span>
-              </label>
-              <Select value={formData.competenza || undefined} onValueChange={(v) => setFormData((prev) => ({ ...prev, competenza: v }))}>
-                <SelectTrigger><SelectValue placeholder="— Nessuna —" /></SelectTrigger>
-                <SelectContent>
-                  {competenze.map((c) => (
-                    <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+            <FormField control={form.control} name="info_specifiche" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Info specifiche <span className="text-muted-foreground">(opzionale)</span></FormLabel>
+                <FormControl>
+                  <Textarea {...field} rows={2} className="resize-none" placeholder="Note aggiuntive sul compenso" />
+                </FormControl>
+              </FormItem>
+            )} />
 
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Info specifiche <span className="text-muted-foreground">(opzionale)</span>
-            </label>
-            <Textarea
-              value={formData.info_specifiche}
-              onChange={(e) => setFormData((prev) => ({ ...prev, info_specifiche: e.target.value }))}
-              rows={2}
-              className="resize-none"
-              placeholder="Note aggiuntive sul compenso"
-            />
-          </div>
+            <FormField control={form.control} name="importo_lordo" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Importo lordo (€) <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" step="0.01" {...field} placeholder="0,00" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Importo lordo (€) <span className="text-destructive">*</span>
-            </label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.importo_lordo}
-              onChange={(e) => setFormData((prev) => ({ ...prev, importo_lordo: e.target.value }))}
-              placeholder="0,00"
-            />
-          </div>
-
-          {lordo > 0 && (
-            <div className="rounded-lg bg-muted/60 border border-border p-3 space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Ritenuta d&apos;acconto (20%)</span>
-                <span className="text-red-600 dark:text-red-400 tabular-nums">-{formatCurrency(ritenuta)}</span>
+            {lordo > 0 && (
+              <div className="rounded-lg bg-muted/60 border border-border p-3 space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Ritenuta d&apos;acconto (20%)</span>
+                  <span className="text-red-600 dark:text-red-400 tabular-nums">-{formatCurrency(ritenuta)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-semibold">
+                  <span className="text-foreground">Importo netto</span>
+                  <span className="text-green-700 dark:text-green-400 tabular-nums">{formatCurrency(netto)}</span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm font-semibold">
-                <span className="text-foreground">Importo netto</span>
-                <span className="text-green-700 dark:text-green-400 tabular-nums">{formatCurrency(netto)}</span>
-              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => setStep('step1')}
+              >
+                ← Indietro
+              </Button>
+              <Button
+                onClick={handleStep2Next}
+                className="bg-brand hover:bg-brand/90 text-white"
+              >
+                Avanti →
+              </Button>
             </div>
-          )}
-
-          {step2Error && (
-            <p className="text-xs text-red-600 dark:text-red-400">{step2Error}</p>
-          )}
-
-          <div className="flex items-center justify-between pt-2">
-            <Button
-              variant="ghost"
-              onClick={() => setStep('step1')}
-            >
-              ← Indietro
-            </Button>
-            <Button
-              onClick={handleStep2Next}
-              className="bg-brand hover:bg-brand/90 text-white"
-            >
-              Avanti →
-            </Button>
           </div>
-        </div>
+        </Form>
       </div>
     );
   }
 
   // ── Step 3 — Riepilogo ────────────────────────────────────────────────────
   if (step === 'step3' && selectedCollab) {
-    const lordo = parseFloat(formData.importo_lordo) || 0;
+    const formValues = form.getValues();
+    const lordo = parseFloat(formValues.importo_lordo) || 0;
     const communityName = selectedCollab.communities[0]?.name ?? '';
     const ritenuta = calcRitenuta(communityName, lordo);
     const netto = Math.round((lordo - ritenuta) * 100) / 100;
-    const competenzaLabel = competenze.find((c) => c.key === formData.competenza)?.label;
+    const competenzaLabel = competenze.find((c) => c.key === formValues.competenza)?.label;
 
     const rows: { label: string; value: string }[] = [
       { label: 'Collaboratore', value: `${selectedCollab.cognome} ${selectedCollab.nome}` },
       { label: 'Stato', value: 'In attesa' },
     ];
     if (competenzaLabel) rows.push({ label: 'Competenza', value: competenzaLabel });
-    if (formData.data_competenza) rows.push({ label: 'Data competenza', value: new Date(formData.data_competenza).toLocaleDateString('it-IT') });
-    if (formData.nome_servizio_ruolo.trim()) rows.push({ label: 'Nome servizio / Ruolo', value: formData.nome_servizio_ruolo.trim() });
-    if (formData.info_specifiche.trim()) rows.push({ label: 'Info specifiche', value: formData.info_specifiche.trim() });
+    if (formValues.data_competenza) rows.push({ label: 'Data competenza', value: new Date(formValues.data_competenza).toLocaleDateString('it-IT') });
+    if (formValues.nome_servizio_ruolo.trim()) rows.push({ label: 'Nome servizio / Ruolo', value: formValues.nome_servizio_ruolo.trim() });
+    if (formValues.info_specifiche?.trim()) rows.push({ label: 'Info specifiche', value: formValues.info_specifiche.trim() });
     rows.push(
       { label: 'Importo lordo', value: formatCurrency(lordo) },
       { label: 'Ritenuta acconto', value: `-${formatCurrency(ritenuta)}` },

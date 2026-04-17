@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
+import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Bell, Pin, Paperclip, CalendarDays, Plus } from 'lucide-react';
@@ -12,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createCommunicationSchema, type CreateCommunicationFormValues } from '@/lib/schemas/communication';
 import {
   Pagination,
   PaginationContent,
@@ -53,84 +57,120 @@ function CommunicationForm({
   onCancel: () => void;
   submitLabel?: string;
 }) {
-  const [form, setForm] = useState<FormData>({
-    titolo: initial?.titolo ?? '',
-    contenuto: initial?.contenuto ?? '',
-    pinned: initial?.pinned ?? false,
-    community_ids: initial?.community_ids ?? [],
-    expires_at: initial?.expires_at ?? '',
-    file_urls: initial?.file_urls ?? '',
-  });
   const [loading, setLoading] = useState(false);
 
-  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const formSchema = createCommunicationSchema.extend({
+    file_urls_raw: z.string().optional(),
+  });
+  type FormValues = z.infer<typeof formSchema>;
 
-  const setRich = (k: keyof FormData) => (v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      titolo: initial?.titolo ?? '',
+      contenuto: initial?.contenuto ?? '',
+      pinned: initial?.pinned ?? false,
+      community_ids: initial?.community_ids ?? [],
+      expires_at: initial?.expires_at ?? '',
+      file_urls_raw: initial?.file_urls ?? '',
+    },
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.titolo.trim() || !form.contenuto.trim()) {
-      toast.error('Titolo e contenuto sono obbligatori.', { duration: 5000 });
-      return;
-    }
+  async function onSubmit(values: FormValues) {
     setLoading(true);
-    try { await onSave(form); }
-    catch (err) { toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 }); setLoading(false); }
+    try {
+      await onSave({
+        titolo: values.titolo,
+        contenuto: values.contenuto,
+        pinned: values.pinned ?? false,
+        community_ids: values.community_ids ?? [],
+        expires_at: (values.expires_at as string) ?? '',
+        file_urls: values.file_urls_raw ?? '',
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 });
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
-        <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo comunicazione" required />
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-foreground">Contenuto <span className="text-destructive">*</span></label>
-        <RichTextEditor value={form.contenuto} onChange={setRich('contenuto')} placeholder="Testo della comunicazione" />
-      </div>
-      <Textarea value={form.file_urls} onChange={set('file_urls')} placeholder="URL allegati (uno per riga)"
-        rows={2} className="resize-none" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Scade il (opzionale)</label>
-          <Input type="date" value={form.expires_at} onChange={set('expires_at')} />
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
-          <div className="flex flex-wrap gap-3">
-            {communities.map((c) => (
-              <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-                <Checkbox
-                  checked={form.community_ids.includes(c.id)}
-                  onCheckedChange={(v) => setForm((f) => ({
-                    ...f,
-                    community_ids: v
-                      ? [...f.community_ids, c.id]
-                      : f.community_ids.filter((id) => id !== c.id),
-                  }))}
-                />
-                {c.name}
-              </label>
-            ))}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <FormField control={form.control} name="titolo" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-xs">Titolo <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input {...field} placeholder="Titolo comunicazione" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="contenuto" render={() => (
+          <FormItem>
+            <FormLabel className="text-xs">Contenuto <span className="text-destructive">*</span></FormLabel>
+            <Controller
+              control={form.control}
+              name="contenuto"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor value={value} onChange={onChange} placeholder="Testo della comunicazione" />
+              )}
+            />
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="file_urls_raw" render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Textarea {...field} placeholder="URL allegati (uno per riga)" rows={2} className="resize-none" />
+            </FormControl>
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField control={form.control} name="expires_at" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Scade il (opzionale)</FormLabel>
+              <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+            </FormItem>
+          )} />
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
+            <Controller
+              control={form.control}
+              name="community_ids"
+              render={({ field: { value, onChange } }) => (
+                <div className="flex flex-wrap gap-3">
+                  {communities.map((c) => (
+                    <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
+                      <Checkbox
+                        checked={(value ?? []).includes(c.id)}
+                        onCheckedChange={(v) =>
+                          onChange(v ? [...(value ?? []), c.id] : (value ?? []).filter((id: string) => id !== c.id))
+                        }
+                      />
+                      {c.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            />
           </div>
         </div>
-      </div>
-      <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-        <Checkbox
-          checked={form.pinned}
-          onCheckedChange={(v) => setForm((f) => ({ ...f, pinned: !!v }))}
+        <Controller
+          control={form.control}
+          name="pinned"
+          render={({ field: { value, onChange } }) => (
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+              <Checkbox checked={!!value} onCheckedChange={(v) => onChange(!!v)} />
+              Fissa in cima
+            </label>
+          )}
         />
-        Fissa in cima
-      </label>
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+          <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+            {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
 

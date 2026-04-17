@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export type ImportTipo = 'collaboratori' | 'contratti' | 'cu';
 
@@ -29,44 +29,46 @@ interface CUDetail {
 
 type AnyDetail = CollabDetail | ContrattoDetail | CUDetail;
 
-function buildCollabSheet(details: CollabDetail[]): XLSX.WorkSheet {
+function buildCollabRows(details: CollabDetail[]): unknown[][] {
   const rows: unknown[][] = [['Row', 'Email', 'Stato', 'Note']];
   for (const d of details) {
     rows.push([d.rowIndex, d.email, d.status, d.message ?? '']);
   }
-  return XLSX.utils.aoa_to_sheet(rows);
+  return rows;
 }
 
-function buildContrattoSheet(details: ContrattoDetail[]): XLSX.WorkSheet {
+function buildContrattoRows(details: ContrattoDetail[]): unknown[][] {
   const rows: unknown[][] = [['Row', 'Username', 'File PDF', 'Stato', 'Note']];
   for (const d of details) {
     rows.push([d.rowIndex, d.username, d.nome_pdf, d.status, d.message ?? '']);
   }
-  return XLSX.utils.aoa_to_sheet(rows);
+  return rows;
 }
 
-function buildCUSheet(details: CUDetail[]): XLSX.WorkSheet {
+function buildCURows(details: CUDetail[]): unknown[][] {
   const rows: unknown[][] = [['Row', 'Username', 'File PDF', 'Stato', 'Note']];
   for (const d of details) {
     rows.push([d.rowIndex, d.username, d.nome_pdf, d.status, d.message ?? '']);
   }
-  return XLSX.utils.aoa_to_sheet(rows);
+  return rows;
 }
 
-export function buildImportXLSX(tipo: ImportTipo, details: AnyDetail[]): Buffer {
-  const wb = XLSX.utils.book_new();
-
-  let ws: XLSX.WorkSheet;
+export async function buildImportXLSX(tipo: ImportTipo, details: AnyDetail[]): Promise<Buffer> {
+  let rows: unknown[][];
   if (tipo === 'collaboratori') {
-    ws = buildCollabSheet(details as CollabDetail[]);
+    rows = buildCollabRows(details as CollabDetail[]);
   } else if (tipo === 'contratti') {
-    ws = buildContrattoSheet(details as ContrattoDetail[]);
+    rows = buildContrattoRows(details as ContrattoDetail[]);
   } else {
-    ws = buildCUSheet(details as CUDetail[]);
+    rows = buildCURows(details as CUDetail[]);
   }
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Import');
-  return Buffer.from(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Import');
+  for (const row of rows) {
+    ws.addRow(row);
+  }
+  return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
 // ── Type for history API ─────────────────────────────────────────────────────

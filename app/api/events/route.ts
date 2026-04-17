@@ -9,6 +9,7 @@ import {
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { createEventSchema } from '@/lib/schemas/event';
 
 const WRITE_ROLES = ['amministrazione', 'responsabile_cittadino'];
 
@@ -20,7 +21,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('events')
-    .select('*')
+    .select('id, titolo, descrizione, start_datetime, end_datetime, location, luma_url, luma_embed_url, community_ids, tipo, file_url, citta, created_at, updated_at')
     .order('start_datetime', { ascending: true, nullsFirst: false });
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
@@ -44,25 +45,14 @@ export async function POST(request: Request) {
   if (!WRITE_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
+  const parsed = createEventSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const {
     titolo, descrizione, start_datetime, end_datetime,
     location, luma_url, luma_embed_url, community_ids, tipo, file_url,
-  } = body as {
-    titolo: string;
-    descrizione?: string;
-    start_datetime?: string;
-    end_datetime?: string;
-    location?: string;
-    luma_url?: string;
-    luma_embed_url?: string;
-    community_ids?: string[];
-    tipo?: string;
-    file_url?: string;
-  };
-
-  if (!titolo?.trim()) {
-    return NextResponse.json({ error: 'Il titolo è obbligatorio' }, { status: 400 });
-  }
+  } = parsed.data;
 
   // For responsabile_cittadino: auto-set citta and derive community_ids from their community
   let eventCitta: string | null = null;

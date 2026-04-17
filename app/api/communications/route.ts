@@ -5,6 +5,7 @@ import { getNotificationSettings, getCollaboratoriForCommunities } from '@/lib/n
 import { buildContentNotification } from '@/lib/notification-utils';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { createCommunicationSchema } from '@/lib/schemas/communication';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -22,18 +23,11 @@ export async function POST(request: Request) {
   if (profile.role !== 'amministrazione') return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = body as {
-    titolo: string;
-    contenuto: string;
-    pinned?: boolean;
-    community_ids?: string[];
-    expires_at?: string | null;
-    file_urls?: string[];
-  };
-
-  if (!titolo?.trim() || !contenuto?.trim()) {
-    return NextResponse.json({ error: 'Titolo e contenuto sono obbligatori' }, { status: 400 });
+  const parsed = createCommunicationSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { titolo, contenuto, pinned, community_ids, expires_at, file_urls } = parsed.data;
 
   const svc = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

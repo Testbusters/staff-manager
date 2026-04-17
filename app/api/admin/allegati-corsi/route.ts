@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const community_id = searchParams.get('community_id');
 
-  let query = svc.from('allegati_globali').select('*').order('updated_at', { ascending: false });
+  let query = svc.from('allegati_globali').select('id, tipo, community_id, file_url, nome_file, updated_by, updated_at').order('updated_at', { ascending: false });
   if (community_id) query = query.eq('community_id', community_id);
 
   const { data, error } = await query;
@@ -50,6 +50,11 @@ export async function POST(req: NextRequest) {
   }
   if (!['docenza', 'cocoda'].includes(tipo)) {
     return NextResponse.json({ error: 'Invalid tipo' }, { status: 400 });
+  }
+
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
   }
 
   const svc = createServiceClient(

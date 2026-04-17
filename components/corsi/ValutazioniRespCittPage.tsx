@@ -191,19 +191,22 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
           )}
         </TableCell>
         <TableCell>
-          <Input
-            type="number"
-            min={1}
-            max={10}
-            step={0.5}
-            value={rawVal}
-            disabled={!entry.thresholdMet}
-            onChange={(e) =>
-              setValues((prev) => ({ ...prev, [key]: e.target.value }))
-            }
-            className={`w-24 h-8 text-sm ${rawVal && !isValid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-            placeholder={entry.thresholdMet ? 'es. 8' : '-'}
-          />
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="number"
+              min={1}
+              max={10}
+              step={0.5}
+              value={rawVal}
+              disabled={!entry.thresholdMet}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, [key]: e.target.value }))
+              }
+              className={`w-24 h-8 text-sm ${rawVal && !isValid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+              placeholder={entry.thresholdMet ? 'es. 8' : '-'}
+            />
+            <span className="text-xs text-muted-foreground">/10</span>
+          </div>
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-2">
@@ -234,7 +237,7 @@ export default function ValutazioniRespCittPage({ corsiValutazioni }: Props) {
             <Badge variant="outline" className="font-mono text-xs">{cv.corso.codice}</Badge>
           </div>
 
-          <div className="w-fit rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="w-fit max-w-full rounded-2xl bg-card border border-border overflow-x-auto">
             {renderCorsoEntries(cv.corso.id, cv.entries)}
           </div>
         </div>

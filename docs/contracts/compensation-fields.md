@@ -27,9 +27,10 @@
 | `competenza` | ✅ required | ✅ column G | ✅ | FK → `compensation_competenze.key` (active rows only) |
 | `nome_servizio_ruolo` | ✅ required | ✅ column D | ✅ | Was `descrizione` before migration 030 |
 | `info_specifiche` | ✅ optional | ✅ column E | ✅ | Was `note_interne` before migration 030 |
-| `data_competenza` | ✅ required | ✅ column A | ✅ | ISO date string |
-| `importo_lordo` | ✅ required | ✅ column B | ✅ | Positive numeric |
-| `ritenuta_acconto` | ✅ optional | — | ✅ | Withholding rate (e.g. 20 = 20%) |
+| `data_competenza` | ✅ **required** (NOT NULL) | ✅ column A | ✅ | ISO date string. DB NOT NULL since migration 070. |
+| `importo_lordo` | ✅ **required** (NOT NULL) | ✅ column B | ✅ | Positive numeric. DB NOT NULL + CHECK > 0 since migration 070. |
+| `importo_netto` | — (server-computed) | — (server-computed) | — | Derived from lordo × (1 - ritenuta/100). DB NOT NULL since migration 070. |
+| `ritenuta_acconto` | ✅ **required** (NOT NULL) | — (defaults 20) | ✅ | Withholding rate (e.g. 20 = 20%). DB NOT NULL + CHECK 0..100 since migration 070. |
 | `community_id` | — | — | — | Always null since migration 030 |
 | `stato` | — (auto IN_ATTESA) | — (auto IN_ATTESA) | ❌ | Changed only via action transitions |
 | `rejection_note` | — | — | ✅ (on reject action) | Required when `action=reject` |
@@ -52,8 +53,9 @@
 | Campo | Rule |
 |---|---|
 | `competenza` | Must exist in `compensation_competenze` with `active=true` |
-| `importo_lordo` | Positive number, max 2 decimal places |
-| `data_competenza` | Valid ISO date, not in the future |
+| `importo_lordo` | Positive number (Zod `.positive()` + DB CHECK > 0), max 2 decimal places |
+| `ritenuta_acconto` | 0..100 (Zod `.min(0).max(100)` + DB CHECK BETWEEN 0 AND 100) |
+| `data_competenza` | Valid ISO date, not in the future (DB NOT NULL) |
 | `username` (import) | Must match an existing `collaborators.username` (case-sensitive) |
 | `rejection_note` | Required string when `action=reject`; server enforces via `canTransition` |
 
@@ -91,3 +93,4 @@ Before starting any block that touches compensation data:
 - Massimale check runs on every `approve` action — reads `approved_lordo_ytd` from `collaborators`.
 - GSheet writeback (column F = PROCESSED) is non-blocking — DB insert succeeds even if writeback fails.
 - `responsabile_compensi` can CREATE but NOT approve/reject/liquidate compensations.
+- **DB-level integrity (migration 070)**: `importo_lordo`, `importo_netto`, `ritenuta_acconto`, `data_competenza` all NOT NULL. CHECK constraints: `importo_lordo > 0`, `ritenuta_acconto BETWEEN 0 AND 100`. These mirror Zod rules — any bypass (direct service-role insert missing a field) is now blocked at the DB level.

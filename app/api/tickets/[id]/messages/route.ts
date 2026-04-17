@@ -5,12 +5,14 @@ import {
   buildTicketReplyNotification,
   buildTicketCollabReplyNotification,
 } from '@/lib/notification-utils';
+import { ticketMessageSchema } from '@/lib/schemas/ticket';
 import {
   getNotificationSettings,
   getResponsabiliForUser,
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { isValidUUID } from '@/lib/validate-id';
 
 const BUCKET = 'tickets';
 
@@ -19,6 +21,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: ticketId } = await params;
+  if (!isValidUUID(ticketId)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -63,16 +66,23 @@ export async function POST(
   }
 
   const formData = await request.formData();
-  const message = (formData.get('message') as string | null)?.trim();
+  const rawMessage = (formData.get('message') as string | null)?.trim();
   const file = formData.get('file') as File | null;
 
-  if (!message) {
-    return NextResponse.json({ error: 'Il messaggio è obbligatorio' }, { status: 400 });
+  const parsed = ticketMessageSchema.safeParse({ message: rawMessage });
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { message } = parsed.data;
 
   // Upload attachment if provided
   let attachment_url: string | null = null;
   let attachment_name: string | null = null;
+
+  const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file && file.size > MAX_ATTACHMENT_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
 
   if (file && file.size > 0) {
     const messageId = crypto.randomUUID();
@@ -87,7 +97,8 @@ export async function POST(
       });
 
     if (uploadErr) {
-      return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+      console.error('[ticket-messages] upload error:', uploadErr.message);
+      return NextResponse.json({ error: 'Errore upload allegato' }, { status: 500 });
     }
 
     attachment_url = storagePath;

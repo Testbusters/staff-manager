@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import * as XLSX from 'xlsx';
 import {
   groupToCollaboratorRows,
   toGSheetRow,
@@ -99,8 +98,8 @@ export async function POST() {
   try {
     await writeExportRows(rows.map(toGSheetRow));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Google Sheets error: ${msg}` }, { status: 500 });
+    console.error('[export/gsheet] Google Sheets error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Errore esportazione Google Sheets' }, { status: 500 });
   }
 
   const now = new Date().toISOString();
@@ -116,8 +115,7 @@ export async function POST() {
   }
 
   // Step 6: build XLS and upload to storage
-  const wb = buildHistoryXLSXWorkbook(rows);
-  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  const buffer = await buildHistoryXLSXWorkbook(rows);
   const storagePath = `export-${now.slice(0, 10)}-${Date.now()}.xlsx`;
 
   const { error: uploadErr } = await svc.storage

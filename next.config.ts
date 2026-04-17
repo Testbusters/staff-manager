@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL ??
@@ -6,7 +7,7 @@ const supabaseUrl =
 
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline';
+  script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""};
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: ${supabaseUrl};
   connect-src 'self' ${supabaseUrl} ${supabaseUrl.replace("https://", "wss://")};
@@ -44,7 +45,7 @@ const nextConfig: NextConfig = {
   // Keep pdfjs-dist, pdf-lib and lightningcss out of the Turbopack/webpack bundle so they
   // run in plain Node.js context. Without this, Turbopack rewrites module
   // paths into .next/dev/server/chunks/ and native binary resolution breaks.
-  serverExternalPackages: ["lightningcss", "pdfjs-dist", "pdf-lib", "xlsx", "docxtemplater", "pizzip"],
+  serverExternalPackages: ["lightningcss", "pdfjs-dist", "pdf-lib", "exceljs", "docxtemplater", "pizzip"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
@@ -63,4 +64,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
+
+export default analyze(nextConfig);

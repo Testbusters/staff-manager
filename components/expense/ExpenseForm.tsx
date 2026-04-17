@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { createClient } from '@/lib/supabase/client';
 import { EXPENSE_CATEGORIES } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,18 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DatePicker } from '@/components/ui/date-picker';
 import { toast } from 'sonner';
-
-const expenseSchema = z.object({
-  categoria: z.string().min(1, 'Seleziona una categoria'),
-  data_spesa: z.string().min(1, 'Data obbligatoria'),
-  importo: z.string().min(1, 'Importo obbligatorio').refine(
-    (v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0,
-    { message: 'Importo deve essere maggiore di 0' },
-  ),
-  descrizione: z.string().optional(),
-});
-
-type ExpenseFormValues = z.infer<typeof expenseSchema>;
+import { expenseSchema, type ExpenseFormValues } from '@/lib/schemas/expense';
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -49,7 +36,7 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
       <div className="flex">
         {([1, 2, 3] as const).map((s) => (
           <div key={s} className="flex-1 text-center">
-            <span className={`text-[10px] font-medium ${s === step ? 'text-brand' : s < step ? 'text-muted-foreground' : 'text-muted-foreground/80'}`}>
+            <span className={`text-xs font-medium ${s === step ? 'text-brand' : s < step ? 'text-muted-foreground' : 'text-muted-foreground/80'}`}>
               {STEP_LABELS[s]}
             </span>
           </div>
@@ -61,7 +48,6 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
 
 export default function ExpenseForm() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [files, setFiles] = useState<File[]>([]);
@@ -115,29 +101,20 @@ export default function ExpenseForm() {
       const expenseId: string = createData.reimbursement.id;
 
       if (files.length > 0) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Sessione scaduta');
-
         const uploadFailed: string[] = [];
 
         for (const file of files) {
-          const path = `${user.id}/${expenseId}/${file.name}`;
-          const { error: uploadErr } = await supabase.storage
-            .from('expenses')
-            .upload(path, file, { upsert: true });
-
-          if (uploadErr) {
-            uploadFailed.push(`${file.name}: ${uploadErr.message}`);
+          const fd = new FormData();
+          fd.append('file', file);
+          const res = await fetch(`/api/expenses/${expenseId}/attachments`, {
+            method: 'POST',
+            body: fd,
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            uploadFailed.push(`${file.name}: ${errData.error ?? 'Errore sconosciuto'}`);
             continue;
           }
-
-          const { data: urlData } = supabase.storage.from('expenses').getPublicUrl(path);
-
-          await fetch(`/api/expenses/${expenseId}/attachments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_url: urlData.publicUrl, file_name: file.name }),
-          });
         }
 
         if (uploadFailed.length > 0) {

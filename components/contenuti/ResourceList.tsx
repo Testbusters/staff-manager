@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
+import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { BookOpen, ExternalLink, Paperclip, Plus } from 'lucide-react';
@@ -12,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createResourceSchema, type CreateResourceFormValues } from '@/lib/schemas/resource';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -52,76 +56,123 @@ function ResourceForm({
   onCancel: () => void;
   submitLabel?: string;
 }) {
-  const [form, setForm] = useState<FormData>({
-    titolo: initial?.titolo ?? '',
-    descrizione: initial?.descrizione ?? '',
-    link: initial?.link ?? '',
-    file_url: initial?.file_url ?? '',
-    tag: initial?.tag ?? '',
-    community_ids: initial?.community_ids ?? [],
-    categoria: initial?.categoria ?? 'ALTRO',
-  });
   const [loading, setLoading] = useState(false);
 
-  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const formSchema = createResourceSchema.extend({
+    tag_raw: z.string().optional(),
+  });
+  type FormValues = z.infer<typeof formSchema>;
 
-  const setRich = (k: keyof FormData) => (v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      titolo: initial?.titolo ?? '',
+      descrizione: initial?.descrizione ?? '',
+      link: initial?.link ?? '',
+      file_url: initial?.file_url ?? '',
+      tag_raw: initial?.tag ?? '',
+      community_ids: initial?.community_ids ?? [],
+      categoria: initial?.categoria ?? 'ALTRO',
+    },
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.titolo.trim()) { toast.error('Il titolo è obbligatorio.', { duration: 5000 }); return; }
+  async function onSubmit(values: FormValues) {
     setLoading(true);
-    try { await onSave(form); }
-    catch (err) { toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 }); setLoading(false); }
+    try {
+      await onSave({
+        titolo: values.titolo,
+        descrizione: values.descrizione ?? '',
+        link: values.link ?? '',
+        file_url: values.file_url ?? '',
+        tag: values.tag_raw ?? '',
+        community_ids: values.community_ids ?? [],
+        categoria: values.categoria ?? 'ALTRO',
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 });
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
-        <Input value={form.titolo} onChange={set('titolo')} placeholder="Titolo della risorsa" required />
-      </div>
-      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
-      <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
-      <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file alternativo (es. Drive)" />
-      <div className="flex items-center gap-3">
-        <label className="text-sm text-muted-foreground shrink-0">Categoria:</label>
-        <Select value={form.categoria} onValueChange={(v) => setForm((f) => ({ ...f, categoria: v }))}>
-          <SelectTrigger className="w-auto"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {CATEGORIA_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      <Input value={form.tag} onChange={set('tag')} placeholder="Tag (separati da virgola, es. contratto, onboarding)" />
-      <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
-        <div className="flex flex-wrap gap-3">
-          {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-              <Checkbox
-                checked={form.community_ids.includes(c.id)}
-                onCheckedChange={(v) => setForm((f) => ({
-                  ...f,
-                  community_ids: v
-                    ? [...f.community_ids, c.id]
-                    : f.community_ids.filter((id) => id !== c.id),
-                }))}
-              />
-              {c.name}
-            </label>
-          ))}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <FormField control={form.control} name="titolo" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-xs">Titolo <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input {...field} placeholder="Titolo della risorsa" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="descrizione" render={() => (
+          <FormItem>
+            <Controller
+              control={form.control}
+              name="descrizione"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor value={value ?? ''} onChange={onChange} placeholder="Descrizione" />
+              )}
+            />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="link" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="Link (URL)" type="url" /></FormControl>
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="file_url" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="URL file alternativo (es. Drive)" /></FormControl>
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="categoria" render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-3">
+              <FormLabel className="text-sm text-muted-foreground shrink-0">Categoria:</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl><SelectTrigger className="w-auto"><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {CATEGORIA_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="tag_raw" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="Tag (separati da virgola, es. contratto, onboarding)" /></FormControl>
+          </FormItem>
+        )} />
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
+          <Controller
+            control={form.control}
+            name="community_ids"
+            render={({ field: { value, onChange } }) => (
+              <div className="flex flex-wrap gap-3">
+                {communities.map((c) => (
+                  <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
+                    <Checkbox
+                      checked={(value ?? []).includes(c.id)}
+                      onCheckedChange={(v) =>
+                        onChange(v ? [...(value ?? []), c.id] : (value ?? []).filter((id: string) => id !== c.id))
+                      }
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          />
         </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+          <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+            {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
 

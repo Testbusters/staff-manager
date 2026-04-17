@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
+import { isValidUUID } from '@/lib/validate-id';
 
 const BUCKET = 'tickets';
 const SIGNED_URL_TTL = 60 * 60; // 1 hour
@@ -12,6 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -28,7 +30,7 @@ export async function GET(
   // Fetch ticket (RLS ensures access)
   const { data: ticket, error: ticketErr } = await supabase
     .from('tickets')
-    .select('*')
+    .select('id, creator_user_id, community_id, categoria, oggetto, stato, priority, created_at')
     .eq('id', id)
     .single();
 
@@ -39,7 +41,7 @@ export async function GET(
   // Fetch messages
   const { data: rawMessages, error: msgErr } = await supabase
     .from('ticket_messages')
-    .select('*')
+    .select('id, ticket_id, author_user_id, message, attachment_url, attachment_name, created_at')
     .eq('ticket_id', id)
     .order('created_at', { ascending: true });
 

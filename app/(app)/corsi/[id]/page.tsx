@@ -348,7 +348,7 @@ export default async function CorsoDetailPage({
   const tabCls = (t: Tab) =>
     `px-4 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap ${
       activeTab === t
-        ? 'bg-brand text-white'
+        ? 'bg-muted text-foreground'
         : 'text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer'
     }`;
 

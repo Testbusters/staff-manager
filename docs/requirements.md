@@ -989,3 +989,58 @@ Admin imports corsi (and their lezioni) from a Google Sheet where each tab repre
 - MOD: `components/corsi/LezioniTab*.tsx` (Admin/Collab/RespCitt), `CorsiCalendario.tsx`, `AssegnazioneRespCittPage.tsx` — use `MateriaBadges`
 - MOD: 9 test files in `__tests__/` — `materia` -> `materie`
 - ENV: `IMPORT_CORSI_SHEET_ID` in `.env.local`
+
+## Block refactor-g2a-financial-integrity — Financial DB constraints hardening
+
+### Overview
+Migration-only block: add `NOT NULL` and `CHECK` constraints on financial columns of `compensations` and `expense_reimbursements` to prevent silent NaN propagation and invalid-value rows. Application code already enforces these constraints via Zod schemas — this block adds DB-level protection as a safety net. Closes 7 items of refactoring group G2 (DB-NEW-1..7).
+
+### Scope
+- NOT NULL on `compensations.importo_lordo`, `importo_netto`, `ritenuta_acconto`, `data_competenza` (4 columns)
+- CHECK `importo_lordo > 0` on `compensations`
+- CHECK `ritenuta_acconto BETWEEN 0 AND 100` on `compensations`
+- CHECK `importo > 0` on `expense_reimbursements`
+- Backfill existing staging rows: 2 rows with `ritenuta_acconto IS NULL` (derived from `(lordo − netto) / lordo × 100` = 20.00 in both cases)
+- Production pre-deploy migration in Phase 8 step 7 (same query; verify row count + NULL counts before applying)
+
+### Out of scope
+- Other G2 items (FK indexes DB8/DB13-16, RLS performance DB3/DB4, UNIQUE drop DB-NEW-9) — deferred to future g2b/g2c sub-blocks
+- Application code changes — dependency scan confirms zero required (Zod schemas already `.positive()` / `.min(0)`)
+- TS type changes — `lib/types.ts` already typed non-nullable where applicable
+
+### Files
+- NEW: `supabase/migrations/070_financial_integrity_constraints.sql` — atomic BEGIN/COMMIT with rollback in header, backfill + NOT NULL + CHECK
+- MOD: `docs/migrations-log.md` — new log row
+- MOD: `docs/db-map.md` — Last synced → 070, refresh Column specs via `node scripts/refresh-db-map.mjs`
+- MOD: `docs/contracts/compensation-fields.md` — add NOT NULL + CHECK constraint info to field matrix
+- MOD: `docs/contracts/reimbursement-fields.md` — add CHECK `importo > 0` info
+- MOD: `docs/refactoring-backlog.md` — move DB-NEW-1..7 from priority index to resolved archive
+- MOD: `docs/implementation-checklist.md` — log row
+- MOD: `docs/prd/prd.md` + GDoc Changelog — mandatory per pipeline
+
+---
+
+## SEC8 — Expenses storage bucket + server-side upload
+
+### Problem
+`ExpenseForm.tsx` uploads attachments via `supabase.storage.from('expenses')` on the client. The `expenses` bucket does not exist - every upload silently fails. Additionally, client-side storage access violates the project rule (all storage operations through API routes with service role).
+
+### Solution
+1. Create private `expenses` bucket via migration
+2. Rewrite `POST /api/expenses/[id]/attachments` to accept FormData, upload via service role, store storage path
+3. Remove client-side storage access from `ExpenseForm.tsx` - send files via FormData POST
+4. Generate signed URLs (1h TTL) in SSR detail page and GET API route
+
+### Scope
+- Storage path: `{collaboratorId}/{expenseId}/{filename}` (collaborator-scoped)
+- Max file size: 10 MB
+- Accepted MIME types: `application/pdf`, `image/jpeg`, `image/png`
+- `expense_attachments.file_url` stores the storage path (not a full URL)
+- Signed URLs generated server-side on read (SSR page + GET API)
+
+### Files
+- NEW: `supabase/migrations/076_expenses_storage_bucket.sql`
+- MOD: `app/api/expenses/[id]/attachments/route.ts` — FormData + service role upload
+- MOD: `components/expense/ExpenseForm.tsx` — remove client storage, send FormData
+- MOD: `app/(app)/rimborsi/[id]/page.tsx` — signed URLs for attachments
+- MOD: `app/api/expenses/[id]/route.ts` — signed URLs in GET response

@@ -169,7 +169,7 @@ export async function POST() {
     const { rows, errors } = await validateRows(serviceClient);
     return NextResponse.json({ rows, errors, total: rows.length + errors.length });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Errore lettura foglio';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error('[compensations/import/preview] sheet error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Errore lettura foglio' }, { status: 500 });
   }
 }

@@ -12,6 +12,7 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { emailNuovoInviato } from '@/lib/email-templates';
+import { MAX_PENDING_EXPENSES } from '@/lib/rate-limits';
 
 const createSchema = z.object({
   categoria: z.enum(EXPENSE_CATEGORIES),
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('expense_reimbursements')
-    .select('*')
+    .select('id, collaborator_id, community_id, categoria, data_spesa, importo, descrizione, stato, liquidated_at, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (statoFilter) {
@@ -69,16 +70,39 @@ export async function POST(request: Request) {
 
   if (!col) return NextResponse.json({ error: 'Collaboratore non trovato' }, { status: 403 });
 
+  const { data: cc } = await supabase
+    .from('collaborator_communities')
+    .select('community_id')
+    .eq('collaborator_id', col.id)
+    .single();
+
+  if (!cc) return NextResponse.json({ error: 'Community non trovata' }, { status: 403 });
+
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
 
+  // Rate limit: cap pending expenses per collaborator
+  const { count: pendingCount } = await supabase
+    .from('expense_reimbursements')
+    .select('*', { count: 'exact', head: true })
+    .eq('collaborator_id', col.id)
+    .eq('stato', 'IN_ATTESA');
+
+  if ((pendingCount ?? 0) >= MAX_PENDING_EXPENSES) {
+    return NextResponse.json(
+      { error: 'Limite rimborsi in attesa raggiunto' },
+      { status: 429 },
+    );
+  }
+
   const { data: reimbursement, error } = await supabase
     .from('expense_reimbursements')
     .insert({
       collaborator_id: col.id,
+      community_id: cc.community_id,
       ...parsed.data,
       stato: 'IN_ATTESA',
     })

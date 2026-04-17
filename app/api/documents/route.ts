@@ -66,6 +66,11 @@ export async function POST(request: Request) {
   const parsedAnno = annoStr ? parseInt(annoStr, 10) : NaN;
   const anno = !isNaN(parsedAnno) ? parsedAnno : new Date().getFullYear();
 
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (file && file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'Il file è troppo grande. Dimensione massima: 10 MB.' }, { status: 413 });
+  }
+
   const validTipi = ['CONTRATTO_OCCASIONALE', 'CU', 'RICEVUTA_PAGAMENTO'];
   if (!file || !tipo || !titolo?.trim()) {
     return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });
@@ -143,7 +148,10 @@ export async function POST(request: Request) {
       upsert: false,
     });
 
-  if (uploadErr) return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+  if (uploadErr) {
+    console.error('[documents] upload error:', uploadErr.message);
+    return NextResponse.json({ error: 'Errore upload documento' }, { status: 500 });
+  }
 
   // Insert document record
   const { data: doc, error } = await serviceClient

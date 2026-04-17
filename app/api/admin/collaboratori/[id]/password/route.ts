@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { isValidUUID } from '@/lib/validate-id';
 
 const schema = z.object({ password: z.string().min(8) });
 
@@ -11,6 +12,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const cookieStore = await cookies();
 
   const supabase = createServerClient(

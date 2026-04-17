@@ -59,8 +59,8 @@ export async function POST() {
   try {
     rawRows = await getImportCURows();
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Foglio non accessibile: ${msg}` }, { status: 502 });
+    console.error('[import/cu/run] sheet error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Foglio non accessibile' }, { status: 502 });
   }
 
   if (rawRows.length === 0) {
@@ -107,8 +107,8 @@ export async function POST() {
   try {
     folderMap = await buildFolderMap(folderId);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Drive non accessibile: ${msg}` }, { status: 502 });
+    console.error('[import/cu/run] drive error:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Drive non accessibile' }, { status: 502 });
   }
 
   // ── Process in batches ───────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ export async function POST() {
   // ── Record import run + upload XLSX (non-blocking) ──────────────────────────
   try {
     const runId    = crypto.randomUUID();
-    const xlsx     = buildImportXLSX('cu', details);
+    const xlsx     = await buildImportXLSX('cu', details);
     const xlsxPath = `cu/${runId}.xlsx`;
     await svc.storage.from('imports').upload(xlsxPath, xlsx, {
       contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

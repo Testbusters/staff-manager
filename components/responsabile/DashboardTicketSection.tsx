@@ -42,8 +42,10 @@ const PRIORITY_DOT: Record<string, string> = {
   BASSA:   'bg-muted-foreground/40',
 };
 
+import { MS_PER_DAY } from '@/lib/constants';
+
 function formatAge(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / MS_PER_DAY);
   if (days === 0) return 'Oggi';
   if (days === 1) return '1g';
   return `${days}g`;
@@ -55,7 +57,7 @@ function formatAgeShort(iso: string): string {
   if (mins < 60) return `${mins}m fa`;
   const hours = Math.floor(diffMs / 3600000);
   if (hours < 24) return `${hours}h fa`;
-  const days = Math.floor(diffMs / 86400000);
+  const days = Math.floor(diffMs / MS_PER_DAY);
   return `${days}g fa`;
 }
 

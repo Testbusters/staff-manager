@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import { CalendarDays, MapPin, Plus, Pencil, Trash2 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createEventSchema, type CreateEventFormValues } from '@/lib/schemas/event';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -54,11 +57,6 @@ interface FormData {
   tipo: string;
 }
 
-const EMPTY_FORM: FormData = {
-  titolo: '', descrizione: '', start_datetime: '', end_datetime: '',
-  location: '', luma_url: '', tipo: '',
-};
-
 function toDatetimeLocal(iso: string | null): string {
   if (!iso) return '';
   return iso.slice(0, 16);
@@ -81,23 +79,26 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
   const [events, setEvents] = useState<ContentEvent[]>(initialEvents);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ContentEvent | null>(null);
-  const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ContentEvent | null>(null);
 
-  const set = (k: keyof FormData) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setForm((f) => ({ ...f, [k]: e.target.value }));
+  const form = useForm<CreateEventFormValues>({
+    resolver: zodResolver(createEventSchema),
+    defaultValues: {
+      titolo: '', descrizione: '', start_datetime: '', end_datetime: '',
+      location: '', luma_url: '', tipo: '',
+    },
+  });
 
   function openNew() {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    form.reset({ titolo: '', descrizione: '', start_datetime: '', end_datetime: '', location: '', luma_url: '', tipo: '' });
     setDialogOpen(true);
   }
 
   function openEdit(ev: ContentEvent) {
     setEditing(ev);
-    setForm({
+    form.reset({
       titolo: ev.titolo,
       descrizione: ev.descrizione ?? '',
       start_datetime: toDatetimeLocal(ev.start_datetime),
@@ -112,30 +113,26 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
   function closeDialog() {
     setDialogOpen(false);
     setEditing(null);
-    setForm(EMPTY_FORM);
+    form.reset();
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.titolo.trim()) {
-      toast.error('Il titolo è obbligatorio.', { duration: 5000 });
-      return;
-    }
+  async function onSubmit(values: CreateEventFormValues) {
     setSaving(true);
     try {
+      const payload = {
+        titolo: values.titolo,
+        descrizione: values.descrizione || null,
+        start_datetime: values.start_datetime || null,
+        end_datetime: values.end_datetime || null,
+        location: values.location || null,
+        luma_url: values.luma_url || null,
+        tipo: values.tipo || null,
+      };
       if (editing) {
         const res = await fetch(`/api/events/${editing.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            titolo: form.titolo,
-            descrizione: form.descrizione || null,
-            start_datetime: form.start_datetime || null,
-            end_datetime: form.end_datetime || null,
-            location: form.location || null,
-            luma_url: form.luma_url || null,
-            tipo: form.tipo || null,
-          }),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error((await res.json()).error ?? 'Errore');
         const { event: updated } = await res.json();
@@ -145,15 +142,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
         const res = await fetch('/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            titolo: form.titolo,
-            descrizione: form.descrizione || null,
-            start_datetime: form.start_datetime || null,
-            end_datetime: form.end_datetime || null,
-            location: form.location || null,
-            luma_url: form.luma_url || null,
-            tipo: form.tipo || null,
-          }),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error((await res.json()).error ?? 'Errore');
         const { event: created } = await res.json();
@@ -206,7 +195,7 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
           description="Crea il primo evento per questa città."
         />
       ) : (
-        <div className="w-fit rounded-lg border border-border bg-card overflow-hidden">
+        <div className="w-fit max-w-full rounded-lg border border-border bg-card overflow-x-auto">
           <Table className="w-auto">
             <TableHeader>
               <TableRow className="bg-muted/40">
@@ -273,64 +262,81 @@ export default function EventiCittaPage({ initialEvents, citta }: Props) {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="pr-10">
-              {editing ? 'Modifica evento' : `Nuovo evento — ${citta}`}
+              {editing ? 'Modifica evento' : `Nuovo evento - ${citta}`}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSave}>
-            <div className="space-y-4 pt-2 overflow-y-auto max-h-[60vh] pr-1">
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Titolo *</label>
-                <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dell'evento" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Tipo</label>
-                <Select value={form.tipo} onValueChange={(v) => setForm((f) => ({ ...f, tipo: v }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPO_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">Data inizio</label>
-                  <Input type="datetime-local" value={form.start_datetime} onChange={set('start_datetime')} />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+              <div className="space-y-4 pt-2 overflow-y-auto max-h-[60vh] pr-1">
+                <FormField control={form.control} name="titolo" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Titolo <span className="text-destructive">*</span></FormLabel>
+                    <FormControl><Input {...field} placeholder="Nome dell'evento" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="tipo" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Tipo</FormLabel>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Seleziona tipo" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {TIPO_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField control={form.control} name="start_datetime" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Data inizio</FormLabel>
+                      <FormControl><Input type="datetime-local" {...field} value={field.value ?? ''} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="end_datetime" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Data fine</FormLabel>
+                      <FormControl><Input type="datetime-local" {...field} value={field.value ?? ''} /></FormControl>
+                    </FormItem>
+                  )} />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">Data fine</label>
-                  <Input type="datetime-local" value={form.end_datetime} onChange={set('end_datetime')} />
-                </div>
+                <FormField control={form.control} name="location" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Luogo</FormLabel>
+                    <FormControl><Input {...field} value={field.value ?? ''} placeholder="Es. Online, Milano - Via Roma 1" /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="descrizione" render={() => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Descrizione</FormLabel>
+                    <Controller
+                      control={form.control}
+                      name="descrizione"
+                      render={({ field: { value, onChange } }) => (
+                        <RichTextEditor value={value ?? ''} onChange={onChange} placeholder="Descrizione dell'evento" />
+                      )}
+                    />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="luma_url" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Link Luma</FormLabel>
+                    <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://lu.ma/..." /></FormControl>
+                  </FormItem>
+                )} />
               </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Luogo</label>
-                <Input value={form.location} onChange={set('location')} placeholder="Es. Online, Milano — Via Roma 1" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Descrizione</label>
-                <RichTextEditor
-                  value={form.descrizione}
-                  onChange={(v) => setForm((f) => ({ ...f, descrizione: v }))}
-                  placeholder="Descrizione dell'evento"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">Link Luma</label>
-                <Input value={form.luma_url} onChange={set('luma_url')} placeholder="https://lu.ma/..." />
-              </div>
-            </div>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={closeDialog} disabled={saving}>
-                Annulla
-              </Button>
-              <Button type="submit" className="bg-brand hover:bg-brand/90 text-white" disabled={saving}>
-                {saving ? 'Salvataggio…' : editing ? 'Aggiorna evento' : 'Salva evento'}
-              </Button>
-            </DialogFooter>
-          </form>
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={closeDialog} disabled={saving}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-brand hover:bg-brand/90 text-white" disabled={saving}>
+                  {saving ? 'Salvataggio...' : editing ? 'Aggiorna evento' : 'Salva evento'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 

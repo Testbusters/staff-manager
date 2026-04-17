@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/email';
 import { emailEsitoLiquidazione } from '@/lib/email-templates';
 import { buildLiquidazioneRequestNotification } from '@/lib/notification-utils';
 import { ROLE_LABELS } from '@/lib/types';
+import { isValidUUID } from '@/lib/validate-id';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('revoca') }),
@@ -18,6 +19,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +46,7 @@ export async function PATCH(
 
   const { data: req, error: fetchError } = await svc
     .from('liquidazione_requests')
-    .select('*')
+    .select('id, collaborator_id, compensation_ids, expense_ids, importo_netto_totale, iban, ha_partita_iva, stato, note_admin, processed_at, processed_by, created_at')
     .eq('id', id)
     .single();
 

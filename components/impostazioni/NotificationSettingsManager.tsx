@@ -127,7 +127,7 @@ export default function NotificationSettingsManager({
                   >
                     <span className="text-sm text-foreground">{s.label}</span>
                     <span className="w-24 text-center">
-                      <span className="inline-block rounded-full bg-accent px-2 py-0.5 text-[10px] text-foreground">
+                      <span className="inline-block rounded-full bg-accent px-2 py-0.5 text-xs text-foreground">
                         {ROLE_LABELS[s.recipient_role] ?? s.recipient_role}
                       </span>
                     </span>

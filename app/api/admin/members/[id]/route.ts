@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { isValidUUID } from '@/lib/validate-id';
 
 const ADMIN_ROLES = ['amministrazione'];
 
@@ -29,6 +30,7 @@ export async function PATCH(
   if (!ADMIN_ROLES.includes(profile.role)) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const body = await req.json();
   const parsed = PatchSchema.safeParse(body);

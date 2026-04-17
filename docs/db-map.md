@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `069_lezioni_materie_array_and_corsi_unique.sql` (2026-04-13).
+> Last synced: migration `077_fix_expense_rls_stale_states.sql` (2026-04-17).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -14,7 +14,7 @@
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
 | `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding`, `invite_email_sent` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione`. `invite_email_sent` (BOOLEAN NOT NULL DEFAULT false): tracks whether the invitation email was delivered successfully. |
-| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL), `telegram_chat_id` (BIGINT UNIQUE NULL) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific. `telegram_chat_id` set by webhook after deep-link flow; cleared by disconnect/admin reset. |
+| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL), `telegram_chat_id` (BIGINT NULL, partial UNIQUE idx on non-null) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific. `telegram_chat_id` set by webhook after deep-link flow; cleared by disconnect/admin reset. |
 | `communities` | Community entities | `id`, `name` (UNIQUE), `is_active`, `banner_content`, `banner_active`, `banner_link_url`, `banner_link_label`, `banner_link_new_tab`, `banner_updated_at` | Banner fields added in migrations 052+053. `banner_updated_at` used as dismiss-key version for localStorage. |
 | `collaborator_communities` | Collaborator → Community membership (1:1 per migration 044) | `collaborator_id` (UNIQUE), `community_id` | UNIQUE on `collaborator_id` — each collaborator belongs to exactly 1 community |
 | `user_community_access` | Responsabile → Community access | `user_id`, `community_id` | UNIQUE `(user_id, community_id)`. Used for RBAC joins in RLS policies |
@@ -107,6 +107,18 @@ All 5 content tables use `community_ids UUID[] DEFAULT '{}'` (array, NOT FK). Em
 
 ---
 
+## Storage Buckets
+
+| Bucket | Public | Purpose | Access pattern |
+|---|---|---|---|
+| `avatars` | yes | Profile pictures | Direct URL via `NEXT_PUBLIC_SUPABASE_URL/storage/v1/object/public/avatars/{userId}/avatar` |
+| `documents` | no | Contracts, CU, receipts | Signed URLs (1h TTL) via service role |
+| `expenses` | no | Expense attachment files (PDF, JPG, PNG) | Signed URLs (1h TTL) via service role. Path: `{collaboratorId}/{expenseId}/{filename}`. Upload via `POST /api/expenses/[id]/attachments`. Max 10 MB. |
+| `corsi-allegati` | no | Global course attachments | Service role access |
+| `export-snapshots` | no | GSheet export snapshots | Service role access |
+
+---
+
 ## FK Graph
 
 ```
@@ -195,6 +207,7 @@ tickets
 | `expense_reimbursements` | `er_collaborator_id_idx` | btree | |
 | `expense_reimbursements` | `er_community_id_idx` | btree | |
 | `expense_reimbursements` | `er_stato_idx` | btree | |
+| `expense_attachments` | `idx_expense_attachments_reimbursement_id` | btree | FK — added migration 071 |
 | `expense_history` | `exp_history_reimbursement_id_idx` | btree | |
 | `notification_settings` | `notif_settings_event_key_role_key` | UNIQUE | composite |
 | `notifications` | `notifications_user_id_read_idx` | btree | `(user_id, read)` — bell query |
@@ -211,17 +224,22 @@ tickets
 | `lezioni` | `lezioni_materie_nonempty` | CHECK | `array_length(materie, 1) >= 1` - added migration 069 |
 | `corsi` | `corsi_codice_identificativo_unique` | UNIQUE | added migration 069 - idempotency key for GSheet import |
 | `compensation_attachments` | `comp_attachments_compensation_id_idx` | btree | FK — added migration 063 |
+| `tickets` | `tickets_community_id_idx` | btree | FK — added migration 073 |
 | `ticket_messages` | `ticket_messages_ticket_id_idx` | btree | FK — added migration 063 |
+| `corsi` | `corsi_community_id_idx` | btree | FK — added migration 073 |
+| `documents` | `documents_community_id_idx` | btree | FK — added migration 073 |
+| `compensations` | `compensations_data_competenza_idx` | btree | date-range filter — added migration 075 |
+| `expense_reimbursements` | `er_data_spesa_idx` | btree | date-range filter — added migration 075 |
+| `tickets` | `tickets_last_message_at_idx` | btree (DESC NULLS LAST) | recency sort — added migration 075 |
 
 **Missing indexes (potential gaps — lower priority):**
-- `compensations.data_competenza` — used in date-range filters in export
-- `expense_reimbursements.data_spesa` — used in filters
 - `notifications.created_at` — used for ordering in bell + page
-- `tickets.updated_at` / `last_message_at` — used for recency sort
 
 ---
 
 ## RLS Summary
+
+> **All RLS policies** on public-schema tables use `TO authenticated` (migration 074). No policy grants access to the `anon` role.
 
 | Table | Roles with access | Pattern |
 |---|---|---|
@@ -230,7 +248,7 @@ tickets
 | `collaborator_communities` | own (SELECT), admin (ALL), responsabile (SELECT via uca) | |
 | `communities` | all active users (SELECT), admin (ALL) | `is_active_user()` |
 | `compensations` | own (SELECT), responsabile (SELECT+limited UPDATE), admin (ALL), own insert | Responsabile UPDATE limited to INVIATO/INTEGRAZIONI_RICHIESTE states |
-| `expense_reimbursements` | own (SELECT+UPDATE if INVIATO), responsabile (SELECT+limited UPDATE), admin (ALL) | |
+| `expense_reimbursements` | own (SELECT+UPDATE if IN_ATTESA with WITH CHECK), responsabile (SELECT only), admin (ALL) | Migration 077: dropped resp UPDATE, fixed collab UPDATE state, added WITH CHECK |
 | `documents` | own (SELECT), responsabile (SELECT via `can_manage_community`), admin (ALL), own UPDATE if DA_FIRMARE | |
 | `tickets` | own (SELECT/INSERT), responsabile (SELECT via cc→uca chain), admin (ALL+UPDATE), resp UPDATE | |
 | `ticket_messages` | read if ticket accessible, insert for all authenticated | |
@@ -292,10 +310,13 @@ tickets
 
 
 
+
+
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-13.
+> Last refreshed: 2026-04-17.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -393,10 +414,10 @@ tickets
 | `collaborator_id` | uuid | NO | — | → collaborators.id |
 | `community_id` | uuid | YES | — | → communities.id |
 | `nome_servizio_ruolo` | text | NO | — | — |
-| `data_competenza` | date | YES | — | — |
-| `importo_lordo` | numeric | YES | — | — |
-| `ritenuta_acconto` | numeric | YES | — | — |
-| `importo_netto` | numeric | YES | — | — |
+| `data_competenza` | date | NO | — | — |
+| `importo_lordo` | numeric | NO | — | — |
+| `ritenuta_acconto` | numeric | NO | — | — |
+| `importo_netto` | numeric | NO | — | — |
 | `stato` | text | NO | `'IN_ATTESA'` | — |
 | `payment_reference` | text | YES | — | — |
 | `info_specifiche` | text | YES | — | — |

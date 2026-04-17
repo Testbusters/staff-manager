@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Bell } from 'lucide-react';
 import type { Notification } from '@/lib/types';
+import { NOTIFICATION_TYPE_BADGE } from '@/lib/notification-utils';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,17 +23,6 @@ function entityHref(n: Notification): string | null {
   if (n.entity_type === 'discount')      return `/sconti/${n.entity_id}`;
   return null;
 }
-
-const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
-  compensation:  { label: 'Compenso',      cls: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/60 dark:text-blue-300 dark:border-blue-800/60' },
-  reimbursement: { label: 'Rimborso',      cls: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/60 dark:text-purple-300 dark:border-purple-800/60' },
-  document:      { label: 'Documento',     cls: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/60 dark:text-yellow-300 dark:border-yellow-800/60' },
-  ticket:        { label: 'Ticket',        cls: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/60 dark:text-orange-300 dark:border-orange-800/60' },
-  communication: { label: 'Comunicazione', cls: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/60 dark:text-green-300 dark:border-green-800/60' },
-  event:         { label: 'Evento',        cls: 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/60 dark:text-cyan-300 dark:border-cyan-800/60' },
-  opportunity:   { label: 'Opportunità',   cls: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/60 dark:text-indigo-300 dark:border-indigo-800/60' },
-  discount:      { label: 'Sconto',        cls: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/60 dark:text-rose-300 dark:border-rose-800/60' },
-};
 
 // Ordered list for filter chips
 const TYPE_FILTERS: { key: string; label: string }[] = [
@@ -150,7 +140,7 @@ export default function NotificationPageClient() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 mt-0.5 shrink-0">
           <ButtonGroup>
             <Button
               variant={!unreadOnly ? 'default' : 'outline'}
@@ -174,7 +164,7 @@ export default function NotificationPageClient() {
               variant="ghost"
               size="sm"
               onClick={handleMarkAllRead}
-              className="text-xs text-link hover:text-link/80 h-auto p-0"
+              className="text-xs text-link hover:text-link/80 h-auto p-0 whitespace-nowrap"
             >
               Segna tutte come lette
             </Button>
@@ -219,7 +209,7 @@ export default function NotificationPageClient() {
           <ul className="divide-y divide-border">
             {notifications.map((n) => {
               const href = entityHref(n);
-              const badge = n.entity_type ? TYPE_BADGE[n.entity_type] : undefined;
+              const badge = n.entity_type ? NOTIFICATION_TYPE_BADGE[n.entity_type] : undefined;
               const inner = (
                 <li
                   className={`group flex items-start gap-3 px-4 py-3.5
@@ -232,7 +222,7 @@ export default function NotificationPageClient() {
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
                       )}
                       {badge && (
-                        <span className={`shrink-0 rounded-full border px-2 py-px text-[10px] font-semibold uppercase tracking-wide ${badge.cls}`}>
+                        <span className={`shrink-0 rounded-full border px-2 py-px text-xs font-semibold uppercase tracking-wide ${badge.cls}`}>
                           {badge.label}
                         </span>
                       )}
@@ -243,7 +233,7 @@ export default function NotificationPageClient() {
                     {n.messaggio && (
                       <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.messaggio}</p>
                     )}
-                    <p className="text-[10px] text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatRelativeTime(n.created_at)}</p>
                   </div>
 
                   {/* Actions (visible on hover) */}
@@ -253,7 +243,7 @@ export default function NotificationPageClient() {
                         variant="ghost"
                         size="sm"
                         onClick={(e) => { e.preventDefault(); handleMarkRead(n.id); }}
-                        className="text-[10px] text-link hover:text-link/80 whitespace-nowrap h-auto p-0"
+                        className="text-xs text-link hover:text-link/80 whitespace-nowrap h-auto p-0"
                       >
                         Segna letta
                       </Button>

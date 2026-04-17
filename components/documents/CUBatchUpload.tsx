@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { cuBatchUploadSchema, type CUBatchUploadFormValues } from '@/lib/schemas/document';
 
 interface BatchDetail {
   success: string[];
@@ -26,14 +28,19 @@ export default function CUBatchUpload() {
 
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [anno, setAnno] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BatchResponse | null>(null);
 
+  const form = useForm<CUBatchUploadFormValues>({
+    resolver: zodResolver(cuBatchUploadSchema),
+    defaultValues: { anno: '' },
+  });
+
+  const anno = form.watch('anno');
   const isValid = zipFile && csvFile && anno && parseInt(anno) >= 2000;
 
-  const handleSubmit = async () => {
-    if (!isValid || !zipFile || !csvFile) return;
+  async function onSubmit(values: CUBatchUploadFormValues) {
+    if (!zipFile || !csvFile) return;
     setLoading(true);
     setResult(null);
 
@@ -41,7 +48,7 @@ export default function CUBatchUpload() {
       const formData = new FormData();
       formData.append('zip', zipFile);
       formData.append('csv', csvFile);
-      formData.append('anno', anno);
+      formData.append('anno', values.anno);
 
       const res = await fetch('/api/documents/cu-batch', {
         method: 'POST',
@@ -58,7 +65,7 @@ export default function CUBatchUpload() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <Card>
@@ -72,60 +79,66 @@ export default function CUBatchUpload() {
         </p>
       </div>
 
-      {/* Anno */}
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1.5">
-          Anno fiscale <span className="text-destructive">*</span>
-        </label>
-        <Input
-          type="number"
-          value={anno}
-          onChange={(e) => setAnno(e.target.value)}
-          placeholder="es. 2025"
-          min={2000}
-          max={2100}
-          className="w-48"
-        />
-      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-5">
+          {/* Anno */}
+          <FormField control={form.control} name="anno" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Anno fiscale <span className="text-destructive">*</span></FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  {...field}
+                  placeholder="es. 2025"
+                  min={2000}
+                  max={2100}
+                  className="w-48"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
 
-      {/* ZIP */}
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1.5">
-          File ZIP (PDF CU) <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="file"
-          accept=".zip"
-          onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
-        />
-        {zipFile && <p className="mt-1 text-xs text-muted-foreground">{zipFile.name} ({(zipFile.size / 1024).toFixed(0)} KB)</p>}
-      </div>
+          {/* ZIP */}
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1.5">
+              File ZIP (PDF CU) <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="file"
+              accept=".zip"
+              onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
+            />
+            {zipFile && <p className="mt-1 text-xs text-muted-foreground">{zipFile.name} ({(zipFile.size / 1024).toFixed(0)} KB)</p>}
+          </div>
 
-      {/* CSV */}
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1.5">
-          File CSV mapping <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="file"
-          accept=".csv,.txt"
-          onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
-        />
-        {csvFile && <p className="mt-1 text-xs text-muted-foreground">{csvFile.name}</p>}
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Prima riga: intestazione. Colonne: <code>nome_file,nome,cognome</code>
-        </p>
-      </div>
+          {/* CSV */}
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1.5">
+              File CSV mapping <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="file"
+              accept=".csv,.txt"
+              onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-accent file:text-foreground hover:file:bg-muted"
+            />
+            {csvFile && <p className="mt-1 text-xs text-muted-foreground">{csvFile.name}</p>}
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Prima riga: intestazione. Colonne: <code>nome_file,nome,cognome</code>
+            </p>
+          </div>
 
-      <Button
-        onClick={handleSubmit}
-        disabled={!isValid || loading}
-        className="bg-brand hover:bg-brand/90 text-white"
-      >
-        {loading ? 'Elaborazione…' : 'Avvia importazione'}
-      </Button>
+          <Button
+            type="submit"
+            disabled={!isValid || loading}
+            className="bg-brand hover:bg-brand/90 text-white"
+          >
+            {loading ? 'Elaborazione...' : 'Avvia importazione'}
+          </Button>
+        </form>
+      </Form>
 
       {/* Results */}
       {result && (

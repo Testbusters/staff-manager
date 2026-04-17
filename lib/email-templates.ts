@@ -259,6 +259,7 @@ export function emailInvito(p: {
   email: string;
   password: string;
   ruolo: string;
+  magicLink?: string;
 }): { subject: string; html: string } {
   const body = `
     ${bodyText('Sei stato invitato ad accedere a <strong>Staff Manager</strong>, la piattaforma di gestione collaboratori di Testbusters.')}
@@ -269,7 +270,7 @@ export function emailInvito(p: {
     ])}
     ${note('Al primo accesso ti verrà chiesto di impostare una nuova password personale.')}
     ${bodyText('Clicca sul pulsante qui sotto per accedere alla piattaforma.')}
-    ${ctaButton('Accedi a Staff Manager')}
+    ${ctaButton('Accedi a Staff Manager', p.magicLink)}
   `;
   return {
     subject: 'Sei stato invitato a Staff Manager — Testbusters',

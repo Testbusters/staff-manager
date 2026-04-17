@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { isValidUUID } from '@/lib/validate-id';
+import { TSHIRT_SIZES } from '@/lib/types';
 
 // All profile fields that admin/responsabile can update on a collaborator's record.
 // IBAN and intestatario_pagamento are excluded from the shared schema — they are
@@ -21,7 +23,7 @@ const patchSchema = z.object({
   telefono:            z.string().max(20).nullable().optional(),
   indirizzo:           z.string().max(200).nullable().optional(),
   civico_residenza:    z.string().max(20).nullable().optional(),
-  tshirt_size:         z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']).nullable().optional(),
+  tshirt_size:         z.enum(TSHIRT_SIZES).nullable().optional(),
   sono_un_figlio_a_carico: z.boolean().optional(),
   importo_lordo_massimale: z.number().min(1).max(5000).nullable().optional(),
   // Admin-only payment field — stripped for responsabile_compensi below
@@ -36,6 +38,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const cookieStore = await cookies();
   const supabase = createServerClient(

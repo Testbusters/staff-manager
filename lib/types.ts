@@ -8,6 +8,10 @@ export type Role =
 
 export type MemberStatus = 'attivo' | 'uscente_con_compenso' | 'uscente_senza_compenso';
 
+// ── Shared constants ───────────────────────────────────────
+export const TSHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const;
+export type TshirtSize = (typeof TSHIRT_SIZES)[number];
+
 // ── Compensation ────────────────────────────────────────────
 export type CompensationStatus =
   | 'IN_ATTESA'
@@ -264,6 +268,8 @@ export interface UserProfile {
   is_active: boolean;
   member_status: MemberStatus;
   onboarding_completed: boolean;
+  invite_email_sent: boolean;
+  must_change_password: boolean;
   created_at: string;
 }
 

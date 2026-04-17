@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { buildContractVars, buildReceiptVars, generateDocumentFromTemplate } from '@/lib/document-generation';
 import { calcRitenuta, getContractTemplateTipo, getReceiptTemplateTipo } from '@/lib/ritenuta';
 import type { ContractTemplateType } from '@/lib/types';
+import { isValidUUID } from '@/lib/validate-id';
 
 export async function POST(
   _request: Request,
@@ -29,6 +30,7 @@ export async function POST(
   }
 
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
 
   const { data: doc, error: fetchError } = await supabase
     .from('documents')
@@ -101,7 +103,8 @@ export async function POST(
     .upload(doc.file_original_url, pdfBuffer, { contentType: 'application/pdf', upsert: true });
 
   if (uploadErr) {
-    return NextResponse.json({ error: `Errore upload: ${uploadErr.message}` }, { status: 500 });
+    console.error('[documents/recompile] upload error:', uploadErr.message);
+    return NextResponse.json({ error: 'Errore upload documento' }, { status: 500 });
   }
 
   // Return a fresh signed URL (1h TTL)

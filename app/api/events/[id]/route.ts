@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { isValidUUID } from '@/lib/validate-id';
 
 const WRITE_ROLES = ['amministrazione', 'responsabile_cittadino'];
+
+const PatchEventSchema = z.object({
+  titolo: z.string().optional(),
+  descrizione: z.string().nullable().optional(),
+  start_datetime: z.string().nullable().optional(),
+  end_datetime: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  luma_url: z.string().nullable().optional(),
+  luma_embed_url: z.string().nullable().optional(),
+  tipo: z.string().nullable().optional(),
+  community_ids: z.array(z.string()).optional(),
+  file_url: z.string().nullable().optional(),
+});
 
 async function authorizeWriter(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,6 +40,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const auth = await authorizeWriter(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -43,19 +59,23 @@ export async function PATCH(
   }
 
   const body = await request.json().catch(() => null);
+  const parsed = PatchEventSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
+  }
   const update: Record<string, unknown> = {};
-  if (body.titolo !== undefined) update.titolo = body.titolo.trim();
-  if (body.descrizione !== undefined) update.descrizione = body.descrizione?.trim() || null;
-  if (body.start_datetime !== undefined) update.start_datetime = body.start_datetime || null;
-  if (body.end_datetime !== undefined) update.end_datetime = body.end_datetime || null;
-  if (body.location !== undefined) update.location = body.location?.trim() || null;
-  if (body.luma_url !== undefined) update.luma_url = body.luma_url?.trim() || null;
-  if (body.luma_embed_url !== undefined) update.luma_embed_url = body.luma_embed_url?.trim() || null;
-  if (body.tipo !== undefined) update.tipo = body.tipo?.trim() || null;
+  if (parsed.data.titolo !== undefined) update.titolo = parsed.data.titolo.trim();
+  if (parsed.data.descrizione !== undefined) update.descrizione = parsed.data.descrizione?.trim() || null;
+  if (parsed.data.start_datetime !== undefined) update.start_datetime = parsed.data.start_datetime || null;
+  if (parsed.data.end_datetime !== undefined) update.end_datetime = parsed.data.end_datetime || null;
+  if (parsed.data.location !== undefined) update.location = parsed.data.location?.trim() || null;
+  if (parsed.data.luma_url !== undefined) update.luma_url = parsed.data.luma_url?.trim() || null;
+  if (parsed.data.luma_embed_url !== undefined) update.luma_embed_url = parsed.data.luma_embed_url?.trim() || null;
+  if (parsed.data.tipo !== undefined) update.tipo = parsed.data.tipo?.trim() || null;
   // responsabile_cittadino cannot change community_ids or citta
   if (auth.role === 'amministrazione') {
-    if (body.community_ids !== undefined) update.community_ids = body.community_ids;
-    if (body.file_url !== undefined) update.file_url = body.file_url?.trim() || null;
+    if (parsed.data.community_ids !== undefined) update.community_ids = parsed.data.community_ids;
+    if (parsed.data.file_url !== undefined) update.file_url = parsed.data.file_url?.trim() || null;
   }
 
   const { data, error } = await serviceClient
@@ -75,6 +95,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isValidUUID(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   const supabase = await createClient();
   const auth = await authorizeWriter(supabase);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });

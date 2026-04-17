@@ -33,26 +33,30 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
 
-  const runs: ExportRunWithUrl[] = await Promise.all(
-    (runRows ?? []).map(async (run) => {
-      let download_url: string | null = null;
-      if (run.storage_path) {
-        const { data: signed } = await svc.storage
-          .from('exports')
-          .createSignedUrl(run.storage_path, 3600);
-        download_url = signed?.signedUrl ?? null;
-      }
-      return {
-        id: run.id,
-        exported_at: run.exported_at,
-        collaborator_count: run.collaborator_count,
-        compensation_count: run.compensation_count,
-        expense_count: run.expense_count,
-        storage_path: run.storage_path,
-        download_url,
-      };
-    }),
-  );
+  // Batch-sign all storage paths in a single call instead of N+1 individual requests
+  const paths = (runRows ?? [])
+    .map((r) => r.storage_path)
+    .filter((p): p is string => p != null);
+
+  const urlMap = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await svc.storage
+      .from('exports')
+      .createSignedUrls(paths, 3600);
+    for (const entry of signed ?? []) {
+      if (entry.signedUrl && entry.path) urlMap.set(entry.path, entry.signedUrl);
+    }
+  }
+
+  const runs: ExportRunWithUrl[] = (runRows ?? []).map((run) => ({
+    id: run.id,
+    exported_at: run.exported_at,
+    collaborator_count: run.collaborator_count,
+    compensation_count: run.compensation_count,
+    expense_count: run.expense_count,
+    storage_path: run.storage_path,
+    download_url: run.storage_path ? (urlMap.get(run.storage_path) ?? null) : null,
+  }));
 
   return NextResponse.json({ runs });
 }

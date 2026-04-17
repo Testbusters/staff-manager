@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const [{ data: corso, error }, { data: lezioni, error: lezioniError }] = await Promise.all([
     svc.from('corsi').select('*, community:communities(id, name)').eq('id', id).single(),
-    svc.from('lezioni').select('*').eq('corso_id', id).order('data').order('orario_inizio'),
+    svc.from('lezioni').select('id, corso_id, data, orario_inizio, orario_fine, materie, created_at, updated_at').eq('corso_id', id).order('data').order('orario_inizio'),
   ]);
 
   if (error || !corso) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (role === 'responsabile_cittadino') {
     const allowed = z.object({ citta: z.string().nullable() });
     const parsed = allowed.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
     const { data, error } = await svc.from('corsi').update(parsed.data).eq('id', id).select().single();
     if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
     return NextResponse.json({ corso: { ...data, stato: getCorsoStato(data.data_inizio, data.data_fine) } });
@@ -84,7 +84,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (role !== 'amministrazione') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const parsed = PatchCorsoSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
 
   const { data, error } = await svc.from('corsi').update(parsed.data).eq('id', id).select().single();
   if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });

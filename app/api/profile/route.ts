@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { TSHIRT_SIZES } from '@/lib/types';
 
 // All fields a collaborator can update on their own record
 // data_ingresso is admin-only; email is handled separately via auth.admin
@@ -28,7 +29,7 @@ const patchSchema = z.object({
   civico_residenza:    z.string().max(20).nullable().optional(),
   iban:                z.string().max(34).regex(/^[A-Z]{2}\d{2}[A-Z0-9]+$/, 'IBAN non valido').or(z.literal('')).optional(),
   intestatario_pagamento: z.string().max(100).nullable().optional(),
-  tshirt_size:         z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']).nullable().optional(),
+  tshirt_size:         z.enum(TSHIRT_SIZES).nullable().optional(),
   // sono_un_figlio_a_carico: il collaboratore dichiara se È fiscalmente a carico di un familiare
   sono_un_figlio_a_carico:   z.boolean().optional(),
   importo_lordo_massimale:   z.number().min(1).max(5000).nullable().optional(),
@@ -83,7 +84,10 @@ export async function PATCH(request: Request) {
       email: newEmail,
       email_confirm: true,
     });
-    if (emailError) return NextResponse.json({ error: 'Errore aggiornamento email: ' + emailError.message }, { status: 500 });
+    if (emailError) {
+      console.error('[profile] email update error:', emailError.message);
+      return NextResponse.json({ error: 'Errore aggiornamento email' }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true, emailChanged });

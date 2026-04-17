@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email';
 import { emailReminderLezione } from '@/lib/email-templates';
 import { sendTelegram, telegramReminderLezione } from '@/lib/telegram';
 import { getNotificationSettings } from '@/lib/notification-helpers';
+import { MS_PER_DAY } from '@/lib/constants';
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
   );
 
   // Tomorrow's date
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + MS_PER_DAY).toISOString().slice(0, 10);
 
   const { data: lezioni } = await svc
     .from('lezioni')

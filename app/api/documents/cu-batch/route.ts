@@ -66,6 +66,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Anno non valido' }, { status: 400 });
   }
 
+  const MAX_ZIP_SIZE = 50 * 1024 * 1024; // 50 MB
+  const MAX_CSV_SIZE = 2 * 1024 * 1024; // 2 MB
+  if (zipFile.size > MAX_ZIP_SIZE) {
+    return NextResponse.json({ error: 'Il file ZIP è troppo grande. Dimensione massima: 50 MB.' }, { status: 413 });
+  }
+  if (csvFile.size > MAX_CSV_SIZE) {
+    return NextResponse.json({ error: 'Il file CSV è troppo grande. Dimensione massima: 2 MB.' }, { status: 413 });
+  }
+
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Tag, Paperclip, Plus } from 'lucide-react';
@@ -12,6 +13,8 @@ import RichTextDisplay from '@/components/ui/RichTextDisplay';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
+import { createDiscountSchema, type CreateDiscountFormValues } from '@/lib/schemas/discount';
 import {
   Pagination,
   PaginationContent,
@@ -58,82 +61,135 @@ function DiscountForm({
   onCancel: () => void;
   submitLabel?: string;
 }) {
-  const [form, setForm] = useState<FormData>({
-    titolo: initial?.titolo ?? '',
-    descrizione: initial?.descrizione ?? '',
-    codice_sconto: initial?.codice_sconto ?? '',
-    link: initial?.link ?? '',
-    valid_from: initial?.valid_from ?? '',
-    valid_to: initial?.valid_to ?? '',
-    community_ids: initial?.community_ids ?? [],
-    fornitore: initial?.fornitore ?? '',
-    logo_url: initial?.logo_url ?? '',
-    file_url: initial?.file_url ?? '',
-  });
   const [loading, setLoading] = useState(false);
 
-  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const form = useForm<CreateDiscountFormValues>({
+    resolver: zodResolver(createDiscountSchema),
+    defaultValues: {
+      titolo: initial?.titolo ?? '',
+      descrizione: initial?.descrizione ?? '',
+      codice_sconto: initial?.codice_sconto ?? '',
+      link: initial?.link ?? '',
+      valid_from: initial?.valid_from ?? '',
+      valid_to: initial?.valid_to ?? '',
+      community_ids: initial?.community_ids ?? [],
+      fornitore: initial?.fornitore ?? '',
+      logo_url: initial?.logo_url ?? '',
+      file_url: initial?.file_url ?? '',
+    },
+  });
 
-  const setRich = (k: keyof FormData) => (v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.titolo.trim()) { toast.error('Il titolo è obbligatorio.', { duration: 5000 }); return; }
+  async function onSubmit(values: CreateDiscountFormValues) {
     setLoading(true);
-    try { await onSave(form); }
-    catch (err) { toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 }); setLoading(false); }
+    try {
+      await onSave({
+        titolo: values.titolo,
+        descrizione: values.descrizione ?? '',
+        codice_sconto: values.codice_sconto ?? '',
+        link: values.link ?? '',
+        valid_from: values.valid_from ?? '',
+        valid_to: values.valid_to ?? '',
+        community_ids: values.community_ids ?? [],
+        fornitore: values.fornitore ?? '',
+        logo_url: values.logo_url ?? '',
+        file_url: values.file_url ?? '',
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Errore.', { duration: 5000 });
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-foreground">Titolo <span className="text-destructive">*</span></label>
-        <Input value={form.titolo} onChange={set('titolo')} placeholder="Nome dello sconto o del beneficio" required />
-      </div>
-      <Input value={form.fornitore} onChange={set('fornitore')} placeholder="Fornitore (es. Amazon, MediaWorld)" />
-      <RichTextEditor value={form.descrizione} onChange={setRich('descrizione')} placeholder="Descrizione" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input value={form.codice_sconto} onChange={set('codice_sconto')} placeholder="Codice sconto" />
-        <Input value={form.link} onChange={set('link')} placeholder="Link (URL)" type="url" />
-        <Input value={form.logo_url} onChange={set('logo_url')} placeholder="URL logo fornitore" />
-        <Input value={form.file_url} onChange={set('file_url')} placeholder="URL file allegato" />
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Valido dal</label>
-          <Input type="date" value={form.valid_from} onChange={set('valid_from')} />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <FormField control={form.control} name="titolo" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-xs">Titolo <span className="text-destructive">*</span></FormLabel>
+            <FormControl><Input {...field} placeholder="Nome dello sconto o del beneficio" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="fornitore" render={({ field }) => (
+          <FormItem>
+            <FormControl><Input {...field} placeholder="Fornitore (es. Amazon, MediaWorld)" /></FormControl>
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="descrizione" render={() => (
+          <FormItem>
+            <Controller
+              control={form.control}
+              name="descrizione"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor value={value ?? ''} onChange={onChange} placeholder="Descrizione" />
+              )}
+            />
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField control={form.control} name="codice_sconto" render={({ field }) => (
+            <FormItem>
+              <FormControl><Input {...field} placeholder="Codice sconto" /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="link" render={({ field }) => (
+            <FormItem>
+              <FormControl><Input {...field} placeholder="Link (URL)" type="url" /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="logo_url" render={({ field }) => (
+            <FormItem>
+              <FormControl><Input {...field} placeholder="URL logo fornitore" /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="file_url" render={({ field }) => (
+            <FormItem>
+              <FormControl><Input {...field} placeholder="URL file allegato" /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="valid_from" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Valido dal</FormLabel>
+              <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="valid_to" render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs text-muted-foreground">Valido fino al</FormLabel>
+              <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+            </FormItem>
+          )} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Valido fino al</label>
-          <Input type="date" value={form.valid_to} onChange={set('valid_to')} />
+          <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
+          <Controller
+            control={form.control}
+            name="community_ids"
+            render={({ field: { value, onChange } }) => (
+              <div className="flex flex-wrap gap-3">
+                {communities.map((c) => (
+                  <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
+                    <Checkbox
+                      checked={(value ?? []).includes(c.id)}
+                      onCheckedChange={(v) =>
+                        onChange(v ? [...(value ?? []), c.id] : (value ?? []).filter((id: string) => id !== c.id))
+                      }
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          />
         </div>
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs text-muted-foreground">Community (vuoto = tutte)</label>
-        <div className="flex flex-wrap gap-3">
-          {communities.map((c) => (
-            <label key={c.id} className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
-              <Checkbox
-                checked={form.community_ids.includes(c.id)}
-                onCheckedChange={(v) => setForm((f) => ({
-                  ...f,
-                  community_ids: v
-                    ? [...f.community_ids, c.id]
-                    : f.community_ids.filter((id) => id !== c.id),
-                }))}
-              />
-              {c.name}
-            </label>
-          ))}
-        </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
-        <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
-          {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onCancel}>Annulla</Button>
+          <Button type="submit" disabled={loading} className="bg-brand hover:bg-brand/90 text-white">
+            {loading ? 'Salvataggio…' : (submitLabel ?? 'Salva')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
 

@@ -9,6 +9,7 @@ import {
 } from '@/lib/notification-helpers';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
+import { createTicketSchema } from '@/lib/schemas/ticket';
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('tickets')
-    .select('*')
+    .select('id, creator_user_id, community_id, categoria, oggetto, stato, priority, created_at')
     .order('created_at', { ascending: false });
 
   if (statoFilter) query = query.eq('stato', statoFilter);
@@ -80,19 +81,13 @@ export async function POST(request: Request) {
   if (!profile?.is_active) return NextResponse.json({ error: 'Utente non attivo' }, { status: 403 });
 
   const body = await request.json().catch(() => null);
-  const { categoria, oggetto, messaggio, priority } = body as {
-    categoria: string;
-    oggetto: string;
-    messaggio?: string;
-    priority?: string;
-  };
-
-  if (!categoria?.trim() || !oggetto?.trim()) {
-    return NextResponse.json({ error: 'Categoria e oggetto sono obbligatori' }, { status: 400 });
+  const parsed = createTicketSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
+  const { categoria, oggetto, messaggio, priority } = parsed.data;
 
-  const VALID_PRIORITIES = ['BASSA', 'NORMALE', 'ALTA'];
-  const safePriority = priority && VALID_PRIORITIES.includes(priority) ? priority : 'NORMALE';
+  const safePriority = priority ?? 'NORMALE';
 
   const { data: ticket, error } = await supabase
     .from('tickets')

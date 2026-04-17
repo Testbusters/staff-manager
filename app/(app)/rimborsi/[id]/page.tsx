@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import ExpenseDetail from '@/components/expense/ExpenseDetail';
 import ExpenseActionPanel from '@/components/expense/ExpenseActionPanel';
 import Timeline from '@/components/compensation/Timeline';
@@ -40,6 +41,28 @@ export default async function ExpenseDetailPage({
     .select('*')
     .eq('reimbursement_id', id)
     .order('created_at', { ascending: true });
+
+  // Generate signed URLs for attachments (private bucket, 1h TTL)
+  const rawAttachments = attachments ?? [];
+  let enrichedAttachments = rawAttachments;
+  if (rawAttachments.length > 0) {
+    const svc = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const paths = rawAttachments.map((a) => a.file_url);
+    const { data: signed } = await svc.storage
+      .from('expenses')
+      .createSignedUrls(paths, 3600);
+    const urlMap = new Map<string, string>();
+    for (const entry of signed ?? []) {
+      if (entry.signedUrl && entry.path) urlMap.set(entry.path, entry.signedUrl);
+    }
+    enrichedAttachments = rawAttachments.map((att) => ({
+      ...att,
+      file_url: urlMap.get(att.file_url) ?? att.file_url,
+    }));
+  }
 
   const { data: history } = await supabase
     .from('expense_history')
@@ -117,7 +140,7 @@ export default async function ExpenseDetailPage({
       <div className="space-y-6">
         <ExpenseDetail
           expense={expense}
-          attachments={attachments ?? []}
+          attachments={enrichedAttachments}
           collaborator={role !== 'collaboratore' ? collaborator : null}
         />
 
@@ -127,16 +150,18 @@ export default async function ExpenseDetailPage({
           role={role}
         />
 
-        {historyForTimeline.length > 0 && (
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
-                Cronologia
-              </p>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              Cronologia
+            </p>
+            {historyForTimeline.length > 0 ? (
               <Timeline events={historyForTimeline} />
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <p className="text-sm text-muted-foreground">Nessuna attività registrata.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
