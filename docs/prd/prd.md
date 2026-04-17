@@ -379,6 +379,7 @@ Rationale: Stakeholders and team members need a navigable, readable document tha
 Impact: The development pipeline includes a synchronisation step in Phase 8 that updates this document when significant product changes are made.
 
 ## Part VII — Changelog
+2026-04-17  |  v2.17  |  Block rhf-migration: Migrated all 22 forms from useState+toast to react-hook-form+Zod with inline field-level validation errors. 15 shared Zod schemas in lib/schemas/ imported by both form components and API routes. FormControl a11y fix: Slot.Root propagates aria-invalid/aria-describedby to actual input elements. No migration, no API contract change — purely UX improvement (inline errors replace toast-only feedback) and code quality (shared validation schemas, reduced boilerplate).
 2026-04-16  |  v2.16  |  Block backlog-low-sweep: Cross-group LOW priority sweep — 26 items resolved (14 implemented + 12 verified already resolved). Implemented: MS_PER_DAY constant extraction (5 files), svc typing fix, Map consolidation, bundle analyzer integration, login whitespace reduction, CoCoD'a disabled+tooltip pattern, TelegramConnect loading spinner, valutazioni/notifiche responsive fixes, native button→shadcn migration (InfoTooltip + SignaturePad), semantic token fixes in docs, corsi UI polish (date column width, valutazioni /10 hint, tab active state, Azioni header). Already resolved: 12 items verified as non-issues or pre-existing fixes in codebase. No migration, no feature/RBAC/API contract changes — purely code quality + cosmetic fixes. Production deploy deferred.
 2026-04-16  |  v2.15  |  Block g9-ui-ux: Accessibility + responsive — htmlFor/id on 25 corsi form label/input pairs (CorsoForm 17, LezioniTab 3, EventiCittaPage 5), noValidate on 6 forms preventing English browser tooltips, events table horizontal scroll at 375px. No feature, RBAC, or API changes — purely a11y and responsive fixes. No migration.
 2026-04-16  |  v2.14  |  Block g7-tests: Test coverage — RLS isolation tests for compensation_history + expense_history (6 tests verify cross-collaborator leakage blocked), mark-paid DB integration tests (4 tests cover APPROVATO→LIQUIDATO + history inserts + only-APPROVATO filter), email failure path unit tests (3 tests verify sendEmail never propagates Resend errors). TC1 and TC-NEW-1 closed as already resolved. Test count: 478→491. No migration, no feature/RBAC/UI change — purely test coverage.
@@ -413,6 +414,7 @@ This appendix is intended for the development team. It records technical decisio
 ### A.1 Technology Stack
 Framework: Next.js 16 (App Router, TypeScript, standalone output)
 Styling: Tailwind v4 + shadcn/ui component library — dark and light themes via next-themes
+Form validation: react-hook-form + Zod — all forms use shared schemas (lib/schemas/) with inline field-level error messages. API routes import the same schemas for server-side validation.
 Authentication: Supabase Auth — email/password only. Session management via proxy.ts (not Next.js middleware).
 Database: Supabase Postgres — row-level security enforced on every table
 Storage: Supabase Storage — private buckets with signed URLs (1-hour TTL)
