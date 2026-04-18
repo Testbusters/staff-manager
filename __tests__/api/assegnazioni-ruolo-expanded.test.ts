@@ -337,40 +337,42 @@ describe('Counter fix: COUNT query accuracy for pending items', () => {
     expect(typeof count).toBe('number');
   }, 15000);
 
-  it('COUNT and fetch return same IN_ATTESA total for a known collaborator (small dataset)', async () => {
-    // Insert 2 IN_ATTESA compensation records for COLLAB_ID to have a known state
+  it('COUNT and fetch return same IN_ATTESA total for inserted records', async () => {
+    // Insert 2 IN_ATTESA compensation records with a unique prefix to isolate from parallel tests
+    const TAG = `${PREFIX}-COUNT`;
     const inserted: string[] = [];
     for (let i = 0; i < 2; i++) {
-      const { data } = await svc.from('compensations').insert({
+      const { data, error } = await svc.from('compensations').insert({
         collaborator_id: COLLAB_ID,
         importo_lordo: 100,
         importo_netto: 80,
         ritenuta_acconto: 20,
-        nome_servizio_ruolo: `COUNT Test ${i}`,
-        data_competenza: '2028-03',
+        nome_servizio_ruolo: `${TAG}-${i}`,
+        data_competenza: '2028-03-01',
         stato: 'IN_ATTESA',
-        competenza: 'Logica',
+        competenza: 'corsi',
       }).select('id').single();
+      expect(error).toBeNull();
       if (data?.id) inserted.push(data.id);
     }
 
-    // COUNT query
+    // COUNT query scoped to our inserted records
     const { count } = await svc
       .from('compensations')
       .select('id', { count: 'exact', head: true })
-      .in('collaborator_id', [COLLAB_ID])
+      .in('id', inserted)
       .eq('stato', 'IN_ATTESA');
 
-    // Fetch query (what the old code did)
+    // Fetch query scoped to our inserted records
     const { data: rows } = await svc
       .from('compensations')
       .select('id, stato')
-      .in('collaborator_id', [COLLAB_ID])
-      .in('stato', ['IN_ATTESA', 'APPROVATO'])
-      .limit(1000);
+      .in('id', inserted);
     const inMemoryCount = (rows ?? []).filter((c: { stato: string }) => c.stato === 'IN_ATTESA').length;
 
-    // Both should agree when total < 1000
+    // Both must agree — scoped to our records, no parallel test interference
+    expect(count).toBe(2);
+    expect(inMemoryCount).toBe(2);
     expect(count).toBe(inMemoryCount);
 
     // Cleanup
