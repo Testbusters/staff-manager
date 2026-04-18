@@ -6,6 +6,18 @@ export default defineConfig({
     environment: 'node',
     include: ['__tests__/**/*.test.ts'],
     exclude: ['e2e/**'],
+    coverage: {
+      provider: 'v8',
+      include: ['lib/**/*.ts', 'app/api/**/route.ts'],
+      exclude: [
+        'lib/**/*.test.ts',
+        'lib/**/*.spec.ts',
+        'lib/**/*.d.ts',
+        'lib/supabase/**',
+      ],
+      reporter: ['text', 'html', 'json-summary'],
+      reportsDirectory: './coverage',
+    },
   },
   resolve: {
     alias: {

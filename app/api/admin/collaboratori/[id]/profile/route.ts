@@ -2,36 +2,8 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { z } from 'zod';
 import { isValidUUID } from '@/lib/validate-id';
-import { TSHIRT_SIZES } from '@/lib/types';
-
-// All profile fields that admin/responsabile can update on a collaborator's record.
-// IBAN and intestatario_pagamento are excluded from the shared schema — they are
-// sensitive payment fields, accessible only to the collaborator or admin.
-// Admin sends them explicitly; they are stripped for responsabile_compensi callers.
-const patchSchema = z.object({
-  username:            z.string().min(3).max(50).regex(/^[a-z0-9_]+$/, 'Solo lettere minuscole, numeri e _').optional(),
-  nome:                z.string().min(1).max(100).optional(),
-  cognome:             z.string().min(1).max(100).optional(),
-  codice_fiscale:      z.string().regex(/^[A-Z0-9]{16}$/, 'Codice fiscale non valido (16 caratteri alfanumerici)').nullable().optional(),
-  data_nascita:        z.string().nullable().optional(),
-  luogo_nascita:       z.string().max(100).nullable().optional(),
-  provincia_nascita:   z.string().regex(/^[A-Z]{2}$/, 'Sigla provincia non valida').nullable().optional(),
-  comune:              z.string().max(100).nullable().optional(),
-  provincia_residenza: z.string().regex(/^[A-Z]{2}$/, 'Sigla provincia non valida').nullable().optional(),
-  telefono:            z.string().max(20).nullable().optional(),
-  indirizzo:           z.string().max(200).nullable().optional(),
-  civico_residenza:    z.string().max(20).nullable().optional(),
-  tshirt_size:         z.enum(TSHIRT_SIZES).nullable().optional(),
-  sono_un_figlio_a_carico: z.boolean().optional(),
-  importo_lordo_massimale: z.number().min(1).max(5000).nullable().optional(),
-  // Admin-only payment field — stripped for responsabile_compensi below
-  intestatario_pagamento: z.string().max(100).nullable().optional(),
-  // Admin-only profile enrichment fields
-  citta:             z.string().min(1).optional(),
-  materie_insegnate: z.array(z.string().min(1)).min(1).optional(),
-});
+import { adminProfilePatchApiSchema as patchSchema } from '@/lib/schemas/api';
 
 export async function PATCH(
   request: Request,

@@ -1,30 +1,9 @@
 /**
- * Unit tests for Block 5:
- * - PATCH /api/admin/collaboratori/[id]/profile — Zod schema
- * - Province regex validation
- * - Field permission: IBAN absent from schema
+ * Unit tests: admin profile patch schema
+ * Imports the ACTUAL schema from lib/schemas/api.ts (single source of truth).
  */
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
-
-// Mirror the schema from the route
-const patchSchema = z.object({
-  username:            z.string().min(3).max(50).regex(/^[a-z0-9_]+$/).optional(),
-  nome:                z.string().min(1).max(100).optional(),
-  cognome:             z.string().min(1).max(100).optional(),
-  codice_fiscale:      z.string().regex(/^[A-Z0-9]{16}$/).nullable().optional(),
-  data_nascita:        z.string().nullable().optional(),
-  luogo_nascita:       z.string().max(100).nullable().optional(),
-  provincia_nascita:   z.string().regex(/^[A-Z]{2}$/).nullable().optional(),
-  comune:              z.string().max(100).nullable().optional(),
-  provincia_residenza: z.string().regex(/^[A-Z]{2}$/).nullable().optional(),
-  telefono:            z.string().max(20).nullable().optional(),
-  indirizzo:           z.string().max(200).nullable().optional(),
-  civico_residenza:    z.string().max(20).nullable().optional(),
-  tshirt_size:         z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']).nullable().optional(),
-  sono_un_figlio_a_carico: z.boolean().optional(),
-  importo_lordo_massimale: z.number().min(1).max(5000).nullable().optional(),
-});
+import { adminProfilePatchApiSchema as patchSchema } from '@/lib/schemas/api';
 
 describe('patchProfileSchema', () => {
   it('accepts a valid partial update', () => {
@@ -49,6 +28,9 @@ describe('patchProfileSchema', () => {
       tshirt_size: 'M',
       sono_un_figlio_a_carico: false,
       importo_lordo_massimale: 5000,
+      intestatario_pagamento: 'Mario Rossi',
+      citta: 'Roma',
+      materie_insegnate: ['Matematica'],
     });
     expect(result.success).toBe(true);
   });
@@ -90,8 +72,6 @@ describe('patchProfileSchema', () => {
   });
 
   it('IBAN is NOT part of the schema (excluded field)', () => {
-    // The schema ignores unknown keys by default in Zod (passthrough not set),
-    // but IBAN is intentionally absent — verify it's not in the schema keys
     const schemaKeys = Object.keys(patchSchema.shape);
     expect(schemaKeys).not.toContain('iban');
   });
