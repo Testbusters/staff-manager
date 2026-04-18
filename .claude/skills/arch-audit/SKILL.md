@@ -25,17 +25,22 @@ Launch a single research agent **(model: haiku)** to fetch ALL of the following 
 - https://github.com/anthropics/claude-code/releases (latest 5 releases)
 - https://docs.anthropic.com/en/docs/about-claude/models (latest model IDs and deprecation notices)
 - https://code.claude.com/docs/en/best-practices
+- https://docs.anthropic.com/en/docs/about-claude/whats-new-claude-4-7
+- https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking#recommended-effort-levels-for-claude-opus-4-7
+- https://docs.anthropic.com/en/docs/build-with-claude/task-budgets
 
 From each Claude Code source extract: new keys/features, deprecations, breaking changes, best practice updates.
 From the models page extract: current model IDs for Opus/Sonnet/Haiku, any deprecation dates announced.
+From the Opus 4.7 sources extract: new effort levels (notably `xhigh`), task budgets beta header, behavioral changes (literal instruction following, shorter responses, fewer tool calls / subagents), tokenizer changes, image resolution changes.
 From the prompting guide sources extract: principles for system prompt design, instruction clarity, context management, and what Anthropic explicitly discourages in long instruction files.
 
-**URL resilience**: if any URL returns 404, try the canonical base `https://code.claude.com/docs/en/` to locate the current path. Note in the report if a URL changed. Do not skip a topic because one URL failed — find the current equivalent page.
+**URL resilience**: if any URL returns 404, try the canonical base `https://code.claude.com/docs/en/` or `https://docs.anthropic.com/en/docs/` to locate the current path. Note in the report if a URL changed. Do not skip a topic because one URL failed — find the current equivalent page.
 
 **Expected current model IDs** (as of last research — verify against the models page):
-- Opus: `claude-opus-4-6`
+- Opus: `claude-opus-4-7`
 - Sonnet: `claude-sonnet-4-6`
 - Haiku: `claude-haiku-4-5-20251001`
+- Superseded (still functional but not the latest): `claude-opus-4-6` (use `claude-opus-4-7` for new work)
 - Deprecated: `claude-3-haiku-*` and `claude-3-5-haiku-*` (deprecation: April 19, 2026)
 
 Flag any changes to this list in the report.
@@ -211,13 +216,13 @@ Run: `wc -l CLAUDE.md | awk '{print $1}'`
 Expected: ≤ 200. Any count above 200 = WARN.
 RECOMMEND if failing: invoke P1 and P5 to identify sections to remove or convert to `@import` references. Do not auto-fix — pruning requires judgment.
 
-**C16 — Deprecated model IDs**
-Check: no SKILL.md file or `.claude/settings.json` should reference model IDs from Claude 3 family (deprecated or retiring). Deprecated as of April 19, 2026: `claude-3-haiku-*`, `claude-3-5-haiku-*`. Also check for any `claude-3-opus-*` or `claude-3-sonnet-*` references (superseded by claude-4.x family).
-Run: `grep -rn "claude-3-haiku\|claude-3-5-haiku\|claude-3-opus\|claude-3-sonnet\|claude-3-5-sonnet" .claude/skills/ .claude/settings.json`
+**C16 — Deprecated / superseded model IDs**
+Check: no SKILL.md file or `.claude/settings.json` should reference model IDs from Claude 3 family (deprecated or retiring) OR the superseded `claude-opus-4-6` (replaced by `claude-opus-4-7`). Deprecated as of April 19, 2026: `claude-3-haiku-*`, `claude-3-5-haiku-*`. Also check for any `claude-3-opus-*` or `claude-3-sonnet-*` references (superseded by claude-4.x family). Superseded: `claude-opus-4-6` (replaced by `claude-opus-4-7`).
+Run: `grep -rn "claude-3-haiku\|claude-3-5-haiku\|claude-3-opus\|claude-3-sonnet\|claude-3-5-sonnet\|claude-opus-4-6" .claude/skills/ .claude/settings.json`
 Expected: 0 matches. Any match = FAIL.
-AUTO-FIX: replace deprecated model IDs with the current equivalents:
+AUTO-FIX: replace deprecated/superseded model IDs with the current equivalents:
 - `claude-3-haiku-*` or `claude-3-5-haiku-*` → `claude-haiku-4-5-20251001`
-- `claude-3-opus-*` → `claude-opus-4-6`
+- `claude-3-opus-*` or `claude-opus-4-6` → `claude-opus-4-7`
 - `claude-3-sonnet-*` or `claude-3-5-sonnet-*` → `claude-sonnet-4-6`
 
 **C17 — `allowed-tools` frontmatter on MCP-dependent skills**
