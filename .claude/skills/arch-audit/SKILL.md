@@ -487,6 +487,11 @@ Add results to Step 6 report under:
 
 For each AUTO-FIX from Step 3, Step 3b, and Step H1: apply the change, note the file and line modified.
 
+**CRITICAL — commit + path rules (prevents branch discipline violation)**:
+- **Never run `git add`, `git commit`, or any push/merge command** during this skill. The fork must only modify files. Commit discipline is the main session's responsibility — staging commits happen on the dedicated worktree branch per Phase 8, never directly on `staging` or `main`.
+- **All file paths in Edit/Write tool calls must be relative to the current working directory** (the worktree root when invoked from a worktree). Never use absolute `~/Projects/staff-manager/...` or `/Users/MarcoG/Projects/staff-manager/...` paths — those resolve to the main repo and bypass the worktree, breaking the branch isolation hard rule.
+- If in doubt about the CWD, run `pwd` first and confirm the path contains `.claude/worktrees/` before applying any Edit.
+
 ## Step 5 — Update timestamp
 
 ```bash
