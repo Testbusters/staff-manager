@@ -25,7 +25,7 @@ export default async function OnboardingPage() {
 
   const { data: collab } = await admin
     .from('collaborators')
-    .select('id, nome, cognome, username, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, telefono, iban, intestatario_pagamento, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, citta, tipo_contratto')
+    .select('id, nome, cognome, username, codice_fiscale, data_nascita, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, telefono, iban, intestatario_pagamento, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, citta, tipo_contratto, numero_documento_identita, tipo_documento_identita, scadenza_documento_identita')
     .eq('user_id', user.id)
     .maybeSingle();
 

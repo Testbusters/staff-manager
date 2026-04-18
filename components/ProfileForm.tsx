@@ -2,21 +2,31 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Controller } from 'react-hook-form';
-import { Check, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Check, AlertTriangle, ChevronDown, Info } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS, TSHIRT_SIZES } from '@/lib/types';
 import type { Role } from '@/lib/types';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useForm, zodResolver } from '@/components/ui/form';
-import { profileFormSchema, type ProfileFormValues } from '@/lib/schemas/collaborator';
+import {
+  profileFormSchema,
+  type ProfileFormValues,
+  TIPO_DOCUMENTO_IDENTITA,
+  REGIME_ALIMENTARE,
+  TIPO_DOCUMENTO_LABELS,
+  REGIME_ALIMENTARE_LABELS,
+  REGIME_ALIMENTARE_DEFAULT,
+} from '@/lib/schemas/collaborator';
 
 type Collaborator = {
   nome: string;
@@ -41,6 +51,19 @@ type Collaborator = {
   importo_lordo_massimale: number | null;
   citta: string | null;
   materie_insegnate: string[] | null;
+  numero_documento_identita: string | null;
+  tipo_documento_identita: (typeof TIPO_DOCUMENTO_IDENTITA)[number] | null;
+  scadenza_documento_identita: string | null;
+  ha_allergie_alimentari: boolean;
+  allergie_note: string | null;
+  regime_alimentare: (typeof REGIME_ALIMENTARE)[number];
+  spedizione_usa_residenza: boolean;
+  spedizione_indirizzo: string | null;
+  spedizione_civico: string | null;
+  spedizione_cap: string | null;
+  spedizione_citta: string | null;
+  spedizione_provincia: string | null;
+  spedizione_nazione: string;
 };
 
 type GuideContent = { titolo: string; descrizione: string | null } | null;
@@ -158,11 +181,27 @@ export default function ProfileForm({ collaborator, role, email, community, comm
       importo_lordo_massimale: collaborator?.importo_lordo_massimale != null ? String(collaborator.importo_lordo_massimale) : '',
       citta: collaborator?.citta ?? '',
       materie_insegnate: collaborator?.materie_insegnate ?? [],
+      numero_documento_identita:   collaborator?.numero_documento_identita ?? '',
+      tipo_documento_identita:     collaborator?.tipo_documento_identita ?? '',
+      scadenza_documento_identita: collaborator?.scadenza_documento_identita ?? '',
+      ha_allergie_alimentari:      collaborator?.ha_allergie_alimentari ?? false,
+      allergie_note:               collaborator?.allergie_note ?? '',
+      regime_alimentare:           collaborator?.regime_alimentare ?? REGIME_ALIMENTARE_DEFAULT,
+      spedizione_usa_residenza:    collaborator?.spedizione_usa_residenza ?? true,
+      spedizione_indirizzo:        collaborator?.spedizione_indirizzo ?? '',
+      spedizione_civico:           collaborator?.spedizione_civico ?? '',
+      spedizione_cap:              collaborator?.spedizione_cap ?? '',
+      spedizione_citta:            collaborator?.spedizione_citta ?? '',
+      spedizione_provincia:        collaborator?.spedizione_provincia ?? '',
+      spedizione_nazione:          collaborator?.spedizione_nazione ?? 'IT',
+      consenso_dati_salute:        false,
     },
   });
 
   const { isDirty, isSubmitting } = form.formState;
   const sonoFiglio = form.watch('sono_un_figlio_a_carico');
+  const haAllergie = form.watch('ha_allergie_alimentari');
+  const usaResidenza = form.watch('spedizione_usa_residenza');
 
   const [showGuida, setShowGuida] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(collaborator?.foto_profilo_url ?? '');
@@ -205,6 +244,20 @@ export default function ProfileForm({ collaborator, role, email, community, comm
         importo_lordo_massimale:   values.importo_lordo_massimale !== '' ? parseFloat(values.importo_lordo_massimale) : null,
         citta:                     values.citta,
         materie_insegnate:         values.materie_insegnate,
+        numero_documento_identita:   values.numero_documento_identita.trim() || null,
+        tipo_documento_identita:     values.tipo_documento_identita || null,
+        scadenza_documento_identita: values.scadenza_documento_identita || null,
+        ha_allergie_alimentari:      values.ha_allergie_alimentari,
+        allergie_note:               values.ha_allergie_alimentari ? (values.allergie_note.trim() || null) : null,
+        regime_alimentare:           values.regime_alimentare,
+        spedizione_usa_residenza:    values.spedizione_usa_residenza,
+        spedizione_indirizzo:        values.spedizione_usa_residenza ? null : (values.spedizione_indirizzo.trim() || null),
+        spedizione_civico:           values.spedizione_usa_residenza ? null : (values.spedizione_civico.trim() || null),
+        spedizione_cap:              values.spedizione_usa_residenza ? null : (values.spedizione_cap.trim() || null),
+        spedizione_citta:            values.spedizione_usa_residenza ? null : (values.spedizione_citta.trim() || null),
+        spedizione_provincia:        values.spedizione_usa_residenza ? null : (values.spedizione_provincia.trim().toUpperCase() || null),
+        spedizione_nazione:          values.spedizione_nazione || 'IT',
+        consenso_dati_salute:        values.ha_allergie_alimentari ? values.consenso_dati_salute : false,
       }),
     });
 
@@ -449,6 +502,239 @@ export default function ProfileForm({ collaborator, role, email, community, comm
               </FormItem>
             )} />
           </div>
+      </Section>
+
+      <Section title="Documento identità" subtitle="Servirà per firmare i contratti e per le trasferte." defaultOpen={false}>
+        <FormField control={form.control} name="tipo_documento_identita" render={({ field }) => (
+          <FormItem>
+            <FormLabel className={labelCls}>Tipo documento</FormLabel>
+            <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isSubmitting}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="— Seleziona —" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {TIPO_DOCUMENTO_IDENTITA.map((t) => (
+                  <SelectItem key={t} value={t}>{TIPO_DOCUMENTO_LABELS[t]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField control={form.control} name="numero_documento_identita" render={({ field }) => (
+            <FormItem>
+              <FormLabel className={labelCls}>Numero documento</FormLabel>
+              <FormControl>
+                <Input placeholder="AX1234567" {...field} disabled={isSubmitting} maxLength={50} className="font-mono" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="scadenza_documento_identita" render={() => (
+            <FormItem>
+              <FormLabel className={labelCls}>Scadenza</FormLabel>
+              <Controller
+                control={form.control}
+                name="scadenza_documento_identita"
+                render={({ field: { value, onChange } }) => (
+                  <DatePicker
+                    value={value}
+                    onChange={onChange}
+                    disabled={isSubmitting}
+                    captionLayout="dropdown"
+                    fromYear={new Date().getFullYear()}
+                    toYear={new Date().getFullYear() + 20}
+                  />
+                )}
+              />
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+      </Section>
+
+      <Section title="Alimentazione" subtitle="Per l'organizzazione di pranzi e cene durante le trasferte." defaultOpen={false}>
+        <FormField control={form.control} name="regime_alimentare" render={({ field }) => (
+          <FormItem>
+            <FormLabel className={labelCls}>Regime alimentare</FormLabel>
+            <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {REGIME_ALIMENTARE.map((r) => (
+                  <SelectItem key={r} value={r}>{REGIME_ALIMENTARE_LABELS[r]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        <FormField control={form.control} name="ha_allergie_alimentari" render={({ field }) => (
+          <FormItem>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={(v) => field.onChange(!!v)}
+                disabled={isSubmitting}
+                className="mt-0.5 flex-shrink-0"
+              />
+              <div>
+                <span className="text-sm text-foreground">Ho allergie o intolleranze alimentari</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Selezionando questa voce ci autorizzi a trattare dati sulla tua salute (Art. 9 GDPR).
+                </p>
+              </div>
+            </label>
+          </FormItem>
+        )} />
+
+        {haAllergie && (
+          <>
+            <Alert variant="info">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Trattamento dati sanitari</AlertTitle>
+              <AlertDescription>
+                Le allergie sono classificate come &quot;dati particolari&quot; (Art. 9 GDPR). Conserveremo queste informazioni
+                solo per organizzare i pasti durante le trasferte. Puoi revocare il consenso in qualsiasi momento
+                deselezionando la casella sopra.
+              </AlertDescription>
+            </Alert>
+
+            <FormField control={form.control} name="allergie_note" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>
+                  Descrizione allergie/intolleranze <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="es. Lattosio, frutta a guscio, glutine…"
+                    {...field}
+                    disabled={isSubmitting}
+                    maxLength={500}
+                    rows={3}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="consenso_dati_salute" render={({ field }) => (
+              <FormItem>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={!!field.value}
+                    onCheckedChange={(v) => field.onChange(!!v)}
+                    disabled={isSubmitting}
+                    className="mt-0.5 flex-shrink-0"
+                  />
+                  <span className="text-sm text-foreground">
+                    Acconsento al trattamento dei dati sulla salute ai sensi dell&apos;Art. 9 GDPR
+                    <span className="text-destructive ml-1">*</span>
+                  </span>
+                </label>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </>
+        )}
+      </Section>
+
+      <Section title="Indirizzo di spedizione" subtitle="Dove spedire t-shirt, gadget e materiale." defaultOpen={false}>
+        <FormField control={form.control} name="spedizione_usa_residenza" render={({ field }) => (
+          <FormItem>
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <div className="min-w-0">
+                <span className="text-sm text-foreground">Usa lo stesso indirizzo della residenza</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Disattiva per specificare un indirizzo diverso.
+                </p>
+              </div>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                disabled={isSubmitting}
+              />
+            </label>
+          </FormItem>
+        )} />
+
+        {!usaResidenza && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FormField control={form.control} name="spedizione_indirizzo" render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel className={labelCls}>Via/Piazza <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Via Roma" {...field} disabled={isSubmitting} maxLength={200} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="spedizione_civico" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={labelCls}>Civico <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="1" {...field} disabled={isSubmitting} maxLength={20} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FormField control={form.control} name="spedizione_cap" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={labelCls}>CAP <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="20100" {...field} disabled={isSubmitting} maxLength={10} className="font-mono" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="spedizione_citta" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={labelCls}>Città <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Milano" {...field} disabled={isSubmitting} maxLength={100} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="spedizione_provincia" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={labelCls}>Provincia <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="MI"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      disabled={isSubmitting}
+                      maxLength={2}
+                      className="font-mono uppercase"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="spedizione_nazione" render={({ field }) => (
+              <FormItem>
+                <FormLabel className={labelCls}>Nazione</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled readOnly maxLength={2} className="font-mono uppercase" />
+                </FormControl>
+                <p className="text-xs text-muted-foreground mt-1">Attualmente gestiamo spedizioni solo in Italia.</p>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </>
+        )}
       </Section>
 
       <Section title="Contatti">
