@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { z } from 'zod';
-import { EXPENSE_CATEGORIES, ROLE_LABELS } from '@/lib/types';
+import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
 import { buildExpenseSubmitNotification } from '@/lib/notification-utils';
 import {
@@ -13,13 +12,7 @@ import {
 import { sendEmail } from '@/lib/email';
 import { emailNuovoInviato } from '@/lib/email-templates';
 import { MAX_PENDING_EXPENSES } from '@/lib/rate-limits';
-
-const createSchema = z.object({
-  categoria: z.enum(EXPENSE_CATEGORIES),
-  data_spesa: z.string().min(1, 'Data spesa obbligatoria'),
-  importo: z.number().positive('Importo deve essere positivo'),
-  descrizione: z.string().optional(),
-});
+import { expenseCreateApiSchema as createSchema } from '@/lib/schemas/api';
 
 export async function GET(request: Request) {
   const supabase = await createClient();

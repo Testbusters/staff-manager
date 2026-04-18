@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { z } from 'zod';
 import { canTransition, applyTransition } from '@/lib/compensation-transitions';
 import { getYtd, isOverMassimale } from '@/lib/massimale';
 import type { CompensationAction } from '@/lib/compensation-transitions';
@@ -21,18 +20,7 @@ import {
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { isValidUUID } from '@/lib/validate-id';
-
-const transitionSchema = z.object({
-  action: z.enum([
-    'reopen',
-    'approve',
-    'reject',
-    'mark_liquidated',
-    'revert_to_pending',
-  ]),
-  note: z.string().optional(),
-  payment_reference: z.string().optional(),
-});
+import { compensationTransitionApiSchema as transitionSchema } from '@/lib/schemas/api';
 
 export async function POST(
   request: Request,

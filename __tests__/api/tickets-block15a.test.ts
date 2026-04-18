@@ -2,16 +2,15 @@
  * Block 15a — Ticket system overhaul
  *
  * Unit tests covering:
- * - VALID_STATI whitelist for status PATCH route
+ * - VALID_TICKET_STATI: imported from lib/schemas/api.ts (single source of truth)
  * - buildTicketReplyNotification: correct fields for collaboratore
  * - buildTicketCollabReplyNotification: correct fields for responsabile
  * - buildTicketStatusNotification: all 3 stato transitions
  * - buildTicketCreatedNotification: fields for new ticket
- * - Message validation: empty/whitespace-only message rejected
- * - Business rule: CHIUSO ticket blocks reply
+ * - Message validation: behavior contract (route validates inline via ?.trim())
  */
 import { describe, it, expect } from 'vitest';
-import type { TicketStatus } from '@/lib/types';
+import { VALID_TICKET_STATI } from '@/lib/schemas/api';
 import {
   buildTicketReplyNotification,
   buildTicketCollabReplyNotification,
@@ -19,79 +18,48 @@ import {
   buildTicketCreatedNotification,
 } from '@/lib/notification-utils';
 
-// ── VALID_STATI ─────────────────────────────────────────────────
+// ── VALID_TICKET_STATI (imported — not a local copy) ──────────────
 
-const VALID_STATI: TicketStatus[] = ['APERTO', 'IN_LAVORAZIONE', 'CHIUSO'];
-
-describe('VALID_STATI', () => {
-  it('accepts APERTO', () => {
-    expect(VALID_STATI.includes('APERTO')).toBe(true);
+describe('VALID_TICKET_STATI', () => {
+  it('includes APERTO', () => {
+    expect(VALID_TICKET_STATI).toContain('APERTO');
   });
 
-  it('accepts IN_LAVORAZIONE', () => {
-    expect(VALID_STATI.includes('IN_LAVORAZIONE')).toBe(true);
+  it('includes IN_LAVORAZIONE', () => {
+    expect(VALID_TICKET_STATI).toContain('IN_LAVORAZIONE');
   });
 
-  it('accepts CHIUSO', () => {
-    expect(VALID_STATI.includes('CHIUSO')).toBe(true);
+  it('includes CHIUSO', () => {
+    expect(VALID_TICKET_STATI).toContain('CHIUSO');
   });
 
   it('rejects an invalid value', () => {
-    // Simulate the route guard
-    const stato = 'PENDENTE' as TicketStatus;
-    expect(VALID_STATI.includes(stato)).toBe(false);
+    expect(VALID_TICKET_STATI).not.toContain('PENDENTE');
   });
 
   it('has exactly 3 values', () => {
-    expect(VALID_STATI).toHaveLength(3);
+    expect(VALID_TICKET_STATI).toHaveLength(3);
   });
 });
 
-// ── Message validation ──────────────────────────────────────────
+// ── Message validation (behavior contract — route uses inline ?.trim()) ───
 
-describe('message validation (route guard logic)', () => {
-  function isValidMessage(raw: unknown): boolean {
-    if (typeof raw !== 'string') return false;
-    return raw.trim().length > 0;
-  }
-
-  it('accepts a non-empty string', () => {
-    expect(isValidMessage('Ciao, ho un problema.')).toBe(true);
+describe('message validation (behavior contract)', () => {
+  // The ticket messages route validates with: (formData.get('message') as string | null)?.trim()
+  // Then checks if (!rawMessage) return 400. These tests document the expected behavior.
+  it('non-empty trimmed string is valid', () => {
+    const raw = 'Ciao, ho un problema.';
+    expect(raw.trim().length > 0).toBe(true);
   });
 
-  it('rejects empty string', () => {
-    expect(isValidMessage('')).toBe(false);
+  it('empty string is invalid', () => {
+    const raw = '';
+    expect(raw.trim().length > 0).toBe(false);
   });
 
-  it('rejects whitespace-only string', () => {
-    expect(isValidMessage('   \n\t  ')).toBe(false);
-  });
-
-  it('rejects null', () => {
-    expect(isValidMessage(null)).toBe(false);
-  });
-
-  it('rejects undefined', () => {
-    expect(isValidMessage(undefined)).toBe(false);
-  });
-});
-
-// ── Closed ticket guard ─────────────────────────────────────────
-
-describe('CHIUSO ticket blocks reply (route business rule)', () => {
-  it('CHIUSO stato triggers rejection', () => {
-    const ticketStato = 'CHIUSO' as TicketStatus;
-    expect(ticketStato === 'CHIUSO').toBe(true);
-  });
-
-  it('APERTO stato does not block reply', () => {
-    const ticketStato = 'APERTO' as TicketStatus;
-    expect(ticketStato === 'CHIUSO').toBe(false);
-  });
-
-  it('IN_LAVORAZIONE stato does not block reply', () => {
-    const ticketStato = 'IN_LAVORAZIONE' as TicketStatus;
-    expect(ticketStato === 'CHIUSO').toBe(false);
+  it('whitespace-only string is invalid', () => {
+    const raw = '   \n\t  ';
+    expect(raw.trim().length > 0).toBe(false);
   });
 });
 
