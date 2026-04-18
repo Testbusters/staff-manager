@@ -63,6 +63,16 @@ export async function PATCH(
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
 
+  if (parsed.data.ha_allergie_alimentari === true) {
+    const note = parsed.data.allergie_note;
+    if (!note || note.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Descrizione allergie obbligatoria quando si attiva il flag' },
+        { status: 400 },
+      );
+    }
+  }
+
   const { username, intestatario_pagamento, citta, materie_insegnate, ...profileFields } = parsed.data;
   // Stripped for responsabile_compensi
   const adminOnly: Record<string, unknown> = {};

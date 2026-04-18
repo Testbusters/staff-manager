@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       .eq('id', existingCollab.id);
     if (updateErr) {
       console.error('[onboarding/complete] collaborator update failed:', updateErr);
-      return NextResponse.json({ error: 'Errore salvataggio dati', details: updateErr.message }, { status: 500 });
+      return NextResponse.json({ error: 'Errore salvataggio dati' }, { status: 500 });
     }
     collaboratorId = existingCollab.id;
     tipoContratto = existingCollab.tipo_contratto;
