@@ -2,6 +2,15 @@ import { describe, it, expect } from 'vitest';
 import {
   buildCompensationNotification,
   buildExpenseNotification,
+  buildTicketReplyNotification,
+  buildCompensationSubmitNotification,
+  buildExpenseSubmitNotification,
+  buildTicketCreatedNotification,
+  buildTicketCollabReplyNotification,
+  buildCompensationReopenNotification,
+  buildContentNotification,
+  buildTicketStatusNotification,
+  buildLiquidazioneRequestNotification,
   COMPENSATION_NOTIFIED_ACTIONS,
   EXPENSE_NOTIFIED_ACTIONS,
 } from '@/lib/notification-utils';
@@ -81,5 +90,109 @@ describe('NOTIFIED_ACTIONS constants', () => {
     expect(EXPENSE_NOTIFIED_ACTIONS).toContain('mark_liquidated');
     expect(EXPENSE_NOTIFIED_ACTIONS).toContain('revert_to_pending');
     expect(EXPENSE_NOTIFIED_ACTIONS).toHaveLength(4);
+  });
+});
+
+// ── Additional build* functions ─────────────────────────────────────────────
+
+describe('buildTicketReplyNotification', () => {
+  it('returns correct payload', () => {
+    const n = buildTicketReplyNotification(USER_ID, ENTITY_ID, 'Problema compenso');
+    expect(n.user_id).toBe(USER_ID);
+    expect(n.entity_type).toBe('ticket');
+    expect(n.entity_id).toBe(ENTITY_ID);
+    expect(n.titolo).toBeTruthy();
+  });
+});
+
+describe('buildCompensationSubmitNotification', () => {
+  it('returns correct payload for responsabile', () => {
+    const n = buildCompensationSubmitNotification(USER_ID, ENTITY_ID);
+    expect(n.user_id).toBe(USER_ID);
+    expect(n.entity_type).toBe('compensation');
+    expect(n.entity_id).toBe(ENTITY_ID);
+  });
+});
+
+describe('buildExpenseSubmitNotification', () => {
+  it('returns correct payload for responsabile', () => {
+    const n = buildExpenseSubmitNotification(USER_ID, ENTITY_ID);
+    expect(n.user_id).toBe(USER_ID);
+    expect(n.entity_type).toBe('reimbursement');
+  });
+});
+
+describe('buildTicketCreatedNotification', () => {
+  it('returns correct payload', () => {
+    const n = buildTicketCreatedNotification(USER_ID, ENTITY_ID, 'Problema accesso');
+    expect(n.entity_type).toBe('ticket');
+    expect(n.titolo).toBeTruthy();
+  });
+});
+
+describe('buildTicketCollabReplyNotification', () => {
+  it('returns correct payload', () => {
+    const n = buildTicketCollabReplyNotification(USER_ID, ENTITY_ID, 'Oggetto test');
+    expect(n.entity_type).toBe('ticket');
+  });
+});
+
+describe('buildCompensationReopenNotification', () => {
+  it('returns correct payload', () => {
+    const n = buildCompensationReopenNotification(USER_ID, ENTITY_ID);
+    expect(n.entity_type).toBe('compensation');
+    expect(n.user_id).toBe(USER_ID);
+  });
+});
+
+describe('buildContentNotification', () => {
+  const types = ['communication', 'event', 'opportunity', 'discount'] as const;
+  for (const t of types) {
+    it(`returns correct payload for ${t}`, () => {
+      const n = buildContentNotification(USER_ID, t, ENTITY_ID, 'Titolo contenuto');
+      expect(n.user_id).toBe(USER_ID);
+      expect(n.entity_type).toBe(t);
+      expect(n.entity_id).toBe(ENTITY_ID);
+      expect(n.titolo).toBeTruthy();
+    });
+  }
+});
+
+describe('buildTicketStatusNotification', () => {
+  it('returns correct payload with stato in message', () => {
+    const n = buildTicketStatusNotification(USER_ID, ENTITY_ID, 'CHIUSO');
+    expect(n.entity_type).toBe('ticket');
+    expect(n.messaggio.toLowerCase()).toContain('chiuso');
+  });
+});
+
+describe('buildLiquidazioneRequestNotification', () => {
+  it('handles created action', () => {
+    const n = buildLiquidazioneRequestNotification('created', USER_ID, ENTITY_ID, 500);
+    expect(n.entity_type).toBe('liquidazione_request');
+    expect(n.user_id).toBe(USER_ID);
+  });
+
+  it('handles accettata action', () => {
+    const n = buildLiquidazioneRequestNotification('accettata', USER_ID, ENTITY_ID, 500);
+    expect(n.entity_type).toBe('liquidazione_request');
+  });
+
+  it('handles annullata action with nota', () => {
+    const n = buildLiquidazioneRequestNotification('annullata', USER_ID, ENTITY_ID, 500, 'Motivo');
+    expect(n.entity_type).toBe('liquidazione_request');
+  });
+});
+
+describe('compensation revert_to_pending', () => {
+  it('returns correct payload', () => {
+    const n = buildCompensationNotification('revert_to_pending', USER_ID, ENTITY_ID);
+    expect(n.entity_type).toBe('compensation');
+    expect(n.tipo).toBeTruthy();
+  });
+
+  it('includes note when provided', () => {
+    const n = buildCompensationNotification('revert_to_pending', USER_ID, ENTITY_ID, 'Da rivedere');
+    expect(n.messaggio).toContain('Da rivedere');
   });
 });
