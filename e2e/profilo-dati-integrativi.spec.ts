@@ -39,7 +39,7 @@ test.describe.serial('Profilo dati integrativi UAT', () => {
     await expect(page.getByRole('heading', { name: 'Alimentazione' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Indirizzo di spedizione' })).toBeVisible();
 
-    const tipoDocTrigger = page.getByRole('heading', { name: 'Documento identità' }).locator('xpath=ancestor::*[@role="button"][1]');
+    const tipoDocTrigger = page.getByRole('heading', { name: 'Documento identità' }).locator('xpath=ancestor::button[1]');
     await tipoDocTrigger.click();
     await expect(page.getByText('Tipo documento')).toBeVisible();
     await expect(page.getByText('Numero documento')).toBeVisible();
@@ -51,7 +51,7 @@ test.describe.serial('Profilo dati integrativi UAT', () => {
     await page.goto('/profilo');
     await page.waitForLoadState('domcontentloaded');
 
-    const alimTrigger = page.getByRole('heading', { name: 'Alimentazione' }).locator('xpath=ancestor::*[@role="button"][1]');
+    const alimTrigger = page.getByRole('heading', { name: 'Alimentazione' }).locator('xpath=ancestor::button[1]');
     await alimTrigger.click();
 
     const allergieLabel = page.locator('label', { hasText: 'Ho allergie o intolleranze alimentari' });
@@ -73,7 +73,7 @@ test.describe.serial('Profilo dati integrativi UAT', () => {
     await page.goto('/profilo');
     await page.waitForLoadState('domcontentloaded');
 
-    const alimTrigger = page.getByRole('heading', { name: 'Alimentazione' }).locator('xpath=ancestor::*[@role="button"][1]');
+    const alimTrigger = page.getByRole('heading', { name: 'Alimentazione' }).locator('xpath=ancestor::button[1]');
     await alimTrigger.click();
 
     const regimeTrigger = page.locator('button[role="combobox"]').filter({ hasText: /Onnivoro|Vegetariano|Vegano/ }).first();
@@ -97,7 +97,7 @@ test.describe.serial('Profilo dati integrativi UAT', () => {
     await page.goto('/profilo');
     await page.waitForLoadState('domcontentloaded');
 
-    const spedTrigger = page.getByRole('heading', { name: 'Indirizzo di spedizione' }).locator('xpath=ancestor::*[@role="button"][1]');
+    const spedTrigger = page.getByRole('heading', { name: 'Indirizzo di spedizione' }).locator('xpath=ancestor::button[1]');
     await spedTrigger.click();
 
     const switchLabel = page.locator('label', { hasText: 'Usa lo stesso indirizzo della residenza' });
