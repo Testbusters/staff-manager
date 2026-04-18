@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev -- --port 3001',
     url: 'http://localhost:3001',
-    reuseExistingServer: false, // always spin up a dedicated test server on port 3001
+    reuseExistingServer: true, // reuse server started from main repo (worktree Turbopack path issue)
     timeout: 60_000,
   },
 });
