@@ -8,6 +8,7 @@ const ACCOUNTS: Record<string, { email: string; password: string }> = {
   collaboratore_tb: { email: 'collaboratore_tb_test@test.com', password: 'Testbusters123' },
   collaboratore_p4m: { email: 'collaboratore_p4m_test@test.com', password: 'Testbusters123' },
   responsabile_compensi: { email: 'responsabile_compensi_test@test.com', password: 'Testbusters123' },
+  responsabile_cittadino: { email: 'responsabile_cittadino_test@test.com', password: 'Testbusters123' },
   admin: { email: 'admin_test@test.com', password: 'Testbusters123' },
 };
 
