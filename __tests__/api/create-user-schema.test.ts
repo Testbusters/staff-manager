@@ -1,23 +1,9 @@
 /**
  * Unit test: Zod schema validation for POST /api/admin/create-user
- * Verifies new schema after admin-invite-gaps block:
- * - role removed (hardcoded to collaboratore)
- * - community_id required UUID
- * - tipo_contratto accepts OCCASIONALE and OCCASIONALE_P4M
- * - citta required
- * - salta_firma optional boolean
+ * Imports the ACTUAL schema from lib/schemas/api.ts (single source of truth).
  */
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
-
-// Mirror the schema from the route (without the server context)
-const schema = z.object({
-  email: z.string().email(),
-  community_id: z.string().uuid(),
-  tipo_contratto: z.enum(['OCCASIONALE', 'OCCASIONALE_P4M']),
-  citta: z.string().min(1),
-  salta_firma: z.boolean().optional(),
-});
+import { createUserApiSchema as schema } from '@/lib/schemas/api';
 
 const VALID_UUID = 'a1b2c3d4-e5f6-4789-a012-a3b4c5d6e7f8';
 

@@ -1,20 +1,10 @@
 /**
- * Unit tests for Block 6:
- * - POST /api/expenses Zod schema (descrizione optional, new categories)
- * - EXPENSE_CATEGORIES updated list
- * - TICKET_CATEGORIES updated list
+ * Unit tests: expense create schema + category constants
+ * Imports the ACTUAL schema from lib/schemas/api.ts (single source of truth).
  */
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
+import { expenseCreateApiSchema as createSchema } from '@/lib/schemas/api';
 import { EXPENSE_CATEGORIES, TICKET_CATEGORIES } from '@/lib/types';
-
-// Mirror the schema from the route
-const createSchema = z.object({
-  categoria: z.enum(EXPENSE_CATEGORIES),
-  data_spesa: z.string().min(1),
-  importo: z.number().positive(),
-  descrizione: z.string().optional(),
-});
 
 describe('expenseCreateSchema', () => {
   it('accepts valid payload without descrizione', () => {

@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { z } from 'zod';
 import { ROLE_LABELS } from '@/lib/types';
 import type { Role } from '@/lib/types';
-
-const bodySchema = z.object({
-  community_id: z.string().uuid(),
-});
+import { approveAllApiSchema as bodySchema } from '@/lib/schemas/api';
 
 export async function POST(request: Request) {
   const supabase = await createClient();

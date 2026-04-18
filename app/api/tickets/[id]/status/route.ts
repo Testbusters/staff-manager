@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import type { TicketStatus } from '@/lib/types';
 import { buildTicketStatusNotification } from '@/lib/notification-utils';
 import { getNotificationSettings } from '@/lib/notification-helpers';
 import { isValidUUID } from '@/lib/validate-id';
 import { ticketStatusSchema } from '@/lib/schemas/ticket';
-
-const VALID_STATI: TicketStatus[] = ['APERTO', 'IN_LAVORAZIONE', 'CHIUSO'];
+import { VALID_TICKET_STATI as VALID_STATI } from '@/lib/schemas/api';
 
 export async function PATCH(
   request: Request,

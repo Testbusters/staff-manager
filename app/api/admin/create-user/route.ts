@@ -2,38 +2,12 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { z } from 'zod';
 import { sendEmail } from '@/lib/email';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { generateUsername, generateUniqueUsername } from '@/lib/username';
 import { generatePassword } from '@/lib/password';
 import { MAX_USERS_PER_HOUR } from '@/lib/rate-limits';
-
-const schema = z.object({
-  email: z.string().email(),
-  community_id: z.string().uuid(),
-  tipo_contratto: z.enum(['OCCASIONALE', 'OCCASIONALE_P4M']),
-  citta: z.string().min(1),
-  salta_firma: z.boolean().optional(),
-  // Anagrafica (opzionale — pre-fill per l'onboarding)
-  username:            z.string().min(3).max(50).regex(/^[a-z0-9_]+$/, 'Solo lettere minuscole, numeri e _').optional(),
-  nome:                z.string().min(1).max(100).optional(),
-  cognome:             z.string().min(1).max(100).optional(),
-  codice_fiscale:      z.string().max(16).nullable().optional(),
-  data_nascita:        z.string().nullable().optional(),
-  luogo_nascita:       z.string().max(100).nullable().optional(),
-  provincia_nascita:   z.string().max(10).nullable().optional(),
-  comune:              z.string().max(100).nullable().optional(),
-  provincia_residenza: z.string().max(10).nullable().optional(),
-  indirizzo:           z.string().max(200).nullable().optional(),
-  civico_residenza:    z.string().max(20).nullable().optional(),
-  telefono:            z.string().max(20).nullable().optional(),
-  intestatario_pagamento: z.string().max(100).nullable().optional(),
-  data_ingresso:            z.string().min(1, 'Obbligatoria').optional(),
-  data_fine_contratto:      z.string().nullable().optional(),
-  sono_un_figlio_a_carico:  z.boolean().optional(),
-  importo_lordo_massimale:  z.number().min(0).max(5000).nullable().optional(),
-});
+import { createUserApiSchema as schema } from '@/lib/schemas/api';
 
 
 export async function POST(request: Request) {
