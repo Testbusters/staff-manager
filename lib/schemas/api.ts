@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { EXPENSE_CATEGORIES, TSHIRT_SIZES } from '@/lib/types';
+import { TIPO_DOCUMENTO_IDENTITA, REGIME_ALIMENTARE } from '@/lib/schemas/collaborator';
 
 // ── POST /api/admin/create-user ─────────────────────────────────────────────
 export const createUserApiSchema = z.object({
@@ -13,7 +14,6 @@ export const createUserApiSchema = z.object({
   tipo_contratto: z.enum(['OCCASIONALE', 'OCCASIONALE_P4M']),
   citta: z.string().min(1),
   salta_firma: z.boolean().optional(),
-  // Anagrafica (optional — pre-fill for onboarding)
   username:            z.string().min(3).max(50).regex(/^[a-z0-9_]+$/, 'Solo lettere minuscole, numeri e _').optional(),
   nome:                z.string().min(1).max(100).optional(),
   cognome:             z.string().min(1).max(100).optional(),
@@ -31,6 +31,9 @@ export const createUserApiSchema = z.object({
   data_fine_contratto:      z.string().nullable().optional(),
   sono_un_figlio_a_carico:  z.boolean().optional(),
   importo_lordo_massimale:  z.number().min(0).max(5000).nullable().optional(),
+  numero_documento_identita:   z.string().max(50).nullable().optional(),
+  tipo_documento_identita:     z.enum(TIPO_DOCUMENTO_IDENTITA).nullable().optional(),
+  scadenza_documento_identita: z.string().nullable().optional(),
 });
 
 // ── POST /api/expenses ──────────────────────────────────────────────────────
@@ -61,6 +64,19 @@ export const adminProfilePatchApiSchema = z.object({
   intestatario_pagamento: z.string().max(100).nullable().optional(),
   citta:             z.string().min(1).optional(),
   materie_insegnate: z.array(z.string().min(1)).min(1).optional(),
+  numero_documento_identita:   z.string().max(50).nullable().optional(),
+  tipo_documento_identita:     z.enum(TIPO_DOCUMENTO_IDENTITA).nullable().optional(),
+  scadenza_documento_identita: z.string().nullable().optional(),
+  ha_allergie_alimentari:      z.boolean().optional(),
+  allergie_note:               z.string().max(500).nullable().optional(),
+  regime_alimentare:           z.enum(REGIME_ALIMENTARE).optional(),
+  spedizione_usa_residenza:    z.boolean().optional(),
+  spedizione_indirizzo:        z.string().max(200).nullable().optional(),
+  spedizione_civico:           z.string().max(20).nullable().optional(),
+  spedizione_cap:              z.string().max(10).nullable().optional(),
+  spedizione_citta:            z.string().max(100).nullable().optional(),
+  spedizione_provincia:        z.string().max(10).nullable().optional(),
+  spedizione_nazione:          z.string().max(2).optional(),
 });
 
 // ── POST /api/compensations/[id]/transition ─────────────────────────────────

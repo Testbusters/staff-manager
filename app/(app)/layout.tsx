@@ -11,6 +11,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeSync } from '@/components/ThemeSync';
 import { SessionGuard } from '@/components/SessionGuard';
 import { Toaster } from '@/components/ui/sonner';
+import ProfileBackfillToast from '@/components/profile/ProfileBackfillToast';
 import { NAV_BY_ROLE } from '@/lib/nav';
 import type { Role } from '@/lib/types';
 
@@ -18,7 +19,7 @@ const getSessionProfile = cache(async (userId: string) => {
   const supabase = await createClient();
   return supabase
     .from('user_profiles')
-    .select('role, is_active, member_status, theme_preference')
+    .select('role, is_active, member_status, theme_preference, onboarding_completed')
     .eq('user_id', userId)
     .single();
 });
@@ -27,7 +28,7 @@ const getSessionCollaborator = cache(async (userId: string) => {
   const supabase = await createClient();
   return supabase
     .from('collaborators')
-    .select('id, nome, cognome, foto_profilo_url')
+    .select('id, nome, cognome, foto_profilo_url, tipo_documento_identita')
     .eq('user_id', userId)
     .single();
 });
@@ -45,6 +46,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!profile || !profile.is_active) redirect('/pending');
 
   const { data: collaborator } = await getSessionCollaborator(user.id);
+
+  const needsProfileBackfill =
+    profile.role === 'collaboratore' &&
+    profile.onboarding_completed === true &&
+    collaborator?.tipo_documento_identita == null;
 
   const role = profile.role as Role;
   const navItems = NAV_BY_ROLE[role];
@@ -128,6 +134,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </SidebarProvider>
       <Toaster position="bottom-right" richColors toastOptions={{ duration: 3000 }} />
+      <ProfileBackfillToast needsBackfill={needsProfileBackfill} />
     </>
   );
 }

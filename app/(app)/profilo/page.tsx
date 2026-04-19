@@ -36,6 +36,10 @@ export default async function ProfiloPage({
         telefono, indirizzo, civico_residenza, iban, intestatario_pagamento, tshirt_size,
         foto_profilo_url, sono_un_figlio_a_carico, importo_lordo_massimale,
         citta, materie_insegnate, telegram_chat_id,
+        numero_documento_identita, tipo_documento_identita, scadenza_documento_identita,
+        ha_allergie_alimentari, allergie_note, regime_alimentare,
+        spedizione_usa_residenza, spedizione_indirizzo, spedizione_civico,
+        spedizione_cap, spedizione_citta, spedizione_provincia, spedizione_nazione,
         collaborator_communities ( communities ( id, name ) )
       `)
       .eq('user_id', user.id)

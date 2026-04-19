@@ -33,7 +33,7 @@ export default async function CollaboratoreDetailPage({
   // ── Fetch collaborator ───────────────────────────────────────────────────
   const { data: collab, error: collabErr } = await svc
     .from('collaborators')
-    .select('id, user_id, nome, cognome, codice_fiscale, telefono, email, tipo_contratto, data_ingresso, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, data_nascita, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, intestatario_pagamento, username, citta, materie_insegnate, telegram_chat_id')
+    .select('id, user_id, nome, cognome, codice_fiscale, telefono, email, tipo_contratto, data_ingresso, luogo_nascita, provincia_nascita, comune, provincia_residenza, indirizzo, civico_residenza, data_nascita, tshirt_size, sono_un_figlio_a_carico, importo_lordo_massimale, intestatario_pagamento, username, citta, materie_insegnate, telegram_chat_id, numero_documento_identita, tipo_documento_identita, scadenza_documento_identita, ha_allergie_alimentari, allergie_note, regime_alimentare, spedizione_usa_residenza, spedizione_indirizzo, spedizione_civico, spedizione_cap, spedizione_citta, spedizione_provincia, spedizione_nazione')
     .eq('id', id)
     .maybeSingle();
 

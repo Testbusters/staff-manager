@@ -5,6 +5,7 @@
 
 | # | File | Applied on | Description |
 |---|---|---|---|
+| 078 | `078_dati_integrativi.sql` | 2026-04-18 | Block `profilo-dati-integrativi`. +13 columns on `collaborators` (3 documento, 3 alimentazione, 7 spedizione) + 1 column on `user_profiles` (`data_consenso_dati_salute TIMESTAMPTZ` for GDPR Art.9). Conditional CHECK `collaborators_spedizione_address_complete` (if `spedizione_usa_residenza=false` → all address fields NOT NULL non-empty). Backfill soft: all new fields nullable or with safe defaults. Rollback SQL in migration header. |
 | 077 | `077_fix_expense_rls_stale_states.sql` | 2026-04-17 | DB-RLS-1: Fix 3 dead expense RLS policies. (1) `expenses_own_update_inviato` → `expenses_own_update` (stato=IN_ATTESA, WITH CHECK added). (2) `expenses_responsabile_update` dropped (resp is read-only). (3) `exp_attachments_own_insert` recreated with stato=IN_ATTESA. Rollback SQL in migration header. |
 | 076 | `076_expenses_storage_bucket.sql` | 2026-04-17 | INSERT `expenses` private bucket into `storage.buckets`. All access via service role signed URLs. ON CONFLICT DO NOTHING for idempotency. |
 | 075 | `075_filter_column_indexes.sql` | 2026-04-16 | DB8: CREATE INDEX on `compensations(data_competenza)`, `expense_reimbursements(data_spesa)`, `tickets(last_message_at DESC NULLS LAST)`. Three frequently filtered/sorted columns. Rollback in migration header. |

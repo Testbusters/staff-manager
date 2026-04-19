@@ -46,6 +46,8 @@ export async function POST(request: Request) {
     comune, provincia_residenza,
     indirizzo, civico_residenza, telefono, intestatario_pagamento, data_ingresso,
     data_fine_contratto, sono_un_figlio_a_carico, importo_lordo_massimale,
+    // R9: admin pre-fill limited to 3 documento identità fields (GDPR minimization)
+    numero_documento_identita, tipo_documento_identita, scadenza_documento_identita,
   } = parsed.data;
 
   const role = 'collaboratore';
@@ -163,6 +165,9 @@ export async function POST(request: Request) {
     data_fine_contratto:     data_fine_contratto ?? null,
     sono_un_figlio_a_carico: sono_un_figlio_a_carico ?? false,
     importo_lordo_massimale: importo_lordo_massimale ?? null,
+    numero_documento_identita:   numero_documento_identita ?? null,
+    tipo_documento_identita:     tipo_documento_identita ?? null,
+    scadenza_documento_identita: scadenza_documento_identita ?? null,
   }).select('id').single();
 
   if (collabError || !newCollab) {

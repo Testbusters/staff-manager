@@ -120,7 +120,7 @@ The approved output is the **architectural contract** for Phase 2 — implementa
 
 **Skip**: block modifies only an internal section of an existing page without layout or navigation change → skip. Use Phase 1.5 if architectural decision involved.
 
-> **Model — MANDATORY**: switch to Opus 4.6 before executing (`/model opus`). Switch back to Sonnet only after STOP confirmed.
+> **Model — MANDATORY**: switch to Opus 4.7 before executing (`/model opus`) with effort level `xhigh` for the design pass. Switch back to Sonnet only after STOP confirmed.
 
 **Execute**: invoke Skill tool with `skill: "phase-design"`. Full procedure in `.claude/skills/phase-design/SKILL.md` (steps 0–6: consistency check → wireframe → HTML preview → UX rationale → design system mapping → Design Quality Gate (10 criteria) → session persist).
 
@@ -432,6 +432,7 @@ Branch prefix `fix/` activates this pipeline automatically.
 - No dependency scan (unless a shared utility is touched — then do a quick grep).
 - Write the fix. Run `npx tsc --noEmit`. Run `npx vitest run`. Must be green.
 - **If the fix modifies any file under `app/api/`**: run `/security-audit target:section:<section>` (static, no dev server needed). Critical findings block the commit and escalate to full pipeline. Medium/Low: append to `docs/refactoring-backlog.md` and proceed.
+- **Optional — critical logic review (Opus 4.7)**: for fixes touching auth, RLS, role gating, or permission logic in `app/api/`, consider running `/ultrareview` before commit. The deeper multi-pass review surfaces structural issues a single-pass audit can miss. Skip for label/copy fixes or trivial bugfixes.
 - Run `/commit` (Conventional Commits skill) to stage and commit with correct type+scope. Do NOT use manual `git commit -m "..."` — the skill ensures Conventional Commits 1.0.0 compliance.
 - No intermediate docs update unless `CLAUDE.md` genuinely needs a pattern correction.
 

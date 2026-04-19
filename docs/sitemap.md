@@ -46,7 +46,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 | `/login` | `app/login/page.tsx` | unauthenticated | `auth-form` | Card, Form, Input, Button | n/a | Redirects to `/` if already authenticated | `UI` |
 | `/pending` | `app/pending/page.tsx` | authenticated | `auth-form` | Card | n/a | Shown when `is_active = false` | `UI` |
 | `/change-password` | `app/change-password/page.tsx` | authenticated | `auth-form` | Card, Form, Input | n/a | Shown when `must_change_password = true` (proxy-enforced) | `UI` |
-| `/onboarding` | `app/onboarding/page.tsx` | authenticated | `wizard` | multi-step Form, Input, Select, Dialog | n/a | Shown when `onboarding_completed = false` (proxy-enforced) | `UI` |
+| `/onboarding` | `app/onboarding/page.tsx` | authenticated | `wizard` | OnboardingWizard (4-step Form, Progress, Input, Select, Checkbox, Switch, Alert, DatePicker, Dialog) | n/a | Shown when `onboarding_completed = false` (proxy-enforced). 4 steps: Anagrafica → Residenza/Pagamento → Documento identità + Alimentazione (GDPR) + Spedizione → Riepilogo. | `UI` |
 | `/auth/callback` | `app/auth/callback/route.ts` | unauthenticated | — | — | n/a | OAuth callback handler | `UI` |
 
 ---
@@ -63,7 +63,7 @@ Layout values: `auth-form` | `full-list` | `detail` | `detail+timeline` | `tabs`
 
 | Route | Page file | Roles | Layout | Componenti chiave | loading.tsx | Access notes | Audit |
 |---|---|---|---|---|---|---|---|
-| `/profilo` | `app/(app)/profilo/page.tsx` | all | `tabs` | Tabs, Form, Input, Avatar, Table, Badge, TelegramConnect | ✅ | Own profile view + documents tab + Impostazioni tab (collab only: Telegram connection). Admin/Responsabile see own profile only. Community field read-only for collab. | `UI` `R` `UX` |
+| `/profilo` | `app/(app)/profilo/page.tsx` | all | `tabs` | Tabs, Form, Input, Avatar, Table, Badge, Collapsible (3 sections: Documento identità, Alimentazione, Spedizione), Switch, Checkbox, Alert (GDPR), TelegramConnect, ProfileBackfillToast | ✅ | Own profile view + documents tab + Impostazioni tab (collab only: Telegram connection). Admin/Responsabile see own profile only. Community field read-only for collab. Integrative fields (documento/alimentazione/spedizione) collapsed by default. | `UI` `R` `UX` |
 | `/notifiche` | `app/(app)/notifiche/page.tsx` | all | `full-list` | list rows, Badge, EmptyState | ✅ | Notification center | `UI` `R` `UX` |
 
 ---
@@ -187,10 +187,10 @@ Internal structure of complex pages: tabs, states, sub-routes, and per-role inte
 - **Responsive notes**: Stats strip (admin) is a multi-column grid — needs stack at mobile. Feed tabs (collab) scroll vertically; card layout should adapt to single column.
 
 ### `/profilo`
-- **Tabs / states**: Collaboratori: 3 tabs — Profilo · Documenti · Impostazioni. Admin/Responsabile: no tabs (profile form only). Impostazioni tab contains TelegramConnect section.
-- **Key interactions**: All roles: edit own contact/fiscal fields (constrained by role). Community field is read-only for collaboratori (admin-only via `/collaboratori/[id]`). Collab: sign documents from Documenti tab, change password from Profilo tab, connect/disconnect Telegram from Impostazioni tab. Admin also has a Telegram reset button on `/collaboratori/[id]`.
-- **Empty states**: Documenti tab uses EmptyState when no documents assigned. TelegramConnect shows disconnected state with connect CTA when no chat_id set.
-- **Responsive notes**: Form fields in two-column grid on desktop → single column on mobile. Avatar upload button should remain accessible.
+- **Tabs / states**: Collaboratori: 3 tabs — Profilo · Documenti · Impostazioni. Admin/Responsabile: no tabs (profile form only). Impostazioni tab contains TelegramConnect section. Profilo tab includes 3 Collapsible sections (Documento identità, Alimentazione, Spedizione) collapsed by default — collaboratore only; admin/responsabile see base form without these sections.
+- **Key interactions**: All roles: edit own contact/fiscal fields (constrained by role). Community field is read-only for collaboratori (admin-only via `/collaboratori/[id]`). Collab: sign documents from Documenti tab, change password from Profilo tab, connect/disconnect Telegram from Impostazioni tab, expand/edit integrative sections (documento, alimentazione with GDPR Art.9 consent when allergie toggled on, spedizione with switch for different address). Admin also has a Telegram reset button on `/collaboratori/[id]`. `ProfileBackfillToast` surfaces a Sonner toast on login when `tipo_documento_identita IS NULL` (dismissible 3x).
+- **Empty states**: Documenti tab uses EmptyState when no documents assigned. TelegramConnect shows disconnected state with connect CTA when no chat_id set. Integrative sections show empty inputs when not yet filled — no EmptyState.
+- **Responsive notes**: Form fields in two-column grid on desktop → single column on mobile. Avatar upload button should remain accessible. Collapsible sections expand inline without layout shift.
 
 ### `/contenuti`
 - **Tabs / states**: 5 tabs — Comunicazioni · Risorse · Eventi · Opportunità · Sconti. Each tab: filterable list + Dialog for create/edit/delete (admin) or read-only view (resp).

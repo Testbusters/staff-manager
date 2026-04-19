@@ -47,6 +47,20 @@
 | `telegram_chat_id` | — | ❌ (set/cleared via /api/telegram/connect + /api/telegram/webhook) | ✅ can reset via /api/admin/collaboratori/[id]/telegram | ❌ |
 | `data_ingresso` | — | ❌ | ✅ (admin only) | ❌ |
 | `tipo_contratto` | — | ❌ | ✅ (admin only) | ❌ |
+| `numero_documento_identita` | ✅ required | ✅ | ✅ (via CreateUserForm at invite + /collaboratori/[id]) | ❌ not exposed |
+| `tipo_documento_identita` | ✅ required (CI/PASSAPORTO/PATENTE) | ✅ | ✅ | ❌ not exposed |
+| `scadenza_documento_identita` | ✅ required | ✅ | ✅ | ❌ not exposed |
+| `ha_allergie_alimentari` | ✅ (default false) | ✅ | ✅ | ❌ not exposed |
+| `allergie_note` | ✅ required if `ha_allergie_alimentari=true` | ✅ (required if flag) | ✅ (required if flag) | ❌ not exposed |
+| `regime_alimentare` | ✅ (onnivoro/vegetariano/vegano, default onnivoro) | ✅ | ✅ | ❌ not exposed |
+| `spedizione_usa_residenza` | ✅ (default true) | ✅ | ✅ | ❌ not exposed |
+| `spedizione_indirizzo` | ✅ required if `spedizione_usa_residenza=false` | ✅ (required if flag false) | ✅ | ❌ not exposed |
+| `spedizione_civico` | ✅ required if `spedizione_usa_residenza=false` | ✅ | ✅ | ❌ not exposed |
+| `spedizione_cap` | ✅ required if `spedizione_usa_residenza=false` | ✅ | ✅ | ❌ not exposed |
+| `spedizione_citta` | ✅ required if `spedizione_usa_residenza=false` | ✅ | ✅ | ❌ not exposed |
+| `spedizione_provincia` | ✅ required if `spedizione_usa_residenza=false` | ✅ | ✅ | ❌ not exposed |
+| `spedizione_nazione` | ✅ (default IT) | ✅ | ✅ | ❌ not exposed |
+| `data_consenso_dati_salute` (on `user_profiles`) | — (server-derived) | — (server-derived) | — (server-derived) | — |
 
 ---
 
@@ -58,6 +72,12 @@
 | `iban` | Uppercase, no spaces, country code prefix | `/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/` |
 | `provincia_*` | 2 uppercase letters | `/^[A-Z]{2}$/` |
 | `username` | Lowercase, alphanumeric + underscore, 3–50 chars | `/^[a-z0-9_]+$/` |
+| `tipo_documento_identita` | Enum | `z.enum(['CI','PASSAPORTO','PATENTE'])` |
+| `scadenza_documento_identita` | ISO date | `z.string().date()` |
+| `regime_alimentare` | Enum | `z.enum(['onnivoro','vegetariano','vegano'])` |
+| `spedizione_provincia` | 2 uppercase letters | `/^[A-Z]{2}$/` |
+| `ha_allergie_alimentari + allergie_note` | Cross-field: if flag true → note required + GDPR consent | `superRefine` in `collaboratorBaseSchema` |
+| `spedizione_usa_residenza + spedizione_*` | Cross-field: if flag false → 5 address fields required | `superRefine` in `collaboratorBaseSchema` + DB CHECK constraint |
 
 ---
 
@@ -78,3 +98,8 @@ Before starting any block that touches profile data:
 - `username` is the import key for compensation ingestion — uniqueness is enforced at DB level (UNIQUE constraint) and via 409 error at API level.
 - Community check for `responsabile_compensi`: verified via `user_community_access` JOIN `collaborator_communities` on the collaborator's ID.
 - `onboarding_completed=false` guard is on `POST /api/onboarding/complete` only — repeated calls are rejected.
+- **GDPR Art.9 — health data**: `data_consenso_dati_salute` on `user_profiles` is derived server-side. Set to `NOW()` when `ha_allergie_alimentari` transitions `false → true` (with explicit consent checkbox at collect time); set to `NULL` when `ha_allergie_alimentari` transitions to `false`. Never editable from client. Timestamped via `deriveConsensoDatiSaluteTimestamp()` in `lib/schemas/collaborator.ts`.
+- **R7 — conservative RBAC for integrative data**: `responsabile_compensi` does not see documento/alimentazione/spedizione fields in `CollaboratoreDetail` UI; API schema accepts them but the UI never sends them. Do not relax without explicit privacy review.
+- **R6 — soft backfill**: `ProfileBackfillToast` surfaces a Sonner toast on every login when `onboarding_completed=true` but `tipo_documento_identita IS NULL`. Dismissible 3x via `localStorage`; no hard gate.
+- **CreateUserForm (admin)**: documento identità section (3 fields) appears only after community selection; optional at invite time (collected again at onboarding). Onboarding remains the single "first" collection point.
+- **CHECK constraint (migration 078)**: DB enforces conditional requirement for spedizione fields when `spedizione_usa_residenza=false`. Zod `superRefine` mirrors the same rule client-side.

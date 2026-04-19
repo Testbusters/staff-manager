@@ -34,6 +34,9 @@
 | Edit importo_lordo_massimale | ✅* | ✅* | ✅ | Collab/resp: own record only via profile API |
 | Edit citta | ✅ | ❌ | ✅ | Self-edit (/api/profile) and admin (/api/admin/collaboratori/[id]/profile). Resp: read-only |
 | Edit materie_insegnate | ✅ | ❌ | ✅ | Self-edit (/api/profile) and admin (/api/admin/collaboratori/[id]/profile). Resp: read-only. Min 1 required |
+| Edit documento identità (numero/tipo/scadenza) | ✅ | ❌ | ✅ | Self-edit (/api/profile) + admin (CreateUserForm at invite + /api/admin/collaboratori/[id]/profile). Resp: not exposed in UI (R7 conservative RBAC). Required at onboarding |
+| Edit alimentazione (ha_allergie/allergie_note/regime_alimentare) | ✅ | ❌ | ✅ | Self-edit + admin. Resp: not exposed. GDPR Art.9 consent required when ha_allergie_alimentari=true (checkbox at collect time). `data_consenso_dati_salute` timestamp server-derived on `user_profiles` |
+| Edit spedizione (indirizzo alternativo: 7 campi) | ✅ | ❌ | ✅ | Self-edit + admin. Resp: not exposed. Conditional: when spedizione_usa_residenza=false, 5 address fields required (DB CHECK + Zod superRefine) |
 | Manage lookup_options (città/materie lists) | ❌ | ❌ | ✅ | Admin-only via /api/admin/lookup-options. GET available to all authenticated |
 | Invite (create) new user | ❌ | ❌ | ✅ | Invite-only flow, email+password shown in UI |
 | Deactivate / change member_status | ❌ | ❌ | ✅ | Includes uscente_con_compenso / uscente_senza_compenso |

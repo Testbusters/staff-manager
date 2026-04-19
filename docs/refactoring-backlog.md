@@ -41,7 +41,13 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | API18 | `approve-all` returns `{ updated }`, `approve-bulk` returns `{ approved }` — inconsistent bulk key | LOW | G4 |
 | API19 | Sitemap/filesystem mismatch: `GET,PATCH` on `[id]`, `GET` on `attachments` — none implemented | MEDIUM | G4 |
 | API20 | `approve-bulk/route.ts` undocumented in sitemap | LOW | G4 |
+| API21 | Sitemap declares `GET /api/profile` — handler not implemented (405 on GET) | MEDIUM | G4 |
+| API22 | Sitemap says `POST /api/profile/password` open to C/R/A — route 403s non-collaboratori | MEDIUM | G4 |
 | | **G6 - Performance** | | |
+| PERF-1 | `ProfileForm.tsx` useEffect fetches lookup options (citta/materie) on every mount | HIGH | G6 |
+| PERF-2 | `app/(app)/layout.tsx` banner queries sequential + uncached on every collab page load | HIGH | G6 |
+| PERF-3 | `app/(app)/profilo/page.tsx` documents query uses `select('*')` | MEDIUM | G6 |
+| PERF-4 | `profilo/page.tsx` + `ProfileForm.tsx` unsized `<img>` avatar tags (CLS risk) | MEDIUM | G6 |
 | P1 | `GET /api/compensations` join does not enrich collaborator name | LOW | G6 |
 | DEV-11 | `GET /api/blacklist` has no pagination - unbounded query | LOW | G6 |
 | | **G5 remnants - DRY / Code Quality** | | |
@@ -59,6 +65,7 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | S1 | `CreateUserForm.tsx` too large (409L) | LOW | G8 |
 | S2 | `CollaboratoreDetail.tsx` too large (474L) | LOW | G8 |
 | S3 | `OnboardingWizard.tsx` complex local state (408L) | LOW | G8 |
+| S7 | `ProfileForm.tsx` too large (1038L, 7+ responsibilities) | MEDIUM | G8 |
 | S6 | Documents query uses `.like('tipo', 'CONTRATTO_%')` instead of `macro_type` | LOW | G8 |
 | N2 | `contenuti/page.tsx` accessible to collaboratori but not in nav | LOW | G8 |
 | N3 | Italian URL routes - rename to English (~30 dirs, ~60-80 files) | LOW | G8 |
@@ -75,6 +82,7 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 | UX2 | Tab switching pattern inconsistency across pages | LOW | G9 |
 | RESP-7 | Systemic: 28-36px touch targets below 44px WCAG minimum | LOW | G9 |
 | UI3 | Inline badge color maps duplicating `lib/content-badge-maps.ts` in 10 files | LOW | G9 |
+| UI-4 | `OnboardingWizard.tsx` success/warning panels use hardcoded green/yellow instead of semantic tokens | LOW | G9 |
 
 ---
 
@@ -200,6 +208,42 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Impact**: LOW
 - **Fix**: Document `approve-bulk` in sitemap. Long-term: consolidate into one route with `force` flag or explicit massimale parameter (API5 covers the naming part).
 
+### API21 — `GET /api/profile` handler not implemented
+- **Problem**: `docs/sitemap.md` declares `GET, PATCH` for `/api/profile` with `C, R, A` access. Only the PATCH handler exists; a GET request returns 405. The `/profilo` page currently fetches profile data via direct Supabase server client, so no consumer is broken today, but the sitemap contract is incorrect.
+- **Files**: `app/api/profile/route.ts` · `docs/sitemap.md`
+- **Impact**: MEDIUM
+- **Fix**: Either implement `GET /api/profile` (session-scoped read of the current user's collaborator + user_profile data) or update the sitemap to list `PATCH` only.
+
+### API22 — `POST /api/profile/password` sitemap/implementation mismatch
+- **Problem**: `docs/sitemap.md` lists `POST /api/profile/password` as accessible to `C, R, A`. The handler explicitly returns 403 for `responsabile_compensi` and `amministrazione`. No runtime mismatch today because `PasswordChangeForm` is only rendered for collaboratori, but a future admin password-change UI would get a surprising 403.
+- **Files**: `app/api/profile/password/route.ts:27-29` · `docs/sitemap.md`
+- **Impact**: MEDIUM
+- **Fix**: Decide the correct access scope. If password change is collaboratore-only, update the sitemap to `C` only. If it should be available to all roles, remove the role guard (the password change itself is scoped to `user.id`).
+
+### PERF-1 — `ProfileForm.tsx` fetches lookup options via useEffect on every mount
+- **Problem**: `ProfileForm.tsx:214` runs two sequential `fetch()` calls in a `useEffect` to load città + materie options. Data is semi-static per community, but fires on every mount and arrives after hydration causing Select dropdowns to flash empty-then-populated.
+- **Files**: `components/ProfileForm.tsx:214`
+- **Impact**: HIGH
+- **Fix**: Fetch server-side in `app/(app)/profilo/page.tsx` `Promise.all` block and pass `cittaOptions`/`materiaOptions` as props to `ProfileForm`. Bundle with the planned `ProfileForm` decomposition (S7).
+
+### PERF-2 — Layout banner queries sequential + uncached on every collab page load
+- **Problem**: `app/(app)/layout.tsx:71-81` fetches `collaborator_communities` then `communities` in sequence for every authenticated collaboratore page load. The queries are not wrapped in `React.cache`, so re-render within the same request triggers new DB round-trips.
+- **Files**: `app/(app)/layout.tsx:71-81`
+- **Impact**: HIGH
+- **Fix**: Wrap both queries in a single cached `getBannerData(collaboratorId)` function alongside the existing `getSessionProfile`/`getSessionCollaborator`. Sequential flow is intrinsic (second depends on first), but caching eliminates repetition.
+
+### PERF-3 — `profilo/page.tsx` documents query uses `select('*')`
+- **Problem**: `app/(app)/profilo/page.tsx:82` uses `.select('*, collaborators(nome, cognome)')` on the documents query — fetches every document column when the Documenti tab only needs id/tipo/stato/dates.
+- **Files**: `app/(app)/profilo/page.tsx:82`
+- **Impact**: MEDIUM
+- **Fix**: Replace with explicit column list matching `DocumentList` consumption.
+
+### PERF-4 — Avatar `<img>` tags without width/height (CLS risk)
+- **Problem**: `app/(app)/profilo/page.tsx:130` and `components/ProfileForm.tsx:317` render raw `<img>` tags without explicit dimensions. Browser cannot reserve layout space before load → content below shifts on first cold-cache render.
+- **Files**: `app/(app)/profilo/page.tsx:130`, `components/ProfileForm.tsx:317`
+- **Impact**: MEDIUM
+- **Fix**: Switch to Next.js `<Image>` component or add `width={56}`/`height={56}` (and `width={64}`/`height={64}`) — remove the existing `eslint-disable-next-line @next/next/no-img-element` suppression.
+
 ### P1 — GET compensations join does not enrich collaborator name
 - **Files**: `app/api/compensations/route.ts:44-47`
 - **Impact**: LOW
@@ -258,6 +302,12 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 - **Fix**: Split into header + compensazioni + documenti sub-components.
 - **Impact**: LOW
 
+### S7 — `ProfileForm.tsx` too large (1038L, 7+ responsibilities)
+- **Problem**: Single component handles avatar upload state + upload handler, lookup-options fetch (città/materie), guida fiscale modal state, 8 collapsible form sections (Informazioni personali, Documento, Alimentazione, Spedizione, Contatti, Pagamento, Attività, Sicurezza/Tab), GDPR consent cross-field logic, form submission, and inline `Section`/`Field`/`GuideBox` sub-components. Divergent change risk: any new profile section requires touching this file.
+- **Files**: `components/ProfileForm.tsx`
+- **Impact**: MEDIUM
+- **Fix**: Extract in order of payoff — (1) `Section`/`Field`/`GuideBox` into `components/profile/primitives.tsx`; (2) avatar upload into `components/profile/AvatarUpload.tsx`; (3) each collapsible block into its own `components/profile/sections/<Section>.tsx` sharing the form via `useFormContext()`. Target <300L per file.
+
 ### S3 — `OnboardingWizard.tsx` complex local state (408L)
 - **Fix**: Extract step sub-components; move contract generation to hook.
 - **Impact**: LOW
@@ -310,6 +360,12 @@ Ordered by execution group. G1/G1b/G2/G5/G7 fully resolved and removed.
 
 ### UI3 — Inline badge color maps duplicated in 10 files
 - **Impact**: LOW
+
+### UI-4 — `OnboardingWizard.tsx` success/warning panels use hardcoded green/yellow
+- **Problem**: Lines 819, 836, 871 use paired `bg-green-50 dark:bg-green-900/20` / `bg-yellow-50 dark:bg-yellow-900/20` for "Contratto generato" / "Account configurato" success panels and warning banners. Pattern pre-exists this block — works visually but is not tokenized.
+- **Files**: `components/onboarding/OnboardingWizard.tsx:819,836,871`
+- **Impact**: LOW
+- **Fix**: Migrate to `Alert` component variants or semantic tokens (`bg-success/10`, `bg-warning/10`).
 
 
 ### SEC10 — DELETE `/api/expenses/[id]` phantom success for `responsabile_compensi`
