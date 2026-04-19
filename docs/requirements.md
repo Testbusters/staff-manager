@@ -1044,3 +1044,44 @@ Migration-only block: add `NOT NULL` and `CHECK` constraints on financial column
 - MOD: `components/expense/ExpenseForm.tsx` — remove client storage, send FormData
 - MOD: `app/(app)/rimborsi/[id]/page.tsx` — signed URLs for attachments
 - MOD: `app/api/expenses/[id]/route.ts` — signed URLs in GET response
+
+---
+
+## Block profilo-dati-integrativi — Collaborator integrative profile data
+
+### Overview
+Extend collaborator profile with 4 new data groups: identity document (3 fields), food allergies/dietary regime (3 fields incl. GDPR Art.9 health data), shipping address (7 fields with conditional CHECK), and GDPR consent timestamp (1 field on `user_profiles`). Onboarding restructured from 2→4 steps; Profile gains 3 new collapsible sections; Create-user form gains 1 collapsible section (admin pre-fill of documento only, per GDPR minimization).
+
+### Scope
+- **collaboratore** — self-edit all new fields via `/profilo` and `/onboarding` (wizard 4 step)
+- **amministrazione** — full edit on admin detail page (`/collaboratori/[id]`) + pre-fill document fields in invite form
+- **responsabile_compensi** · **responsabile_cittadino** — NO access to new fields (GDPR need-to-know, conservative)
+
+### Requirements confirmed (R1–R12)
+- **R1** Documento identità: 3 campi (`numero`, `tipo ∈ {CI, PASSAPORTO, PATENTE}`, `scadenza DATE`) — NO upload
+- **R2** Alimentazione: `ha_allergie_alimentari` boolean + `allergie_note` TEXT + `regime_alimentare ∈ {onnivoro, vegetariano, vegano}`
+- **R3** Spedizione: `spedizione_usa_residenza` flag + 6 campi address + conditional CHECK
+- **R4** GDPR Art.9: `user_profiles.data_consenso_dati_salute TIMESTAMPTZ` populated server-side only if `ha_allergie_alimentari=true AND consenso checkbox=true`
+- **R5** Onboarding 4 step: Identità+Documento / Residenza+Spedizione / Preferenze+Alimentazione / Contratto
+- **R6** Backfill soft: nullable + toast prompt al login (3x max), NON blocking modal
+- **R7** Visibilità cross-role conservativa: solo self + admin
+- **R8** CI NON aggiunto a PDF template (no ricalibrazione)
+- **R9** Admin invite: solo documento (3 campi) pre-compilabili — NO allergie/regime/spedizione
+- **R10** CreateUserForm: 1 collapsible section "Documento identità" default collapsed
+- **R11** Onboarding pre-fill: tutti i 4 step visibili al collab, tutti i campi editabili
+- **R12** GDPR consent: explicit checkbox Art.9 obbligatorio a livello Zod .refine()
+
+### Out of scope
+- PDF template recalibration (confirmed by dep scan Check 5)
+- RLS column-level filtering (row-level existenti coprono)
+- Visibility of new fields to `responsabile_*` roles (R7)
+- GSheet import extension for new fields (future)
+- `proxy.ts` changes (onboarding_completed gate unchanged)
+
+### Files
+- NEW: `supabase/migrations/078_dati_integrativi.sql`
+- MOD: `lib/types.ts`, `lib/schemas/collaborator.ts`, `lib/schemas/api.ts`
+- MOD: `app/api/profile/route.ts`, `app/api/onboarding/complete/route.ts`, `app/api/admin/create-user/route.ts`, `app/api/admin/collaboratori/[id]/profile/route.ts`
+- MOD: `components/onboarding/OnboardingWizard.tsx` (2→4 step), `components/ProfileForm.tsx` (+3 sections), `components/impostazioni/CreateUserForm.tsx` (+1 section)
+- MOD: `app/(app)/collaboratori/[id]/page.tsx` (SELECT 23→36)
+- NEW: soft backfill toast utility (Sonner)

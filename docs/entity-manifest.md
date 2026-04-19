@@ -37,9 +37,11 @@
 | `amministrazione` | ✅ (invite flow) | All | All fields | ✅ (deactivate) |
 
 **Notification triggers**: E1 (invite), E2 (password reset)
-**Key surfaces**: `/profilo`, `/collaboratori/[id]`, `/onboarding`, `/impostazioni/collaboratori`
+**Key surfaces**: `/profilo`, `/collaboratori/[id]`, `/onboarding`, `/impostazioni?tab=utenti` (CreateUserForm), `/impostazioni/collaboratori`, `ProfileBackfillToast` (app layout)
+**API routes**: `POST /api/onboarding/complete`, `PATCH /api/profile`, `PATCH /api/admin/collaboratori/[id]/profile`, `PATCH /api/admin/collaboratori/[id]`, `POST /api/admin/create-user`
 **Member status values**: `attivo` | `uscente_con_compenso` | `uscente_senza_compenso` (from `lib/types.ts` → `MemberStatus`; lowercase)
 **Sensitive fields**: `codice_fiscale`, `iban`, `partita_iva`, `data_nascita` — RBAC matrix defines per-role edit access
+**Integrative fields (block profilo-dati-integrativi, migration 078)**: `numero_documento_identita`, `tipo_documento_identita` (CI/PASSAPORTO/PATENTE), `scadenza_documento_identita`, `ha_allergie_alimentari`, `allergie_note`, `regime_alimentare` (onnivoro/vegetariano/vegano), `spedizione_usa_residenza`, `spedizione_indirizzo`, `spedizione_civico`, `spedizione_cap`, `spedizione_citta`, `spedizione_provincia`, `spedizione_nazione` (default IT). GDPR Art.9 timestamp `data_consenso_dati_salute` on `user_profiles` is server-derived (NOT editable from client). Responsabile does not see these fields in UI (R7).
 
 ---
 
