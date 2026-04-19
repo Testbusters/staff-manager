@@ -100,18 +100,18 @@ function Section({
 }) {
   return (
     <Collapsible defaultOpen={defaultOpen} className={sectionCls}>
-      <CollapsibleTrigger asChild>
-        <button type="button" className="w-full px-5 py-4 border-b border-border flex items-center justify-between gap-2 text-left cursor-pointer">
-          <div className="min-w-0">
-            <h2 className="text-sm font-medium text-foreground">{title}</h2>
-            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {headerRight}
+      <div className={`${sectionHeader} flex items-center justify-between gap-2`}>
+        <CollapsibleTrigger asChild>
+          <button type="button" className="flex-1 min-w-0 flex items-center justify-between gap-2 text-left cursor-pointer">
+            <div className="min-w-0">
+              <h2 className="text-sm font-medium text-foreground">{title}</h2>
+              {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+            </div>
             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
-          </div>
-        </button>
-      </CollapsibleTrigger>
+          </button>
+        </CollapsibleTrigger>
+        {headerRight && <div className="flex items-center gap-2 shrink-0">{headerRight}</div>}
+      </div>
       <CollapsibleContent>
         <div className="p-5 space-y-4">{children}</div>
       </CollapsibleContent>
