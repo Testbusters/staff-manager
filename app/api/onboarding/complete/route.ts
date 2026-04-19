@@ -2,33 +2,12 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { z } from 'zod';
 import { CONTRACT_TEMPLATE_DOCUMENT_TYPE, type ContractTemplateType } from '@/lib/types';
 import { buildContractVars, generateDocumentFromTemplate } from '@/lib/document-generation';
 import { getContractTemplateTipo } from '@/lib/ritenuta';
 import { getRenderedEmail } from '@/lib/email-template-service';
 import { sendEmail } from '@/lib/email';
-
-const schema = z.object({
-  nome:                z.string().min(1).max(100),
-  cognome:             z.string().min(1).max(100),
-  codice_fiscale:      z.string().regex(/^[A-Z0-9]{16}$/, 'Codice fiscale non valido (16 caratteri alfanumerici)'),
-  data_nascita:        z.string().min(1),          // ISO date
-  luogo_nascita:       z.string().min(1).max(100),
-  provincia_nascita:   z.string().min(1).max(10),
-  comune:              z.string().min(1).max(100),
-  provincia_residenza: z.string().min(1).max(10),
-  indirizzo:           z.string().min(1).max(200),
-  civico_residenza:    z.string().min(1).max(20),
-  telefono:            z.string().min(1).max(20),
-  iban:                z.string().regex(/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/, 'IBAN non valido'),
-  intestatario_pagamento: z.string().min(1).max(100),
-  tshirt_size:         z.string().min(1),
-  sono_un_figlio_a_carico:   z.boolean(),
-  importo_lordo_massimale:   z.number().min(0).max(5000).nullable().optional(),
-  citta:                     z.string().min(1),
-  materie_insegnate:         z.array(z.string().min(1)).min(1),
-});
+import { onboardingSchema, deriveConsensoDatiSaluteTimestamp } from '@/lib/schemas/collaborator';
 
 
 export async function POST(request: Request) {
@@ -54,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = schema.safeParse(body);
+  const parsed = onboardingSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
@@ -80,7 +59,7 @@ export async function POST(request: Request) {
     nome:                d.nome,
     cognome:             d.cognome,
     email:               user.email ?? '',
-    codice_fiscale:      d.codice_fiscale.toUpperCase(),
+    codice_fiscale:      d.codice_fiscale ? d.codice_fiscale.toUpperCase() : null,
     data_nascita:        d.data_nascita,
     luogo_nascita:       d.luogo_nascita,
     provincia_nascita:   d.provincia_nascita,
@@ -96,6 +75,19 @@ export async function POST(request: Request) {
     importo_lordo_massimale:   d.importo_lordo_massimale ?? null,
     citta:                     d.citta,
     materie_insegnate:         d.materie_insegnate,
+    numero_documento_identita:   d.numero_documento_identita,
+    tipo_documento_identita:     d.tipo_documento_identita,
+    scadenza_documento_identita: d.scadenza_documento_identita,
+    ha_allergie_alimentari:      d.ha_allergie_alimentari,
+    allergie_note:               d.allergie_note,
+    regime_alimentare:           d.regime_alimentare,
+    spedizione_usa_residenza:    d.spedizione_usa_residenza,
+    spedizione_indirizzo:        d.spedizione_indirizzo,
+    spedizione_civico:           d.spedizione_civico,
+    spedizione_cap:              d.spedizione_cap,
+    spedizione_citta:            d.spedizione_citta,
+    spedizione_provincia:        d.spedizione_provincia,
+    spedizione_nazione:          d.spedizione_nazione,
   };
 
   if (existingCollab) {
@@ -105,7 +97,7 @@ export async function POST(request: Request) {
       .eq('id', existingCollab.id);
     if (updateErr) {
       console.error('[onboarding/complete] collaborator update failed:', updateErr);
-      return NextResponse.json({ error: 'Errore salvataggio dati', details: updateErr.message }, { status: 500 });
+      return NextResponse.json({ error: 'Errore salvataggio dati' }, { status: 500 });
     }
     collaboratorId = existingCollab.id;
     tipoContratto = existingCollab.tipo_contratto;
@@ -140,12 +132,12 @@ export async function POST(request: Request) {
       const collabForVars = {
         nome: d.nome,
         cognome: d.cognome,
-        codice_fiscale: d.codice_fiscale.toUpperCase(),
-        data_nascita: d.data_nascita,
-        luogo_nascita: d.luogo_nascita,
-        comune: d.comune,
-        indirizzo: d.indirizzo,
-        civico_residenza: d.civico_residenza,
+        codice_fiscale: d.codice_fiscale ? d.codice_fiscale.toUpperCase() : '',
+        data_nascita: d.data_nascita ?? '',
+        luogo_nascita: d.luogo_nascita ?? '',
+        comune: d.comune ?? '',
+        indirizzo: d.indirizzo ?? '',
+        civico_residenza: d.civico_residenza ?? '',
         data_fine_contratto: existingCollab ? (existingCollab as { data_fine_contratto?: string | null }).data_fine_contratto ?? null : null,
       };
       const vars = buildContractVars(collabForVars);
@@ -201,8 +193,10 @@ export async function POST(request: Request) {
     }
   }
 
-  // Mark onboarding complete (and reset skip flag if it was set)
-  const onboardingUpdate: Record<string, unknown> = { onboarding_completed: true };
+  const onboardingUpdate: Record<string, unknown> = {
+    onboarding_completed: true,
+    data_consenso_dati_salute: deriveConsensoDatiSaluteTimestamp(d.ha_allergie_alimentari),
+  };
   if (profile.skip_contract_on_onboarding) {
     onboardingUpdate.skip_contract_on_onboarding = false;
   }

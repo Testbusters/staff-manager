@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { CONTRACT_TEMPLATE_LABELS } from '@/lib/types';
 import { getContractTemplateTipo } from '@/lib/ritenuta';
 import { generateUsername } from '@/lib/username';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import {
   Form,
@@ -27,6 +29,8 @@ import {
   createUserQuickSchema,
   createUserFullSchema,
   type CreateUserFullFormValues,
+  TIPO_DOCUMENTO_IDENTITA,
+  TIPO_DOCUMENTO_LABELS,
 } from '@/lib/schemas/collaborator';
 
 type Credentials = { email: string; password: string };
@@ -36,18 +40,13 @@ type LookupOption = { id: string; nome: string };
 const sectionTitle = 'text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 mt-1';
 
 export default function CreateUserForm() {
-  // Separate state (not in useForm)
   const [communities, setCommunities] = useState<Community[]>([]);
   const [cittaOptions, setCittaOptions] = useState<LookupOption[]>([]);
-  const [selectedCommunityName, setSelectedCommunityName] = useState('');
   const [mode, setMode] = useState<'quick' | 'full'>('quick');
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [copied, setCopied] = useState<'email' | 'password' | null>(null);
   const [usernameManuallySet, setUsernameManuallySet] = useState(false);
-
-  // Derived tipo_contratto from community
-  const tipoContratto = selectedCommunityName ? getContractTemplateTipo(selectedCommunityName) : 'OCCASIONALE';
 
   // Dynamic resolver based on mode — cast needed because the quick schema is a
   // subset of the full schema and TS cannot unify the two Resolver generics.
@@ -81,12 +80,21 @@ export default function CreateUserForm() {
       intestatario_pagamento: '',
       sono_un_figlio_a_carico: false,
       importo_lordo_massimale: undefined,
+      numero_documento_identita: '',
+      tipo_documento_identita: undefined,
+      scadenza_documento_identita: '',
     },
   });
 
   const selectedCommunity = form.watch('community_id');
   const nome = form.watch('nome');
   const cognome = form.watch('cognome');
+
+  const selectedCommunityName = useMemo(
+    () => communities.find((c) => c.id === selectedCommunity)?.name ?? '',
+    [communities, selectedCommunity],
+  );
+  const tipoContratto = selectedCommunityName ? getContractTemplateTipo(selectedCommunityName) : 'OCCASIONALE';
 
   useEffect(() => {
     fetch('/api/admin/communities')
@@ -125,11 +133,6 @@ export default function CreateUserForm() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const handleCommunityChange = (id: string) => {
-    const comm = communities.find((c) => c.id === id);
-    setSelectedCommunityName(comm?.name ?? '');
-  };
-
   const onSubmit = async (values: CreateUserFullFormValues) => {
     setLoading(true);
     setCredentials(null);
@@ -157,6 +160,9 @@ export default function CreateUserForm() {
       data_fine_contratto: values.data_fine_contratto || null,
       sono_un_figlio_a_carico: values.sono_un_figlio_a_carico ?? false,
       importo_lordo_massimale: values.importo_lordo_massimale ?? null,
+      numero_documento_identita: values.numero_documento_identita?.trim() || undefined,
+      tipo_documento_identita: values.tipo_documento_identita || undefined,
+      scadenza_documento_identita: values.scadenza_documento_identita || undefined,
     };
 
     const res = await fetch('/api/admin/create-user', {
@@ -171,9 +177,7 @@ export default function CreateUserForm() {
     toast.success('Utente creato.');
     setCredentials({ email: data.email, password: data.password });
 
-    // Reset
     form.reset();
-    setSelectedCommunityName('');
     setUsernameManuallySet(false);
   };
 
@@ -269,7 +273,7 @@ export default function CreateUserForm() {
                   <FormLabel className="text-xs text-muted-foreground">Community <span className="text-destructive">*</span></FormLabel>
                   <Select
                     value={field.value}
-                    onValueChange={(id) => { field.onChange(id); handleCommunityChange(id); }}
+                    onValueChange={field.onChange}
                     disabled={loading}
                   >
                     <FormControl>
@@ -375,6 +379,91 @@ export default function CreateUserForm() {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Documento identità - optional pre-fill (R9 GDPR minimization) */}
+        {selectedCommunity && (
+          <Collapsible defaultOpen={false} className="rounded-xl border border-border">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="w-full px-4 py-3 flex items-center justify-between gap-2 text-left cursor-pointer"
+                aria-label="Mostra dati documento identità"
+              >
+                <div>
+                  <p className="text-sm font-medium text-foreground">Documento identità</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Opzionale - il collaboratore potrà inserirli in onboarding.</p>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180 shrink-0" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4 pt-0 space-y-3">
+                <FormField
+                  control={form.control}
+                  name="tipo_documento_identita"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Tipo documento</FormLabel>
+                      <Select value={field.value || undefined} onValueChange={field.onChange} disabled={loading}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="— Seleziona —" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TIPO_DOCUMENTO_IDENTITA.map((t) => (
+                            <SelectItem key={t} value={t}>{TIPO_DOCUMENTO_LABELS[t]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="numero_documento_identita"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Numero documento</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="AX1234567"
+                            {...field}
+                            value={field.value ?? ''}
+                            disabled={loading}
+                            maxLength={50}
+                            className="font-mono"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Controller
+                    control={form.control}
+                    name="scadenza_documento_identita"
+                    render={({ field: { value, onChange } }) => (
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1.5">Scadenza</label>
+                        <DatePicker
+                          value={value ?? ''}
+                          onChange={onChange}
+                          disabled={loading}
+                          captionLayout="dropdown"
+                          fromYear={new Date().getFullYear()}
+                          toYear={new Date().getFullYear() + 20}
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {/* Invito rapido: nome + cognome + data_ingresso required */}

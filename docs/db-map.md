@@ -2,7 +2,7 @@
 
 > **Authoritative schema reference** for `skill-db` and the dependency scanner.
 > Updated in **Phase 8 step 2d** of `pipeline.md` whenever a migration adds/modifies tables, columns, FKs, indexes, or RLS policies.
-> Last synced: migration `077_fix_expense_rls_stale_states.sql` (2026-04-17).
+> Last synced: migration `078_dati_integrativi.sql` (2026-04-19).
 > Column specs section is auto-generated — run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ---
@@ -13,8 +13,8 @@
 
 | Table | Purpose | Key columns | Notes |
 |---|---|---|---|
-| `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding`, `invite_email_sent` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione`. `invite_email_sent` (BOOLEAN NOT NULL DEFAULT false): tracks whether the invitation email was delivered successfully. |
-| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL), `telegram_chat_id` (BIGINT NULL, partial UNIQUE idx on non-null) | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific. `telegram_chat_id` set by webhook after deep-link flow; cleared by disconnect/admin reset. |
+| `user_profiles` | Auth metadata per user | `user_id` (→ auth.users), `role`, `is_active`, `member_status`, `must_change_password`, `onboarding_completed`, `theme_preference`, `skip_contract_on_onboarding`, `invite_email_sent`, `data_consenso_dati_salute` | 1:1 with auth.users. `role` values: `collaboratore`, `responsabile_compensi`, `amministrazione`. `invite_email_sent` (BOOLEAN NOT NULL DEFAULT false): tracks whether the invitation email was delivered successfully. `data_consenso_dati_salute` (TIMESTAMPTZ NULL — migration 078): GDPR Art.9 consent timestamp; set to `NOW()` when `ha_allergie_alimentari` transitions false→true (with explicit consent); cleared to NULL when flag transitions to false. Never editable from client. |
+| `collaborators` | Profile data for collaborators and responsabili | `user_id`, `email`, `tipo_contratto`, `approved_lordo_ytd`, `approved_year`, `importo_lordo_massimale`, `codice_fiscale` (UNIQUE), `username` (UNIQUE), `intestatario_pagamento`, `citta` (NOT NULL), `materie_insegnate` (TEXT[], NOT NULL), `telegram_chat_id` (BIGINT NULL, partial UNIQUE idx on non-null), `numero_documento_identita`, `tipo_documento_identita` (CI/PASSAPORTO/PATENTE), `scadenza_documento_identita`, `ha_allergie_alimentari` (NOT NULL DEFAULT false), `allergie_note`, `regime_alimentare` (NOT NULL DEFAULT 'onnivoro' — onnivoro/vegetariano/vegano), `spedizione_usa_residenza` (NOT NULL DEFAULT true), `spedizione_indirizzo`, `spedizione_civico`, `spedizione_cap`, `spedizione_citta`, `spedizione_provincia`, `spedizione_nazione` (NOT NULL DEFAULT 'IT') | `sono_un_figlio_a_carico` = collaborator IS fiscally dependent (NOT "has children"). `approved_lordo_ytd` reset logic: compare `approved_year` to current year. `citta`/`materie_insegnate` values come from `lookup_options` table, community-specific. `telegram_chat_id` set by webhook after deep-link flow; cleared by disconnect/admin reset. Integrative fields added in migration 078: documento identità (3 cols), alimentazione (3 cols — GDPR Art.9 triggered via `ha_allergie_alimentari`), spedizione (7 cols). CHECK constraint enforces: `spedizione_usa_residenza=true OR (all 5 spedizione address fields non-null/non-empty)`. |
 | `communities` | Community entities | `id`, `name` (UNIQUE), `is_active`, `banner_content`, `banner_active`, `banner_link_url`, `banner_link_label`, `banner_link_new_tab`, `banner_updated_at` | Banner fields added in migrations 052+053. `banner_updated_at` used as dismiss-key version for localStorage. |
 | `collaborator_communities` | Collaborator → Community membership (1:1 per migration 044) | `collaborator_id` (UNIQUE), `community_id` | UNIQUE on `collaborator_id` — each collaborator belongs to exactly 1 community |
 | `user_community_access` | Responsabile → Community access | `user_id`, `community_id` | UNIQUE `(user_id, community_id)`. Used for RBAC joins in RLS policies |
@@ -313,10 +313,11 @@ tickets
 
 
 
+
 ## Column specs
 
 > Auto-generated from `information_schema` on staging DB (`gjwkvgfwkdwzqlvudgqr`).
-> Last refreshed: 2026-04-17.
+> Last refreshed: 2026-04-19.
 > Run `node scripts/refresh-db-map.mjs` after each migration block.
 
 ### `user_profiles`
@@ -336,6 +337,7 @@ tickets
 | `skip_contract_on_onboarding` | boolean | NO | `false` | — |
 | `citta_responsabile` | text | YES | — | — |
 | `invite_email_sent` | boolean | NO | `false` | — |
+| `data_consenso_dati_salute` | timestamp with time zone | YES | — | — |
 
 ### `collaborators`
 
@@ -374,6 +376,19 @@ tickets
 | `citta` | text | NO | — | — |
 | `materie_insegnate` | text[] | NO | `'{}'[]` | — |
 | `telegram_chat_id` | bigint | YES | — | — |
+| `numero_documento_identita` | text | YES | — | — |
+| `tipo_documento_identita` | text | YES | — | — |
+| `scadenza_documento_identita` | date | YES | — | — |
+| `ha_allergie_alimentari` | boolean | NO | `false` | — |
+| `allergie_note` | text | YES | — | — |
+| `regime_alimentare` | text | NO | `'onnivoro'` | — |
+| `spedizione_usa_residenza` | boolean | NO | `true` | — |
+| `spedizione_indirizzo` | text | YES | — | — |
+| `spedizione_civico` | text | YES | — | — |
+| `spedizione_cap` | text | YES | — | — |
+| `spedizione_citta` | text | YES | — | — |
+| `spedizione_provincia` | text | YES | — | — |
+| `spedizione_nazione` | text | NO | `'IT'` | — |
 
 ### `communities`
 

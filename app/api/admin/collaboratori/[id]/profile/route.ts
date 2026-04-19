@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { isValidUUID } from '@/lib/validate-id';
 import { adminProfilePatchApiSchema as patchSchema } from '@/lib/schemas/api';
+import { deriveConsensoDatiSaluteTimestamp } from '@/lib/schemas/collaborator';
 
 export async function PATCH(
   request: Request,
@@ -62,8 +63,18 @@ export async function PATCH(
     return NextResponse.json({ error: 'Dati non validi', issues: parsed.error.issues }, { status: 400 });
   }
 
+  if (parsed.data.ha_allergie_alimentari === true) {
+    const note = parsed.data.allergie_note;
+    if (!note || note.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Descrizione allergie obbligatoria quando si attiva il flag' },
+        { status: 400 },
+      );
+    }
+  }
+
   const { username, intestatario_pagamento, citta, materie_insegnate, ...profileFields } = parsed.data;
-  // Admin-only fields — stripped for responsabile_compensi
+  // Stripped for responsabile_compensi
   const adminOnly: Record<string, unknown> = {};
   if (caller.role === 'amministrazione') {
     if (intestatario_pagamento !== undefined) adminOnly.intestatario_pagamento = intestatario_pagamento;
@@ -88,16 +99,36 @@ export async function PATCH(
   const update: Record<string, unknown> = { ...profileFields, ...adminOnly };
   if (username !== undefined) update.username = username;
 
-  if (Object.keys(update).length === 0) {
+  const allergieTouched = 'ha_allergie_alimentari' in parsed.data;
+
+  if (Object.keys(update).length === 0 && !allergieTouched) {
     return NextResponse.json({ error: 'Nessun campo da aggiornare' }, { status: 400 });
   }
 
-  const { error } = await admin
-    .from('collaborators')
-    .update(update)
-    .eq('id', id);
+  if (Object.keys(update).length > 0) {
+    const { error } = await admin
+      .from('collaborators')
+      .update(update)
+      .eq('id', id);
 
-  if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
+  }
+
+  if (allergieTouched) {
+    const { data: collab } = await admin
+      .from('collaborators')
+      .select('user_id')
+      .eq('id', id)
+      .maybeSingle();
+    if (collab?.user_id) {
+      await admin
+        .from('user_profiles')
+        .update({
+          data_consenso_dati_salute: deriveConsensoDatiSaluteTimestamp(parsed.data.ha_allergie_alimentari),
+        })
+        .eq('user_id', collab.user_id);
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

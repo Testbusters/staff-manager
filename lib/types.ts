@@ -308,6 +308,19 @@ export interface Collaborator {
   citta: string | null;
   materie_insegnate: string[] | null;
   figli_dettaglio: Record<string, unknown> | null;
+  numero_documento_identita: string | null;
+  tipo_documento_identita: 'CI' | 'PASSAPORTO' | 'PATENTE' | null;
+  scadenza_documento_identita: string | null;
+  ha_allergie_alimentari: boolean;
+  allergie_note: string | null;
+  regime_alimentare: 'onnivoro' | 'vegetariano' | 'vegano';
+  spedizione_usa_residenza: boolean;
+  spedizione_indirizzo: string | null;
+  spedizione_civico: string | null;
+  spedizione_cap: string | null;
+  spedizione_citta: string | null;
+  spedizione_provincia: string | null;
+  spedizione_nazione: string;
   created_at: string;
 }
 
